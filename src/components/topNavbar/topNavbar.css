@@ -1,0 +1,18 @@
+.floating-bars {
+  animation: floatIn 0.3s ease-in-out;
+}
+
+@keyframes floatIn {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-10px) scale(1.15);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(0) scale(1.1);
+    opacity: 1;
+  }
+}

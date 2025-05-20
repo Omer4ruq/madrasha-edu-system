@@ -1,0 +1,258 @@
+<!--
+Template Name: Taildash - Tailwind Dashboard Admin Template
+Author: Aribudin
+Website: https://www.tailwinddashboard.com
+Contact: support@tailwinddashboard.com
+Purchase: https://themes.tailwindtemplate.net/taildash
+License: You must have a valid license purchased only from official store (the above link) in order to legally use the theme for your project.
+-->
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <!-- Required meta tags -->
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Title  -->
+  <title>Taildash | Tailwind Admin Template</title>
+  <meta name="description" content="Tailwind Admin Template">
+
+  <!-- Development css (used in all pages) -->
+  <link rel="stylesheet" id="stylesheet" href="../src/css/style.css">
+  <!-- Production css (used in all pages) -->
+  <!-- <link rel="stylesheet" href="../dist/css/style.css"> -->
+
+  <!--start::Vendor Stylesheets (only on this page)-->
+  <link rel="stylesheet" href="../src/css/customizer.css">
+  <!--end::Vendor Stylesheets (only on this page)-->
+
+  <!-- google font -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&amp;display=swap" rel="stylesheet">
+
+  <!-- Favicon  -->
+  <link rel="icon" href="../src/img/favicon.png">
+</head>
+<body class="font-sans text-base font-normal text-gray-600 dark:text-gray-400 dark:bg-gray-800">
+  <!-- preloader -->
+  <div class="preloader loaded-success fixed inset-0 bg-gray-100 dark:bg-gray-900">
+    <div class="absolute left-1/2 top-1/2 transform -translate-y-1/2">
+      <div class="relative mx-auto my-12">
+        <div class="inline-block">
+          <svg class="animate-spin h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <!-- <i class="text-3xl text-indigo-500 fas fa-circle-notch fa-spin"></i> -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-gray-100 dark:bg-gray-900 dark:bg-opacity-40" style="background: url(../src/img/blog/blog_4.jpg);background-repeat: no-repeat;background-size: cover;background-attachment: fixed;">
+  	<div class="flex flex-wrap flex-row">
+      <span class="fixed bg-gray-900 bg-opacity-70 w-full h-full inset-x-0 top-0"></span>
+			<div class="flex-shrink max-w-full w-full min-h-screen sm:w-2/3 lg:w-1/2 xl:w-1/3 z-30">
+	      <!-- login form -->
+	      <div class="max-w-full w-full px-6 sm:px-12 bg-white dark:bg-gray-800 shadow-lg z-40">
+	        <div class="relative">
+	          <div class="p-6 sm:p-8">
+	            <form id="login-form">
+	            	<div class="text-center">
+		              <a class="py-2 text-2xl" href="register-cover.html#">
+						        <h2 class="text-2xl font-semibold text-gray-200 px-4 max-h-9 overflow-hidden">
+                      <!-- <img class="inline-block w-8 h-auto ltr:mr-2 rtl:ml-2 -mt-1" src="../src/img/logo.png"> -->
+                      <svg xmlns="http://www.w3.org/2000/svg" class="inline-block w-7 h-7 ltr:mr-2 rtl:ml-2 -mt-1" viewBox="0 0 300.000000 300.000000"> 
+                        <g transform="translate(0.000000,300.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none">
+                          <path class="text-pink-500" d="M1225 2825 c-546 -115 -959 -534 -1065 -1080 -28 -147 -28 -373 0
+                          -520 81 -419 350 -774 728 -964 115 -58 120 -58 65 3 -27 29 -65 84 -85 122
+                          -68 131 -90 236 -89 428 0 229 44 470 167 923 41 149 74 275 74 278 0 4 -102
+                          5 -227 3 -198 -4 -236 -7 -290 -25 -35 -12 -63 -18 -63 -14 0 4 22 43 49 87
+                          58 93 123 157 177 175 22 6 124 14 234 16 l195 5 33 112 c91 305 200 431 405
+                          465 43 7 31 9 -73 9 -94 1 -152 -5 -235 -23z"/>
+                          <path class="text-indigo-500" d="M1695 2763 c-48 -77 -122 -231 -179 -375 -25 -65 -46 -120 -46 -123
+                          0 -7 995 -6 1069 1 34 4 61 12 61 18 0 6 -30 46 -65 88 -170 201 -426 361
+                          -687 428 -110 29 -111 28 -153 -37z"/>
+                          <path class="text-indigo-500" d="M2660 2104 c-33 -36 -54 -47 -120 -67 -21 -6 -256 -12 -595 -16
+                          l-560 -6 -51 -180 c-62 -215 -116 -445 -144 -608 -74 -435 -37 -655 124 -740
+                          62 -32 189 -30 274 5 174 72 337 212 410 353 l20 40 24 -50 c32 -70 32 -162
+                          -1 -229 -48 -97 -216 -250 -383 -347 -86 -51 -170 -85 -261 -109 l-69 -17 94
+                          -6 c469 -33 947 205 1214 605 229 342 291 790 163 1173 -24 70 -76 192 -94
+                          217 -10 16 -14 14 -45 -18z"/>
+                        </g>
+                      </svg><span class="text-gray-700 dark:text-gray-200">Taildash</span>
+                    </h2>
+						      </a>
+						    </div>
+	              <hr class="block w-12 h-0.5 mx-auto my-5 bg-gray-700 border-gray-700">
+	              <div class="mb-4">
+                  <label for="inputname" class="inline-block mb-2">Full Name</label>
+	                <input name="name" id="inputname" class="w-full leading-5 relative py-2 px-4 rounded text-gray-800 bg-white border border-gray-300 overflow-x-auto focus:outline-none focus:border-gray-400 focus:ring-0 dark:text-gray-300 dark:bg-gray-700 dark:border-gray-700 dark:focus:border-gray-600" value="" aria-label="text" type="text" required="">
+	              </div>
+	              <div class="mb-4">
+                  <label for="inputemail" class="inline-block mb-2">Email</label>
+	                <input name="email" id="inputemail" class="w-full leading-5 relative py-2 px-4 rounded text-gray-800 bg-white border border-gray-300 overflow-x-auto focus:outline-none focus:border-gray-400 focus:ring-0 dark:text-gray-300 dark:bg-gray-700 dark:border-gray-700 dark:focus:border-gray-600" value="" aria-label="email" type="email" required="">
+	              </div>
+	              <div class="mb-4">
+		              <label for="inputpass" class="inline-block mb-2">Password</label>
+	                <input id="inputpass" class="w-full leading-5 relative py-2 px-4 rounded text-gray-800 bg-white border border-gray-300 overflow-x-auto focus:outline-none focus:border-gray-400 focus:ring-0 dark:text-gray-300 dark:bg-gray-700 dark:border-gray-700 dark:focus:border-gray-600" aria-label="password" type="password" value="" required="">
+	              </div>
+	              <div class="mb-4">
+		              <label for="inputrepeatpass" class="inline-block mb-2">Repeat Password</label>
+	                <input id="inputrepeatpass" class="w-full leading-5 relative py-2 px-4 rounded text-gray-800 bg-white border border-gray-300 overflow-x-auto focus:outline-none focus:border-gray-400 focus:ring-0 dark:text-gray-300 dark:bg-gray-700 dark:border-gray-700 dark:focus:border-gray-600" aria-label="password" type="password" value="" required="">
+	              </div>
+	              <div class="my-6">
+                    <input class="form-checkbox h-5 w-5 text-indigo-500 dark:bg-gray-700 border border-gray-300 dark:border-gray-700 rounded focus:outline-none" type="checkbox" value="" id="terms" required>
+                    <label class="ltr:ml-2 rtl:mr-2" for="terms">
+                      I agree to the <a href="register-cover.html#">Terms and Conditions</a>
+                    </label>
+                  </div>
+	              <div class="grid">
+                  <button type="submit" class="py-2 px-4 inline-block text-center rounded leading-normal text-gray-100 bg-indigo-500 border border-indigo-500 hover:text-white hover:bg-indigo-600 hover:ring-0 hover:border-indigo-600 focus:bg-indigo-600 focus:border-indigo-600 focus:outline-none focus:ring-0">
+                  	<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="inline-block w-4 h-4 ltr:mr-2 rtl:ml-2 bi bi-box-arrow-in-right" viewBox="0 0 16 16">
+										  <path fill-rule="evenodd" d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5 1.5 0 0 0 6.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-8A1.5 1.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0v-2z"/>
+										  <path fill-rule="evenodd" d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
+										</svg>Register
+                  </button>
+                </div>
+	            </form>
+	            <div class="mt-4">
+	              <p class="text-center mb-3"><span>Or</span></p>
+	              <div class="text-center mb-6 sm:space-x-4">
+	                <a class="p-2 block sm:inline-block rounded lg:rounded-full leading-5 text-gray-100 bg-indigo-900 border border-indigo-900 hover:text-white hover:opacity-90 hover:ring-0 hover:border-indigo-900 focus:bg-indigo-900 focus:border-indigo-800 focus:outline-none focus:ring-0 mb-3" href="register-cover.html#">
+	                  <!-- <i class="fab fa-facebook"></i> -->
+	                  <svg xmlns="http://www.w3.org/2000/svg" class="inline-block w-4 h-4 mx-1" fill="currentColor" viewBox="0 0 512 512"><path d="M455.27,32H56.73A24.74,24.74,0,0,0,32,56.73V455.27A24.74,24.74,0,0,0,56.73,480H256V304H202.45V240H256V189c0-57.86,40.13-89.36,91.82-89.36,24.73,0,51.33,1.86,57.51,2.68v60.43H364.15c-28.12,0-33.48,13.3-33.48,32.9V240h67l-8.75,64H330.67V480h124.6A24.74,24.74,0,0,0,480,455.27V56.73A24.74,24.74,0,0,0,455.27,32Z"/></svg>
+	                  <span class="inline-block lg:hidden">Login with FB</span>
+	                </a>
+	                <a class="p-2 block sm:inline-block rounded lg:rounded-full leading-5 text-gray-100 bg-indigo-500 border border-indigo-500 hover:text-white hover:bg-indigo-600 hover:ring-0 hover:border-indigo-600 focus:bg-indigo-600 focus:border-indigo-600 focus:outline-none focus:ring-0 mb-3" href="register-cover.html#">
+	                  <!-- <i class="fab fa-twitter"></i> -->
+	                  <svg xmlns="http://www.w3.org/2000/svg" class="inline-block w-4 h-4 mx-1" fill="currentColor" viewBox="0 0 512 512"><path d="M496,109.5a201.8,201.8,0,0,1-56.55,15.3,97.51,97.51,0,0,0,43.33-53.6,197.74,197.74,0,0,1-62.56,23.5A99.14,99.14,0,0,0,348.31,64c-54.42,0-98.46,43.4-98.46,96.9a93.21,93.21,0,0,0,2.54,22.1,280.7,280.7,0,0,1-203-101.3A95.69,95.69,0,0,0,36,130.4C36,164,53.53,193.7,80,211.1A97.5,97.5,0,0,1,35.22,199v1.2c0,47,34,86.1,79,95a100.76,100.76,0,0,1-25.94,3.4,94.38,94.38,0,0,1-18.51-1.8c12.51,38.5,48.92,66.5,92.05,67.3A199.59,199.59,0,0,1,39.5,405.6,203,203,0,0,1,16,404.2,278.68,278.68,0,0,0,166.74,448c181.36,0,280.44-147.7,280.44-275.8,0-4.2-.11-8.4-.31-12.5A198.48,198.48,0,0,0,496,109.5Z"/></svg>
+	                  <span class="inline-block lg:hidden">Login with Twitter</span>
+	                </a>
+	              </div>
+	              <p class="text-center mb-4">Already have an account?  <a class="hover:text-indigo-500" href="login-cover.html">Login</a></p>
+	            </div>
+	          </div>
+	        </div>
+	      </div>
+			</div>
+		</div>
+	</div>
+
+  <!-- Customizer (Only for demo purpose) -->
+  <div x-data="{ open: false }" class="relative">
+    <a href="javascript:;" class="fixed bottom-4 ltr:right-4 rtl:left-4 text-gray-500 block py-3 px-4 flex text-sm rounded-full focus:outline-none" aria-controls="mobile-canvas" @click="open = !open" aria-expanded="false" x-bind:aria-expanded="open.toString()">
+      <span class="sr-only">Customizer</span>
+      <svg x-description="Icon closed" x-state:on="Menu open" x-state:off="Menu closed" class="block h-6 w-6 animate-spin-slow" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
+        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
+      </svg>
+      <!-- <i class="text-2xl fas fa-cog"></i> -->
+    </a>
+
+    <!-- Right Offcanvas -->
+    <div class="fixed w-full h-full inset-0 z-50" id="mobile-canvas" x-description="Mobile menu" x-show="open" style="display: none;">
+      <!-- bg open -->
+      <span class="fixed bg-gray-900 bg-opacity-70 w-full h-full inset-x-0 top-0"></span>
+
+      <nav id="mobile-nav" class="flex flex-col ltr:right-0 rtl:left-0 w-72 fixed top-0 bg-white dark:bg-gray-800 h-full overflow-auto z-40 scrollbars show" x-show="open" @click.away="open=false" x-description="Mobile menu" role="menu" aria-orientation="vertical" aria-labelledby="navbartoggle" x-transition:enter="transform transition-transform duration-300" x-transition:enter-start="ltr:translate-x-full rtl:-translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transform transition-transform duration-300" x-transition:leave-start="translate-x-0" x-transition:leave-end="ltr:translate-x-full rtl:-translate-x-full">
+        <div class="p-6 bg-indigo-500 text-gray-100 border-b border-gray-200 dark:border-gray-700">
+          <div class="flex flex-row justify-between">
+            <h3 class="text-md font-bold">Customizer</h3>
+            <button @click="open = false" type="button" class="inline-block w-4 h-4">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="inline-block text-gray-100 bi bi-x-lg" viewBox="0 0 16 16" id="x-lg"><path d="M1.293 1.293a1 1 0 011.414 0L8 6.586l5.293-5.293a1 1 0 111.414 1.414L9.414 8l5.293 5.293a1 1 0 01-1.414 1.414L8 9.414l-5.293 5.293a1 1 0 01-1.414-1.414L6.586 8 1.293 2.707a1 1 0 010-1.414z"></path></svg>
+              <!-- <i class="fas fa-times"></i> -->
+            </Button>
+          </div>
+        </div>
+        <div class="py-3 px-6 border-b border-gray-200 dark:border-gray-700">
+          <p class="text-base text-semibold">Color Scheme</p>
+          <div class="flex flex-row">
+            <div class="relative inline-block w-8 py-3 mt-0.5 ltr:mr-3 rtl:ml-3 align-middle select-none transition duration-200 ease-in">
+              <input type="checkbox" name="lightdark" id="lightdark" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white dark:bg-gray-900 border-2 dark:border-gray-700 appearance-none cursor-pointer"/>
+              <label for="lightdark" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 dark:bg-gray-700 cursor-pointer"></label>
+            </div>
+            <p class="text-sm text-gray-500 self-center">Light and Dark</p>
+          </div>
+        </div>
+        <div class="py-3 px-6 border-b border-gray-200 dark:border-gray-700">
+          <p class="text-base text-semibold">Sidebar Color</p>
+          <div class="flex flex-row">
+            <div class="relative inline-block w-8 py-3 mt-0.5 ltr:mr-3 rtl:ml-3 align-middle select-none transition duration-200 ease-in">
+              <input type="checkbox" name="sidecolor" id="sidecolor" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white dark:bg-gray-900 border-2 dark:border-gray-700 appearance-none cursor-pointer"/>
+              <label for="sidecolor" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 dark:bg-gray-700 cursor-pointer"></label>
+            </div>
+            <p class="text-sm text-gray-500 self-center">Light and Dark</p>
+          </div>
+        </div>
+        <div class="py-3 px-6 border-b border-gray-200 dark:border-gray-700">
+          <p class="text-base text-semibold">Direction</p>
+          <div class="flex flex-row">
+            <div class="relative inline-block w-8 py-3 mt-0.5 ltr:mr-3 rtl:ml-3 align-middle select-none transition duration-200 ease-in">
+              <input  type="checkbox" name="rtlmode" id="rtlmode" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white dark:bg-gray-900 border-2 dark:border-gray-700 appearance-none cursor-pointer"/>
+              <label for="rtlmode" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 dark:bg-gray-700 cursor-pointer"></label>
+            </div>
+            <p class="text-sm text-gray-500 self-center">LTR and RTL</p>
+          </div>
+        </div>
+        <div class="py-3 px-6 border-b border-gray-200 dark:border-gray-700">
+          <p class="text-base text-semibold">Layout</p>
+          <div class="relative mb-3">
+            <a href="../index.html" class="inline-block py-2 px-2.5 mt-2 rounded text-sm text-gray-500 bg-gray-100 dark:bg-gray-900 dark:bg-opacity-20 dark:hover:bg-opacity-60 hover:text-indigo-500 hover:bg-gray-200 self-center">Default</a>
+            <a href="../layout-compact.html" class="inline-block py-2 px-2.5 mt-2 rounded text-sm text-gray-500 bg-gray-100 dark:bg-gray-900 dark:bg-opacity-20 dark:hover:bg-opacity-60 hover:text-indigo-500 hover:bg-gray-200 self-center">Compact</a>
+            <a href="../layout-topnav.html" class="inline-block py-2 px-2.5 mt-2 rounded text-sm text-gray-500 bg-gray-100 dark:bg-gray-900 dark:bg-opacity-20 dark:hover:bg-opacity-60 hover:text-indigo-500 hover:bg-gray-200 self-center">Topnav</a>
+          </div>
+        </div>
+        <div id="customcolor" class="py-3 px-6 border-b border-gray-200 dark:border-gray-700">
+          <p class="text-base text-semibold">Primary Color</p>
+          <div class="relative my-3">
+            <div id="custred" title="red" class="inline-block p-3 ltr:mr-1.5 rtl:ml-1.5 bg-red-500 hover:opacity-90 rounded-full cursor-pointer"></div>
+            <div id="custyellow" title="yellow" class="inline-block p-3 ltr:mr-1.5 rtl:ml-1.5 bg-yellow-500 hover:opacity-90 rounded-full cursor-pointer"></div>
+            <div id="custgreen" title="green" class="inline-block p-3 ltr:mr-1.5 rtl:ml-1.5 bg-green-500 hover:opacity-90 rounded-full cursor-pointer"></div>
+            <div id="custblue" title="blue" class="inline-block p-3 ltr:mr-1.5 rtl:ml-1.5 bg-blue-500 hover:opacity-90 rounded-full cursor-pointer"></div>
+            <div id="custpurple" title="purple" class="inline-block p-3 ltr:mr-1.5 rtl:ml-1.5 bg-purple-500 hover:opacity-90 rounded-full cursor-pointer"></div>
+            <div id="custpink" title="pink" class="inline-block p-3 ltr:mr-1.5 rtl:ml-1.5 bg-pink-500 hover:opacity-90 rounded-full cursor-pointer"></div>
+            <div id="custindigo" title="reset color" class="inline-block cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-counterclockwise" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/>
+              <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z"/>
+            </svg></div>
+          </div>
+        </div>
+        <div class="pt-6 px-6">
+          <div x-data="{ open: true }" x-show="open" class="flex justify-between items-center relative bg-yellow-100 text-yellow-900 p-3 rounded-lg mb-4">
+            <div>
+              How to apply? please read the documentation on <a href="https://taildash.tailwinddashboard.com/authentication/docs/customize.html" class="underline font-semibold">Customize page</a>
+            </div>
+            <button type="button" @click="open = false">
+              <span class="text-2xl">×</span>
+              <!-- <i class="fas fa-times"></i> -->
+            </button>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </div><!-- End Customizer (Only for demo purpose) -->
+
+  <!--start::Global javascript (used in all pages)-->
+  <script src="../vendors/alpinejs/dist/cdn.min.js"></script><!-- core js -->
+  <script src="../vendors/chart.js/dist/chart.min.js"></script><!-- charts -->
+  <script src="../vendors/flatpickr/dist/flatpickr.min.js"></script><!-- input date -->
+  <script src="../vendors/flatpickr/dist/plugins/rangePlugin.js"></script><!-- input range date -->
+  <script src="../vendors/@yaireo/tagify/dist/tagify.min.js"></script><!-- input tags -->
+  <script src="../vendors/pristinejs/dist/pristine.min.js"></script><!-- form validation -->
+  <script src="../vendors/simple-datatables/dist/umd/simple-datatables.js"></script><!--sort table-->
+  <script src="../vendors/glightbox/dist/js/glightbox.min.js"></script><!-- lightbox image -->
+  <script src="../vendors/flickity/dist/flickity.pkgd.min.js"></script><!-- slider -->
+  <!--end::Global javascript (used in all pages)-->
+
+  <!-- Minify Global javascript (for production purpose) -->
+  <!-- <script src="../dist/js/scripts.js"></script> -->
+
+  <!--start::Demo javascript ( initialize global javascript )-->
+  <script src="../src/js/demo.js"></script>
+
+  <!--start::Customizer js ( Only for demo purpose )-->
+  <script src="../src/js/customizer.js"></script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+#subjects {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.subject {
+  min-width: 100px;
+  padding: 5px 10px;
+  background-color: #007bff;
+  border: 1px solid #0056b3;
+  color: white;
+  cursor: grab;
+  text-align: center;
+  border-radius: 5px;
+  transition: transform 0.2s;
+}
+
+#schedule-container .subject {
+  font-size: 18px;
+  font-weight: 500;
+  background-color: rgba(237, 233, 157, 0.9);
+  color: black;
+  border: none;
+}
+
+.subject p {
+  text-align: center;
+  margin: 0;
+  line-height: 30px;
+}
+
+.subject p:first-child {
+  border-bottom: 1px solid white;
+}
+
+.subject:hover {
+  transform: scale(1.04);
+}
+
+#form-container {
+  margin-bottom: 20px;
+}
+
+#schedule-container {
+  overflow-x: auto;
+}
+
+#schedule {
+  display: grid;
+  gap: 10px;
+  background-color: #fff;
+  margin: 15px 0 25px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+}
+
+.header,
+.day-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  background-color: #007bff;
+  color: white;
+  border: 1px solid #0056b3;
+  border-radius: 5px;
+  min-width: 100px;
+  min-height: 45px;
+  position: relative;
+}
+
+.day-label .icon {
+  position: absolute;
+  color: rgba(254, 254, 254, 0.25);
+  cursor: pointer;
+}
+
+.day-label .icon {
+  color: rgba(254, 254, 254, 0.5);
+}
+
+.day-label .copy-row {
+  top: 5px;
+  right: 5px;
+}
+
+.day-label .paste-row {
+  top: 5px;
+  left: 5px;
+}
+
+.period {
+  width: 100%;
+  height: 90px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 5px;
+  transition: background-color 0.2s, border-color 0.2s;
+  min-width: 100px;
+}
+
+.period:hover {
+  background-color: #f0f0f0;
+  border-color: #007bff;
+}
+
+.period .delete {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: red;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.period:hover .delete {
+  display: flex;
+}
+
+.period.drag-over {
+  border-color: #007bff;
+  background-color: #e0e0e0;
+  opacity: 0.2;
+}
+
+#buttons {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+#form-container form {
+  margin-top: 20px;
+  margin-bottom: 35px;
+}
+
+#form-container form label {
+  font-size: 19px;
+  margin-right: 20px;
+}
+
+#num-periods {
+  width: 150px;
+  padding: 5px;
+  border: 2px solid gray;
+  border-radius: 6px;
+  margin-right: 10px;
+  height: 40px;
+}
+
+#num-periods:focus {
+  border: 2px solid #0056b3;
+  outline: none;
+}
+
+#period-form button,
+#save-button,
+#print-button {
+  padding: 10px 25px;
+  border-radius: 6px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+}
+
+#save-button {
+  padding: 10px 50px;
+}
+
+@media (max-width: 768px) {
+  #schedule {
+    grid-template-columns: 100px repeat(auto-fit, minmax(100px, 1fr));
+  }
+
+  .period,
+  .header,
+  .day-label {
+    min-width: 100px;
+  }
+}
+
+@media print {
+  /* body * {
+    visibility: hidden;
+  } */
+
+  #schedule-container,
+  #schedule-container * {
+    visibility: visible;
+  }
+
+  #schedule-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  .period,
+  .header,
+  .day-label {
+    min-width: 65px;
+  }
+}
