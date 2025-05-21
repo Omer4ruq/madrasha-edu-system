@@ -153,6 +153,13 @@ import {
   getStudent,
   getTeacher,
 } from "./loaders";
+import ClassManagement from "./components/ClassManagement/ClassManagement";
+import ClassTabs from "./components/ClassManagement/ClassTabs";
+import Subjects from "./components/ClassManagement/Subjects";
+import ClassTeacher from "./components/ClassManagement/ClassTeacher";
+import Marks from "./components/ClassManagement/Marks";
+import MarksConfig from "./components/ClassManagement/MarksConfig";
+
 
 function Root() {
   const router = createBrowserRouter([
@@ -176,6 +183,32 @@ function Root() {
         {
           path: "institute-profile/edit-info",
           element: <EditInstituteInfo />,
+        },
+        {
+          path: "class-management",
+          element: <ClassManagement />,
+        },
+        {
+          path: "class-management/:classId",
+          element: <ClassTabs />,
+          children: [
+            {
+              path: "subjects",
+              element: <Subjects />,
+            },
+            {
+              path: "teachers",
+              element: <ClassTeacher />,
+            },
+            {
+              path: "marks",
+              element: <Marks />,
+            },
+            {
+              path: "marks-config",
+              element: <MarksConfig />,
+            },
+          ],
         },
         {
           path: "settings",
@@ -573,7 +606,6 @@ function Root() {
                 },
               ],
             },
-
             {
               path: "transport",
               children: [
@@ -865,7 +897,6 @@ function Root() {
             },
           ],
         },
-
         {
           path: "test",
           element: <Test />,
