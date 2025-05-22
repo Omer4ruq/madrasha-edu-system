@@ -2,10 +2,48 @@ import React, { useState } from 'react';
 import { useCreateInstituteMutation, useUpdateInstituteMutation } from '../../redux/features/api/instituteApi';
 import { useGetInstituteTypesQuery } from '../../redux/features/api/instituteTypeApi';
 
+// Custom CSS for pressed-in effect with inner shadow
+const customStyles = `
+  @keyframes pressIn {
+    0% {
+      transform: translateY(0);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    100% {
+      transform: translateY(2px);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2); /* Inner shadow for pressed effect */
+    }
+  }
+
+  @keyframes pressOut {
+    0% {
+      transform: translateY(2px);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    100% {
+      transform: translateY(0);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+  }
+
+  .focus-pressed:focus {
+    outline: none;
+    animation: pressIn 0.2s ease-in-out forwards;
+    border-top-color: transparent; /* Hide top border on focus */
+  }
+
+  .focus-pressed {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+
+  .focus-pressed:not(:focus) {
+    animation: pressOut 0.2s ease-in-out forwards;
+  }
+`;
 
 const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
   const { data: instituteTypes, isLoading: isTypesLoading, error: typesError } = useGetInstituteTypesQuery();
-  
+
   const [formData, setFormData] = useState({
     institute_id: institute?.institute_id || '',
     institute_name: institute?.institute_name || '',
@@ -42,14 +80,6 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const requiredFields = ['institute_id', 'institute_name', 'headmaster_name', 'headmaster_mobile', 'institute_type'];
-    // const isFormValid = requiredFields.every((field) => formData[field].trim() !== '');
-    
-    // if (!isFormValid) {
-    //   alert('Please fill in all required fields.');
-    //   return;
-    // }
-
     const payload = {
       ...formData,
       institute_type_id: parseInt(formData.institute_type_id) || null,
@@ -89,6 +119,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
+      <style>{customStyles}</style>
       <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
         {institute ? 'Edit Institute Profile' : 'Create Institute Profile'}
       </h2>
@@ -109,20 +140,20 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
               value={formData.institute_name}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-md focus-pressed sm:text-sm p-2"
               placeholder="Enter institute name"
             />
           </div>
-             <div>
-            <label className="block text-sm font-medium text-gray-700">Institute id *</label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Institute ID *</label>
             <input
               type="text"
               name="institute_id"
               value={formData.institute_id}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-              placeholder="Enter institute name"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
+              placeholder="Enter institute ID"
             />
           </div>
           <div>
@@ -133,7 +164,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
               value={formData.headmaster_name}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
               placeholder="Enter headmaster name"
             />
           </div>
@@ -145,7 +176,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
               value={formData.headmaster_mobile}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
               placeholder="Enter mobile number"
             />
           </div>
@@ -156,7 +187,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
               name="institute_address"
               value={formData.institute_address}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
               placeholder="Enter address"
             />
           </div>
@@ -171,7 +202,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
               name="institute_email_address"
               value={formData.institute_email_address}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
               placeholder="Enter email address"
             />
           </div>
@@ -182,7 +213,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
               name="institute_eiin_no"
               value={formData.institute_eiin_no}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
               placeholder="Enter EIIN number"
             />
           </div>
@@ -192,22 +223,22 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
               name="institute_gender_type"
               value={formData.institute_gender_type}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
             >
               <option value="Combined">Combined</option>
               <option value="Male">Male</option>
               <option value="Female">Female</option>
             </select>
           </div>
-           <div>
+          <div>
             <label className="block text-sm font-medium text-gray-700">Institute Type *</label>
             <select
-              name="institute_type_id" // Changed to institute_type_id
+              name="institute_type_id"
               value={formData.institute_type_id}
               onChange={handleChange}
               required
               disabled={isTypesLoading || typesError}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
             >
               <option value="">Select Institute Type</option>
               {instituteTypes?.map((type) => (
@@ -228,7 +259,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
               name="institute_web"
               value={formData.institute_web}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
               placeholder="Enter website URL"
             />
           </div>
@@ -239,7 +270,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
               name="institute_management_web"
               value={formData.institute_management_web}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-readable focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
               placeholder="Enter management website URL"
             />
           </div>
@@ -250,7 +281,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
               name="institute_fb"
               value={formData.institute_fb}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
               placeholder="Enter Facebook URL"
             />
           </div>
@@ -261,7 +292,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
               name="institute_youtube"
               value={formData.institute_youtube}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
               placeholder="Enter YouTube URL"
             />
           </div>
@@ -276,7 +307,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
               name="incharge_manager"
               value={formData.incharge_manager}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
               placeholder="Enter manager name"
             />
           </div>
@@ -287,7 +318,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
               name="incharge_manager_email"
               value={formData.incharge_manager_email}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
               placeholder="Enter manager email"
             />
           </div>
@@ -298,7 +329,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
               name="incharge_manager_mobile"
               value={formData.incharge_manager_mobile}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
               placeholder="Enter manager mobile"
             />
           </div>
@@ -313,7 +344,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
               name="institute_v_heading"
               value={formData.institute_v_heading}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
               placeholder="Enter vision heading"
             />
           </div>
@@ -324,7 +355,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
               name="signature"
               value={formData.signature}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
               placeholder="Enter signature"
             />
           </div>
@@ -335,7 +366,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
               name="education_board_id"
               value={formData.education_board_id}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
               placeholder="Enter board ID"
             />
           </div>
@@ -346,18 +377,18 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
               name="education_district_id"
               value={formData.education_district_id}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
               placeholder="Enter district ID"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Education Dark Division ID</label>
+            <label className="block text-sm font-medium text-gray-700">Education Division ID</label>
             <input
               type="text"
               name="education_division_id"
               value={formData.education_division_id}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
               placeholder="Enter division ID"
             />
           </div>
@@ -368,7 +399,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
               name="education_thana_id"
               value={formData.education_thana_id}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+              className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
               placeholder="Enter thana ID"
             />
           </div>
@@ -381,7 +412,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
             name="status"
             value={formData.status}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+            className="mt-1 block w-full rounded-md border-t-2 border-slate-400 shadow-lg focus-pressed sm:text-sm p-2"
           >
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>

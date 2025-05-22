@@ -10,7 +10,7 @@ import InstituteProfileHeader from "./InstituteProfileHeader";
 import { useCreateInstituteMutation, useDeleteInstituteMutation, useGetInstitutesQuery, useUpdateInstituteMutation } from "../../redux/features/api/instituteApi.js";
 import InstituteProfileForm from "./InstituteProfileForm.jsx";
 import InstituteDetails from "./InstituteDetails.jsx";
-
+import '../../styles/institute-profile.css'
 export default function InstituteProfile() {
    const {t} = useTranslation();
 
@@ -143,15 +143,16 @@ console.log(institutes)
         //   ))}
         // </div>
       ) : (
-        <div className="text-center">
-          <p className="text-gray-600 mb-4">No institute found. Add a new institute to get started.</p>
-          <button
-            onClick={handleAddInstitute}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            Add Institute
-          </button>
-        </div>
+<div className="text-center">
+  <p className="text-gray-600 mb-4">No institute found. Add a new institute to get started.</p>
+  <button
+    onClick={handleAddInstitute} // Fixed the typo
+    className="group relative px-4 py-2 bg-white text-slate-900 rounded-md overflow-hidden focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-transform duration-150 ease-in-out active:translate-y-0.5 active:shadow-sm hover:text-white"
+  >
+    <span className="relative z-10">Add Institute</span>
+    <span className="absolute inset-0 bg-indigo-700 transform scale-x-0 origin-center transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+  </button>
+</div>
       )}
     </div>
       </>

@@ -16,6 +16,12 @@ const mainMenu = [
     icon: "HiOutlineBuildingStorefront",
     link: "/institute-profile",
   },
+    {
+    id: "30",
+    title: "ClassManagment",
+    icon: "HiOutlineBuildingStorefront",
+    link: "/class-management",
+  },
   {
     id: "04",
     title: "sidebarSingle.appsAndPages",

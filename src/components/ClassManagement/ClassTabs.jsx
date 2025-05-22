@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 const ClassTabs = () => {
   // const { user } = useSelector((state) => state.auth);
   const { classId } = useParams();
+  console.log(classId)
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('subjects');
 
@@ -15,11 +16,11 @@ const ClassTabs = () => {
     { id: 'marks-config', label: 'Marks Config', icon: 'ph-gear' },
   ];
 
-  useEffect(() => {
-    if (!classId || !classId.match(/^class-\d+$/)) {
-      navigate('/class-management');
-    }
-  }, [classId, navigate]);
+  // useEffect(() => {
+  //   if (!classId || !classId.match(/^class-\d+$/)) {
+  //     navigate('/class-management');
+  //   }
+  // }, [classId, navigate]);
 
   const handleTabClick = (tabId) => {
     setActiveTab(tabId);

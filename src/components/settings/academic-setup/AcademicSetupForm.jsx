@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useCreateInstituteMutation } from "../../../redux/features/api/instituteApi";
 
 
 export default function AcademicSetupForm({acSetupFields}) {
@@ -8,6 +9,7 @@ export default function AcademicSetupForm({acSetupFields}) {
 
   const [selectedType, setSelectedType] = useState("student-class");
   const [typeValue, setTypeValue] = useState("");
+  const {data, isLoading, error} = useCreateInstituteMutation()
 
   async function handleSubmit(e) {
     e.preventDefault();
