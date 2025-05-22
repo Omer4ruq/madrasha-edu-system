@@ -159,6 +159,9 @@ import Subjects from "./components/ClassManagement/Subjects";
 import ClassTeacher from "./components/ClassManagement/ClassTeacher";
 import Marks from "./components/ClassManagement/Marks";
 import MarksConfig from "./components/ClassManagement/MarksConfig";
+import AddSection from "./components/ClassManagement/AddSection";
+import AddClass from "./components/ClassManagement/AddClass";
+import AddShift from "./components/ClassManagement/AddShift";
 
 
 function Root() {
@@ -187,6 +190,42 @@ function Root() {
         {
           path: "class-management",
           element: <ClassManagement />,
+          children: [
+            {
+              index: true, // Default route for /class-management
+              element: <AddClass />,
+            },
+            {
+              path: "add-section",
+              element: <AddSection />,
+            },
+              {
+              path: "add-shift",
+              element: <AddShift />,
+            },
+            {
+              path: ":classId",
+              element: <ClassTabs />,
+              children: [
+                {
+                  path: "subjects",
+                  element: <Subjects />,
+                },
+                {
+                  path: "teachers",
+                  element: <ClassTeacher />,
+                },
+                {
+                  path: "marks",
+                  element: <Marks />,
+                },
+                {
+                  path: "marks-config",
+                  element: <MarksConfig />,
+                },
+              ],
+            },
+          ],
         },
         {
           path: "class-management/:classId",

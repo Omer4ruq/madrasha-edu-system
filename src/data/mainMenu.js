@@ -21,6 +21,23 @@ const mainMenu = [
     title: "ClassManagment",
     icon: "HiOutlineBuildingStorefront",
     link: "/class-management",
+    children: [
+      {
+        id: "30/01",
+        title: "Add Classes",
+        link: "/class-management",
+      },
+        {
+        id: "30/02",
+        title: "Add Section",
+        link: "add-section",
+      },
+       {
+        id: "30/03",
+        title: "Add Shift",
+        link: "add-shift",
+      },
+    ]
   },
   {
     id: "04",
