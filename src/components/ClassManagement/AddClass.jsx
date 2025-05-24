@@ -67,13 +67,13 @@ const AddClass = () => {
   if (listError) return <div>Error loading class list: {JSON.stringify(listError)}</div>;
 
   return (
-    <div className="py-10 px-4 sm:px-0">
+    <div className="py-10 px-1 sm:px-0">
       <div className="container mx-auto max-w-7xl">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Add Classes</h2>
           <button
             onClick={handleViewClasses}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="bg-blue-600 text-white px-2 md:px-4  py-2 rounded hover:bg-blue-700"
           >
             View Classes
           </button>
