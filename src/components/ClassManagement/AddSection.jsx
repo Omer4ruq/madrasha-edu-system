@@ -92,7 +92,7 @@ const AddSection = () => {
 
         {/* Form to Add Section */}
         <div className="bg-white border border-gray-200 p-6 rounded-lg mb-8">
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4 ">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
             <div className="relative border-2 border-purple-700 rounded-lg p-4 flex-1">
               <label
                 htmlFor="sectionName"
@@ -114,7 +114,7 @@ const AddSection = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="bg-slate-800 text-white px-6 py-2 rounded hover:bg-green-600 disabled:bg-gray-400"
+              className="bg-slate-800 text-white px-6 py-2 rounded hover:bg-orange-500 disabled:bg-gray-400"
             >
               {isLoading ? 'Creating...' : 'Create Section'}
             </button>
