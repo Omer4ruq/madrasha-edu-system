@@ -48,7 +48,7 @@ export const studentSectionApi = createApi({
     // PUT: Update an existing studentSectionApi
     updateStudentSectionApi: builder.mutation({
       query: ({ id, ...studentSectionApiData }) => ({
-        url: `/student-class/${id}/`,
+        url: `/student-section/${id}/`,
         method: 'PUT',
         body: studentSectionApiData,
       }),
