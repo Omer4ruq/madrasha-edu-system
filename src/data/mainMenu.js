@@ -30,12 +30,12 @@ const mainMenu = [
         {
         id: "30/02",
         title: "Add Section",
-        link: "add-section",
+        link: "/class-management/add-section",
       },
        {
         id: "30/03",
         title: "Add Shift",
-        link: "add-shift",
+        link: "/class-management/add-shift",
       },
     ]
   },

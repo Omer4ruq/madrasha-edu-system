@@ -1,106 +1,105 @@
-import React, { useState } from 'react';
-import { useCreateStudentShiftApiMutation } from '../../redux/features/api/studentShiftApi';
+import React, { useState, useEffect } from 'react';
+import { useCreateStudentShiftApiMutation, useGetStudentShiftApiQuery } from '../../redux/features/api/studentShiftApi';
 
 export default function AddShift() {
-    const [createShift, { isLoading, error }] = useCreateStudentShiftApiMutation();
-    const [shiftData, setShiftData] = useState({
-        shift: 'day', // Default to day shift
-        isActive: false,
-    });
+    const [createShift, { isLoading: isCreating, error: createError }] = useCreateStudentShiftApiMutation();
+    const { data: classShifts, isLoading: isFetching, error: fetchError } = useGetStudentShiftApiQuery();
+    const [selectedShift, setSelectedShift] = useState(null);
+    const [shifts, setShifts] = useState([
+        { name: 'Day Shift', is_active: false },
+        { name: 'Night Shift', is_active: false },
+    ]);
+console.log(classShifts);
+    // Update shifts based on API data
+    useEffect(() => {
+        if (classShifts) {
+            const updatedShifts = shifts.map(shift => {
+                const apiShift = classShifts.find(s => s.name === shift.name);
+                return apiShift ? { ...shift, is_active: apiShift.is_active } : shift;
+            });
+            setShifts(updatedShifts);
+            const activeShift = updatedShifts.find(s => s.is_active);
+            if (activeShift) {
+                setSelectedShift(activeShift.name);
+            }
+        }
+    }, [classShifts]);
 
-    // Handle shift radio button change
-    const handleShiftChange = (e) => {
-        setShiftData({ ...shiftData, shift: e.target.value });
+    const handleToggle = (shiftName) => {
+        setSelectedShift(shiftName);
+        setShifts(shifts.map(shift => ({
+            ...shift,
+            is_active: shift.name === shiftName
+        })));
     };
 
-    // Handle active status checkbox change
-    const handleActiveChange = (e) => {
-        setShiftData({ ...shiftData, isActive: e.target.checked });
-    };
+    const handleSubmit = async () => {
+        if (!selectedShift) {
+            alert('Please select a shift');
+            return;
+        }
 
-    // Handle form submission
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+        const selectedShiftData = shifts.find(shift => shift.name === selectedShift);
         try {
-            await createShift(shiftData).unwrap();
-            alert('Shift created successfully!');
-            // Reset form after successful submission
-            setShiftData({ shift: 'day', isActive: false });
+            await createShift({
+                name: selectedShiftData.name,
+                is_active: selectedShiftData.is_active
+            }).unwrap();
+            alert('Shift updated successfully!');
         } catch (err) {
             console.error('Failed to create shift:', err);
+            alert('Failed to update shift');
         }
     };
 
+    if (isFetching) return <div className="text-center py-4">Loading...</div>;
+    if (fetchError) return <div className="text-center py-4 text-red-500">Error: {fetchError.message}</div>;
+
     return (
-        <div className="p-4 max-w-lg mx-auto">
-            <h2 className="text-2xl font-bold mb-4">Add Shift</h2>
-            <form onSubmit={handleSubmit}>
-                <table className="w-full border-collapse border border-gray-300">
+        <div className="max-w-2xl mx-auto p-6 bg-gray-50 rounded-lg shadow-lg">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">Manage Shifts</h2>
+            <div className="overflow-x-auto">
+                <table className="w-full border-collapse bg-white rounded-lg shadow-md">
                     <thead>
-                        <tr className="bg-gray-100">
-                            <th className="border border-gray-300 p-2">Shift</th>
-                            <th className="border border-gray-300 p-2">Select</th>
-                            <th className="border border-gray-300 p-2">Active</th>
+                        <tr className="bg-gray-200">
+                            <th className="p-4 text-left text-gray-700 font-medium">Shift Name</th>
+                            <th className="p-4 text-left text-gray-700 font-medium">Status</th>
+                            <th className="p-4 text-left text-gray-700 font-medium">Select</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td className="border border-gray-300 p-2">Day Shift</td>
-                            <td className="border border-gray-300 p-2 text-center">
-                                <input
-                                    type="radio"
-                                    name="shift"
-                                    value="day"
-                                    checked={shiftData.shift === 'day'}
-                                    onChange={handleShiftChange}
-                                />
-                            </td>
-                            <td className="border border-gray-300 p-2 text-center">
-                                <input
-                                    type="checkbox"
-                                    checked={shiftData.shift === 'day' ? shiftData.isActive : false}
-                                    onChange={shiftData.shift === 'day' ? handleActiveChange : undefined}
-                                    disabled={shiftData.shift !== 'day'}
-                                />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td className="border border-gray-300 p-2">Night Shift</td>
-                            <td className="border border-gray-300 p-2 text-center">
-                                <input
-                                    type="radio"
-                                    name="shift"
-                                    value="night"
-                                    checked={shiftData.shift === 'night'}
-                                    onChange={handleShiftChange}
-                                />
-                            </td>
-                            <td className="border border-gray-300 p-2 text-center">
-                                <input
-                                    type="checkbox"
-                                    checked={shiftData.shift === 'night' ? shiftData.isActive : false}
-                                    onChange={shiftData.shift === 'night' ? handleActiveChange : undefined}
-                                    disabled={shiftData.shift !== 'night'}
-                                />
-                            </td>
-                        </tr>
+                        {shifts.map((shift, index) => (
+                            <tr key={index} className="border-b hover:bg-gray-50 transition-colors">
+                                <td className="p-4 text-gray-800">{shift.name}</td>
+                                <td className="p-4">
+                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${shift.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                        {shift.is_active ? 'Active' : 'Inactive'}
+                                    </span>
+                                </td>
+                                <td className="p-4">
+                                    <input
+                                        type="radio"
+                                        name="shift"
+                                        checked={selectedShift === shift.name}
+                                        onChange={() => handleToggle(shift.name)}
+                                        className="h-5 w-5 text-blue-600 focus:ring-blue-500"
+                                    />
+                                </td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
+            </div>
+            {createError && <p className="text-red-500 mt-4 text-center">Error: {createError.message}</p>}
+            <div className="mt-6 text-center">
                 <button
-                    type="submit"
-                    className={`mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 ${
-                        isLoading ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
-                    disabled={isLoading}
+                    onClick={handleSubmit}
+                    disabled={isCreating || !selectedShift}
+                    className={`px-6 py-2 rounded-lg font-medium text-white transition-colors ${isCreating || !selectedShift ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
                 >
-                    {isLoading ? 'Submitting...' : 'Submit'}
+                    {isCreating ? 'Submitting...' : 'Submit'}
                 </button>
-                {error && (
-                    <p className="mt-2 text-red-500">
-                        Error: {error?.data?.message || 'Failed to create shift'}
-                    </p>
-                )}
-            </form>
+            </div>
         </div>
     );
 }

@@ -29,13 +29,14 @@ const AddSection = () => {
 
   return (
     <div className="py-10 px-4 sm:px-0">
-      <div className="container mx-auto max-w-7xl">
+      <div className="max-w-md mx-auto">
         <h2 className="text-2xl font-bold mb-6">Add Section</h2>
         
         <div className="bg-white border border-gray-200 p-6 rounded-lg">
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label htmlFor="sectionName" className="block text-gray-700 font-medium mb-2">
+          <form onSubmit={handleSubmit} className='flex gap-10'>
+            <div className="relative border-2 border-purple-700 rounded-lg p-4">
+              <label htmlFor="score"
+          className="absolute -top-3 left-4 bg-white px-2 text-purple-700 text-sm">
                 Section Name
               </label>
               <input
@@ -43,7 +44,7 @@ const AddSection = () => {
                 id="sectionName"
                 value={sectionName}
                 onChange={(e) => setSectionName(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full  bg-transparent focus:outline-none"
                 placeholder="Enter section name (e.g., Section A)"
                 disabled={isLoading}
               />
@@ -65,6 +66,7 @@ const AddSection = () => {
           </form>
         </div>
       </div>
+  
     </div>
   );
 };
