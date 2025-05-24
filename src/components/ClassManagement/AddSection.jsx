@@ -87,7 +87,7 @@ const AddSection = () => {
 
   return (
     <div className="py-10 px-4 sm:px-0">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <h2 className="text-2xl font-bold mb-6">Add Section</h2>
 
         {/* Form to Add Section */}
