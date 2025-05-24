@@ -162,6 +162,7 @@ import MarksConfig from "./components/ClassManagement/MarksConfig";
 import AddSection from "./components/ClassManagement/AddSection";
 import AddClass from "./components/ClassManagement/AddClass";
 import AddShift from "./components/ClassManagement/AddShift";
+import AddClassConfig from "./components/ClassManagement/AddClassConfig.jsx";
 
 
 function Root() {
@@ -202,6 +203,11 @@ function Root() {
               {
               path: "add-shift",
               element: <AddShift />,
+            },
+                {
+              path: "add-config",
+              // element: <ClassConfig />,
+              element: <AddClassConfig />,
             },
             {
               path: ":classId",
