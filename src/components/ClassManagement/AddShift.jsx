@@ -78,7 +78,7 @@ console.log(classShifts);
                                 </td>
                                 <td className="p-4">
                                     <input
-                                        type="radio"
+                                        type="checkbox"
                                         name="shift"
                                         checked={selectedShift === shift.name}
                                         onChange={() => handleToggle(shift.name)}
@@ -95,7 +95,7 @@ console.log(classShifts);
                 <button
                     onClick={handleSubmit}
                     disabled={isCreating || !selectedShift}
-                    className={`px-6 py-2 rounded-lg font-medium text-white transition-colors ${isCreating || !selectedShift ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+                    className={`bg-slate-800 px-6 py-2 rounded-lg font-medium text-white transition-colors ${isCreating || !selectedShift ? ' cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
                 >
                     {isCreating ? 'Submitting...' : 'Submit'}
                 </button>

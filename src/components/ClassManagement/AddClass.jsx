@@ -109,7 +109,7 @@ const AddClass = () => {
           <button
             onClick={handleSubmit}
             disabled={isCreating}
-            className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:bg-gray-400"
+            className="bg-slate-800 text-white px-6 py-2 rounded hover:bg-green-700 disabled:bg-gray-400"
           >
             {isCreating ? 'Submitting...' : 'Submit Selected Classes'}
           </button>

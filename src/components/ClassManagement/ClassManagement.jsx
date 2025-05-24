@@ -6,7 +6,7 @@ const ClassManagement = () => {
     <div className="py-10 px-4 sm:px-0">
       <div className="container mx-auto max-w-7xl">
         <h2 className="text-2xl font-bold mb-6">Class Management</h2>
-        <div className="flex space-x-4 mb-6">
+        {/* <div className="flex space-x-4 mb-6">
           <NavLink
             to="/class-management"
             end
@@ -28,7 +28,7 @@ const ClassManagement = () => {
           >
             Add Section
           </NavLink>
-        </div>
+        </div> */}
         <Outlet />
       </div>
     </div>
