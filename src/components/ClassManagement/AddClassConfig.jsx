@@ -138,7 +138,7 @@ console.log("sdfds", classData);
             {/* Submit Button */}
             <button
               type="submit"
-              className="bg-slate-800 text-white px-6 py-2 rounded hover:bg-green-600 h-fit self-end"
+              className="bg-slate-800 text-white px-6 py-2 rounded hover:bg-orange-500 h-fit self-end"
             >
               Add Configuration
             </button>
