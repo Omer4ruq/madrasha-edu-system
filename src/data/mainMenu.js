@@ -38,7 +38,7 @@ const mainMenu = [
         link: "/class-management/add-shift",
       },
        {
-        id: "30/03",
+        id: "30/04",
         title: "Class Config",
         link: "/class-management/add-config",
       },

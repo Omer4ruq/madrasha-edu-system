@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { useSelectedMenu } from "../../context/SelectedMenuContext";
 import { useEffect, useState, useRef } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { RxDividerVertical } from "react-icons/rx";
 
 export default function Breadcrumb({ module, route, nestedRoute }) {
   const { selectedMenuItem } = useSelectedMenu();
@@ -30,16 +29,28 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
     checkOverflow();
     window.addEventListener("resize", checkOverflow);
     return () => window.removeEventListener("resize", checkOverflow);
-  }, [selectedMenuItem?.children]);
+  }, [selectedMenuItem]);
 
-  // Construct URLs for module and route paths
-  const modulePath = module ? `/${module?.replace(/\s/g, "-")}` : "/";
+  // Construct URLs for module path
+  const modulePath = module ? `/${module.replace(/\s/g, "-").toLowerCase()}` : "/";
+
+  // Get the deepest selected child for tabs (handles nested dropdowns)
+  const getSelectedChildren = () => {
+    if (!selectedMenuItem) return [];
+    let currentItem = selectedMenuItem;
+    if (currentItem.activeChild && currentItem.activeChild.children) {
+      currentItem = currentItem.activeChild;
+    }
+    return currentItem.children || [];
+  };
 
   // Handle breadcrumb path display
   const getBreadcrumbPaths = () => {
-    if (!selectedMenuItem) return { module: null, route: null, nestedRoute: null };
+    if (!selectedMenuItem) {
+      return { module: module || null, route: route || null, nestedRoute: nestedRoute || null };
+    }
 
-    let currentModule = module;
+    let currentModule = module || selectedMenuItem.title;
     let currentRoute = null;
     let currentNestedRoute = null;
 
@@ -50,16 +61,19 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
       } else {
         currentNestedRoute = selectedMenuItem.activeChild.title;
       }
+    } else {
+      currentRoute = selectedMenuItem.title;
     }
 
     return {
       module: currentModule,
-      route: currentRoute || route,
-      nestedRoute: currentNestedRoute || nestedRoute,
+      route: currentRoute,
+      nestedRoute: currentNestedRoute,
     };
   };
 
   const { module: breadcrumbModule, route: breadcrumbRoute, nestedRoute: breadcrumbNestedRoute } = getBreadcrumbPaths();
+  const tabs = getSelectedChildren();
 
   // Scroll functions
   const scrollLeft = () => {
@@ -77,7 +91,6 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
   return (
     <div className="pl-1 md:pl-4 xl:pl-2 my-5">
       <div className="flex-1 md:flex items-center justify-between">
-        
         {/* Breadcrumb Path */}
         {breadcrumbModule && (
           <h3 className="text-xs md:text-lg text-white capitalize flex-1">
@@ -87,9 +100,8 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
                 breadcrumbRoute ? "text-white hover:text-primary" : "text-slate-50 font-bold"
               }`}
             >
-
-
-              {breadcrumbModule} {breadcrumbRoute && "/ "}
+              {t(breadcrumbModule)}
+              {breadcrumbRoute && " / "}
             </Link>
             {breadcrumbRoute && (
               <span
@@ -108,7 +120,7 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
         )}
 
         {/* Tabs with Scroll Arrows */}
-        {selectedMenuItem?.children && selectedMenuItem.children.length > 0 && (
+        {tabs.length > 0 && (
           <div className="w-full md:w-1/2 flex items-center relative mt-2 md:mt-0">
             {/* Left Arrow */}
             {isOverflowing && (
@@ -125,7 +137,7 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
               ref={tabsContainerRef}
               className="flex overflow-x-auto whitespace-nowrap no-scrollbar mx-4 md:mx-10"
             >
-              {selectedMenuItem.children.map((child) => {
+              {tabs.map((child) => {
                 const childPath = child.link || "#";
                 const isActive = activeTab === childPath;
 

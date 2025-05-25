@@ -13,38 +13,41 @@ export default function SidebarMenuItem({ item, itemId, setItemId }) {
   const { t } = useTranslation();
   const location = useLocation();
 
-  // Check if this menu item or any of its children are active based on the current path
-  const isActive = location.pathname === item.link || 
-    (item.children && item.children.some(child => 
-      child.link === location.pathname || 
-      (child.children && child.children.some(subItem => subItem.link === location.pathname))
-    ));
+  // Recursive function to check if any child or subchild is active
+  const isChildActive = (children) => {
+    if (!children) return false;
+    return children.some(
+      (child) =>
+        child.link === location.pathname ||
+        (child.children && isChildActive(child.children))
+    );
+  };
 
-  // Open the menu item if it or any of its children are active
+  // Check if this menu item or any of its children are active
+  const isActive = item.link === location.pathname || isChildActive(item.children);
+
+  // Open menu item if it or its children are active
   useEffect(() => {
     if (isActive && !isOpen) {
       setIsOpen(true);
       setItemId(item.id);
-      
-      // Set selected menu item if it has children for breadcrumb tabs
       if (item.children) {
         setSelectedMenuItem(item);
       }
     }
-  }, [location.pathname, isActive, isOpen, item, setItemId, setSelectedMenuItem]);
+    console.log(`SidebarMenuItem ${item.title}: isOpen=${isOpen}, isActive=${isActive}`);
+  }, [location.pathname, isActive, item, setItemId, setSelectedMenuItem]);
 
   // Close this dropdown if another one is opened
   useEffect(() => {
     if (isOpen && item.id !== itemId) {
       setIsOpen(false);
     }
-  }, [itemId, isOpen, item.id]);
+  }, [itemId, item.id]);
 
   function handleMenuClick() {
-    // If the item has no children, navigation is handled by the Link component
-    // If it has children, toggle the dropdown and set selected menu item
     if (item.children) {
-      setIsOpen((state) => !state);
+      setIsOpen((prev) => !prev);
       setItemId(item.id);
       setSelectedMenuItem(item);
     }
@@ -57,7 +60,10 @@ export default function SidebarMenuItem({ item, itemId, setItemId }) {
       }`}
     >
       {item.children ? (
-        <div className="flex gap-2 items-center px-6 cursor-pointer" onClick={handleMenuClick}>
+        <div
+          className="flex gap-2 items-center px-6 cursor-pointer"
+          onClick={handleMenuClick}
+        >
           <Icons name={item.icon} />
           <h4
             className={`text-[#ffffffab] group-hover/main:text-white duration-200 flex-1 ${
@@ -68,13 +74,13 @@ export default function SidebarMenuItem({ item, itemId, setItemId }) {
           </h4>
           <FaAngleDown
             className={`font-thin text-sm duration-200 ${
-              isOpen && "rotate-180"
+              isOpen ? "rotate-180" : ""
             }`}
           />
         </div>
       ) : (
         <Link
-          to={item.link}
+          to={item.link || "#"}
           className="flex gap-2 items-center px-6 cursor-pointer"
           onClick={() => {
             setItemId(item.id);
@@ -99,6 +105,7 @@ export default function SidebarMenuItem({ item, itemId, setItemId }) {
               data={{ ...dropdown, parent: item }}
               ddId={ddId}
               setDDId={setDDId}
+              setItemId={setItemId} // Pass setItemId to control top-level dropdowns
             />
           ))}
         </ul>
