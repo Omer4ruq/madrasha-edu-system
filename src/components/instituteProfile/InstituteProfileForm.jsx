@@ -145,7 +145,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-4 sm:p-6">
+    <div className="mx-auto">
       <style>{customStyles}</style>
       <div className="form-card bg-white rounded-xl shadow-md overflow-hidden">
         <div className="p-6">

@@ -61,7 +61,7 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-4 sm:p-6">
+    <div className="mx-auto">
       <style>{customStyles}</style>
       {/* <h1 className="text-3xl md:text-4xl font-extrabold mb-8 text-center text-gray-900">Institute Profiles</h1> */}
       {institutes.map((institute) => {
