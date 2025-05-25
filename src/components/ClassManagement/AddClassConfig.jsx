@@ -3,22 +3,28 @@ import { useGetClassListApiQuery } from '../../redux/features/api/classListApi';
 import { useGetStudentSectionApiQuery } from '../../redux/features/api/studentSectionApi';
 import { useGetStudentShiftApiQuery } from '../../redux/features/api/studentShiftApi';
 import { useGetStudentClassApIQuery } from '../../redux/features/api/studentClassApi';
+import { useCreateClassConfigApiMutation, useDeleteClassConfigApiMutation, useGetclassConfigApiQuery } from '../../redux/features/api/classConfigApi';
+
 
 const AddClassConfig = () => {
   const [classId, setClassId] = useState('');
   const [sectionId, setSectionId] = useState('');
   const [shiftId, setShiftId] = useState('');
-  const [configurations, setConfigurations] = useState([]);
 
   // Fetch data from APIs
   const { data: classData, isLoading: classLoading, error: classError } = useGetClassListApiQuery();
   const { data: sectionData, isLoading: sectionLoading, error: sectionError } = useGetStudentSectionApiQuery();
   const { data: shiftData, isLoading: shiftLoading, error: shiftError } = useGetStudentShiftApiQuery();
   const { data: classList, isLoading: isListLoading, error: listError } = useGetStudentClassApIQuery();
-  console.log("class List", classList);
+  const { data: configurations, isLoading: configLoading, error: configError } = useGetclassConfigApiQuery();
 
+  // API mutations
+  const [createClassConfig] = useCreateClassConfigApiMutation();
+  const [deleteClassConfig] = useDeleteClassConfigApiMutation();
+console.log(classList)
+console.log("config", configurations)
   // Handle form submission to create a configuration
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (classLoading || sectionLoading || shiftLoading || isListLoading) {
@@ -35,36 +41,35 @@ const AddClassConfig = () => {
       alert('Please select a class, section, and shift');
       return;
     }
+console.log("class id", classId)
+console.log("section id", sectionId)
+console.log("shift id", shiftId)
+    try {
+      // Post configuration to API with the specified JSON format
+      await createClassConfig({
+        is_active: true,
+        class_id: parseInt(classId),
+        section_id: parseInt(sectionId),
+        shift_id: parseInt(shiftId),
+      }).unwrap();
 
-    // Find the selected class, section, and shift names
-    const selectedClass = classList?.find(cls => cls?.student_class?.id === parseInt(classId));
-    const selectedSection = sectionData?.find(sec => sec.id === parseInt(sectionId));
-    const selectedShift = shiftData?.find(shf => shf.id === parseInt(shiftId));
-
-    if (!selectedClass || !selectedSection || !selectedShift) {
-      alert('Invalid selection');
-      return;
+      // Reset form
+      setClassId('');
+      setSectionId('');
+      setShiftId('');
+    } catch (error) {
+      alert('Failed to create configuration: ' + JSON.stringify(error));
     }
-
-    // Create a new configuration
-    const newConfig = {
-      id: Date.now(), // Temporary ID for local state
-      className: selectedClass.student_class.name,
-      sectionName: selectedSection.name,
-      shiftName: selectedShift.name,
-    };
-
-    setConfigurations([...configurations, newConfig]);
-    // Reset form
-    setClassId('');
-    setSectionId('');
-    setShiftId('');
   };
 
   // Handle delete configuration
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this configuration?')) {
-      setConfigurations(configurations.filter(config => config.id !== id));
+      try {
+        await deleteClassConfig(id).unwrap();
+      } catch (error) {
+        alert('Failed to delete configuration: ' + JSON.stringify(error));
+      }
     }
   };
 
@@ -93,7 +98,7 @@ const AddClassConfig = () => {
               >
                 <option value="">Select a class</option>
                 {classList?.map((cls) => (
-                  <option key={cls.id} value={cls?.student_class?.id}>
+                  <option key={cls.id} value={cls?.id}>
                     {cls?.student_class?.name}
                   </option>
                 ))}
@@ -152,18 +157,20 @@ const AddClassConfig = () => {
             <button
               type="submit"
               className="bg-slate-800 text-white px-6 py-2 rounded hover:bg-orange-500 h-fit self-end"
+              disabled={configLoading}
             >
               Add Configuration
             </button>
           </form>
 
           {/* Error Messages */}
-          {(classError || sectionError || shiftError || listError) && (
+          {(classError || sectionError || shiftError || listError || configError) && (
             <div className="mt-4 text-red-600">
               {classError && <p>Error loading classes: {JSON.stringify(classError)}</p>}
               {sectionError && <p>Error loading sections: {JSON.stringify(sectionError)}</p>}
               {shiftError && <p>Error loading shifts: {JSON.stringify(shiftError)}</p>}
               {listError && <p>Error loading class list: {JSON.stringify(listError)}</p>}
+              {configError && <p>Error loading configurations: {JSON.stringify(configError)}</p>}
             </div>
           )}
         </div>
@@ -171,9 +178,9 @@ const AddClassConfig = () => {
         {/* Configurations Table */}
         <div className="bg-white border border-gray-200 rounded-lg shadow-lg">
           <h3 className="text-xl font-semibold p-4 border-b border-gray-200">Configurations List</h3>
-          {(classLoading || sectionLoading || shiftLoading || isListLoading) ? (
+          {(classLoading || sectionLoading || shiftLoading || isListLoading || configLoading) ? (
             <p className="p-4">Loading data...</p>
-          ) : configurations.length === 0 ? (
+          ) : !configurations || configurations.length === 0 ? (
             <p className="p-4">No configurations available.</p>
           ) : (
             <div className="overflow-x-auto">
@@ -198,13 +205,13 @@ const AddClassConfig = () => {
                   {configurations.map((config) => (
                     <tr key={config.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {config.className}
+                        {config.class_name || 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {config.sectionName}
+                        {config.section_name || 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {config.shiftName}
+                        {config.shift_name || 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
