@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useGetClassListApiQuery } from '../../redux/features/api/classListApi';
 import { useGetStudentSectionApiQuery } from '../../redux/features/api/studentSectionApi';
 import { useGetStudentShiftApiQuery } from '../../redux/features/api/studentShiftApi';
-
+import { useGetStudentClassApIQuery } from '../../redux/features/api/studentClassApi';
 
 const AddClassConfig = () => {
   const [classId, setClassId] = useState('');
@@ -14,17 +14,30 @@ const AddClassConfig = () => {
   const { data: classData, isLoading: classLoading, error: classError } = useGetClassListApiQuery();
   const { data: sectionData, isLoading: sectionLoading, error: sectionError } = useGetStudentSectionApiQuery();
   const { data: shiftData, isLoading: shiftLoading, error: shiftError } = useGetStudentShiftApiQuery();
-console.log("sdfds", classData);
+  const { data: classList, isLoading: isListLoading, error: listError } = useGetStudentClassApIQuery();
+  console.log("class List", classList);
+
   // Handle form submission to create a configuration
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (classLoading || sectionLoading || shiftLoading || isListLoading) {
+      alert('Please wait, data is still loading');
+      return;
+    }
+
+    if (classError || sectionError || shiftError || listError) {
+      alert('Error loading data. Please try again later.');
+      return;
+    }
+
     if (!classId || !sectionId || !shiftId) {
       alert('Please select a class, section, and shift');
       return;
     }
 
     // Find the selected class, section, and shift names
-    const selectedClass = classData?.find(cls => cls.id === parseInt(classId));
+    const selectedClass = classList?.find(cls => cls?.student_class?.id === parseInt(classId));
     const selectedSection = sectionData?.find(sec => sec.id === parseInt(sectionId));
     const selectedShift = shiftData?.find(shf => shf.id === parseInt(shiftId));
 
@@ -36,7 +49,7 @@ console.log("sdfds", classData);
     // Create a new configuration
     const newConfig = {
       id: Date.now(), // Temporary ID for local state
-      className: selectedClass.name,
+      className: selectedClass.student_class.name,
       sectionName: selectedSection.name,
       shiftName: selectedShift.name,
     };
@@ -76,12 +89,12 @@ console.log("sdfds", classData);
                 value={classId}
                 onChange={(e) => setClassId(e.target.value)}
                 className="w-full bg-transparent focus:outline-none"
-                disabled={classLoading}
+                disabled={classLoading || isListLoading}
               >
                 <option value="">Select a class</option>
-                {classData?.map((cls) => (
-                  <option key={cls.id} value={cls.id}>
-                    {cls.name}
+                {classList?.map((cls) => (
+                  <option key={cls.id} value={cls?.student_class?.id}>
+                    {cls?.student_class?.name}
                   </option>
                 ))}
               </select>
@@ -145,11 +158,12 @@ console.log("sdfds", classData);
           </form>
 
           {/* Error Messages */}
-          {(classError || sectionError || shiftError) && (
+          {(classError || sectionError || shiftError || listError) && (
             <div className="mt-4 text-red-600">
               {classError && <p>Error loading classes: {JSON.stringify(classError)}</p>}
               {sectionError && <p>Error loading sections: {JSON.stringify(sectionError)}</p>}
               {shiftError && <p>Error loading shifts: {JSON.stringify(shiftError)}</p>}
+              {listError && <p>Error loading class list: {JSON.stringify(listError)}</p>}
             </div>
           )}
         </div>
@@ -157,7 +171,7 @@ console.log("sdfds", classData);
         {/* Configurations Table */}
         <div className="bg-white border border-gray-200 rounded-lg shadow-lg">
           <h3 className="text-xl font-semibold p-4 border-b border-gray-200">Configurations List</h3>
-          {(classLoading || sectionLoading || shiftLoading) ? (
+          {(classLoading || sectionLoading || shiftLoading || isListLoading) ? (
             <p className="p-4">Loading data...</p>
           ) : configurations.length === 0 ? (
             <p className="p-4">No configurations available.</p>
