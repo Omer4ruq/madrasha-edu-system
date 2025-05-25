@@ -3,7 +3,6 @@ import {
   useCreateStudentSectionApiMutation,
   useGetStudentSectionApiQuery,
   useGetStudentSectionApiByIdQuery,
-
   useDeleteStudentSectionApiMutation,
   useUpdateStudentSectionApiMutation,
 } from '../../redux/features/api/studentSectionApi';
@@ -72,6 +71,22 @@ const AddSection = () => {
     }
   };
 
+  // Handle toggle active status
+  const handleToggleActive = async (section) => {
+    try {
+      const payload = {
+        id: section.id,
+        name: section.name,
+        is_active: !section.is_active, // Toggle the current status
+      };
+      await updateSection(payload).unwrap();
+      alert(`Section ${section.name} is now ${!section.is_active ? 'active' : 'inactive'}!`);
+    } catch (err) {
+      console.error('Error toggling section active status:', err);
+      alert(`Failed to toggle active status: ${err.status || 'Unknown error'} - ${JSON.stringify(err.data || {})}`);
+    }
+  };
+
   // Handle delete section
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this section?')) {
@@ -92,7 +107,7 @@ const AddSection = () => {
 
         {/* Form to Add Section */}
         <div className="bg-white border border-gray-200 p-6 rounded-lg mb-8">
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="relative border-2 border-purple-700 rounded-lg p-4 flex-1">
               <label
                 htmlFor="sectionName"
@@ -205,7 +220,15 @@ const AddSection = () => {
                         {section.name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {section.is_active ? 'Yes' : 'No'}
+                        <label className="inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={section.is_active}
+                            onChange={() => handleToggleActive(section)}
+                            className="form-checkbox h-5 w-5 text-purple-700"
+                          />
+                          <span className="ml-2">{section.is_active ? 'Active' : 'Inactive'}</span>
+                        </label>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(section.created_at).toLocaleString()}

@@ -48,7 +48,7 @@ export const studentShiftApi = createApi({
     // PUT: Update an existing studentShiftApi
     updateStudentShiftApi: builder.mutation({
       query: ({ id, ...studentShiftApiData }) => ({
-        url: `/student-class/${id}/`,
+        url: `/student-shift/${id}/`,
         method: 'PUT',
         body: studentShiftApiData,
       }),
