@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { useCreateStaffMutation } from '../redux/features/api/staffApi'; // Adjust path as needed
+import { useCreateStuffRegistrationApiMutation } from '../../../redux/features/api/stuffRegistration';
+
 
 const StaffRegistrationForm = () => {
   const [formData, setFormData] = useState({
@@ -38,7 +39,7 @@ const StaffRegistrationForm = () => {
     department_id: '',
   });
 
-  const [createStaff, { isLoading, error }] = useCreateStaffMutation();
+  const [createStaff, { isLoading, error }] = useCreateStuffRegistrationApiMutation();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -158,7 +159,7 @@ const StaffRegistrationForm = () => {
         <form onSubmit={handleSubmit} className="space-y-8 px-6 pb-8">
           {/* Personal Information */}
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2">Personal Information</h2>
+            <h3 className="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2">Personal Information</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username *</label>

@@ -30,7 +30,7 @@ export const stuffRegistrationApi = createApi({
     // POST: Create a new stuffRegistrationApi
     createStuffRegistrationApi: builder.mutation({
       query: (stuffRegistrationApiData) => ({
-        url: '/register/stuff/',
+        url: '/register/staff/',
         method: 'POST',
         body: stuffRegistrationApiData,
       }),

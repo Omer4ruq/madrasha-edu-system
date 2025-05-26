@@ -94,6 +94,11 @@ const mainMenu = [
         title: "Student Registration",
         link: "settings/student-registration",
       },
+      {
+        id: "05/09",
+        title: "Stuff Registration",
+        link: "settings/stuff-registration",
+      },
     ],
   },
   {
