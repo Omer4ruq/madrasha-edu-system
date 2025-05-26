@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { FaAngleDown } from "react-icons/fa6";
 import { Link, useLocation } from "react-router-dom";
@@ -9,6 +9,8 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
   const { t } = useTranslation();
   const location = useLocation();
   const { setSelectedMenuItem } = useSelectedMenu();
+  const dropdownRef = useRef(null);
+  const [contentHeight, setContentHeight] = useState(0);
 
   // Recursive function to check if any child or subchild is active
   const isChildActive = (children) => {
@@ -38,6 +40,15 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
       setIsOpen(false);
     }
   }, [ddId, data.id]);
+
+  // Calculate dropdown content height dynamically
+  useEffect(() => {
+    if (dropdownRef.current) {
+      const height = dropdownRef.current.scrollHeight;
+      setContentHeight(height);
+      console.log(`DropDown ${data.title}: contentHeight=${height}px`);
+    }
+  }, [data.children, isOpen]);
 
   function handleDropdownClick() {
     if (data.children) {
@@ -95,34 +106,45 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
           </div>
         </Link>
       )}
-      {isOpen && data?.children && (
-        <ul className="py-2">
-          {data.children.map((innerDD) => (
-            <Link
-              to={innerDD.link || "#"}
-              key={innerDD.id}
-              onClick={() => {
-                setSelectedMenuItem({
-                  ...data.parent,
-                  activeChild: {
-                    ...data,
-                    activeChild: innerDD,
-                  },
-                });
-                setItemId(data.parent.id); // Keep parent dropdown open
-                setDDId(innerDD.id); // Set sub-dropdown ID
-              }}
-            >
-              <li
-                className={`hover:bg-[#00000010] hover:text-white duration-200 pl-12 pr-6 ${
-                  location.pathname === innerDD.link ? "text-white bg-[#00000010]" : ""
-                }`}
+      {data?.children && (
+        <div
+          className={`overflow-hidden transition-all duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[max-height,opacity,transform] ${
+            isOpen
+              ? `max-h-[${contentHeight + 20}px] opacity-100 translate-y-0`
+              : "max-h-0 opacity-0 -translate-y-2"
+          }`}
+          style={{ transitionProperty: "max-height, opacity, transform" }}
+        >
+          <ul ref={dropdownRef} className="py-2">
+            {data.children.map((innerDD) => (
+              <Link
+                to={innerDD.link || "#"}
+                key={innerDD.id}
+                onClick={() => {
+                  setSelectedMenuItem({
+                    ...data.parent,
+                    activeChild: {
+                      ...data,
+                      activeChild: innerDD,
+                    },
+                  });
+                  setItemId(data.parent.id); // Keep parent dropdown open
+                  setDDId(innerDD.id); // Set sub-dropdown ID
+                }}
               >
-                {t(innerDD.title)}
-              </li>
-            </Link>
-          ))}
-        </ul>
+                <li
+                  className={`hover:bg-[#00000010] hover:text-white duration-200 pl-12 pr-6 ${
+                    location.pathname === innerDD.link
+                      ? "text-white bg-[#00000010]"
+                      : ""
+                  }`}
+                >
+                  {t(innerDD.title)}
+                </li>
+              </Link>
+            ))}
+          </ul>
+        </div>
       )}
     </li>
   );
