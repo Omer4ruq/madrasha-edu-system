@@ -8,6 +8,7 @@ import { studentSectionApi } from './features/api/studentSectionApi';
 import { studentShiftApi } from './features/api/studentShiftApi';
 import { classConfigApi } from './features/api/classConfigApi';
 import { studentRegistrationApi } from './features/api/studentRegistrationApi';
+import { stuffRegistrationApi } from './features/api/stuffRegistration';
 
 
 export const store = configureStore({
@@ -20,6 +21,10 @@ export const store = configureStore({
     [studentShiftApi.reducerPath]: studentShiftApi.reducer,
     [classConfigApi.reducerPath]: classConfigApi.reducer,
     [studentRegistrationApi.reducerPath]: studentRegistrationApi.reducer,
+    [stuffRegistrationApi.reducerPath]: stuffRegistrationApi.reducer,
+    
+   
+    
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -31,6 +36,7 @@ export const store = configureStore({
     .concat(studentShiftApi.middleware)
     .concat(classConfigApi.middleware)
     .concat(studentRegistrationApi.middleware)
+    .concat(stuffRegistrationApi.middleware)
 });
 
 // Enable refetchOnFocus/refetchOnReconnect behaviors
