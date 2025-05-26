@@ -29,7 +29,7 @@ export const studentSectionApi = createApi({
       providesTags: ['studentSectionApi'],
     }),
 
-    // GET: Fetch single studentSectionApi by ID
+    // GET: Fetch single studentSectionApi by ID set-student-password/
     getStudentSectionApiById: builder.query({
       query: (id) => `/student-section/${id}/`,
       providesTags: ['studentSectionApi'],

@@ -5,7 +5,6 @@ import { useGetStudentShiftApiQuery } from '../../redux/features/api/studentShif
 import { useGetStudentClassApIQuery } from '../../redux/features/api/studentClassApi';
 import { useCreateClassConfigApiMutation, useDeleteClassConfigApiMutation, useGetclassConfigApiQuery } from '../../redux/features/api/classConfigApi';
 
-
 const AddClassConfig = () => {
   const [classId, setClassId] = useState('');
   const [sectionId, setSectionId] = useState('');
@@ -21,8 +20,17 @@ const AddClassConfig = () => {
   // API mutations
   const [createClassConfig] = useCreateClassConfigApiMutation();
   const [deleteClassConfig] = useDeleteClassConfigApiMutation();
-console.log(classList)
-console.log("config", configurations)
+
+  // Log data for debugging
+  console.log('classList:', classList);
+  console.log('configurations:', configurations);
+  console.log('sectionData:', sectionData);
+  console.log('shiftData:', shiftData);
+
+  // Filter active sections and shifts
+  const activeSections = sectionData?.filter((sec) => sec.is_active) || [];
+  const activeShifts = shiftData?.filter((shf) => shf.is_active) || [];
+
   // Handle form submission to create a configuration
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,9 +49,11 @@ console.log("config", configurations)
       alert('Please select a class, section, and shift');
       return;
     }
-console.log("class id", classId)
-console.log("section id", sectionId)
-console.log("shift id", shiftId)
+
+    console.log('class id:', classId);
+    console.log('section id:', sectionId);
+    console.log('shift id:', shiftId);
+
     try {
       // Post configuration to API with the specified JSON format
       await createClassConfig({
@@ -57,7 +67,9 @@ console.log("shift id", shiftId)
       setClassId('');
       setSectionId('');
       setShiftId('');
+      alert('Configuration created successfully!');
     } catch (error) {
+      console.error('Error creating configuration:', error);
       alert('Failed to create configuration: ' + JSON.stringify(error));
     }
   };
@@ -67,7 +79,9 @@ console.log("shift id", shiftId)
     if (window.confirm('Are you sure you want to delete this configuration?')) {
       try {
         await deleteClassConfig(id).unwrap();
+        alert('Configuration deleted successfully!');
       } catch (error) {
+        console.error('Error deleting configuration:', error);
         alert('Failed to delete configuration: ' + JSON.stringify(error));
       }
     }
@@ -98,8 +112,8 @@ console.log("shift id", shiftId)
               >
                 <option value="">Select a class</option>
                 {classList?.map((cls) => (
-                  <option key={cls.id} value={cls?.id}>
-                    {cls?.student_class?.name}
+                  <option key={cls.id} value={cls.id}>
+                    {cls.student_class?.name || 'N/A'}
                   </option>
                 ))}
               </select>
@@ -118,10 +132,10 @@ console.log("shift id", shiftId)
                 value={sectionId}
                 onChange={(e) => setSectionId(e.target.value)}
                 className="w-full bg-transparent focus:outline-none"
-                disabled={sectionLoading}
+                disabled={sectionLoading || activeSections.length === 0}
               >
                 <option value="">Select a section</option>
-                {sectionData?.map((sec) => (
+                {activeSections.map((sec) => (
                   <option key={sec.id} value={sec.id}>
                     {sec.name}
                   </option>
@@ -142,10 +156,10 @@ console.log("shift id", shiftId)
                 value={shiftId}
                 onChange={(e) => setShiftId(e.target.value)}
                 className="w-full bg-transparent focus:outline-none"
-                disabled={shiftLoading}
+                disabled={shiftLoading || activeShifts.length === 0}
               >
                 <option value="">Select a shift</option>
-                {shiftData?.map((shf) => (
+                {activeShifts.map((shf) => (
                   <option key={shf.id} value={shf.id}>
                     {shf.name}
                   </option>
