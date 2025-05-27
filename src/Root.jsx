@@ -164,7 +164,7 @@ import AddClass from "./components/ClassManagement/AddClass";
 import AddShift from "./components/ClassManagement/AddShift";
 import AddClassConfig from "./components/ClassManagement/AddClassConfig.jsx";
 import StudentRegister from "./components/settings/academic-setup/student-register/StudentRegister";
-import StuffRegister from "./components/settings/stuff-register/StuffRegister";
+import StuffRegister from "./components/settings/staff-register/StaffRegister";
 
 
 function Root() {
