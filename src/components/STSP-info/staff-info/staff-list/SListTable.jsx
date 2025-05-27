@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useGetStaffListApIQuery } from "../../../../redux/features/api/staffListApi";
 
 export const staffs = [
    {
@@ -33,7 +34,9 @@ export const staffs = [
 
 export default function SListTable({ handleDelete }) {
    const { t } = useTranslation();
-
+   const {data , isLoading: isListLoading, error: listError} = useGetStaffListApIQuery()
+const staffList = data?.staffs   
+console.log(staffList)
    return (
       <div className="overflow-x-scroll border mt-6 rounded shadow-md">
          <table className="w-full text-textGray text-sm">
@@ -52,7 +55,7 @@ export default function SListTable({ handleDelete }) {
                </tr>
             </thead>
             <tbody className="divide-y-2 font-medium">
-               {staffs.map((item, index) => (
+               {staffList?.map((item, index) => (
                   <tr key={index} className="text-start leading-8 even:bg-slate-200">
                      <td className="min-w-10 pl-2">#</td>
                      <td className="min-w-12">{item.id}</td>

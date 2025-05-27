@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { useCreateStuffRegistrationApiMutation } from '../../../redux/features/api/staffRegistration';
+import { useCreateStaffRegistrationApiMutation } from '../../../redux/features/api/staffRegistration';
+
 
 
 const StaffRegistrationForm = () => {
@@ -39,7 +40,7 @@ const StaffRegistrationForm = () => {
     department_id: '',
   });
 
-  const [createStaff, { isLoading, error }] = useCreateStuffRegistrationApiMutation();
+  const [createStaff, { isLoading, error }] = useCreateStaffRegistrationApiMutation();
 
   const handleChange = (e) => {
     const { name, value } = e.target;

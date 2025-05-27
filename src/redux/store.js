@@ -10,6 +10,8 @@ import { classConfigApi } from './features/api/classConfigApi';
 import { studentRegistrationApi } from './features/api/studentRegistrationApi';
 import { staffRegistrationApi } from './features/api/staffRegistration';
 import { studentListApi } from './features/api/studentListApi';
+import { staffListApi } from './features/api/staffListApi';
+
 
 
 
@@ -25,6 +27,8 @@ export const store = configureStore({
     [studentRegistrationApi.reducerPath]: studentRegistrationApi.reducer,
     [staffRegistrationApi.reducerPath]: staffRegistrationApi.reducer,
     [studentListApi.reducerPath]: studentListApi.reducer,
+    [staffListApi.reducerPath]: staffListApi.reducer,
+    
     
    
     
@@ -41,6 +45,8 @@ export const store = configureStore({
     .concat(studentRegistrationApi.middleware)
     .concat(staffRegistrationApi.middleware)
     .concat(studentListApi.middleware)
+    .concat(staffListApi.middleware)
+    
 });
 
 // Enable refetchOnFocus/refetchOnReconnect behaviors
