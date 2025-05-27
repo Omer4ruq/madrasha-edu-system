@@ -175,10 +175,13 @@ export const communicationBn = {
   father_mobile: "বাবার মোবাইল",
   mother_mobile: "মায়ের মোবাইল",
   edit_parent: "পিতামাতা সম্পাদনা",
+  user_id: "ইউজার আইডি",
   
 };
 
 export const communicationEn = {
+  
+  user_id: "User ID",
   edit_parent: "Edit Parent",
   select_wise: "Select Wise",
   edit_staff: "Edit Staff",
