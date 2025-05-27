@@ -28,7 +28,7 @@ export default function App() {
       <div className="font-roboto text-base font-normal text-gray-600 dark:text-gray-400 dark:bg-gray-800 relative">
         <Sidebar showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
         <div
-          className={`bg-secondary text-textBlack flex flex-col justify-between min-h-screen transition-all duration-500 ease-in-out p-3 ml-0 xl:ml-72 ${
+          className={`bg-[#1E3A8A] text-textBlack flex flex-col justify-between min-h-screen transition-all duration-500 ease-in-out p-3 ml-0 xl:ml-72 ${
             showSidebar && "max-xl:opacity-65"
           }`}
         >

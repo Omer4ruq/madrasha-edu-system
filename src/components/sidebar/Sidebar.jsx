@@ -33,7 +33,7 @@ export default function Sidebar({ showSidebar, setShowSidebar }) {
       <nav
         ref={sidebarRef}
         id="sidebar-menu"
-        className={`fixed transition-all duration-300 ease-in-out h-screen bg-primary bg-[linear-gradient(270deg,rgba(51,148,225,0.18),transparent)] shadow-sm  w-0 xl:w-72 scrollbar ${showSidebar && "w-72"} z-20`}
+        className={`fixed transition-all duration-300 ease-in-out h-screen bg-slate-800 bg-[linear-gradient(270deg,rgba(51,148,225,0.18),transparent)] shadow-sm  w-0 xl:w-72 scrollbar ${showSidebar && "w-72"} z-20`}
       >
         <div className="h-full overflow-y-auto relative scrollbar-webkit">
           <SidebarHeader searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
