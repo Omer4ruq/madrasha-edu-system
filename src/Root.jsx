@@ -163,6 +163,8 @@ import AddSection from "./components/ClassManagement/AddSection";
 import AddClass from "./components/ClassManagement/AddClass";
 import AddShift from "./components/ClassManagement/AddShift";
 import AddClassConfig from "./components/ClassManagement/AddClassConfig.jsx";
+import StudentRegister from "./components/settings/academic-setup/student-register/StudentRegister";
+import StuffRegister from "./components/settings/staff-register/StaffRegister";
 
 
 function Root() {
@@ -261,6 +263,14 @@ function Root() {
             {
               path: "academic-setup",
               element: <AcademicSetup />,
+            },
+                {
+              path: "student-registration",
+              element: <StudentRegister></StudentRegister>,
+            },
+                 {
+              path: "stuff-registration",
+              element: <StuffRegister></StuffRegister>,
             },
             {
               path: "class-config",

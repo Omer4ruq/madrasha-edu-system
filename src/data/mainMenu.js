@@ -89,6 +89,16 @@ const mainMenu = [
         title: "settings.chooseableSubject",
         link: "settings/chooseable-subject",
       },
+       {
+        id: "05/08",
+        title: "Student Registration",
+        link: "settings/student-registration",
+      },
+      {
+        id: "05/09",
+        title: "Stuff Registration",
+        link: "settings/stuff-registration",
+      },
     ],
   },
   {

@@ -8,8 +8,8 @@ const getToken = () => {
   return localStorage.getItem('token'); // Adjust based on your token storage method
 };
 
-export const studentRegistrationApi = createApi({
-  reducerPath: 'studentRegistrationApi',
+export const staffRegistrationApi = createApi({
+  reducerPath: 'staffRegistrationApi',
   baseQuery: fetchBaseQuery({
     baseUrl: BASE_URL,
     prepareHeaders: (headers) => {
@@ -21,20 +21,20 @@ export const studentRegistrationApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ['studentRegistrationApi'],
+  tagTypes: ['staffRegistrationApi'],
   endpoints: (builder) => ({
   
 
   
 
-    // POST: Create a new studentRegistrationApi
-    createStudentRegistrationApi: builder.mutation({
-      query: (studentRegistrationApiData) => ({
-        url: '/register/student/',
+    // POST: Create a new staffRegistrationApi
+    createStaffRegistrationApi: builder.mutation({
+      query: (staffRegistrationApiData) => ({
+        url: '/register/staff/',
         method: 'POST',
-        body: studentRegistrationApiData,
+        body: staffRegistrationApiData,
       }),
-      invalidatesTags: ['studentRegistrationApi'],
+      invalidatesTags: ['staffRegistrationApi'],
     }),
 
   }),
@@ -43,6 +43,6 @@ export const studentRegistrationApi = createApi({
 // Export hooks for usage in components
 export const {
 
-  useCreateStudentRegistrationApiMutation,
+  useCreateStaffRegistrationApiMutation,
 
-} = studentRegistrationApi;
+} = staffRegistrationApi;
