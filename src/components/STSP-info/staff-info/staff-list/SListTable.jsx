@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useGetStaffListApIQuery } from "../../../../redux/features/api/staffListApi";
 
 export const staffs = [
    {
@@ -33,6 +34,9 @@ export const staffs = [
 
 export default function SListTable({ handleDelete }) {
    const { t } = useTranslation();
+   const {data , isLoading: isListLoading, error: listError} = useGetStaffListApIQuery()
+const staffList = data?.staffs   
+console.log(data)
 
    return (
       <div className="overflow-x-scroll border mt-6 rounded shadow-md">
@@ -40,11 +44,11 @@ export default function SListTable({ handleDelete }) {
             <thead className="border-b-2 bg-bgBlue leading-8">
                <tr>
                   <th className="min-w-10 text-start pl-2">#</th>
-                  <th className="min-w-12 text-start">{t("module.communication.id")}</th>
+                  <th className="min-w-12 text-start">{t("module.communication.user_id")}</th>
                   <th className="min-w-[72px] text-start">{t("module.communication.picture")}</th>
                   <th className="min-w-36 text-start">{t("module.communication.name")}</th>
                   <th className="min-w-20 text-start">{t("module.communication.role")}</th>
-                  <th className="min-w-16 text-start">{t("module.communication.gender")}</th>
+                  <th className="min-w-16 text-start">{t("module.communication.email")}</th>
                   <th className="min-w-28 text-start">{t("module.communication.designation")}</th>
                   <th className="min-w-20 text-start">{t("module.communication.job_type")}</th>
                   <th className="min-w-20 text-start">{t("module.communication.mobile")}</th>
@@ -52,7 +56,7 @@ export default function SListTable({ handleDelete }) {
                </tr>
             </thead>
             <tbody className="divide-y-2 font-medium">
-               {staffs.map((item, index) => (
+               {staffList?.map((item, index) => (
                   <tr key={index} className="text-start leading-8 even:bg-slate-200">
                      <td className="min-w-10 pl-2">#</td>
                      <td className="min-w-12">{item.id}</td>
@@ -63,12 +67,12 @@ export default function SListTable({ handleDelete }) {
                            alt={t("module.communication.picture")}
                         />
                      </td>
-                     <td className="min-w-36">{item.name}</td>
-                     <td className="min-w-20">{item.role}</td>
-                     <td className="min-w-16">{item.gender}</td>
-                     <td className="min-w-28">{item.designation}</td>
-                     <td className="min-w-20">{item.jobType}</td>
-                     <td className="min-w-20">{item.mobile}</td>
+                     <td className="min-w-36">{item?.name}</td>
+                     <td className="min-w-20">{item?.role}</td>
+                     <td className="min-w-16">{item?.gender}</td>
+                     <td className="min-w-28">{item?.designation}</td>
+                     <td className="min-w-20">{item?.jobType}</td>
+                     <td className="min-w-20">{item?.mobile}</td>
                      <td className="min-w-40 pb-1 text-center">
                         <Link to={`/staff-info/edit-staff/${item.id}`}>
                            <button

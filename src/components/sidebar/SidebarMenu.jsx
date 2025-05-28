@@ -8,14 +8,14 @@ export default function SidebarMenu() {
   const { t } = useTranslation();
 
   return (
-    <ul className="text-white py-6">
+    <ul className="nk-menu text-white py-6">
       {mainMenu.map((item) => (
         <li
           key={item.id}
           className={
             item.icon
-              ? ""
-              : "text-[#ffffff70] uppercase font-bold text-sm leading-10 tracking-wide pt-5 px-6"
+              ? "py-0.5"
+              : "relative pt-5 px-6 text-[#ffffff70] uppercase font-bold text-sm leading-10 tracking-wide"
           }
         >
           {item.icon ? (

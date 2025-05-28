@@ -40,7 +40,7 @@ const StaffRegistrationForm = () => {
     department_id: '',
   });
 
-  const [createStaff, { isLoading, error }] = useCreateStaffRegistrationApiMutationn();
+  const [createStaff, { isLoading, error }] = useCreateStaffRegistrationApiMutation();
 
   const handleChange = (e) => {
     const { name, value } = e.target;

@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { studentsData } from "../../../../data/studentList";
+// import { studentsData } from "../../../../data/studentList";
 import DeleteModal from "../../../common/DeleleModal";
 import Pagination from "../../../common/Pagination";
 import InfoAction from "../../InfoAction";
 import SListTable from "./SListTable";
+import { useGetStudentListApIByIdQuery, useGetStudentListApIQuery } from "../../../../redux/features/api/studentListApi";
 
 export default function StudentList() {
    const [isDelete, setIsDelete] = useState(false);
@@ -11,7 +12,9 @@ export default function StudentList() {
 
    const [amountToShow, setAmountToShow] = useState("10");
    const [index, setIndex] = useState(0);
- 
+ const {data, isLoading, error} = useGetStudentListApIQuery()
+ console.log(data?.students)
+ const studentsData = data?.students
    function handleDelete(name) {
      setIsDelete(true);
      setToDelete(name);
