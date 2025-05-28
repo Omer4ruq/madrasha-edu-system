@@ -25,7 +25,7 @@ export default function Singlemail() {
     ]
     
   return (
-   <div className="absolute z-50 bg-white shadow rounded top-9 md:top-10 right-0 w-60 md:w-72 py-1 text-primary font-medium text-start tracking-wide cursor-pointer">
+   <div className="absolute z-50 bg-white shadow rounded top-9 md:top-10 right-0 w-60 md:w-72 py-1 text-[#441a05] font-medium text-start tracking-wide cursor-pointer">
     {
       mails.map((item, index) => (
         <Link key={index}>

@@ -14,7 +14,7 @@ export default function AddGradeModal({ isAdd, onClose }) {
                     <input
                         type="text"
                         placeholder={t('module.exam.gradeName')}
-                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
 
@@ -23,7 +23,7 @@ export default function AddGradeModal({ isAdd, onClose }) {
                     <input
                         type="text"
                         placeholder={t('module.exam.gpa')}
-                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
 
@@ -32,7 +32,7 @@ export default function AddGradeModal({ isAdd, onClose }) {
                     <input
                         type="number"
                         placeholder={t('module.exam.minimumMark')}
-                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
 
@@ -41,7 +41,7 @@ export default function AddGradeModal({ isAdd, onClose }) {
                     <input
                         type="number"
                         placeholder={t('module.exam.maximumMark')}
-                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
             </div>

@@ -14,7 +14,7 @@ export default function AddDeductionModal({ isAdd, onClose }) {
           <input
             type="text"
             placeholder={t("module.payroll.namePlaceholder")}
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
       </div>

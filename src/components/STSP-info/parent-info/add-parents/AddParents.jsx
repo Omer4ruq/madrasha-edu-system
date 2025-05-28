@@ -12,7 +12,7 @@ export default function AddParents() {
          <div className="flex justify-end mt-4 mb-2 md:mb-0">
             <button
                type="submit"
-               className="rounded w-40 p-3 bg-primary hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200"
+               className="rounded w-40 p-3 bg-#DB9E30 hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200"
                >
                Submit
             </button>

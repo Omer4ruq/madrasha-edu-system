@@ -79,7 +79,7 @@ export default function AExRForm() {
                     exams.length > 0 &&
                     <button
                         type="submit"
-                        className="rounded w-32 p-[10px] bg-primary hover:bg-buttonHover text-white shadow-md hover:-translate-y-[2px] duration-200"
+                        className="rounded w-32 p-[10px] bg-#DB9E30 hover:bg-buttonHover text-white shadow-md hover:-translate-y-[2px] duration-200"
                     >
                         {t('module.exam.submit')}
                     </button>

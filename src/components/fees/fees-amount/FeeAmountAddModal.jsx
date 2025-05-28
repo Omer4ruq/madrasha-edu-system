@@ -12,7 +12,7 @@ export default function FeeAmountAddModal({ isAdd, onClose }) {
         <div className="space-y-2">
           <label>{t("module.fees.class")}</label>
           <select
-            className="bg-bgGray appearance-none w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray appearance-none w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue="1"
             name="status"
             id="status"
@@ -24,7 +24,7 @@ export default function FeeAmountAddModal({ isAdd, onClose }) {
         <div className="space-y-2">
           <label>{t("module.fees.fee_type")}</label>
           <select
-            className="bg-bgGray appearance-none w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray appearance-none w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue="0"
             name="fee_type"
             id="fee_type"
@@ -44,14 +44,14 @@ export default function FeeAmountAddModal({ isAdd, onClose }) {
           <input
             type="number"
             placeholder={t("module.fees.amount")}
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
         <div className="space-y-2">
           <label>{t("module.fees.admission_year")}</label>
           <select
-            className="bg-bgGray appearance-none w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray appearance-none w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue="2024"
             name="admission_year"
             id="admission_year"

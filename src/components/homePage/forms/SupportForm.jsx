@@ -5,13 +5,13 @@ export default function SupportForm() {
   
   return (
     <div className="p-2 sm:p-4 space-y-2">
-      <h4 className="text-primary font-medium">{t("module.dashboard.title")}</h4>
+      <h4 className="text-#DB9E30 font-medium">{t("module.dashboard.title")}</h4>
       <input
         type="text"
         placeholder="Type your suggested title"
         className="w-full bg-bgGray rounded p-2 outline-none"
       />
-      <h4 className="text-primary font-medium">{t("module.dashboard.description")}</h4>
+      <h4 className="text-#DB9E30 font-medium">{t("module.dashboard.description")}</h4>
       <textarea
         placeholder="Write the problem in detail"
         rows="5"

@@ -10,9 +10,9 @@ export default function IncomeEDForm() {
                 <label className="w-36">{t("module.income.selectDate")}</label> {/* Translate Select Date */}
                 <input
                     type="date"
-                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                 />
-                <button className="bg-primary hover:bg-buttonHover w-24 sm:w-32 md:w-40 ml-1 py-2 rounded shadow text-white hover:-translate-y-[2px] duration-200">
+                <button className="bg-#DB9E30 hover:bg-buttonHover w-24 sm:w-32 md:w-40 ml-1 py-2 rounded shadow text-white hover:-translate-y-[2px] duration-200">
                     {t("module.income.submit")} {/* Translate Submit */}
                 </button>
             </div>

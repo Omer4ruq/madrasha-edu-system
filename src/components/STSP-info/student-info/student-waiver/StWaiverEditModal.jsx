@@ -14,7 +14,7 @@ export default function StWaiverEditModal({ editContent, setEditContent, isEdit,
                placeholder="Student Name"
                value={editContent.name}
                onChange={(e)=> setEditContent({...editContent, name:e.target.value}) }
-               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             />
          </div>
 
@@ -25,7 +25,7 @@ export default function StWaiverEditModal({ editContent, setEditContent, isEdit,
             name=""
             value={editContent.class}
             onChange={(e)=> setEditContent({...editContent, class:e.target.value}) }
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             >
                <option value="Class One">Class One</option>
                <option value="Class Two">Class Two</option>
@@ -40,7 +40,7 @@ export default function StWaiverEditModal({ editContent, setEditContent, isEdit,
             name=""
             value={editContent.section}
             onChange={(e)=> setEditContent({...editContent, section:e.target.value}) }
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             >
                <option value="Golap">Golap</option>
                <option value="Jaba">Jaba</option>
@@ -54,7 +54,7 @@ export default function StWaiverEditModal({ editContent, setEditContent, isEdit,
                placeholder="Waiver Percentage"
                value={editContent.waiverPercentage}
                onChange={(e)=> setEditContent({...editContent, waiverPercentage:e.target.value}) }
-               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             />
          </div>
 
@@ -65,7 +65,7 @@ export default function StWaiverEditModal({ editContent, setEditContent, isEdit,
             name=""
             value={editContent.feeType}
             onChange={(e)=> setEditContent({...editContent, feeType:e.target.value}) }
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             >
                <option value="Tution Fee">Tution Fee</option>
                <option value="Monthly Fee">Monthly Fee</option>

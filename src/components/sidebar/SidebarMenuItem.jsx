@@ -55,7 +55,7 @@ export default function SidebarMenuItem({ item, itemId, setItemId }) {
 
   return (
     <li
-      className={`leading-10 group/main text-[#ffffff85] hover:text-[#ffffffab] hover:bg-[#00000010] duration-200 relative ${
+      className={`leading-10 group/main text-white hover:text-[#ffffffab] hover:bg-[#00000010] duration-200 relative ${
         isOpen || isActive ? "bg-[#00000010] text-[#b4a0d2]" : ""
       }`}
     >
@@ -66,7 +66,7 @@ export default function SidebarMenuItem({ item, itemId, setItemId }) {
         >
           <Icons name={item.icon} />
           <h4
-            className={`text-[#ffffffab] group-hover/main:text-white duration-200 flex-1 ${
+            className={`text-white group-hover/main:text-white duration-200 flex-1 ${
               isOpen || isActive ? "text-[#fff]" : ""
             }`}
           >
@@ -89,7 +89,7 @@ export default function SidebarMenuItem({ item, itemId, setItemId }) {
         >
           <Icons name={item.icon} />
           <h4
-            className={`text-[#ffffffab] group-hover/main:text-white duration-200 flex-1 ${
+            className={`text-white group-hover/main:text-white duration-200 flex-1 ${
               isActive ? "text-[#fff]" : ""
             }`}
           >

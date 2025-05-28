@@ -57,7 +57,7 @@ export default function RfidTable() {
                   placeholder="RFID" 
                   value={item.rfid}
                   onChange={(event) => handleChange(event, item.id)}
-                  className="w-full m-[2px] mb-0 px-1 py-[2px] rounded border border-slate-300 focus:outline-none focus:border-2 focus:border-primary" />
+                  className="w-full m-[2px] mb-0 px-1 py-[2px] rounded border border-slate-300 focus:outline-none focus:border-2 focus:border-#DB9E30" />
                </td>
             </tr>
          ))}

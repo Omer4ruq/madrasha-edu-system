@@ -82,7 +82,7 @@ const RecieveTransactionForm = ({ totalTransaction }) => {
         </div>
         <button
           type="submit"
-          className="rounded mt-4 w-44 p-2 bg-primary hover:bg-buttonHover text-white shadow-md hover:-translate-y-[2px] duration-200"
+          className="rounded mt-4 w-44 p-2 bg-#DB9E30 hover:bg-buttonHover text-white shadow-md hover:-translate-y-[2px] duration-200"
         >
           {t("module.accounts.save")}
         </button>

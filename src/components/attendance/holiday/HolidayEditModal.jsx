@@ -13,7 +13,7 @@ export default function HolidayEditModal({ editContent, setEditContent, isEdit, 
                type="text"
                value={editContent.name}
                onChange={(e)=> setEditContent({...editContent, name:e.target.value})}
-               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             />
          </div>
 
@@ -24,7 +24,7 @@ export default function HolidayEditModal({ editContent, setEditContent, isEdit, 
                type="date"
                value={editContent.date}
                onChange={(e)=> setEditContent({...editContent, date:e.target.value})}
-               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             />
          </div>
 
@@ -35,7 +35,7 @@ export default function HolidayEditModal({ editContent, setEditContent, isEdit, 
                value={editContent.session}
                onChange={(e)=> setEditContent({...editContent, session:e.target.value})}
                placeholder="Session Year"
-               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             />
          </div>
       </div>

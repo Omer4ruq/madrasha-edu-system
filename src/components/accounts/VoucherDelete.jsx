@@ -20,7 +20,7 @@ const VoucherDelete = () => {
       <div className="flex justify-end">
         <button
           type="submit"
-          className="rounded px-6 p-3 bg-primary hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200"
+          className="rounded px-6 p-3 bg-#DB9E30 hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200"
         >
           {t("module.fees.save")}
         </button>

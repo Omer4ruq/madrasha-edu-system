@@ -51,7 +51,7 @@ export default function InstInfoForm() {
                   <label className="text-textGray" htmlFor="">{t("module.instituteInfo.logo")}</label>
                   <input 
                   onChange={(e) => handleChange(e, "institute_logo")}
-                  className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-primary focus:outline-none" aria-describedby="" id="" type="file"/>
+                  className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none" aria-describedby="" id="" type="file"/>
                </div>
 
                {/* institute id */}
@@ -62,7 +62,7 @@ export default function InstInfoForm() {
                      placeholder="Enter Institute ID"
                      value={formData?.institute_id}
                      onChange={(e) => handleChange(e, "institute_id")}
-                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                   />
                </div>
 
@@ -74,7 +74,7 @@ export default function InstInfoForm() {
                      placeholder="Enter Institute Name"
                      value={formData?.institute_name}
                      onChange={(e) => handleChange(e, "institute_name")}
-                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                   />
                </div>
 
@@ -86,7 +86,7 @@ export default function InstInfoForm() {
                      name=""
                      value={formData?.institute_gender_type}
                      onChange={(e) => handleChange(e, "institute_gender_type")}
-                     className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+                     className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
                   >
                      <option value="">{t("module.instituteInfo.chooseGender")}</option>
                      <option value="Combined">{t("general.combined")}</option>
@@ -103,7 +103,7 @@ export default function InstInfoForm() {
                      placeholder="Enter Institute Email"
                      value={formData?.institute_email_address}
                      onChange={(e) => handleChange(e, "institute_email_address")}
-                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                   />
                </div>
                
@@ -116,7 +116,7 @@ export default function InstInfoForm() {
                      defaultValue="Active"
                      value={formData?.status}
                      onChange={(e) => handleChange(e, "status")}
-                     className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+                     className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
                   >
                      <option value="Active">{t("general.active")}</option>
                      <option value="Deactive">{t("general.inactive")}</option>
@@ -131,7 +131,7 @@ export default function InstInfoForm() {
                      placeholder="Enter Headmaster Name"
                      value={formData?.headmaster_name}
                      onChange={(e) => handleChange(e, "headmaster_name")}
-                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                   />
                </div>
                               
@@ -143,7 +143,7 @@ export default function InstInfoForm() {
                      placeholder="Enter Headmaster Mobile"
                      value={formData?.headmaster_mobile}
                      onChange={(e) => handleChange(e, "headmaster_mobile")}
-                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                   />
                </div>
                               
@@ -156,7 +156,7 @@ export default function InstInfoForm() {
                      defaultValue="Dhaka"
                      value={formData?.education_board_id}
                      onChange={(e) => handleChange(e, "education_board_id")}
-                     className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+                     className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
                   >
                      <option value="Dhaka">Dhaka</option>
                      <option value="Rangpur">Rangpur</option>
@@ -176,7 +176,7 @@ export default function InstInfoForm() {
                      defaultValue="Dhaka"
                      value={formData?.education_division_id}
                      onChange={(e) => handleChange(e, "education_division_id")}
-                     className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+                     className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
                   >
                      <option value="Dhaka">Dhaka</option>
                      <option value="Rangpur">Rangpur</option>
@@ -196,7 +196,7 @@ export default function InstInfoForm() {
                      defaultValue="Dhaka"
                      value={formData?.education_district_id}
                      onChange={(e) => handleChange(e, "education_district_id")}
-                     className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+                     className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
                   >
                      <option value="Dhaka">Dhaka</option>
                      <option value="Gazipur">Gazipur</option>
@@ -212,7 +212,7 @@ export default function InstInfoForm() {
                      defaultValue="Mirpur"
                      value={formData?.education_thana_id}
                      onChange={(e) => handleChange(e, "education_thana_id")}
-                     className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+                     className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
                   >
                      <option value="Mirpur">Mirpur</option>
                      <option value="Pallabi">Pallabi</option>
@@ -229,7 +229,7 @@ export default function InstInfoForm() {
                      placeholder="Enter Facebook Link"
                      value={formData?.institute_fb}
                      onChange={(e) => handleChange(e, "institute_fb")}
-                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                   />
                </div>
                                              
@@ -241,7 +241,7 @@ export default function InstInfoForm() {
                      placeholder="Enter Youtube Link"
                      value={formData?.institute_youtube}
                      onChange={(e) => handleChange(e, "institute_youtube")}
-                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                   />
                </div>
 
@@ -251,7 +251,7 @@ export default function InstInfoForm() {
                   <label className="text-textGray">{t("general.signature")}</label>
                   <input 
                   onChange={(e) => handleChange(e, "signature")}
-                  className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-primary focus:outline-none" aria-describedby="" id="" type="file"/>
+                  className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none" aria-describedby="" id="" type="file"/>
                </div>
             </div>
 
@@ -268,7 +268,7 @@ export default function InstInfoForm() {
                      placeholder="Enter Institute EIIN No"
                      value={formData?.institute_eiin_no}
                      onChange={(e) => handleChange(e, "institute_eiin_no")}
-                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                   />
                </div>
                
@@ -280,7 +280,7 @@ export default function InstInfoForm() {
                      placeholder="Enter ICT Incharge"
                      value={formData?.ict_teacher}
                      onChange={(e) => handleChange(e, "ict_teacher")}
-                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                   />
                </div>
                
@@ -292,7 +292,7 @@ export default function InstInfoForm() {
                      placeholder="Enter Incharge Mobile Number"
                      value={formData?.ict_teacher_mobile}
                      onChange={(e) => handleChange(e, "ict_teacher_mobile")}
-                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                   />
                </div>
                
@@ -304,7 +304,7 @@ export default function InstInfoForm() {
                      placeholder="Enter Incharge Email Address"
                      value={formData?.ict_teacher_email}
                      onChange={(e) => handleChange(e, "ict_teacher_email")}
-                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                     className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                   />
                </div>
             </div>

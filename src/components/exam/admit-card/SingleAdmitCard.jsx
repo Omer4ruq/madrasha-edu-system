@@ -4,8 +4,8 @@ export default function SingleAdmitCard({ student }) {
     const { t } = useTranslation();
 
     return (
-        <div className="my-4 border border-primary rounded p-4">
-            <h2 className="text-primary text-center text-2xl font-bold">Urban School and College</h2>
+        <div className="my-4 border border-#DB9E30 rounded p-4">
+            <h2 className="text-#DB9E30 text-center text-2xl font-bold">Urban School and College</h2>
             <h2 className="text-center text-xl">{t('module.exam.admitCard')}</h2>
 
             <div className="flex justify-between">

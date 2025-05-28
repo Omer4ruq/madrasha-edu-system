@@ -14,7 +14,7 @@ export default function LTypeModal({ isEdit, onClose }) {
                     <input
                         type="number"
                         placeholder={t("module.income.pleaseTypeAmount")}
-                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
                 <div className="space-y-2">
@@ -22,7 +22,7 @@ export default function LTypeModal({ isEdit, onClose }) {
                     <input
                         type="text"
                         placeholder={t("module.income.pleaseTypeName")}
-                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
                 <div className="space-y-2">
@@ -30,7 +30,7 @@ export default function LTypeModal({ isEdit, onClose }) {
                     <input
                         type="text"
                         placeholder={t("module.income.writeDescription")}
-                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
             </div>

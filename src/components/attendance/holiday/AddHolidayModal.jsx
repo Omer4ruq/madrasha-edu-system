@@ -13,7 +13,7 @@ export default function AddHolidayModal({isAdd, onClose}) {
             <input
                type="text"
                placeholder="Holiday Name"
-               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             />
          </div>
 
@@ -22,7 +22,7 @@ export default function AddHolidayModal({isAdd, onClose}) {
             <label className="">{t('module.communication.date')}</label>
             <input
                type="date"
-               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             />
          </div>
 
@@ -31,7 +31,7 @@ export default function AddHolidayModal({isAdd, onClose}) {
             <input
                type="text"
                placeholder="Session Year"
-               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             />
          </div>
       </div>

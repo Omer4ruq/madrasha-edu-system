@@ -20,14 +20,14 @@ export default function SingleMark({data}) {
          type="number" 
          value={written}
          onChange={(e)=>setWritten(e.target.value)}
-         className="w-full h-8 focus:outline-primary bg-bgGray focus:bg-white px-1 sm:px-2 rounded"></input>
+         className="w-full h-8 focus:outline-#DB9E30 bg-bgGray focus:bg-white px-1 sm:px-2 rounded"></input>
       </td>
       <td className="w-2/12">
          <input 
          type="number" 
          value={MCQ}
          onChange={(e)=>setMCQ(e.target.value)}
-         className="w-full h-8 focus:outline-primary bg-bgGray focus:bg-white px-1 sm:px-2 ml-2 rounded"></input>
+         className="w-full h-8 focus:outline-#DB9E30 bg-bgGray focus:bg-white px-1 sm:px-2 ml-2 rounded"></input>
       </td>
       <td className="w-2/12">{total}</td>
     </tr>

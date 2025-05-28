@@ -55,7 +55,7 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
           <Link
             to={modulePath}
             className={`${
-              breadcrumbRoute ? "text-white hover:text-primary" : "text-primary font-bold"
+              breadcrumbRoute ? "text-white hover:text-#DB9E30" : "text-#DB9E30 font-bold"
             }`}
           >
             {breadcrumbModule} {breadcrumbRoute && "/ "}
@@ -63,7 +63,7 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
           
           {breadcrumbRoute && (
             <span className={`${
-              breadcrumbNestedRoute ? "text-white hover:text-primary" : "text-primary font-bold"
+              breadcrumbNestedRoute ? "text-white hover:text-#DB9E30" : "text-#DB9E30 font-bold"
             }`}>
               {t(breadcrumbRoute)}
               {breadcrumbNestedRoute && " / "}
@@ -71,7 +71,7 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
           )}
           
           {breadcrumbNestedRoute && (
-            <span className="text-primary font-bold">
+            <span className="text-#DB9E30 font-bold">
               {t(breadcrumbNestedRoute)}
             </span>
           )}
@@ -91,8 +91,8 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
                 to={childPath}
                 className={`px-4 py-2 rounded-md text-sm capitalize transition-colors ${
                   isActive
-                    ? "bg-primary text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-primary hover:text-white"
+                    ? "bg-#DB9E30 text-white"
+                    : "bg-gray-200 text-gray-700 hover:bg-#DB9E30 hover:text-white"
                 }`}
               >
                 {t(child.title)}

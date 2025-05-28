@@ -9,7 +9,7 @@ export default function TesForm() {
             id=""
             name=""
             defaultValue="Select"
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none min-w-40 lg:min-w-52 mb-2 sm:mb-0"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none min-w-40 lg:min-w-52 mb-2 sm:mb-0"
             >
                <option value="Select">Select Class</option>
                <option value="One Jaba">One Jaba</option>
@@ -23,7 +23,7 @@ export default function TesForm() {
             id=""
             name=""
             defaultValue="Select"
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none min-w-40 lg:min-w-52 mb-3 sm:mb-0"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none min-w-40 lg:min-w-52 mb-3 sm:mb-0"
             >
                <option value="Select">Select Class</option>
                <option value="One Jaba">One Jaba</option>
@@ -38,7 +38,7 @@ export default function TesForm() {
          </div>
 
          <Link to="../testimonial-settings/" className="mt-3 md:mt-0 flex justify-end">
-            <button className="bg-primary hover:bg-buttonHover w-44 py-2 rounded shadow text-white hover:-translate-y-[2px] duration-200">
+            <button className="bg-#DB9E30 hover:bg-buttonHover w-44 py-2 rounded shadow text-white hover:-translate-y-[2px] duration-200">
                Settings
             </button>
          </Link>

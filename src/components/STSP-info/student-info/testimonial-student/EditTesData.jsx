@@ -10,7 +10,7 @@ export default function EditTesData() {
         <input
            type="text"
            placeholder="Enter Name"
-           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
         />
      </div>
 
@@ -20,7 +20,7 @@ export default function EditTesData() {
         <input
            type="text"
            placeholder="Enter Name"
-           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
         />
      </div>
 
@@ -30,7 +30,7 @@ export default function EditTesData() {
         <input
            type="text"
            placeholder="Enter Name"
-           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
         />
      </div>
 
@@ -40,7 +40,7 @@ export default function EditTesData() {
         <input
            type="date"
            placeholder="Enter Name"
-           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
         />
      </div>
 
@@ -50,7 +50,7 @@ export default function EditTesData() {
         <input
            type="number"
            placeholder="Enter Name"
-           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
         />
      </div>
 
@@ -60,7 +60,7 @@ export default function EditTesData() {
         <input
            type="number"
            placeholder="Enter Name"
-           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
         />
      </div>
 
@@ -70,7 +70,7 @@ export default function EditTesData() {
         <input
            type="number"
            placeholder="Enter Name"
-           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
         />
      </div>
      
@@ -80,7 +80,7 @@ export default function EditTesData() {
         <input
            type="text"
            placeholder="Enter Name"
-           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
         />
      </div>
 
@@ -90,7 +90,7 @@ export default function EditTesData() {
         <input
            type="text"
            placeholder="Enter Name"
-           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
         />
      </div>
 
@@ -100,7 +100,7 @@ export default function EditTesData() {
         <input
            type="text"
            placeholder="Enter Name"
-           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
         />
      </div>
 
@@ -110,7 +110,7 @@ export default function EditTesData() {
         <input
            type="text"
            placeholder="Enter Name"
-           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
         />
      </div>
      
@@ -120,7 +120,7 @@ export default function EditTesData() {
         <input
            type="text"
            placeholder="Enter Name"
-           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
         />
      </div>
 
@@ -130,7 +130,7 @@ export default function EditTesData() {
         <input
            type="text"
            placeholder="Enter Name"
-           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
         />
      </div>
 
@@ -139,7 +139,7 @@ export default function EditTesData() {
         <label className="text-textGray">Exam Date :</label>
         <input
            type="date"
-           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
         />
      </div>
 
@@ -149,7 +149,7 @@ export default function EditTesData() {
         <input
            type="text"
            placeholder="Enter Name"
-           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
         />
      </div>
      
@@ -159,7 +159,7 @@ export default function EditTesData() {
         <input
            type="text"
            placeholder="Enter Name"
-           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
         />
      </div>
 
@@ -170,7 +170,7 @@ export default function EditTesData() {
         <input
            type="date"
            placeholder="Enter Name"
-           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+           className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
         />
      </div>
 

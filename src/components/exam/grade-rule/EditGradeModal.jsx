@@ -15,7 +15,7 @@ export default function EditGradeModal({ editContent, setEditContent, isEdit, on
                         type="text"
                         value={editContent.name}
                         onChange={(e) => setEditContent({ ...editContent, name: e.target.value })}
-                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
 
@@ -25,7 +25,7 @@ export default function EditGradeModal({ editContent, setEditContent, isEdit, on
                         type="text"
                         value={editContent.gpa}
                         onChange={(e) => setEditContent({ ...editContent, gpa: e.target.value })}
-                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
 
@@ -35,7 +35,7 @@ export default function EditGradeModal({ editContent, setEditContent, isEdit, on
                         type="number"
                         value={editContent.min}
                         onChange={(e) => setEditContent({ ...editContent, min: e.target.value })}
-                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
 
@@ -45,7 +45,7 @@ export default function EditGradeModal({ editContent, setEditContent, isEdit, on
                         type="number"
                         value={editContent.max}
                         onChange={(e) => setEditContent({ ...editContent, max: e.target.value })}
-                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
             </div>

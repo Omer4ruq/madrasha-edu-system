@@ -18,7 +18,7 @@ export default function AddSForm() {
             {t("module.communication.avatar")}:
           </label>
           <input
-            className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
             aria-describedby=""
             id=""
             type="file"
@@ -33,7 +33,7 @@ export default function AddSForm() {
           <input
             type="text"
             placeholder={t("module.communication.enter_name")}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -45,7 +45,7 @@ export default function AddSForm() {
             id=""
             name=""
             defaultValue="Male"
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
           >
             <option value="Male">{t("module.communication.male")}</option>
             <option value="Female">{t("module.communication.female")}</option>
@@ -61,7 +61,7 @@ export default function AddSForm() {
             id=""
             name=""
             defaultValue={t("module.communication.select_blood_group")}
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
           >
             <option value={t("module.communication.select_blood_group")} disabled>
               {t("module.communication.select_blood_group")}
@@ -85,7 +85,7 @@ export default function AddSForm() {
           <input
             type="text"
             placeholder={t("module.communication.enter_phone_umber")}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -97,7 +97,7 @@ export default function AddSForm() {
           <input
             type="text"
             placeholder={t("module.communication.enter_email")}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -109,7 +109,7 @@ export default function AddSForm() {
           <input
             type="text"
             placeholder={t("module.communication.enter_nid")}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -120,7 +120,7 @@ export default function AddSForm() {
           </label>
           <input
             type="date"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -132,7 +132,7 @@ export default function AddSForm() {
           <input
             type="text"
             placeholder={t("module.communication.enter_rfid")}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -144,7 +144,7 @@ export default function AddSForm() {
             id=""
             name=""
             defaultValue="Islam"
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
           >
             <option value="Islam">{t("module.communication.islam")}</option>
             <option value="Hindu">{t("module.communication.hindu")}</option>
@@ -164,7 +164,7 @@ export default function AddSForm() {
           <input
             type="text"
             placeholder={t("module.communication.enter_fathers_name")}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -176,7 +176,7 @@ export default function AddSForm() {
           <input
             type="text"
             placeholder={t("module.communication.enter_mothers_name")}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -189,7 +189,7 @@ export default function AddSForm() {
             name=""
             value={maritalStatus}
             onChange={(e) => setMaritalStatus(e.target.value)}
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
           >
             <option value="Single">{t("module.communication.single")}</option>
             <option value="Married">{t("module.communication.married")}</option>
@@ -216,7 +216,7 @@ export default function AddSForm() {
               <input
                 type="text"
                 placeholder={t("module.communication.enter_spouse_name")}
-                className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
               />
             </div>
 
@@ -228,7 +228,7 @@ export default function AddSForm() {
               <input
                 type="text"
                 placeholder={t("module.communication.enable_spouse_phone_number")}
-                className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
               />
             </div>
 
@@ -240,7 +240,7 @@ export default function AddSForm() {
               <input
                 type="number"
                 placeholder={t("module.communication.enter_number_of_children")}
-                className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
               />
             </div>
           </>
@@ -259,7 +259,7 @@ export default function AddSForm() {
           <input
             type="number"
             placeholder={t("module.communication.enter_staff_id_number")}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -270,7 +270,7 @@ export default function AddSForm() {
           </label>
           <input
             type="date"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -282,7 +282,7 @@ export default function AddSForm() {
             id=""
             name=""
             defaultValue="SSC"
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
           >
             <option value="SSC">{t("module.communication.ssc")}</option>
             <option value="HSC">{t("module.communication.hsc")}</option>
@@ -308,7 +308,7 @@ export default function AddSForm() {
             id=""
             name=""
             defaultValue="Permanent"
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
           >
             <option value="Permanent">
               {t("module.communication.permanent")}
@@ -330,7 +330,7 @@ export default function AddSForm() {
           <input
             type="text"
             placeholder={t("module.communication.enter_role")}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -342,7 +342,7 @@ export default function AddSForm() {
           <input
             type="text"
             placeholder={t("module.communication.enter_designation")}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
       </div>
@@ -358,7 +358,7 @@ export default function AddSForm() {
           <textarea
             rows="3"
             placeholder={t("module.communication.enterYour_permanent_address")}
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -369,7 +369,7 @@ export default function AddSForm() {
           <textarea
             rows="3"
             placeholder={t("module.communication.enter_your_present_address")}
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
       </div>
@@ -377,7 +377,7 @@ export default function AddSForm() {
       <div className="flex justify-end mt-4 mb-2 md:mb-0">
         <button
           type="submit"
-          className="rounded w-40 p-3 bg-primary hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200"
+          className="rounded w-40 p-3 bg-#DB9E30 hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200"
         >
           {t("module.communication.submit")}
         </button>

@@ -15,7 +15,7 @@ export default function AddTypeModal({ isAdd, onClose }) {
           <input
             type="text"
             placeholder={t("module.report.servicePlaceholder")}
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -24,7 +24,7 @@ export default function AddTypeModal({ isAdd, onClose }) {
           <input
             type="text"
             placeholder={t("module.report.packagePlaceholder")}
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -33,7 +33,7 @@ export default function AddTypeModal({ isAdd, onClose }) {
           <input
             type="number"
             placeholder={t("module.report.pricePlaceholder")}
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -41,14 +41,14 @@ export default function AddTypeModal({ isAdd, onClose }) {
           <label className="text-textGray">{t("module.report.description")}</label>
           <textarea
             placeholder={t("module.report.descriptionPlaceholder")}
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
         
         <div className="space-y-1">
           <label className="text-textGray">{t("module.report.status")}</label>
           <select
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           >
             <option value="Active">{t("module.report.statusActive")}</option>
             <option value="Inactive">{t("module.report.statusInactive")}</option>

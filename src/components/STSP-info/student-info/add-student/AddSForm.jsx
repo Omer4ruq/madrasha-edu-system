@@ -7,7 +7,7 @@ export default function AddSForm() {
       {/* Avatar */}
       <div className="space-y-1">
          <label className="text-textGray" htmlFor="">Avatar :</label>
-         <input className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-primary focus:outline-none" aria-describedby="" id="" type="file"/>
+         <input className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none" aria-describedby="" id="" type="file"/>
       </div>
 
       {/* Name */}
@@ -16,7 +16,7 @@ export default function AddSForm() {
          <input
             type="text"
             placeholder="Enter Name"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
 
@@ -26,7 +26,7 @@ export default function AddSForm() {
          <input
             type="text"
             placeholder="Enter Phone Number"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
       
@@ -36,7 +36,7 @@ export default function AddSForm() {
          id=""
          name=""
          defaultValue="Male"
-         className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+         className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
          >
             <option value="Male">Male</option>
             <option value="Female">Female</option>
@@ -49,7 +49,7 @@ export default function AddSForm() {
          <label className="text-textGray">Date of Birth :</label>
          <input
             type="date"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
 
@@ -60,7 +60,7 @@ export default function AddSForm() {
          id=""
          name=""
          defaultValue="Select Blood Group"
-         className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+         className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
          >
             <option value="Select Blood Group" disabled >Select Blood Group</option>
             <option value="A+">A+</option>
@@ -81,7 +81,7 @@ export default function AddSForm() {
          id=""
          name=""
          defaultValue="Islam"
-         className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+         className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
          >
             <option value="Islam">Islam</option>
             <option value="Hindu">Hindu</option>
@@ -97,7 +97,7 @@ export default function AddSForm() {
          <input
             type="text"
             placeholder="Enter Email"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
 
@@ -107,7 +107,7 @@ export default function AddSForm() {
          <input
             type="text"
             placeholder="Enter NID"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
 
@@ -118,7 +118,7 @@ export default function AddSForm() {
          <input
             type="text"
             placeholder="Enter RFID"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
 
@@ -134,7 +134,7 @@ export default function AddSForm() {
          id=""
          name=""
          defaultValue="Nursery"
-         className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+         className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
          >
             <option value="Nursery">Nursery</option>
             <option value="Class One">Class One</option>
@@ -148,7 +148,7 @@ export default function AddSForm() {
          <input
             type="number"
             placeholder="Enter Roll No"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
       
@@ -158,7 +158,7 @@ export default function AddSForm() {
          <input
             type="number"
             placeholder="Enter Student ID"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
       
@@ -169,7 +169,7 @@ export default function AddSForm() {
          id=""
          name=""
          defaultValue="2024"
-         className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+         className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
          >
             <option value="2024">2024</option>
             <option value="2025">2025</option>
@@ -187,7 +187,7 @@ export default function AddSForm() {
          <label className="text-textGray">Date :</label>
          <input
             type="date"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
             
@@ -197,7 +197,7 @@ export default function AddSForm() {
          <input
             type="number"
             placeholder="Enter TC No"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
             
@@ -207,7 +207,7 @@ export default function AddSForm() {
          <input
             type="number"
             placeholder="Enter Birth Certificate"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
             
@@ -218,7 +218,7 @@ export default function AddSForm() {
          id=""
          name=""
          defaultValue="Bangladeshi"
-         className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+         className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
          >
             <option value="Bangladeshi">Bangladeshi</option>
             <option value="Other">Other</option>
@@ -236,7 +236,7 @@ export default function AddSForm() {
          id=""
          name=""
          defaultValue="Select Parent"
-         className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+         className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
          >
             <option value="Select Parent" disabled>Select Parent</option>
          </select>
@@ -248,7 +248,7 @@ export default function AddSForm() {
          <input
             type="text"
             placeholder="Enter Gurdian Name"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
 
@@ -258,7 +258,7 @@ export default function AddSForm() {
          <input
             type="text"
             placeholder="Enter Relation"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
       
@@ -268,7 +268,7 @@ export default function AddSForm() {
          <input
             type="text"
             placeholder="Enter Gurdian Phone Number"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
 
@@ -279,7 +279,7 @@ export default function AddSForm() {
          <input
             type="text"
             placeholder="Enter Gurdian Occupation"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
       
@@ -289,7 +289,7 @@ export default function AddSForm() {
          <input
             type="number"
             placeholder="Enter Gurdian Phone Number"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
       
@@ -299,7 +299,7 @@ export default function AddSForm() {
          <input
             type="text"
             placeholder="Enter Father Name"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
       
@@ -309,7 +309,7 @@ export default function AddSForm() {
          <input
             type="text"
             placeholder="Enter Father Phone Number"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
 
@@ -320,7 +320,7 @@ export default function AddSForm() {
          <input
             type="text"
             placeholder="Enter Mother Name"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
 
@@ -330,7 +330,7 @@ export default function AddSForm() {
          <input
             type="text"
             placeholder="Enter Mother Phone Number"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
 
@@ -339,7 +339,7 @@ export default function AddSForm() {
    <div className="flex justify-end mt-4 mb-2 md:mb-0">
       <button
          type="submit"
-         className="rounded w-40 p-3 bg-primary hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200"
+         className="rounded w-40 p-3 bg-#DB9E30 hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200"
          >
          Submit
       </button>

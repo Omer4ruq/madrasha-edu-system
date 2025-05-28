@@ -17,7 +17,7 @@ export default function NewSMSTemplate() {
           <input
             type="text"
             placeholder="Enter SMS Title"
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -26,7 +26,7 @@ export default function NewSMSTemplate() {
           <textarea 
           rows="4"
           placeholder="Enter The SMS Content"
-          className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+          className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           onChange={(e)=>{setCharacterCount(e.target.value.length)}}></textarea>
         </div>
 

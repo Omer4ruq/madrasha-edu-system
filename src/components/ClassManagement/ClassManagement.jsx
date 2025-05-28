@@ -4,7 +4,7 @@ import { Outlet, NavLink } from 'react-router-dom';
 const ClassManagement = () => {
   return (
     <div className="sm:px-0">
-      <div className="container mx-auto max-w-7xl">
+      <div className="container mx-auto ">
         {/* <h2 className="text-2xl font-bold mb-6">Class Management</h2> */}
         {/* <div className="flex space-x-4 mb-6">
           <NavLink

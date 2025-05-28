@@ -17,7 +17,7 @@ export default function ProfileMenu() {
     }
   ]
   return (
-   <div className="absolute z-50 bg-white shadow rounded top-9 md:top-10 right-0 w-32 md:w-40 py-1 text-primary font-medium text-start tracking-wide cursor-pointer">
+   <div className="absolute z-50 bg-[#DB9E30] shadow rounded top-9 md:top-10 right-0 w-32 md:w-40 text-[#441a05] font-medium text-start tracking-wide cursor-pointer">
     {
       linkedMenu.map((item, index) => (
         <Link key={index} to={item.link}>

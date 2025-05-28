@@ -1,10 +1,45 @@
 export default function Footer() {
   return (
-    <div className="p-3 sm:flex items-center justify-between bg-primary bg-[linear-gradient(270deg,rgba(51,148,225,0.18),transparent)] text-[#ffffff85] text-sm rounded-md mt-4 leading-6">
-      <h4 className="text-center capitalize">
-        @2024 all rights are reserved by FreelanceHub (BD) limited
-      </h4>
-      <h4 className="text-center">Privacy policy | Terms of use</h4>
-    </div>
+    <footer
+      className="p-4 sm:p-6 mx-4 sm:mx-6 lg:mx-8 bg-black/10 backdrop-blur-sm border border-white/20 text-white text-base rounded-xl mt-4 shadow-xl animate-fadeIn"
+      aria-label="Footer"
+    >
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 0.6s ease-out forwards;
+          }
+        `}
+      </style>
+      <div className="flex flex-col gap-2 sm:flex-row items-center justify-between leading-6">
+        <p className="text-center font-medium text-[#441a05]">
+          © 2025 All Rights Reserved by FreelanceHub (BD) Limited
+        </p>
+        <div className="flex gap-4 text-center font-medium">
+          <a
+            href="#"
+            className="hover:text-blue-400 hover:underline transition-all duration-300 text-[#441a05]"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Privacy Policy"
+          >
+            Privacy Policy
+          </a>
+          <a
+            href="#"
+            className="hover:text-blue-400 hover:underline transition-all duration-300 text-[#441a05]"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Terms of Use"
+          >
+            Terms of Use
+          </a>
+        </div>
+      </div>
+    </footer>
   );
 }

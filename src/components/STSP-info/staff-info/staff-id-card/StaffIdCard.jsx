@@ -23,13 +23,13 @@ const StaffIdCard = () => {
             </div>
             <div className="idcard_details z-20 absolute left-0 top-0 w-full h-full overflow-hidden">
               <div className="school_name text-center">
-                <h2 className="bg-white text-sm font-semibold text-primary pt-1 pb-[2px] px-2 rounded-md mt-5 inline-block">
+                <h2 className="bg-white text-sm font-semibold text-#DB9E30 pt-1 pb-[2px] px-2 rounded-md mt-5 inline-block">
                   Classic Residential School
                 </h2>
               </div>
               <div className="idd_image text-center">
                 <img
-                  className="w-[75px] h-[75px] inline-block mt-6 mb-2 rounded-md border-secondary border-2"
+                  className="w-[75px] h-[75px] inline-block mt-6 mb-2 rounded-md border-#57A68F border-2"
                   src="/images/profile.jpg"
                   alt="student image"
                 />

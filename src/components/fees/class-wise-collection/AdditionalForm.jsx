@@ -12,7 +12,7 @@ export default function AdditionalForm() {
          <label>{t("module.fees.payment_type")}</label>
 
          <select
-            className="bg-bgGray w-full rounded p-2 border-2 border-gray-500 focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-gray-500 focus:border-#DB9E30 focus:outline-none"
             defaultValue="0"
             name="payment_type"
             id="payment_type"
@@ -25,7 +25,7 @@ export default function AdditionalForm() {
       
       <div className="space-y-2">
          <label>{t("module.fees.note")}</label>
-         <input type="text" name="" id="" placeholder="Enter Additional Note" className="bg-bgGray w-full rounded p-2 border-2 border-gray-500 focus:border-primary focus:outline-none" />
+         <input type="text" name="" id="" placeholder="Enter Additional Note" className="bg-bgGray w-full rounded p-2 border-2 border-gray-500 focus:border-#DB9E30 focus:outline-none" />
 
       </div>
 

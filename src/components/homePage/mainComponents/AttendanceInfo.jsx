@@ -7,7 +7,7 @@ export default function AttendanceInfo() {
   return (
     <div className="bg-white cols-span-1 sm:col-span-2 order-2 sm:order-3 lg:order-2 rounded-md">
       {/* component title */}
-      <h3 className="bg-primary text-white text-xl p-4 leading-[33px] rounded-t-md shadow-md">
+      <h3 className="bg-#DB9E30 text-white text-xl p-4 leading-[33px] rounded-t-md shadow-md">
       {t('module.dashboard.attendance_information')}
       </h3>
 
@@ -18,7 +18,7 @@ export default function AttendanceInfo() {
           <StudentAttendance />
 
           {/* graph title */}
-          <h5 className="text-center text-primary text-lg font-medium">
+          <h5 className="text-center text-#DB9E30 text-lg font-medium">
           {t('module.dashboard.students')}
           </h5>
 
@@ -35,7 +35,7 @@ export default function AttendanceInfo() {
           </div>
 
           {/* link icon */}
-          <PiDotsThreeCircleFill className="absolute top-2 right-2 w-7 h-7 text-primary" />
+          <PiDotsThreeCircleFill className="absolute top-2 right-2 w-7 h-7 text-#DB9E30" />
         </div>
 
         {/* Teachers graph */}
@@ -43,7 +43,7 @@ export default function AttendanceInfo() {
           <TeacherAttendance />
 
           {/* graph title */}
-          <h5 className="text-center text-primary text-lg font-medium ">
+          <h5 className="text-center text-#DB9E30 text-lg font-medium ">
           {t('module.dashboard.teachers')}
           </h5>
 
@@ -60,7 +60,7 @@ export default function AttendanceInfo() {
           </div>
 
           {/* link icon */}
-          <PiDotsThreeCircleFill className="absolute top-2 right-2 w-7 h-7 text-primary" />
+          <PiDotsThreeCircleFill className="absolute top-2 right-2 w-7 h-7 text-#DB9E30" />
         </div>
       </div>
     </div>

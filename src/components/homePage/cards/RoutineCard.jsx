@@ -11,7 +11,7 @@ export default function RoutineCard({ routine }) {
           <img src={books} alt="" className="w-6 h-6" />
         </div>
         <div>
-          <h4 className="text-primary font-medium text-lg">{name}</h4>
+          <h4 className="text-#DB9E30 font-medium text-lg">{name}</h4>
           <h4 className="text-textGray font-medium">{time}</h4>
         </div>
       </div>

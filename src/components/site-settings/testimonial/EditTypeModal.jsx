@@ -13,7 +13,7 @@ export default function EditTypeModal({ editContent, setEditContent, isEdit, onC
           <input 
           value={editContent?.image}
           onChange={(e)=> setEditContent({...editContent, image:e.target.value}) }
-          className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-primary focus:outline-none" aria-describedby="" id="" type="file" />
+          className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none" aria-describedby="" id="" type="file" />
         </div>
 
         <div className="space-y-1">
@@ -23,7 +23,7 @@ export default function EditTypeModal({ editContent, setEditContent, isEdit, onC
           placeholder="Enter Name"
           value={editContent?.name}
           onChange={(e)=> setEditContent({...editContent, name:e.target.value}) }
-          className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+          className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -34,7 +34,7 @@ export default function EditTypeModal({ editContent, setEditContent, isEdit, onC
           placeholder="Enter Designation"
           value={editContent?.designation}
           onChange={(e)=> setEditContent({...editContent, designation:e.target.value}) }
-          className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+          className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -44,7 +44,7 @@ export default function EditTypeModal({ editContent, setEditContent, isEdit, onC
           placeholder="Enter Testimonial"
           value={editContent?.testimonial}
           onChange={(e)=> setEditContent({...editContent, testimonial:e.target.value}) }
-          className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+          className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
       </div>

@@ -10,7 +10,7 @@ export default function SearchPayslip() {
     <div className="rounded-md text-sm bg-white">
       <SectionHeader title={t("module.dashboard.search_online_payslip")} />
       <div className="p-2 sm:p-4 space-y-4">
-        <h5 className="text-primary font-medium tracking-wide text-lg leading-3 pt-2">
+        <h5 className="text-#DB9E30 font-medium tracking-wide text-lg leading-3 pt-2">
           {t("module.dashboard.student_id")}
         </h5>
         <div className="flex items-center gap-4">
@@ -18,7 +18,7 @@ export default function SearchPayslip() {
             type="text"
             name="ID"
             placeholder="Type Student ID"
-            className="w-9/12 bg-bgGray rounded p-2 text-textBlack font-medium outline-none border-2 border-transparent focus:border-secondary"
+            className="w-9/12 bg-bgGray rounded p-2 text-textBlack font-medium outline-none border-2 border-transparent focus:border-#57A68F"
           />
           <button className="w-3/12 bg-red text-white p-2 tracking-wide rounded">
             {t("module.dashboard.search")}
@@ -27,7 +27,7 @@ export default function SearchPayslip() {
 
         {/* payslip table */}
         <div className="rounded">
-          <h5 className="text-primary font-bold bg-bgGreen p-2">
+          <h5 className="text-#DB9E30 font-bold bg-bgGreen p-2">
             {t("module.dashboard.payslip_id")}: 1234567
           </h5>
           <SearchPayslipTable />

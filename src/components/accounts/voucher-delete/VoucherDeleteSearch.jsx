@@ -12,7 +12,7 @@ export default function VoucherDeleteSearch() {
         </label>
         <input
           placeholder="Search By Voucher Id"
-          className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+          className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
         />
       </div>
 
@@ -20,7 +20,7 @@ export default function VoucherDeleteSearch() {
       <div className="flex items-center gap-2 md:w-2/12 justify-end my-4">
         <button
           type="submit"
-          className="rounded w-full p-3 bg-primary hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200"
+          className="rounded w-full p-3 bg-#DB9E30 hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200"
         >
           {t("module.accounts.search")}
         </button>

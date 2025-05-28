@@ -15,7 +15,7 @@ export default function EditPopup({ editContent, setEditContent, isEdit, onClose
           type="text"
           value={editContent?.item?.name}
           onChange={(e) => setEditContent({...editContent, item:{...editContent?.item, name:e.target.value}})}
-          className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+          className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
         />
       </div>
     </Modal>

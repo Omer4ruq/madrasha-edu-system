@@ -12,7 +12,7 @@ const AssignFeeByMonth = () => {
   return (
     <div className="bg-white shadow rounded-md">
       {/* component title */}
-      <h3 className="bg-primary text-white text-lg text-center p-4 leading-[20px] rounded-t-md shadow-md">
+      <h3 className="bg-#DB9E30 text-white text-lg text-center p-4 leading-[20px] rounded-t-md shadow-md">
         {t("module.fees.select_fee")}
       </h3>
 
@@ -26,7 +26,7 @@ const AssignFeeByMonth = () => {
           <label htmlFor="">{t("module.fees.fee_collection_start_date")}</label>
           <div className="relative">
             <select
-              className="border-gray-300 appearance-none w-full rounded p-2 border focus:border-primary focus:outline-none"
+              className="border-gray-300 appearance-none w-full rounded p-2 border focus:border-#DB9E30 focus:outline-none"
               defaultValue="0"
               name="fee_start_date"
               id="fee_start_date"
@@ -53,7 +53,7 @@ const AssignFeeByMonth = () => {
           <label htmlFor="">{t("module.fees.fee_collection_end_date")}</label>
           <div className="relative">
             <select
-              className="border-gray-300 appearance-none w-full rounded p-2 border focus:border-primary focus:outline-none"
+              className="border-gray-300 appearance-none w-full rounded p-2 border focus:border-#DB9E30 focus:outline-none"
               defaultValue="0"
               name="fee_end_date"
               id="fee_end_date"

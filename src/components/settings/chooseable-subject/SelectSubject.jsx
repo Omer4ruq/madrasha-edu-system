@@ -10,7 +10,7 @@ export default function SelectSubject() {
       <select
         id=""
         name=""
-        className="bg-bgGray flex-1 rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+        className="bg-bgGray flex-1 rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
       >
         {academicSetupList[2].content.map((subject, index) => (
           <option value="" key={index}>
@@ -18,7 +18,7 @@ export default function SelectSubject() {
           </option>
         ))}
       </select>
-      <button className="bg-primary hover:bg-buttonHover px-6 md:px-8 lg:px-12 py-2 rounded shadow text-white hover:-translate-y-[2px] duration-200 ml-0 sm:ml-2 lg:ml-4">
+      <button className="bg-#DB9E30 hover:bg-buttonHover px-6 md:px-8 lg:px-12 py-2 rounded shadow text-white hover:-translate-y-[2px] duration-200 ml-0 sm:ml-2 lg:ml-4">
       {t('module.settings.submit')}
       </button>
     </div>

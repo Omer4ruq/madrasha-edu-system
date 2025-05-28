@@ -21,7 +21,7 @@ export default function LedgerEditModal({
             onChange={(e) =>
               setEditContent({ ...editContent, category: e.target.value })
             }
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue="0"
             name="select_category"
             id="select_category"
@@ -50,7 +50,7 @@ export default function LedgerEditModal({
             onChange={(e) =>
               setEditContent({ ...editContent, ledger_name: e.target.value })
             }
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             placeholder="Ledger Name"
             name="ledger_name"
             id="ledger_name"
@@ -63,7 +63,7 @@ export default function LedgerEditModal({
             onChange={(e) =>
               setEditContent({ ...editContent, write_note: e.target.value })
             }
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             placeholder="Write Note"
             name="write_note"
             id="write_note"

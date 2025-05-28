@@ -29,7 +29,7 @@ export default function TesSettings() {
             placeholder="Enter Document Header"
             value={tesFormat.header}
             onChange={(e) => handleChange(e.target.value, "header")}
-            className="bg-bgGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             />
         </div>
 
@@ -40,7 +40,7 @@ export default function TesSettings() {
             rows="5"
             value={tesFormat.body}
             onChange={(e) => handleChange(e.target.value, "body")}
-            className="bg-bgGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"></textarea>
+            className="bg-bgGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"></textarea>
         </div>
         
         <div className="space-y-1">
@@ -49,7 +49,7 @@ export default function TesSettings() {
             placeholder="Enter Document Subbody"
             value={tesFormat.subBody}
             onChange={(e) => handleChange(e.target.value, "subBody")}
-            className="bg-bgGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"></textarea>
+            className="bg-bgGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"></textarea>
         </div>
 
         <div className="space-y-1">
@@ -58,7 +58,7 @@ export default function TesSettings() {
             placeholder="Enter Document Footer"
             value={tesFormat.footer}
             onChange={(e) => handleChange(e.target.value, "footer")}
-            className="bg-bgGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"></textarea>
+            className="bg-bgGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"></textarea>
         </div>
 
         <div className="space-y-1">
@@ -66,7 +66,7 @@ export default function TesSettings() {
          <select
          id=""
          name=""
-         className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+         className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          >
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
@@ -80,12 +80,12 @@ export default function TesSettings() {
             placeholder="Enter Document Signature"
             value={tesFormat.signature}
             onChange={(e) => handleChange(e.target.value, "signature")}
-            className="bg-bgGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"></textarea>
+            className="bg-bgGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"></textarea>
         </div>
 
         <div className="space-y-1">
          <label className="text-lg" htmlFor="">Signature</label>
-         <input className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-primary focus:outline-none" aria-describedby="" id="" type="file" />
+         <input className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none" aria-describedby="" id="" type="file" />
       </div>
 
 

@@ -13,7 +13,7 @@ export default function StudentIdHeader({idCardsRef}) {
       <div className="search_student_fee flex items-center justify-between gap-4">
         <div className="relative w-64">
           <select
-            className="bg-bgGray appearance-none w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray appearance-none w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue="1"
             name="status"
             id="status"
@@ -37,13 +37,13 @@ export default function StudentIdHeader({idCardsRef}) {
         
       </div>
       <div className="btns flex gap-2">
-          <button className="rounded p-2 bg-primary hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200">
+          <button className="rounded p-2 bg-#DB9E30 hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200">
             View Id Card
           </button>
-          <button className="rounded p-2 bg-primary hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200">
+          <button className="rounded p-2 bg-#DB9E30 hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200">
             <MdOutlineQrCodeScanner size={22} />
           </button>
-          <button onClick={handlePrint} className="rounded p-2 bg-primary hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200">
+          <button onClick={handlePrint} className="rounded p-2 bg-#DB9E30 hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200">
             <IoPrintOutline size={22} />
           </button>
         </div>

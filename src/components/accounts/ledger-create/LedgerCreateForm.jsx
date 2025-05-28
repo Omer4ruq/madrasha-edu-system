@@ -10,7 +10,7 @@ const LedgerCreateForm = () => {
           <label>{t("module.accounts.select_category")}</label>
 
           <select
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue="0"
             name="select_category"
             id="select_category"
@@ -36,7 +36,7 @@ const LedgerCreateForm = () => {
         <div className="space-y-2">
           <label>{t("module.accounts.ledger_name")}</label>
           <input
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             placeholder="Ledger Name"
             name="ledger_name"
             id="ledger_name"
@@ -46,7 +46,7 @@ const LedgerCreateForm = () => {
         <div className="space-y-2">
           <label>{t("module.accounts.write_note")}</label>
           <input
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             placeholder="Write Note"
             name="write_note"
             id="write_note"
@@ -58,7 +58,7 @@ const LedgerCreateForm = () => {
       <div className="flex justify-end">
         <button
           type="submit"
-          className="rounded mt-4 w-44 p-2 bg-primary hover:bg-buttonHover text-white shadow-md hover:-translate-y-[2px] duration-200 flex items-center justify-center gap-2"
+          className="rounded mt-4 w-44 p-2 bg-#DB9E30 hover:bg-buttonHover text-white shadow-md hover:-translate-y-[2px] duration-200 flex items-center justify-center gap-2"
         >
           {t("module.accounts.save")}
         </button>

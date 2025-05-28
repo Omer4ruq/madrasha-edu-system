@@ -27,7 +27,7 @@
     }
   }
 
-  // Custom primary color (Customizer)
+  // Custom #DB9E30 color (Customizer)
   const myColor = function () {
     const mycolor = document.querySelector("#customcolor");
     if ( mycolor != null) {

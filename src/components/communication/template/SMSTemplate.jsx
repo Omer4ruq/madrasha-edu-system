@@ -34,7 +34,7 @@ export default function SMSTemplate() {
           <Link to="/communication/add-sms-template">
             <button
             type="submit"
-            className="rounded w-52 p-2 bg-primary hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200"
+            className="rounded w-52 p-2 bg-#DB9E30 hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200"
             >
             
             {t('module.communication.add_new_template')}

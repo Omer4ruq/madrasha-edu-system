@@ -60,7 +60,7 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
 
   return (
     <li
-      className={`text-[#ffffffab] group/dd duration-200 relative ${
+      className={`text-white group/dd duration-200 relative ${
         isOpen || isActive ? "bg-[#00000010]" : ""
       }`}
     >
@@ -70,7 +70,7 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
           onClick={handleDropdownClick}
         >
           <span
-            className={`w-[5px] h-[5px] rounded-full group-hover/dd:w-[7px] group-hover/dd:h-[7px] duration-100 bg-[#ffffff65] group-hover/dd:bg-[#ffffff90] absolute top-4 left-7 ${
+            className={`w-[5px] h-[5px] rounded-full group-hover/dd:w-[7px] group-hover/dd:h-[7px] duration-100 bg-[#441a05] group-hover/dd:bg-[#ffffff90] absolute top-4 left-7 ${
               isOpen || isActive ? "w-[7px] h-[7px] bg-[#ffffff90]" : ""
             }`}
           ></span>
@@ -96,11 +96,11 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
         >
           <div className="flex items-center gap-2 pl-12 pr-6 hover:bg-[#00000010] hover:text-white">
             <span
-              className={`w-[5px] h-[5px] rounded-full group-hover/dd:w-[7px] group-hover/dd:h-[7px] duration-100 bg-[#ffffff65] group-hover/dd:bg-[#ffffff90] absolute top-4 left-7 ${
-                isActive ? "w-[7px] h-[7px] bg-[#ffffff90]" : ""
+              className={`w-[5px] h-[5px] rounded-full group-hover/dd:w-[7px] group-hover/dd:h-[7px] duration-100 group-hover/dd:bg-[#ffffff90] absolute top-4 left-7 ${
+                isActive ? "w-[8px] h-[8px] bg-[#441a05]" : "bg-[#ffffff90]"
               }`}
             ></span>
-            <h5 className={`flex-1 ${isActive ? "text-white" : ""}`}>
+            <h5 className={`flex-1 ${isActive ? "text-[#441a05]" : "text-white"}`}>
               {t(data.title)}
             </h5>
           </div>
@@ -135,7 +135,7 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
                 <li
                   className={`hover:bg-[#00000010] hover:text-white duration-200 pl-12 pr-6 ${
                     location.pathname === innerDD.link
-                      ? "text-white bg-[#00000010]"
+                      ? "text-[#441a05] bg-[#00000010]"
                       : ""
                   }`}
                 >

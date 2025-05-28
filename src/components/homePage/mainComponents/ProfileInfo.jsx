@@ -30,12 +30,12 @@ export default function ProfileInfo() {
         <img
           src={profileImg}
           alt=""
-          className="w-20 h-20 rounded-full border border-primary"
+          className="w-20 h-20 rounded-full border border-#DB9E30"
         />
       </div>
 
       {/* user name */}
-      <h4 className="bg-primary text-white text-center rounded p-1">
+      <h4 className="bg-#DB9E30 text-white text-center rounded p-1">
         Salauddin Ahmed
       </h4>
 
@@ -44,7 +44,7 @@ export default function ProfileInfo() {
         <tbody>
           {profile.map((row, index) => (
             <tr key={index}>
-              <td className="text-end px-2 py-[3px] border border-white text-primary ">
+              <td className="text-end px-2 py-[3px] border border-white text-#DB9E30 ">
                 {row.title}
               </td>
               <td className="text-start px-2 py-[3px] border border-white text-textGray">
