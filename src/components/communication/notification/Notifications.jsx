@@ -19,7 +19,7 @@ export default function Notifications() {
         {/* submit button */}
         <button
             type="submit"
-            className="rounded w-36 p-2 bg-primary hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200"
+            className="rounded w-36 p-2 bg-#DB9E30 hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200"
           >
             
             {t('module.communication.submit')}

@@ -13,7 +13,7 @@ export default function AddLRequestModal({isAdd, onClose}) {
             <input
                type="text"
                placeholder="Employee Name"
-               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             />
          </div>
 
@@ -23,7 +23,7 @@ export default function AddLRequestModal({isAdd, onClose}) {
             id=""
             name=""
             defaultValue="Sick Leave"
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             >
                <option value="Sick Leave">Sick Leave</option>
                <option value="Special Leave">Special Leave</option>
@@ -35,7 +35,7 @@ export default function AddLRequestModal({isAdd, onClose}) {
             <label className="">{t('module.communication.start_date')}</label>
             <input
                type="date"
-               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             />
          </div>
 
@@ -43,7 +43,7 @@ export default function AddLRequestModal({isAdd, onClose}) {
             <label className="">{t('module.communication.end_date')}</label>
             <input
                type="date"
-               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             />
          </div>
       </div>

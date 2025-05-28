@@ -6,7 +6,7 @@ export default function AExRHeader() {
 
     return (
         <div className="flex gap-4 items-center justify-between bg-bgGreen px-2 py-3 my-2 rounded">
-            <div className="sm:flex gap-2 text-primary font-bold divide-x-2 divide-primary">
+            <div className="sm:flex gap-2 text-#DB9E30 font-bold divide-x-2 divide-#DB9E30">
                 <h3 className="">{t('module.exam.class')}: One</h3>
                 <h3 className="pl-2">{t('module.exam.section')}: Jaba</h3>
                 <h3 className="pl-2">{t('module.exam.shift')}: Morning</h3>

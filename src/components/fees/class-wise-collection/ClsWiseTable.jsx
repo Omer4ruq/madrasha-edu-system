@@ -106,7 +106,7 @@ export default function ClsWiseTable() {
                value={row.waiver}
                onChange={(e)=> handleChange(e, row.id, "waiver")}
                disabled={!checkedState[row.id]}
-               className="bg-gray-100 disabled:bg-white w-full rounded px-2 my-1 border-2 leading-7 border-primary disabled:border-transparent focus:outline-none" />
+               className="bg-gray-100 disabled:bg-white w-full rounded px-2 my-1 border-2 leading-7 border-#DB9E30 disabled:border-transparent focus:outline-none" />
             </td>
             <td className="w-1/12">1200</td>
             <td className="w-2/12">
@@ -114,14 +114,14 @@ export default function ClsWiseTable() {
                   value={row.paidNow}
                   onChange={(e)=> handleChange(e, row.id, "paidNow")}
                   disabled={!checkedState[row.id]}
-                  className="bg-gray-100 disabled:bg-white w-full rounded px-2 my-1 border-2 leading-7 border-primary disabled:border-transparent focus:outline-none" />
+                  className="bg-gray-100 disabled:bg-white w-full rounded px-2 my-1 border-2 leading-7 border-#DB9E30 disabled:border-transparent focus:outline-none" />
             </td>
             <td className="w-2/12">
                <input type="number"
                   value={row.due}
                   onChange={(e)=> handleChange(e, row.id, "due")}
                   disabled={!checkedState[row.id]}
-                  className="bg-gray-100 disabled:bg-white w-full rounded px-2 my-1 border-2 leading-7 border-primary disabled:border-transparent focus:outline-none" />
+                  className="bg-gray-100 disabled:bg-white w-full rounded px-2 my-1 border-2 leading-7 border-#DB9E30 disabled:border-transparent focus:outline-none" />
             </td>
           </tr>
         ))}

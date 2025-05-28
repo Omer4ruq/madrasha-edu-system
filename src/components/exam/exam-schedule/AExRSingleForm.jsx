@@ -13,7 +13,7 @@ export default function AExRSingleForm({ exam, handleDeleteField, handleChange }
                         name=""
                         value={exam.exam}
                         onChange={(e) => handleChange(exam.id, "exam", e)}
-                        className="bg-bgGray min-w-36 w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray min-w-36 w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     >
                         <option value="select">{t('module.exam.select')}</option>
                         <option value="1st Term">1st Term</option>
@@ -28,7 +28,7 @@ export default function AExRSingleForm({ exam, handleDeleteField, handleChange }
                         name=""
                         value={exam.subject}
                         onChange={(e) => handleChange(exam.id, "subject", e)}
-                        className="bg-bgGray min-w-36 w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray min-w-36 w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     >
                         <option value="select">{t('module.exam.select')}</option>
                         <option value="bangla">Bangla</option>
@@ -42,7 +42,7 @@ export default function AExRSingleForm({ exam, handleDeleteField, handleChange }
                     <label>{t('module.exam.date')}</label>
                     <input
                         type="date"
-                        className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
 
@@ -50,7 +50,7 @@ export default function AExRSingleForm({ exam, handleDeleteField, handleChange }
                     <label>{t('module.exam.start')}</label>
                     <input
                         type="time"
-                        className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
 
@@ -58,7 +58,7 @@ export default function AExRSingleForm({ exam, handleDeleteField, handleChange }
                     <label>{t('module.exam.end')}</label>
                     <input
                         type="time"
-                        className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
 

@@ -28,7 +28,7 @@ export default function Profile() {
         className="w-8 sm:w-9 h-8 sm:h-9 rounded-full"
         onClick={()=> setIsOpen(!isOpen)}
       />
-      <GoTriangleDown className="text-white w-11 sm:w-14" onClick={()=> setIsOpen(!isOpen)}/>
+      <GoTriangleDown className="text-[#441a05]" onClick={()=> setIsOpen(!isOpen)}/>
 
       {isOpen && <ProfileMenu />}
 

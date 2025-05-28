@@ -12,7 +12,7 @@ const FeesMasterForm = () => {
           <label className="">{t("module.fees.fee_type")}</label>
           <div className="relative">
             <select
-              className="bg-bgGray appearance-none w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+              className="bg-bgGray appearance-none w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
               defaultValue="0"
               name="fee_type"
               id="fee_type"
@@ -42,7 +42,7 @@ const FeesMasterForm = () => {
           <label className="">{t("module.fees.select_class")}</label>
           <div className="relative">
             <select
-              className="bg-bgGray appearance-none w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+              className="bg-bgGray appearance-none w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
               defaultValue="0"
               name="class"
               id="class"
@@ -70,7 +70,7 @@ const FeesMasterForm = () => {
       </div>
       <button
         type="submit"
-        className="rounded mt-4 w-20 p-2 bg-primary hover:bg-buttonHover text-white shadow-md hover:-translate-y-[2px] duration-200 flex items-center justify-center gap-2"
+        className="rounded mt-4 w-20 p-2 bg-#DB9E30 hover:bg-buttonHover text-white shadow-md hover:-translate-y-[2px] duration-200 flex items-center justify-center gap-2"
       >
         {t("module.fees.submit")}
       </button>

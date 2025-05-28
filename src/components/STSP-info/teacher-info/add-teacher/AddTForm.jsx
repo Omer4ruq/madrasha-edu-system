@@ -15,7 +15,7 @@ export default function AddTForm() {
                 <div className="space-y-1">
                     <label className="text-textGray">{t("module.teacher.avatar")} :</label>
                     <input
-                        className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-primary focus:outline-none"
+                        className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
                         type="file"
                     />
                 </div>
@@ -26,7 +26,7 @@ export default function AddTForm() {
                     <input
                         type="text"
                         placeholder={t("module.teacher.enter_name")}
-                        className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
 
@@ -35,7 +35,7 @@ export default function AddTForm() {
                     <label className="text-textGray">{t("module.teacher.gender")}</label>
                     <select
                         defaultValue="Male"
-                        className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
                     >
                         <option value="Male">{t("module.teacher.male")}</option>
                         <option value="Female">{t("module.teacher.female")}</option>
@@ -48,7 +48,7 @@ export default function AddTForm() {
                     <label className="text-textGray">{t("module.teacher.blood_group")}</label>
                     <select
                         defaultValue="Select Blood Group"
-                        className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
                     >
                         <option value="Select Blood Group" disabled>
                             {t("module.teacher.select_blood_group")}
@@ -74,7 +74,7 @@ export default function AddTForm() {
                     <select
                         value={maritalStatus}
                         onChange={(e) => setMaritalStatus(e.target.value)}
-                        className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
                     >
                         <option value="Single">{t("module.teacher.single")}</option>
                         <option value="Married">{t("module.teacher.married")}</option>
@@ -93,7 +93,7 @@ export default function AddTForm() {
                             <input
                                 type="text"
                                 placeholder={t("module.teacher.enter_spouse_name")}
-                                className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                                className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                             />
                         </div>
                         {/* Additional fields for spouse */}
@@ -105,7 +105,7 @@ export default function AddTForm() {
             <div className="flex justify-end mt-4 mb-2 md:mb-0">
                 <button
                     type="submit"
-                    className="rounded w-40 p-3 bg-primary hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200"
+                    className="rounded w-40 p-3 bg-#DB9E30 hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200"
                 >
                     {t("module.teacher.submit")}
                 </button>

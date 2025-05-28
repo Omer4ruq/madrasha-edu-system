@@ -13,7 +13,7 @@ export default function LTypeModal({ editContent, isEdit, onClose }) {
                 <input
                     type="text"
                     defaultValue={editContent}
-                    className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                    className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                 />
             </div>
         </Modal>

@@ -11,7 +11,7 @@ const ClsWiseColForm = () => {
           <label>{t("module.fees.select_session")}</label>
 
          <select
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue="0"
             name="select_session"
             id="select_session"
@@ -26,7 +26,7 @@ const ClsWiseColForm = () => {
           <label>{t("module.fees.select_group")}</label>
 
          <select
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue="0"
             name="select_group"
             id="select_group"
@@ -41,7 +41,7 @@ const ClsWiseColForm = () => {
           <label>{t("module.fees.select_section")}</label>
 
          <select
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue="0"
             name="select_section"
             id="select_section"
@@ -55,7 +55,7 @@ const ClsWiseColForm = () => {
         <div className="space-y-2">
           <label>{t("module.fees.select_roll")}</label>
           <select
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue=""
             name="select_roll"
             id="select_roll"
@@ -69,14 +69,14 @@ const ClsWiseColForm = () => {
         
         <div className="space-y-2">
           <label>{t("module.fees.payment_date")}</label>
-          <input type="date" className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none" />
+          <input type="date" className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none" />
         </div>
 
         <div className="space-y-2">
           <label>{t("module.fees.up_to_month")}</label>
 
          <select
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue=""
             name="up_to_month"
             id="up_to_month"
@@ -93,7 +93,7 @@ const ClsWiseColForm = () => {
       <div className="flex justify-end">
         <button
           type="submit"
-          className="rounded mt-4 w-44 p-2 bg-primary hover:bg-buttonHover text-white shadow-md hover:-translate-y-[2px] duration-200 flex items-center justify-center gap-2"
+          className="rounded mt-4 w-44 p-2 bg-#DB9E30 hover:bg-buttonHover text-white shadow-md hover:-translate-y-[2px] duration-200 flex items-center justify-center gap-2"
         >
           {t("module.fees.get_student_data")}
         </button>

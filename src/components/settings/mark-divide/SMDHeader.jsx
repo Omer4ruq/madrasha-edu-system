@@ -5,7 +5,7 @@ export default function SMDHeader() {
    const { t } = useTranslation();
     return (
       <div className="flex gap-4 items-center justify-between bg-bgGreen px-2 py-3 my-2 rounded">
-         <div className="text-primary font-bold">
+         <div className="text-#DB9E30 font-bold">
             <h3 className="">{t('module.settings.class')} : One</h3>
          </div>
          <div className="flex items-center gap-2 justify-end">

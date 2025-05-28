@@ -43,7 +43,7 @@ export default function ExScTable() {
                         <td className="w-4/12 min-w-40">
                             <Link to={`../add-exam-routine/${index}`}>
                                 <button
-                                    className="bg-primary px-2 sm:px-3 py-1 sm:py-2 rounded shadow text-white hover:-translate-y-[2px] duration-200 text-sm my-1 sm:my-[6px]"
+                                    className="bg-#DB9E30 px-2 sm:px-3 py-1 sm:py-2 rounded shadow text-white hover:-translate-y-[2px] duration-200 text-sm my-1 sm:my-[6px]"
                                 >
                                     {t('module.exam.add_exam_routine')}
                                 </button>

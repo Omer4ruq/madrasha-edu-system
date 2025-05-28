@@ -16,7 +16,7 @@ export default function TodayDate() {
       <div className="flex justify-end">
          <div className="flex itemes-center gap-3 md:gap-7 rounded border-2 p-1 pl-3 md:pl-4">
             <h3 className="font-medium md:text-lg">{t('module.communication.date')}: </h3>
-            <h3 className="bg-bgBlue px-6 lg:px-12 py-1 text-sm lg:text-base text-secondary">{formattedDate}</h3>
+            <h3 className="bg-bgBlue px-6 lg:px-12 py-1 text-sm lg:text-base text-#57A68F">{formattedDate}</h3>
          </div>
       </div>
     );

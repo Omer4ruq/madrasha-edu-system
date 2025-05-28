@@ -88,87 +88,96 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
     }
   };
 
+
+  // bg-black/10 backdrop-blur-sm
+
   return (
-    <div className="pl-1 md:pl-4 xl:pl-2 my-5">
-      <div className="flex-1 md:flex items-center justify-between">
-        {/* Breadcrumb Path */}
-        {breadcrumbModule && (
-          <h3 className="text-xs md:text-lg text-white capitalize flex-1">
-            <Link
-              to={modulePath}
-              className={`${
-                breadcrumbRoute ? "text-white hover:text-primary" : "text-slate-50 font-bold"
-              }`}
-            >
-              {t(breadcrumbModule)}
-              {breadcrumbRoute && " / "}
-            </Link>
-            {breadcrumbRoute && (
-              <span
-                className={`${
-                  breadcrumbNestedRoute ? "text-white hover:text-primary" : "text-slate-50 font-bold"
+    <div className="pl-2 md:pl-6 xl:pl-5 rounded-lg mt-6">
+  <div className="flex flex-col md:flex-row items-start md:items-center justify-between w-full gap-4 px-4">
+    
+    {/* Breadcrumb Path */}
+    {breadcrumbModule && (
+      <h3 className="text-sm md:text-lg text-white capitalize flex-1 space-x-1 font-medium">
+        <Link
+          to={modulePath}
+          className={`${
+            breadcrumbRoute
+              ? "text-[#441a05] font-semibold hover:text-[#DB9E30] transition-colors"
+              : "text-[#DB9E30] font-bold"
+          }`}
+        >
+          {t(breadcrumbModule)}
+          {breadcrumbRoute && " / "}
+        </Link>
+        {breadcrumbRoute && (
+          <span
+            className={`${
+              breadcrumbNestedRoute
+                ? "text-[#441a05] font-semibold hover:text-[#DB9E30] transition-colors"
+                : "text-[#DB9E30] font-bold"
+            }`}
+          >
+            {t(breadcrumbRoute)}
+            {breadcrumbNestedRoute && " / "}
+          </span>
+        )}
+        {breadcrumbNestedRoute && (
+          <span className="text-[#DB9E30] font-bold">{t(breadcrumbNestedRoute)}</span>
+        )}
+      </h3>
+    )}
+
+    {/* Tabs with Scroll Arrows */}
+    {tabs.length > 0 && (
+      <div className="relative w-full md:w-1/2 flex items-center justify-end">
+        {/* Left Arrow */}
+        {isOverflowing && (
+          <button
+            onClick={scrollLeft}
+            className="absolute left-0 p-2 bg-white/80 text-[#441a05] rounded-full hover:bg-[#DB9E30] hover:text-white shadow-md transition-colors z-10"
+          >
+            <FaChevronLeft />
+          </button>
+        )}
+
+        {/* Tabs Container */}
+        <div
+          ref={tabsContainerRef}
+          className="flex overflow-x-auto whitespace-nowrap no-scrollbar mx-6 gap-2 py-1"
+        >
+          {tabs.map((child) => {
+            const childPath = child.link || "#";
+            const isActive = activeTab === childPath;
+
+            return (
+              <Link
+                key={child.id}
+                to={childPath}
+                className={`px-4 py-2 rounded-full text-xs md:text-sm capitalize transition-all duration-300 flex-shrink-0 ${
+                  isActive
+                    ? "bg-[#DB9E30] text-white font-bold shadow-md"
+                    : "bg-white text-[#441a05] font-bold hover:bg-[#DB9E30] hover:text-white"
                 }`}
               >
-                {t(breadcrumbRoute)}
-                {breadcrumbNestedRoute && " / "}
-              </span>
-            )}
-            {breadcrumbNestedRoute && (
-              <span className="text-primary font-bold">{t(breadcrumbNestedRoute)}</span>
-            )}
-          </h3>
-        )}
+                {t(child.title)}
+              </Link>
+            );
+          })}
+        </div>
 
-        {/* Tabs with Scroll Arrows */}
-        {tabs.length > 0 && (
-          <div className="w-full md:w-1/2 flex items-center relative mt-2 md:mt-0">
-            {/* Left Arrow */}
-            {isOverflowing && (
-              <button
-                onClick={scrollLeft}
-                className="absolute left-0 p-2 bg-gray-200 text-gray-700 rounded-full hover:bg-primary hover:text-white transition-colors z-10"
-              >
-                <FaChevronLeft />
-              </button>
-            )}
-
-            {/* Tabs Container */}
-            <div
-              ref={tabsContainerRef}
-              className="flex overflow-x-auto whitespace-nowrap no-scrollbar mx-4 md:mx-10"
-            >
-              {tabs.map((child) => {
-                const childPath = child.link || "#";
-                const isActive = activeTab === childPath;
-
-                return (
-                  <Link
-                    key={child.id}
-                    to={childPath}
-                    className={`px-4 py-2 rounded-md text-xs md:text-sm capitalize transition-colors flex-shrink-0 mx-1 ${
-                      isActive
-                        ? "bg-primary text-white font-bold"
-                        : "bg-gray-200 text-gray-700 hover:bg-primary hover:text-white"
-                    }`}
-                  >
-                    {t(child.title)}
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Right Arrow */}
-            {isOverflowing && (
-              <button
-                onClick={scrollRight}
-                className="absolute right-0 p-2 bg-gray-200 text-gray-700 rounded-full hover:bg-primary hover:text-white transition-colors z-10"
-              >
-                <FaChevronRight />
-              </button>
-            )}
-          </div>
+        {/* Right Arrow */}
+        {isOverflowing && (
+          <button
+            onClick={scrollRight}
+            className="absolute right-0 p-2 bg-white/80 text-[#441a05] rounded-full hover:bg-[#DB9E30] hover:text-white shadow-md transition-colors z-10"
+          >
+            <FaChevronRight />
+          </button>
         )}
       </div>
-    </div>
+    )}
+  </div>
+</div>
+
   );
 }

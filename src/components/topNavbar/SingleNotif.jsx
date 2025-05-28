@@ -18,7 +18,7 @@ export default function SingleNotif() {
  ]
  
   return (
-   <div className="absolute z-50 bg-white shadow rounded top-9 md:top-10 right-0 w-60 md:w-72 py-1 text-primary font-medium text-start tracking-wide cursor-pointer">
+   <div className="absolute z-50 bg-white shadow rounded top-9 md:top-10 right-0 w-60 md:w-72 py-1 text-#DB9E30 font-medium text-start tracking-wide cursor-pointer">
     {
       notifs.map((item, index) => (
         <Link key={index}>

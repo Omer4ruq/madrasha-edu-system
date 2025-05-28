@@ -22,7 +22,7 @@ export default function SidebarHeader({searchTerm, setSearchTerm}) {
             className="flex-1 bg-transparent text-white text-sm outline-none focus:text-sm"
           />
           <FaAngleUp
-            className="bg-secondary text-white text-xl p-[2px] rounded-sm hover:bg-tertiary hover:shadow-[0_0_4px_#5790b3] duration-100"
+            className="text-white text-xl p-[2px] rounded-sm hover:bg-[#DB9E30] duration-100"
             onClick={() => {
               setShowSearchBar(false);
             }}
@@ -31,7 +31,7 @@ export default function SidebarHeader({searchTerm, setSearchTerm}) {
       ) : (
         <div className="relative">
           <div
-            className="group/angle absolute top-0 right-1/2 translate-x-1/2 px-2 pb-[2px] pt-0 rounded-b-full bg-primary z-10 hover:bg-tertiary hover:shadow-[0_2px_6px_#5790b3] hover:border-primary duration-100"
+            className="group/angle absolute top-0 right-1/2 translate-x-1/2 px-2 pb-[2px] pt-0 rounded-b-full bg-[#DB9E30] z-10 hover:border-[#441a05] duration-100"
             onClick={() => {
               setShowSearchBar(true);
             }}

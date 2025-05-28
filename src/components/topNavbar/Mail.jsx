@@ -22,8 +22,8 @@ export default function Mail() {
   }, [setIsOpen]);
 
   return (
-    <div className="flex items-center pr-2 sm:pr-3 border-r-2 relative cursor-pointer"  ref={modalRef}  onClick={() => setIsOpen(!isOpen)}>
-      <FaRegEnvelope className="text-white w-5 sm:w-6 h-5 sm:h-6" />
+    <div className="flex items-center pr-2 sm:pr-3 border-r-2 border-[#441a05] relative cursor-pointer"  ref={modalRef}  onClick={() => setIsOpen(!isOpen)}>
+      <FaRegEnvelope className="text-[#441a05] w-5 sm:w-6 h-5 sm:h-6" />
 
       {
         isOpen && <Singlemail/>

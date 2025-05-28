@@ -28,11 +28,21 @@ export default function App() {
       <div className="font-roboto text-base font-normal text-gray-600 dark:text-gray-400 dark:bg-gray-800 relative">
         <Sidebar showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
         <div
-          className={`bg-[#1E3A8A] text-textBlack flex flex-col justify-between min-h-screen transition-all duration-500 ease-in-out p-3 ml-0 xl:ml-72 ${
+          className={`relative text-textBlack flex flex-col justify-between min-h-screen transition-all duration-500 ease-in-out p-3 ml-0 xl:ml-72 ${
             showSidebar && "max-xl:opacity-65"
           }`}
         >
-          <div>
+          {/* Background Image Layer */}
+          <div
+            className="absolute inset-0 bg-cover bg-center z-0 rounded-lg"
+            style={{
+              backgroundImage: `url("https://shaha.ancorathemes.com/wp-content/uploads/2017/06/bg-16.jpg?id=371")`,
+            }}
+          ></div>
+          {/* <div className="absolute inset-0 bg-black opacity-50 z-0"></div> */}
+
+          {/* Content Layer */}
+          <div className="relative z-10 w-full">
             <TopNavbar setShowSidebar={setShowSidebar} />
             {pathname.length > 1 && (
               <Breadcrumb
@@ -43,8 +53,11 @@ export default function App() {
             )}
             <Outlet />
           </div>
+
+          {/* Footer */}
           <Footer />
         </div>
+
         <ToastContainer
           position="bottom-right"
           autoClose={5000}

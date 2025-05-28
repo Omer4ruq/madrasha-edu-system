@@ -13,7 +13,7 @@ export default function SelectNotification({notificationType, setNotificationTyp
         name=""
         defaultValue="Select Notification"
         onChange={(e)=> {setNotificationType(e.target.value)}}
-        className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+        className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
       >
         <option value="Select Notification" disabled>Select Notification</option>
         <option value="Exam Result">Exam Result</option>
@@ -30,7 +30,7 @@ export default function SelectNotification({notificationType, setNotificationTyp
       id=""
       name=""
       defaultValue="1st Term"
-      className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+      className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
     >
       <option value="1st Term">1st Term</option>
       <option value="2nd Term">2nd Term</option>

@@ -11,7 +11,7 @@ export default function AddStWaiverModal({isAdd, onClose}) {
             <input
                type="text"
                placeholder="Student Name"
-               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             />
          </div>
 
@@ -20,7 +20,7 @@ export default function AddStWaiverModal({isAdd, onClose}) {
             <select
             id=""
             name=""
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             >
                <option value="Class One">Class One</option>
                <option value="Class Two">Class Two</option>
@@ -33,7 +33,7 @@ export default function AddStWaiverModal({isAdd, onClose}) {
             <select
             id=""
             name=""
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             >
                <option value="Golap">Golap</option>
                <option value="Jaba">Jaba</option>
@@ -45,7 +45,7 @@ export default function AddStWaiverModal({isAdd, onClose}) {
             <input
                type="number"
                placeholder="Waiver Percentage"
-               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+               className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             />
          </div>
 
@@ -54,7 +54,7 @@ export default function AddStWaiverModal({isAdd, onClose}) {
             <select
             id=""
             name=""
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             >
                <option value="Tution Fee">Tution Fee</option>
                <option value="Monthly Fee">Monthly Fee</option>

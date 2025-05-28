@@ -16,7 +16,7 @@ export default function EventEditModal({ editContent, setEditContent, isEdit, on
             placeholder={t("events.title")} // Placeholder can also be translated
             value={editContent.name}
             onChange={(e) => setEditContent({ ...editContent, name: e.target.value })}
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -27,7 +27,7 @@ export default function EventEditModal({ editContent, setEditContent, isEdit, on
             placeholder={t("events.start")} // Placeholder can also be translated
             value={editContent.start}
             onChange={(e) => setEditContent({ ...editContent, start: e.target.value })}
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -38,7 +38,7 @@ export default function EventEditModal({ editContent, setEditContent, isEdit, on
             placeholder={t("events.end")} // Placeholder can also be translated
             value={editContent.end}
             onChange={(e) => setEditContent({ ...editContent, end: e.target.value })}
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
       </div>

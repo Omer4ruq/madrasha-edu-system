@@ -14,7 +14,7 @@ export default function AddIncome() {
                     <input
                         type="text"
                         placeholder={t("module.income.enterId")}
-                        className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
 
@@ -23,7 +23,7 @@ export default function AddIncome() {
                     <input
                         type="text"
                         placeholder={t("module.income.enterName")}
-                        className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
 
@@ -32,14 +32,14 @@ export default function AddIncome() {
                     <input
                         type="number"
                         placeholder={t("module.income.enterAmount")}
-                        className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
 
                 <div className="space-y-2">
                     <label className="text-textGray">{t("module.income.incomeHead")}</label>
                     <select
-                        className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
                     >
                         <option value="Tuition Fee">{t("module.income.tuitionFee")}</option>
                         <option value="Maintenance Fee">{t("module.income.maintenanceFee")}</option>
@@ -52,7 +52,7 @@ export default function AddIncome() {
                     <label className="text-textGray">{t("module.income.date")}</label>
                     <input
                         type="date"
-                        className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
 
@@ -61,14 +61,14 @@ export default function AddIncome() {
                     <input
                         type="number"
                         placeholder={t("module.income.enterInvoice")}
-                        className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
 
                 <div className="space-y-1">
                     <label className="text-textGray">{t("module.income.document")}</label>
                     <input 
-                        className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-primary focus:outline-none" 
+                        className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none" 
                         placeholder={t("module.income.uploadDocument")}
                         type="file"
                     />
@@ -78,7 +78,7 @@ export default function AddIncome() {
             <div className="space-y-1">
                 <label className="text-textGray">{t("module.income.description")}</label>
                 <textarea
-                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     rows="3"
                     placeholder={t("module.income.enterDescription")}
                 ></textarea>

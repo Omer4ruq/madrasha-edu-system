@@ -6,7 +6,7 @@ export default function SecConfigHeader({ section }) {
 
   return (
     <div className="flex gap-4 items-center justify-between bg-bgGreen px-2 py-3 my-2 rounded">
-      <div className="text-primary font-bold sm:flex gap-4">
+      <div className="text-#DB9E30 font-bold sm:flex gap-4">
         <h3 className="">{t('module.settings.class')} : {section.class}</h3>
         <h3 className="">{t('module.settings.shift')} : {section.shift}</h3>
       </div>

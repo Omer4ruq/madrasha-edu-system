@@ -11,7 +11,7 @@ const QuickColForm = () => {
           <label>{t("module.fees.select_session")}</label>
 
          <select
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue="0"
             name="select_session"
             id="select_session"
@@ -25,7 +25,7 @@ const QuickColForm = () => {
         <div className="space-y-2">
           <label>{t("module.fees.select_id")}</label>
           <select
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue=""
             name="select_id"
             id="select_id"
@@ -39,14 +39,14 @@ const QuickColForm = () => {
         
         <div className="space-y-2">
           <label>{t("module.fees.payment_date")}</label>
-          <input type="date" className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none" />
+          <input type="date" className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none" />
         </div>
 
         <div className="space-y-2">
           <label>{t("module.fees.up_to_month")}</label>
 
          <select
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue=""
             name="up_to_month"
             id="up_to_month"
@@ -63,7 +63,7 @@ const QuickColForm = () => {
       <div className="flex justify-end">
         <button
           type="submit"
-          className="rounded mt-4 w-44 p-2 bg-primary hover:bg-buttonHover text-white shadow-md hover:-translate-y-[2px] duration-200 flex items-center justify-center gap-2"
+          className="rounded mt-4 w-44 p-2 bg-#DB9E30 hover:bg-buttonHover text-white shadow-md hover:-translate-y-[2px] duration-200 flex items-center justify-center gap-2"
         >
           {t("module.fees.get_student_data")}
         </button>

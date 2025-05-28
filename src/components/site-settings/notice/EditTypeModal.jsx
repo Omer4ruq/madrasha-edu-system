@@ -19,7 +19,7 @@ export default function EditTypeModal({ editContent, setEditContent, isEdit, onC
             onChange={(e) =>
               setEditContent({ ...editContent, date: e.target.value })
             }
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -32,7 +32,7 @@ export default function EditTypeModal({ editContent, setEditContent, isEdit, onC
             onChange={(e) =>
               setEditContent({ ...editContent, title: e.target.value })
             }
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -44,7 +44,7 @@ export default function EditTypeModal({ editContent, setEditContent, isEdit, onC
             onChange={(e) =>
               setEditContent({ ...editContent, description: e.target.value })
             }
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -57,7 +57,7 @@ export default function EditTypeModal({ editContent, setEditContent, isEdit, onC
             onChange={(e) =>
               setEditContent({ ...editContent, expireDate: e.target.value })
             }
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -70,7 +70,7 @@ export default function EditTypeModal({ editContent, setEditContent, isEdit, onC
             onChange={(e) =>
               setEditContent({ ...editContent, file: e.target.value })
             }
-            className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
       </div>

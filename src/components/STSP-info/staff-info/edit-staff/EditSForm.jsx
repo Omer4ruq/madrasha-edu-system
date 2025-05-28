@@ -16,7 +16,7 @@ export default function EditSForm({staffData, handleChange}) {
                <input 
                   value={staffData.avatar}
                   onChange={(event) => handleChange("avatar", event)}
-                  className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-primary focus:outline-none" 
+                  className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none" 
                   aria-describedby="" 
                   id="" 
                   type="file"
@@ -31,7 +31,7 @@ export default function EditSForm({staffData, handleChange}) {
                   placeholder={t('module.communication.enter_name')}
                   value={staffData.name}
                   onChange={(event) => handleChange("name", event)}
-                  className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                  className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                />
             </div>
             
@@ -41,7 +41,7 @@ export default function EditSForm({staffData, handleChange}) {
                <select
                   value={staffData.gender}
                   onChange={(event) => handleChange("gender", event)}
-                  className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+                  className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
                >
                   <option value="Male">{t('module.communication.male')}</option>
                   <option value="Female">{t('module.communication.female')}</option>
@@ -55,7 +55,7 @@ export default function EditSForm({staffData, handleChange}) {
                <select
                   value={staffData.bloodGroup}
                   onChange={(event) => handleChange("bloodGroup", event)}
-                  className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+                  className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
                >
                   {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(group => (
                      <option key={group} value={group}>{t(`module.communication.${group.replace('+', 'plus').replace('-', 'minus')}`)}</option>
@@ -71,7 +71,7 @@ export default function EditSForm({staffData, handleChange}) {
                   placeholder={t('module.communication.enter_phone_number')}
                   value={staffData.mobile}
                   onChange={(event) => handleChange("mobile", event)}
-                  className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                  className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                />
             </div>
 
@@ -83,7 +83,7 @@ export default function EditSForm({staffData, handleChange}) {
                   placeholder={t('module.communication.enter_email')}
                   value={staffData.email}
                   onChange={(event) => handleChange("email", event)}
-                  className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                  className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                />
             </div>
 
@@ -95,7 +95,7 @@ export default function EditSForm({staffData, handleChange}) {
                   placeholder={t('module.communication.enter_nid')}
                   value={staffData.NID}
                   onChange={(event) => handleChange("NID", event)}
-                  className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                  className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                />
             </div>
 
@@ -106,7 +106,7 @@ export default function EditSForm({staffData, handleChange}) {
                   type="date"
                   value={staffData.birthDate}
                   onChange={(event) => handleChange("birthDate", event)}
-                  className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                  className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                />
             </div>
 
@@ -118,7 +118,7 @@ export default function EditSForm({staffData, handleChange}) {
                   placeholder={t('module.communication.enter_rfid')}
                   value={staffData.id}
                   onChange={(event) => handleChange("id", event)}
-                  className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                  className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                />
             </div>
 
@@ -128,7 +128,7 @@ export default function EditSForm({staffData, handleChange}) {
                <select
                   value={staffData.religion}
                   onChange={(event) => handleChange("religion", event)}
-                  className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+                  className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
                >
                   {['Islam', 'Hindu', 'Christian', 'Buddha', 'Other'].map(religion => (
                      <option key={religion} value={religion}>{t(`module.communication.${religion.toLowerCase()}`)}</option>
@@ -144,7 +144,7 @@ export default function EditSForm({staffData, handleChange}) {
                   placeholder={t('module.communication.enter_fathers_name')}
                   value={staffData.fathersName}
                   onChange={(event) => handleChange("fathersName", event)}
-                  className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                  className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                />
             </div>
 
@@ -156,7 +156,7 @@ export default function EditSForm({staffData, handleChange}) {
                   placeholder={t('module.communication.enter_mothers_name')}
                   value={staffData.mothersName}
                   onChange={(event) => handleChange("mothersName", event)}
-                  className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                  className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                />
             </div>
 
@@ -166,7 +166,7 @@ export default function EditSForm({staffData, handleChange}) {
                <select
                   value={staffData.maritalStatus}
                   onChange={(event) => handleChange("maritalStatus", event)}
-                  className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+                  className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
                >
                   {['Single', 'Married', 'Unmarried', 'Widowed', 'Separated', 'Divorced'].map(status => (
                      <option key={status} value={status}>{t(`module.communication.${status.toLowerCase()}`)}</option>
@@ -185,7 +185,7 @@ export default function EditSForm({staffData, handleChange}) {
                         placeholder={t('module.communication.enter_spouse_name')}
                         value={staffData.spouseName}
                         onChange={(event) => handleChange("spouseName", event)}
-                        className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                      />
                   </div>
 
@@ -197,7 +197,7 @@ export default function EditSForm({staffData, handleChange}) {
                         placeholder={t('module.communication.enter_spouse_phone_number')}
                         value={staffData.spouseMobile}
                         onChange={(event) => handleChange("spouseMobile", event)}
-                        className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                      />
                   </div>
             
@@ -209,7 +209,7 @@ export default function EditSForm({staffData, handleChange}) {
             placeholder="Enter Number of Children"
             value={staffData.children}
             onChange={(event)=> {handleChange("children", event)}}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          />
       </div>
    </>
@@ -229,7 +229,7 @@ export default function EditSForm({staffData, handleChange}) {
           <input
             type="number"
             placeholder={t("module.communication.enter_staff_id_number")}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -240,7 +240,7 @@ export default function EditSForm({staffData, handleChange}) {
           </label>
           <input
             type="date"
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -252,7 +252,7 @@ export default function EditSForm({staffData, handleChange}) {
             id=""
             name=""
             defaultValue="SSC"
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
           >
             <option value="SSC">{t("module.communication.ssc")}</option>
             <option value="HSC">{t("module.communication.hsc")}</option>
@@ -278,7 +278,7 @@ export default function EditSForm({staffData, handleChange}) {
             id=""
             name=""
             defaultValue="Permanent"
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
           >
             <option value="Permanent">
               {t("module.communication.permanent")}
@@ -300,7 +300,7 @@ export default function EditSForm({staffData, handleChange}) {
           <input
             type="text"
             placeholder={t("module.communication.enter_role")}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -312,7 +312,7 @@ export default function EditSForm({staffData, handleChange}) {
           <input
             type="text"
             placeholder={t("module.communication.enter_designation")}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
       </div>
@@ -328,7 +328,7 @@ export default function EditSForm({staffData, handleChange}) {
           <textarea
             rows="3"
             placeholder={t("module.communication.enterYour_permanent_address")}
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -339,7 +339,7 @@ export default function EditSForm({staffData, handleChange}) {
           <textarea
             rows="3"
             placeholder={t("module.communication.enter_your_present_address")}
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
       </div>

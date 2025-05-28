@@ -1,34 +1,19 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { FaAngleDown } from "react-icons/fa6";
-import { NavLink, useLocation } from "react-router-dom";
-
+import { useLocation, Link } from "react-router-dom";
+import DropDown from "./DropDown";
 import Icons from "./Icons";
 import { useSelectedMenu } from "../../context/SelectedMenuContext";
-import slideDown from "../../utilitis/slideDown";
-import slideUp from "../../utilitis/slideUp";
-import getParents from "../../utilitis/getParents";
 
-export default function SidebarMenuItem({ item, itemId, setItemId, level = 1 }) {
+export default function SidebarMenuItem({ item, itemId, setItemId }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [ddId, setDDId] = useState(null);
   const { setSelectedMenuItem } = useSelectedMenu();
   const { t } = useTranslation();
   const location = useLocation();
-  const submenuRef = useRef(null);
 
-  // Menu classes inspired by Menu.jsx
-  const menuClasses = {
-    main: "nk-menu",
-    item: "nk-menu-item",
-    link: "nk-menu-link",
-    toggle: "nk-menu-toggle",
-    sub: "nk-menu-sub",
-    subparent: "has-sub",
-    active: "active",
-    current: "current-page",
-  };
-
-  // Check if this menu item or any of its children are active
+  // Recursive function to check if any child or subchild is active
   const isChildActive = (children) => {
     if (!children) return false;
     return children.some(
@@ -38,154 +23,89 @@ export default function SidebarMenuItem({ item, itemId, setItemId, level = 1 }) 
     );
   };
 
+  // Check if this menu item or any of its children are active
   const isActive = item.link === location.pathname || isChildActive(item.children);
 
-  // Open menu if active and sync with itemId
+  // Open menu item if it or its children are active
   useEffect(() => {
     if (isActive && !isOpen) {
       setIsOpen(true);
       setItemId(item.id);
       if (item.children) {
         setSelectedMenuItem(item);
-        if (submenuRef.current) {
-          slideDown(submenuRef.current, 400);
-        }
-      }
-    } else if (!isActive && isOpen && item.id !== itemId) {
-      setIsOpen(false);
-      if (submenuRef.current) {
-        slideUp(submenuRef.current, 400);
       }
     }
-  }, [isActive, item.id, itemId, setItemId, setSelectedMenuItem, location.pathname]);
+    console.log(`SidebarMenuItem ${item.title}: isOpen=${isOpen}, isActive=${isActive}`);
+  }, [location.pathname, isActive, item, setItemId, setSelectedMenuItem]);
 
-  // Close other dropdowns when this one is opened
-  const closeSiblings = (elm) => {
-    const parent = elm.parentElement;
-    const siblings = parent.parentElement.children;
-    Array.from(siblings).forEach((sibling) => {
-      if (sibling !== parent) {
-        sibling.classList.remove(menuClasses.active);
-        if (sibling.classList.contains(menuClasses.subparent)) {
-          const subitems = sibling.querySelectorAll(`.${menuClasses.sub}`);
-          subitems.forEach((child) => {
-            child.parentElement.classList.remove(menuClasses.active);
-            slideUp(child, 400);
-          });
-        }
-      }
-    });
-  };
+  // Close this dropdown if another one is opened
+  useEffect(() => {
+    if (isOpen && item.id !== itemId) {
+      setIsOpen(false);
+    }
+  }, [itemId, item.id]);
 
-  // Toggle dropdown
-  const handleMenuClick = (e) => {
-    e.preventDefault();
+  function handleMenuClick() {
     if (item.children) {
       setIsOpen((prev) => !prev);
       setItemId(item.id);
       setSelectedMenuItem(item);
-      if (submenuRef.current) {
-        if (!isOpen) {
-          slideDown(submenuRef.current, 400);
-          closeSiblings(submenuRef.current.parentElement);
-        } else {
-          slideUp(submenuRef.current, 400);
-        }
-      }
     }
-  };
-
-  // Update active states on route change
-  useEffect(() => {
-    const links = document.querySelectorAll(`.${menuClasses.link}`);
-    links.forEach((link) => {
-      if (link.classList.contains(menuClasses.active)) {
-        closeSiblings(link);
-        link.parentElement.classList.add(menuClasses.active);
-      } else {
-        link.parentElement.classList.remove(menuClasses.active);
-      }
-    });
-
-    const allLinks = document.querySelectorAll(`.${menuClasses.link}`);
-    allLinks.forEach((item) => {
-      const activeRouterLink = item.classList.contains(menuClasses.active);
-      if (activeRouterLink) {
-        const parents = getParents(item, `.${menuClasses.main}`, menuClasses.item);
-        parents.forEach((parentElement) => {
-          parentElement.classList.add(menuClasses.active, menuClasses.current);
-          const subItem = parentElement.querySelector(`.${menuClasses.sub}`);
-          if (subItem) {
-            slideDown(subItem, 400);
-          }
-        });
-      } else {
-        item.parentElement.classList.remove(menuClasses.active, menuClasses.current);
-      }
-    });
-  }, [location.pathname]);
-
-  // Adjust padding based on level
-  const paddingLeft = level === 1 ? "px-6" : `pl-[calc(theme(spacing.6)+theme(spacing.9)*${level - 1})]`;
+  }
 
   return (
     <li
-      className={`py-0.5 group/item ${item.children ? menuClasses.subparent : ""} ${
-        isOpen || isActive ? "bg-[#00000010] text-[#db9e30]" : ""
+      className={`leading-10 group/main text-white hover:text-[#ffffffab] hover:bg-[#00000010] duration-200 relative ${
+        isOpen || isActive ? "bg-[#00000010] text-[#b4a0d2]" : ""
       }`}
     >
       {item.children ? (
-        <a
-          href="#expand"
-          className={`${menuClasses.toggle} flex items-center py-2.5 ${paddingLeft} font-heading font-bold tracking-snug text-[#ffffffab] hover:text-white group-hover/item:text-white duration-200 relative`}
+        <div
+          className="flex gap-2 items-center px-6 cursor-pointer"
           onClick={handleMenuClick}
         >
-          {item.icon && level === 1 && (
-            <span className="font-normal tracking-normal w-9 inline-flex flex-grow-0 flex-shrink-0 text-[#ffffff85] group-[.active]/item:text-[#db9e30] group-hover/item:text-[#db9e30]">
-              <Icons name={item.icon} className="text-2xl leading-none transition-all duration-300" />
-            </span>
-          )}
-          <span className="flex-grow-1 inline-block whitespace-nowrap transition-all duration-300 text-[#ffffffab] group-[.active]/item:text-[#db9e30] group-hover/item:text-white">
+          <Icons name={item.icon} />
+          <h4
+            className={`text-white group-hover/main:text-white duration-200 flex-1 ${
+              isOpen || isActive ? "text-[#fff]" : ""
+            }`}
+          >
             {t(item.title)}
-          </span>
+          </h4>
           <FaAngleDown
-            className={`text-base leading-none text-[#ffffff85] group-[.active]/item:text-[#db9e30] absolute right-5 top-1/2 -translate-y-1/2 transition-all duration-300 ${
-              isOpen ? "rotate-90" : ""
+            className={`font-thin text-sm duration-200 ${
+              isOpen ? "rotate-180" : ""
             }`}
           />
-        </a>
+        </div>
       ) : (
-        <NavLink
+        <Link
           to={item.link || "#"}
-          className={`${menuClasses.link} flex items-center py-2.5 ${paddingLeft} font-heading font-bold tracking-snug text-[#ffffffab] hover:text-white group-hover/item:text-white duration-200 relative`}
+          className="flex gap-2 items-center px-6 cursor-pointer"
           onClick={() => {
             setItemId(item.id);
             setSelectedMenuItem(item);
           }}
-          end
         >
-          {item.icon && level === 1 && (
-            <span className="font-normal tracking-normal w-9 inline-flex flex-grow-0 flex-shrink-0 text-[#ffffff85] group-[.active]/item:text-[#db9e30] group-hover/item:text-[#db9e30]">
-              <Icons name={item.icon} className="text-2xl leading-none transition-all duration-300" />
-            </span>
-          )}
-          <span className="flex-grow-1 inline-block whitespace-nowrap transition-all duration-300 text-[#ffffffab] group-[.active]/item:text-[#db9e30] group-hover/item:text-white">
+          <Icons name={item.icon} />
+          <h4
+            className={`text-white group-hover/main:text-white duration-200 flex-1 ${
+              isActive ? "text-[#fff]" : ""
+            }`}
+          >
             {t(item.title)}
-          </span>
-        </NavLink>
+          </h4>
+        </Link>
       )}
-      {item.children && (
-        <ul
-          ref={submenuRef}
-          className={`${menuClasses.sub} hidden py-2 before:content-[''] before:block before:absolute before:z-1 before:left-[30px] before:top-10 before:bottom-0 before:border-l before:border-solid before:border-[#ffffff35]`}
-        >
-          {item.children.map((child) => (
-            <SidebarMenuItem
-              key={child.id}
-              item={child}
-              itemId={itemId}
-              setItemId={setItemId}
-              level={level + 1}
+      {isOpen && item?.children && (
+        <ul className="py-2 before:content-[''] before:block before:absolute before:z-1 before:left-[30px] before:top-10 before:bottom-0 before:border-l before:border-solid before:border-[#ffffff35]">
+          {item.children.map((dropdown) => (
+            <DropDown
+              key={dropdown.id}
+              data={{ ...dropdown, parent: item }}
+              ddId={ddId}
+              setDDId={setDDId}
+              setItemId={setItemId} // Pass setItemId to control top-level dropdowns
             />
           ))}
         </ul>

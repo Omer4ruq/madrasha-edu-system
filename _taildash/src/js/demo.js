@@ -10,8 +10,8 @@
 
   // Copy color value from CSS :root
   const style              =   getComputedStyle(document.body);
-  const text_primary_500   =   style.getPropertyValue('--primary');
-  const text_secondary_500 =   style.getPropertyValue('--secondary');
+  const text_#DB9E30_500   =   style.getPropertyValue('--#DB9E30');
+  const text_#57A68F_500 =   style.getPropertyValue('--#57A68F');
   const text_yellow_500    =   style.getPropertyValue('--yellow');
   const text_green_500     =   style.getPropertyValue('--green');
   const text_gray_500      =   style.getPropertyValue('--gray');
@@ -39,18 +39,18 @@
             label: 'Previous Week',
             data: [70, 121, 135, 234, 183, 104, 175, 13],
             fill: false,
-            borderColor: text_secondary_500,
+            borderColor: text_#57A68F_500,
             borderDash: [5, 5],
             tension: 0.1,
-            pointBackgroundColor: text_secondary_500
+            pointBackgroundColor: text_#57A68F_500
           },
           {
             label: 'Current Week',
             data: [13, 104, 175, 121, 231, 132, 283, 165],
             fill: false,
-            borderColor: text_primary_500,
+            borderColor: text_#DB9E30_500,
             tension: 0.1,
-            pointBackgroundColor: text_primary_500
+            pointBackgroundColor: text_#DB9E30_500
           }]
         },
         options: {
@@ -100,18 +100,18 @@
             label: 'Previous Week',
             data: [6, 12, 8, 18, 11, 5, 16, 8],
             fill: false,
-            borderColor: text_secondary_500,
+            borderColor: text_#57A68F_500,
             borderDash: [5, 5],
             tension: 0.1,
-            pointBackgroundColor: text_secondary_500,
+            pointBackgroundColor: text_#57A68F_500,
           },
           {
             label: 'Current Week',
             data: [8, 10, 15, 9, 14, 12, 18, 20],
             fill: false,
-            borderColor: text_primary_500,
+            borderColor: text_#DB9E30_500,
             tension: 0.1,
-            pointBackgroundColor: text_primary_500
+            pointBackgroundColor: text_#DB9E30_500
           }]
         },
         options: {
@@ -168,18 +168,18 @@
             label: 'Previous Week',
             data: [70, 21, 35, 34, 83, 14, 75, 13],
             fill: false,
-            borderColor: text_secondary_500,
+            borderColor: text_#57A68F_500,
             borderDash: [5, 5],
             tension: 0.1,
-            pointBackgroundColor: text_secondary_500
+            pointBackgroundColor: text_#57A68F_500
           },
           {
             label: 'Current Week',
             data: [13, 14, 75, 21, 31, 32, 83, 65],
             fill: false,
-            borderColor: text_primary_500,
+            borderColor: text_#DB9E30_500,
             tension: 0.1,
-            pointBackgroundColor: text_primary_500
+            pointBackgroundColor: text_#DB9E30_500
           }]
         },
         options: {
@@ -229,9 +229,9 @@
     if ( chart_line_country!= null) {
       const ctl_country = chart_line_country.getContext('2d');
 
-      let primary_gradient = ctl_country.createLinearGradient(100, 200, 400, 600);
-      primary_gradient.addColorStop(0, text_primary_500);
-      primary_gradient.addColorStop(1, text_secondary_500);
+      let #DB9E30_gradient = ctl_country.createLinearGradient(100, 200, 400, 600);
+      #DB9E30_gradient.addColorStop(0, text_#DB9E30_500);
+      #DB9E30_gradient.addColorStop(1, text_#57A68F_500);
 
       const CountryLine = new Chart(ctl_country, {
         type: 'bar',
@@ -241,10 +241,10 @@
             label: 'Session',
             data: [26, 18, 16, 12, 9, 6, 4, 2],
             backgroundColor: [
-              primary_gradient
+              #DB9E30_gradient
             ],
             borderColor: [
-              primary_gradient
+              #DB9E30_gradient
             ],
             borderWidth: 1
           }]
@@ -299,8 +299,8 @@
             label: 'Traffic Source',
             data: [925, 30, 252],
             backgroundColor: [
-              text_primary_500,
-              text_secondary_500,
+              text_#DB9E30_500,
+              text_#57A68F_500,
               text_green_500
             ],
             hoverOffset: 4
@@ -330,8 +330,8 @@
             label: 'Session',
             data: [300, 150, 26, 18],
             backgroundColor: [
-              text_primary_500,
-              text_secondary_500,
+              text_#DB9E30_500,
+              text_#57A68F_500,
               text_yellow_500,
               text_green_500
             ],
@@ -362,7 +362,7 @@
             label: 'Daily',
             data: [70, 121, 135, 105, 76, 150, 195],
             fill: false,
-            borderColor: text_secondary_500,
+            borderColor: text_#57A68F_500,
             borderWidth: 1,
             radius: 0,
             tension: 0.1
@@ -371,7 +371,7 @@
             label: 'Weekly',
             data: [471, 521, 635, 534, 483, 504, 875],
             fill: false,
-            borderColor: text_primary_500,
+            borderColor: text_#DB9E30_500,
             borderWidth: 1,
             radius: 0,
             tension: 0.1
@@ -438,35 +438,35 @@
             label: 'Organic search',
             data: [70, 41, 35, 83, 73, 64, 75],
             backgroundColor: [
-              text_primary_500,
+              text_#DB9E30_500,
             ]
           },
           {
             label: 'Direct',
             data: [27, 17, 15, 19, 12, 17, 11],
             backgroundColor: [
-              hexToRGBA( text_primary_500, 0.8)
+              hexToRGBA( text_#DB9E30_500, 0.8)
             ]
           },
           {
             label: 'Refferal',
             data: [24, 21, 35, 34, 23, 24, 15],
             backgroundColor: [
-              hexToRGBA( text_primary_500, 0.6)
+              hexToRGBA( text_#DB9E30_500, 0.6)
             ]
           },
           {
             label: 'Social',
             data: [9, 7, 12, 14, 18, 8, 9],
             backgroundColor: [
-              hexToRGBA( text_primary_500, 0.4)
+              hexToRGBA( text_#DB9E30_500, 0.4)
             ]
           },
           {
             label: 'Others',
             data: [30, 31, 35, 34, 33, 34, 35],
             backgroundColor: [
-              hexToRGBA( text_primary_500, 0.2)
+              hexToRGBA( text_#DB9E30_500, 0.2)
             ]
           }]
         },
@@ -514,35 +514,35 @@
             label: 'Google.com',
             data: [70, 54, 65, 73, 63, 64, 75],
             backgroundColor: [
-              text_primary_500,
+              text_#DB9E30_500,
             ]
           },
           {
             label: 'Youtube.com',
             data: [17, 17, 15, 19, 12, 17, 11],
             backgroundColor: [
-              hexToRGBA( text_primary_500, 0.8)
+              hexToRGBA( text_#DB9E30_500, 0.8)
             ]
           },
           {
             label: 'Facebook.com',
             data: [24, 21, 35, 34, 23, 24, 15],
             backgroundColor: [
-              hexToRGBA( text_primary_500, 0.6)
+              hexToRGBA( text_#DB9E30_500, 0.6)
             ]
           },
           {
             label: 'Instagram.com',
             data: [9, 17, 12, 14, 18, 8, 9],
             backgroundColor: [
-              hexToRGBA( text_primary_500, 0.4)
+              hexToRGBA( text_#DB9E30_500, 0.4)
             ]
           },
           {
             label: 'Others',
             data: [10, 21, 15, 14, 23, 24, 15],
             backgroundColor: [
-              hexToRGBA( text_primary_500, 0.2)
+              hexToRGBA( text_#DB9E30_500, 0.2)
             ]
           }]
         },
@@ -590,11 +590,11 @@
             data: [925, 430, 252, 135, 78, 53],
             backgroundColor: [
               text_green_500,
-              text_primary_500,
-              hexToRGBA( text_primary_500, 0.6),
+              text_#DB9E30_500,
+              hexToRGBA( text_#DB9E30_500, 0.6),
               text_yellow_500,
               hexToRGBA( text_yellow_500, 0.6),
-              text_secondary_500,
+              text_#57A68F_500,
             ],
             hoverOffset: 4
           }]
@@ -624,10 +624,10 @@
             label: '# Visitors',
             data: [1170, 1321, 1835, 1834, 2183, 1504, 2175, 2521],
             backgroundColor: [
-              hexToRGBA( text_primary_500, 0.6)
+              hexToRGBA( text_#DB9E30_500, 0.6)
             ],
             borderColor: [
-              hexToRGBA( text_primary_500, 0.6)
+              hexToRGBA( text_#DB9E30_500, 0.6)
             ],
             borderWidth: 1
           },
@@ -635,10 +635,10 @@
             label: '# Sales',
             data: [670, 721, 835, 734, 683, 724, 875, 1021],
             backgroundColor: [
-              text_primary_500,
+              text_#DB9E30_500,
             ],
             borderColor: [
-              text_primary_500,
+              text_#DB9E30_500,
             ],
             borderWidth: 1
           }]
@@ -685,7 +685,7 @@
             label: 'Previous Week',
             data: [70, 121, 235, 334, 483, 304, 475],
             fill: false,
-            borderColor: text_primary_500,
+            borderColor: text_#DB9E30_500,
             cubicInterpolationMode: 'monotone',
             tension: 0.1
           },
@@ -754,20 +754,20 @@
             label: 'Previous Week',
             data: [12, 21, 18, 19, 17, 21, 25, 28],
             fill: false,
-            borderColor: text_secondary_500,
+            borderColor: text_#57A68F_500,
             borderDash: [5, 5],
             tension: 0.1,
             cubicInterpolationMode: 'monotone',
-            pointBackgroundColor: text_secondary_500
+            pointBackgroundColor: text_#57A68F_500
           },
           {
             label: 'Current Week',
             data: [15, 22, 16, 17, 18, 24, 27, 24],
             fill: false,
-            borderColor: text_primary_500,
+            borderColor: text_#DB9E30_500,
             tension: 0.1,
             cubicInterpolationMode: 'monotone',
-            pointBackgroundColor: text_primary_500
+            pointBackgroundColor: text_#DB9E30_500
           }]
         },
         options: {
@@ -826,8 +826,8 @@
             data: [74, 9, 17],
             backgroundColor: [
               text_green_500,
-              text_primary_500,
-              text_secondary_500,
+              text_#DB9E30_500,
+              text_#57A68F_500,
             ],
             hoverOffset: 4
           }]
@@ -856,21 +856,21 @@
             label: 'Planned',
             data: [70, 41, 35, 83],
             backgroundColor: [
-              text_primary_500
+              text_#DB9E30_500
             ]
           },
           {
             label: 'Spend',
             data: [27, 17, 15, 19],
             backgroundColor: [
-              hexToRGBA( text_primary_500, 0.8)
+              hexToRGBA( text_#DB9E30_500, 0.8)
             ]
           },
           {
             label: 'Remaining',
             data: [24, 21, 35, 34],
             backgroundColor: [
-              hexToRGBA( text_primary_500, 0.6)
+              hexToRGBA( text_#DB9E30_500, 0.6)
             ]
           }]
         },
@@ -918,9 +918,9 @@
       const ctla = chart_linearea.getContext('2d');
       
       const gradientIndigo = ctla.createLinearGradient(0, 230, 0, 50);
-      gradientIndigo.addColorStop(1, hexToRGBA( text_primary_500, 0.3));
-      gradientIndigo.addColorStop(0.2, hexToRGBA( text_primary_500, 0.02));
-      gradientIndigo.addColorStop(0, hexToRGBA( text_primary_500, 0.01));
+      gradientIndigo.addColorStop(1, hexToRGBA( text_#DB9E30_500, 0.3));
+      gradientIndigo.addColorStop(0.2, hexToRGBA( text_#DB9E30_500, 0.02));
+      gradientIndigo.addColorStop(0, hexToRGBA( text_#DB9E30_500, 0.01));
 
       const LineArea = new Chart(ctla, {
         type: 'line',
@@ -930,14 +930,14 @@
             fill: {
               target: 'origin'
             },
-            borderColor: text_primary_500,
+            borderColor: text_#DB9E30_500,
             backgroundColor: gradientIndigo,
             label: 'Deals',
             tension: 0.3,
-            pointBackgroundColor: text_primary_500,
+            pointBackgroundColor: text_#DB9E30_500,
             pointBorderWidth: 0,
             pointHitRadius: 30,
-            pointHoverBackgroundColor: text_primary_500,
+            pointHoverBackgroundColor: text_#DB9E30_500,
             pointHoverRadius: 5,
             pointRadius: 0,
             data: [120, 462, 323, 184, 187, 362, 324, 429, 289, 559, 461, 394, 541],
@@ -987,9 +987,9 @@
             label: 'Preview Data',
             data: [180, 110, 155, 80, 98],
             backgroundColor: [
-              text_secondary_500,
+              text_#57A68F_500,
             ],
-            borderColor: text_secondary_500,
+            borderColor: text_#57A68F_500,
             borderDash: [4, 4],
           }, 
           {
@@ -998,10 +998,10 @@
             data: [180, 110, 155, 80, 98],
             fill: false,
             backgroundColor: [
-              hexToRGBA( text_primary_500, 0.4)
+              hexToRGBA( text_#DB9E30_500, 0.4)
             ],
             borderColor: [
-              hexToRGBA( text_primary_500, 0.4)
+              hexToRGBA( text_#DB9E30_500, 0.4)
             ],
             borderWidth: 2
           }]
@@ -1037,18 +1037,18 @@
             label: 'Clents',
             data: [270, 220, 155, 122, 98],
             backgroundColor: [
-              text_primary_500,
-              hexToRGBA( text_primary_500, 0.8),
-              hexToRGBA( text_primary_500, 0.6),
-              hexToRGBA( text_primary_500, 0.4),
-              hexToRGBA( text_primary_500, 0.2)
+              text_#DB9E30_500,
+              hexToRGBA( text_#DB9E30_500, 0.8),
+              hexToRGBA( text_#DB9E30_500, 0.6),
+              hexToRGBA( text_#DB9E30_500, 0.4),
+              hexToRGBA( text_#DB9E30_500, 0.2)
             ],
             borderColor: [
-              text_primary_500,
-              hexToRGBA( text_primary_500, 0.8),
-              hexToRGBA( text_primary_500, 0.6),
-              hexToRGBA( text_primary_500, 0.4),
-              hexToRGBA( text_primary_500, 0.2)
+              text_#DB9E30_500,
+              hexToRGBA( text_#DB9E30_500, 0.8),
+              hexToRGBA( text_#DB9E30_500, 0.6),
+              hexToRGBA( text_#DB9E30_500, 0.4),
+              hexToRGBA( text_#DB9E30_500, 0.2)
             ],
             borderWidth: 1
           }]
@@ -1101,8 +1101,8 @@
             label: 'Traffic Source',
             data: [925, 30, 252],
             backgroundColor: [
-              text_primary_500,
-              text_secondary_500,
+              text_#DB9E30_500,
+              text_#57A68F_500,
               text_yellow_500
             ],
             hoverOffset: 4
@@ -1135,7 +1135,7 @@
             label: 'Storage',
             data: [90000, 52000],
             backgroundColor: [
-              text_primary_500,
+              text_#DB9E30_500,
               text_green_500
             ],
             hoverOffset: 4
@@ -1162,9 +1162,9 @@
 
       const gradientIndigo = ctla.createLinearGradient(0, 70, 0, 0);
 
-      gradientIndigo.addColorStop(1, hexToRGBA( text_primary_500, 0.5));
-      gradientIndigo.addColorStop(0.2, hexToRGBA( text_secondary_500, 0.02));
-      gradientIndigo.addColorStop(0, hexToRGBA( text_primary_500, 0.01));
+      gradientIndigo.addColorStop(1, hexToRGBA( text_#DB9E30_500, 0.5));
+      gradientIndigo.addColorStop(0.2, hexToRGBA( text_#57A68F_500, 0.02));
+      gradientIndigo.addColorStop(0, hexToRGBA( text_#DB9E30_500, 0.01));
 
       const LineAreaSm = new Chart(ctla, {
         type: 'line',
@@ -1174,14 +1174,14 @@
             fill: {
               target: 'origin'
             },
-            borderColor: text_primary_500,
+            borderColor: text_#DB9E30_500,
             backgroundColor: gradientIndigo,
             label: 'Page views',
             tension: 0.3,
-            pointBackgroundColor: text_primary_500,
+            pointBackgroundColor: text_#DB9E30_500,
             pointBorderWidth: 0,
             pointHitRadius: 30,
-            pointHoverBackgroundColor: text_primary_500,
+            pointHoverBackgroundColor: text_#DB9E30_500,
             pointHoverRadius: 5,
             pointRadius: 0,
             data: [1170, 1321, 1835, 1834, 2183, 1504, 2175, 2521, 1835, 1834, 2183],
@@ -1216,8 +1216,8 @@
       const ctb = chart_barsm.getContext('2d');
       const gradientIndigo = ctb.createLinearGradient(0, 200, 0, 20);
 
-      gradientIndigo.addColorStop(1, hexToRGBA( text_primary_500 ));
-      gradientIndigo.addColorStop(0.2, hexToRGBA( text_secondary_500 ));
+      gradientIndigo.addColorStop(1, hexToRGBA( text_#DB9E30_500 ));
+      gradientIndigo.addColorStop(0.2, hexToRGBA( text_#57A68F_500 ));
 
       const BarChartSm = new Chart(ctb, {
         type: 'bar',
@@ -1266,7 +1266,7 @@
       const gradientIndigo = ctb.createLinearGradient(0, 200, 0, 20);
 
       gradientIndigo.addColorStop(1, hexToRGBA( text_green_500, 0.9));
-      gradientIndigo.addColorStop(0.2, hexToRGBA( text_primary_500, 0.2));
+      gradientIndigo.addColorStop(0.2, hexToRGBA( text_#DB9E30_500, 0.2));
 
       const BarComments = new Chart(ctb, {
         type: 'bar',
@@ -1313,8 +1313,8 @@
       const ctb = chart_share.getContext('2d');
       const gradientIndigo = ctb.createLinearGradient(0, 200, 0, 20);
 
-      gradientIndigo.addColorStop(1, hexToRGBA( text_secondary_500, 0.9));
-      gradientIndigo.addColorStop(0.2, hexToRGBA( text_primary_500, 0.2));
+      gradientIndigo.addColorStop(1, hexToRGBA( text_#57A68F_500, 0.9));
+      gradientIndigo.addColorStop(0.2, hexToRGBA( text_#DB9E30_500, 0.2));
 
       const BarShare = new Chart(ctb, {
         type: 'bar',
@@ -1370,13 +1370,13 @@
             fill: {
               target: 'origin'
             },
-            borderColor: text_secondary_500,
-            backgroundColor: hexToRGBA( text_secondary_500, 0.1),
+            borderColor: text_#57A68F_500,
+            backgroundColor: hexToRGBA( text_#57A68F_500, 0.1),
             tension: 0.3,
-            pointBackgroundColor: text_secondary_500,
+            pointBackgroundColor: text_#57A68F_500,
             pointBorderWidth: 0,
             pointHitRadius: 30,
-            pointHoverBackgroundColor: text_secondary_500,
+            pointHoverBackgroundColor: text_#57A68F_500,
             pointHoverRadius: 5,
             pointRadius: 0
           },
@@ -1386,13 +1386,13 @@
             fill: {
               target: 'origin'
             },
-            borderColor: text_primary_500,
-            backgroundColor: hexToRGBA( text_primary_500, 0.1),
+            borderColor: text_#DB9E30_500,
+            backgroundColor: hexToRGBA( text_#DB9E30_500, 0.1),
             tension: 0.3,
-            pointBackgroundColor: text_primary_500,
+            pointBackgroundColor: text_#DB9E30_500,
             pointBorderWidth: 0,
             pointHitRadius: 30,
-            pointHoverBackgroundColor: text_primary_500,
+            pointHoverBackgroundColor: text_#DB9E30_500,
             pointHoverRadius: 5,
             pointRadius: 0,
           }]
@@ -1442,12 +1442,12 @@
           datasets: [{
               data: [320, 80],
               backgroundColor: [
-                text_primary_500,
-                text_secondary_500
+                text_#DB9E30_500,
+                text_#57A68F_500
               ],
               borderColor: [
-                text_primary_500,
-                text_secondary_500
+                text_#DB9E30_500,
+                text_#57A68F_500
               ],
               borderWidth: 1
           }]

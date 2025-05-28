@@ -40,7 +40,7 @@ export default function AllocationTable({ title, data: propData }) {
                     name=""
                     value={item.package}
                     onChange={(event) => handleChange(event, item.id)}
-                    className="bg-bgGray w-full rounded px-1 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                    className="bg-bgGray w-full rounded px-1 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                   >
                     <option value="Package 1 - 1000">{t("module.service.package1")}</option> {/* Translate option */}
                     <option value="Package 2 - 2000">{t("module.service.package2")}</option> {/* Translate option */}

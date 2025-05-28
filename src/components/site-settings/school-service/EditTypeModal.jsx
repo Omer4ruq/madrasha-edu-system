@@ -17,7 +17,7 @@ export default function EditTypeModal({ editContent, setEditContent, isEdit, onC
             placeholder={t("module.report.servicePlaceholder")}
             value={editContent?.service}
             onChange={(e) => setEditContent({ ...editContent, service: e.target.value })}
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -28,7 +28,7 @@ export default function EditTypeModal({ editContent, setEditContent, isEdit, onC
             placeholder={t("module.report.packagePlaceholder")}
             value={editContent?.package}
             onChange={(e) => setEditContent({ ...editContent, package: e.target.value })}
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -39,7 +39,7 @@ export default function EditTypeModal({ editContent, setEditContent, isEdit, onC
             placeholder={t("module.report.pricePlaceholder")}
             value={editContent?.price}
             onChange={(e) => setEditContent({ ...editContent, price: e.target.value })}
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -49,7 +49,7 @@ export default function EditTypeModal({ editContent, setEditContent, isEdit, onC
             placeholder={t("module.report.descriptionPlaceholder")}
             value={editContent?.description}
             onChange={(e) => setEditContent({ ...editContent, description: e.target.value })}
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
         
@@ -58,7 +58,7 @@ export default function EditTypeModal({ editContent, setEditContent, isEdit, onC
           <select
             value={editContent?.status}
             onChange={(e) => setEditContent({ ...editContent, status: e.target.value })}
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           >
             <option value="Active">{t("module.report.statusActive")}</option>
             <option value="Inactive">{t("module.report.statusInactive")}</option>

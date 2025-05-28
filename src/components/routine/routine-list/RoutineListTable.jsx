@@ -32,7 +32,7 @@ export default function RoutineListTable() {
                   <td className="w-4/12 min-w-40">
                      <Link to={`../create-routine`}>
                         <button
-                           className="bg-primary px-2 sm:px-3 py-1 sm:py-2 rounded shadow text-white hover:-translate-y-[2px] duration-200 text-sm my-1 sm:my-[6px]"
+                           className="bg-#DB9E30 px-2 sm:px-3 py-1 sm:py-2 rounded shadow text-white hover:-translate-y-[2px] duration-200 text-sm my-1 sm:my-[6px]"
                         >
                            {t("module.routine.add_routine")}
                         </button>

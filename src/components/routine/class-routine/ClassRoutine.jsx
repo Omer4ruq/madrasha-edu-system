@@ -12,7 +12,7 @@ export default function ClassRoutine() {
             id=""
             name=""
             defaultValue="Select"
-            className="bg-bgGray flex-1 rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray flex-1 rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             >
                <option value="Select" disabled>Select Class</option>
                <option value="One A">One A</option>
@@ -20,7 +20,7 @@ export default function ClassRoutine() {
                <option value="Two A">Period</option>
             </select>
 
-            <button className="bg-primary hover:bg-buttonHover w-20 sm:w-28 md:w-32 ml-1 py-2 rounded shadow text-white hover:-translate-y-[2px] duration-200">
+            <button className="bg-#DB9E30 hover:bg-buttonHover w-20 sm:w-28 md:w-32 ml-1 py-2 rounded shadow text-white hover:-translate-y-[2px] duration-200">
             {t("module.routine.submit")}
             </button>
          </div>

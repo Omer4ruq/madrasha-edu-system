@@ -34,7 +34,7 @@ export default function ClassConfigTable({ classConfig }) {
               <td className="w-3/12 min-w-40">
                 <Link to={`../section-config/${row.id}`}>
                   <button
-                    className="bg-primary px-3 py-2 rounded shadow text-white hover:-translate-y-[2px] duration-200 text-sm my-[6px]"
+                    className="bg-#DB9E30 px-3 py-2 rounded shadow text-white hover:-translate-y-[2px] duration-200 text-sm my-[6px]"
                   >
                     {t('module.settings.add_class_section')}
                   </button>

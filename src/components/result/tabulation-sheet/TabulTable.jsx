@@ -23,7 +23,7 @@ export default function TabulTable() {
    ];
 
    return (
-      <div className="overflow-x-scroll overflow-y-clip border border-primary rounded-md">
+      <div className="overflow-x-scroll overflow-y-clip border border-#DB9E30 rounded-md">
          <table className="w-full text-textGray leading-10">
             <thead className="border-b-2 bg-bgGreen text-lg">
                <tr className="divide-x-2 divide-bgGray">

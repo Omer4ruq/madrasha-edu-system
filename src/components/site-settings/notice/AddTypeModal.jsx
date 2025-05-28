@@ -14,7 +14,7 @@ export default function AddTypeModal({ isAdd, onClose }) {
           <input
             type="date"
             placeholder={t("module.report.enterDate")}
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -23,7 +23,7 @@ export default function AddTypeModal({ isAdd, onClose }) {
           <input
             type="text"
             placeholder={t("module.report.enterNoticeTitle")}
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -31,7 +31,7 @@ export default function AddTypeModal({ isAdd, onClose }) {
           <label className="text-textGray">{t("module.report.noticeDetails")}</label>
           <textarea
             placeholder={t("module.report.enterNoticeDetails")}
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -40,7 +40,7 @@ export default function AddTypeModal({ isAdd, onClose }) {
           <input
             type="date"
             placeholder={t("module.report.enterExpireDate")}
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -48,7 +48,7 @@ export default function AddTypeModal({ isAdd, onClose }) {
           <label className="text-textGray">{t("module.report.fileAttached")}</label>
           <input
             type="file"
-            className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
       </div>

@@ -14,7 +14,7 @@ export default function DownloadAddModal({ isAdd, onClose }) {
           <input
             type="text"
             placeholder={t("study_material.title_label")} // Use translation key for placeholder if needed
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
         
@@ -23,7 +23,7 @@ export default function DownloadAddModal({ isAdd, onClose }) {
           <input
             type="text"
             placeholder={t("study_material.class_label")} // Use translation key for placeholder if needed
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -32,14 +32,14 @@ export default function DownloadAddModal({ isAdd, onClose }) {
           <input
             type="text"
             placeholder={t("study_material.document_type_label")} // Use translation key for placeholder if needed
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
         <div className="space-y-2">
           <label>{t("study_material.upload_file_label")}</label> {/* Use translation key */}
           <input
-            className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
             aria-describedby=""
             id=""
             type="file"

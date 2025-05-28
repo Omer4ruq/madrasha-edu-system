@@ -13,7 +13,7 @@ export default function EditTForm({ teacherData, handleChange }) {
           <input
             value={teacherData.avatar}
             onChange={(event) => { handleChange("avatar", event); }}
-            className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
             type="file"
           />
         </div>
@@ -26,7 +26,7 @@ export default function EditTForm({ teacherData, handleChange }) {
             placeholder={t("module.teacher.enter_name")}
             value={teacherData.name}
             onChange={(event) => { handleChange("name", event); }}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -36,7 +36,7 @@ export default function EditTForm({ teacherData, handleChange }) {
           <select
             value={teacherData.gender}
             onChange={(event) => { handleChange("gender", event); }}
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
           >
             <option value="Male">{t("module.teacher.male")}</option>
             <option value="Female">{t("module.teacher.female")}</option>
@@ -50,7 +50,7 @@ export default function EditTForm({ teacherData, handleChange }) {
           <select
             value={teacherData.bloodGroup}
             onChange={(event) => { handleChange("bloodGroup", event); }}
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
           >
             <option value="A+">A+</option>
             <option value="A-">A-</option>
@@ -71,7 +71,7 @@ export default function EditTForm({ teacherData, handleChange }) {
             placeholder={t("module.teacher.enter_phone_number")}
             value={teacherData.mobile}
             onChange={(event) => { handleChange("mobile", event); }}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -83,7 +83,7 @@ export default function EditTForm({ teacherData, handleChange }) {
             placeholder={t("module.teacher.enter_email")}
             value={teacherData.email}
             onChange={(event) => { handleChange("email", event); }}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -95,7 +95,7 @@ export default function EditTForm({ teacherData, handleChange }) {
             placeholder={t("module.teacher.enter_nid")}
             value={teacherData.NID}
             onChange={(event) => { handleChange("NID", event); }}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -106,7 +106,7 @@ export default function EditTForm({ teacherData, handleChange }) {
             type="date"
             value={teacherData.birthDate}
             onChange={(event) => { handleChange("birthDate", event); }}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -118,7 +118,7 @@ export default function EditTForm({ teacherData, handleChange }) {
             placeholder={t("module.teacher.enter_rfid")}
             value={teacherData.id}
             onChange={(event) => { handleChange("id", event); }}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -128,7 +128,7 @@ export default function EditTForm({ teacherData, handleChange }) {
           <select
             value={teacherData.religion}
             onChange={(event) => { handleChange("religion", event); }}
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
           >
             <option value="Islam">{t("module.teacher.islam")}</option>
             <option value="Hindu">{t("module.teacher.hindu")}</option>
@@ -146,7 +146,7 @@ export default function EditTForm({ teacherData, handleChange }) {
             placeholder={t("module.teacher.enter_fathers_name")}
             value={teacherData.fathersName}
             onChange={(event) => { handleChange("fathersName", event); }}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -158,7 +158,7 @@ export default function EditTForm({ teacherData, handleChange }) {
             placeholder={t("module.teacher.enter_mothers_name")}
             value={teacherData.mothersName}
             onChange={(event) => { handleChange("mothersName", event); }}
-            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -168,7 +168,7 @@ export default function EditTForm({ teacherData, handleChange }) {
           <select
             value={teacherData.maritalStatus}
             onChange={(event) => { handleChange("maritalStatus", event); }}
-            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded px-1 py-2 border-2 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
           >
             <option value="Single">{t("module.teacher.single")}</option>
             <option value="Married">{t("module.teacher.married")}</option>
@@ -189,7 +189,7 @@ export default function EditTForm({ teacherData, handleChange }) {
                 placeholder={t("module.teacher.enter_spouse_name")}
                 value={teacherData.spouseName}
                 onChange={(event) => { handleChange("spouseName", event); }}
-                className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
               />
             </div>
 
@@ -201,7 +201,7 @@ export default function EditTForm({ teacherData, handleChange }) {
                 placeholder={t("module.teacher.enter_spouse_phone_number")}
                 value={teacherData.spousePhone}
                 onChange={(event) => { handleChange("spousePhone", event); }}
-                className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
               />
             </div>
           </>

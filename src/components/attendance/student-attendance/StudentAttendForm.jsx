@@ -14,7 +14,7 @@ export default function StudentAttendForm({setIsSubmit}) {
          id=""
          name=""
          defaultValue="Select Class"
-         className="bg-bgGray flex-1 rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+         className="bg-bgGray flex-1 rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
          onChange={(e)=> {setChosenClass(e.target.value)}}
          >
             <option value="Select Class" disabled>Select Class</option>
@@ -25,7 +25,7 @@ export default function StudentAttendForm({setIsSubmit}) {
          </select>
          <button
             type="submit"
-            className="rounded w-36 p-2 bg-primary hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200"
+            className="rounded w-36 p-2 bg-#DB9E30 hover:bg-buttonHover text-white shadow-md  hover:-translate-y-[2px] duration-200"
             onClick={()=> chosenClass && setIsSubmit(true)}
             >
             {t('module.communication.submit')}

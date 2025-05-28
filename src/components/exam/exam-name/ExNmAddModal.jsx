@@ -14,7 +14,7 @@ export default function ExNmAddModal({ isAdd, onClose }) {
                     <input
                         type="text"
                         placeholder={t('module.exam.exam_name')}
-                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
 
@@ -22,7 +22,7 @@ export default function ExNmAddModal({ isAdd, onClose }) {
                     <label className="">{t('module.exam.start_date')}</label>
                     <input
                         type="date"
-                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
 
@@ -30,7 +30,7 @@ export default function ExNmAddModal({ isAdd, onClose }) {
                     <label className="">{t('module.exam.end_date')}</label>
                     <input
                         type="date"
-                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     />
                 </div>
                 
@@ -40,7 +40,7 @@ export default function ExNmAddModal({ isAdd, onClose }) {
                         id=""
                         name=""
                         defaultValue="2024"
-                        className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-primary focus:outline-none"
+                        className="bg-bgGray w-full rounded px-1 py-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                     >
                         <option value="2024">2024</option>
                         <option value="2023">2023</option>

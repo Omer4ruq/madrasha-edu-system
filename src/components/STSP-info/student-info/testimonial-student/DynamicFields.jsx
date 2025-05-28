@@ -8,7 +8,7 @@ export default function DynamicFields() {
             values.map((item, i) => <span key={i} className="mr-2 border border-slate-400 rounded p-2 leading-10 dashed">{`{${item}}`}</span>)
          }
 
-        <h3 className="text-primary/65 mt-4 mb-6"><span className="underline">Note</span> :  Use $(Dollar) sign before using a variable. Example: ${father_name}</h3>
+        <h3 className="text-#DB9E30/65 mt-4 mb-6"><span className="underline">Note</span> :  Use $(Dollar) sign before using a variable. Example: ${father_name}</h3>
 
         </div>
     );

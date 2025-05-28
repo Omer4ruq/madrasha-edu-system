@@ -13,7 +13,7 @@ export default function FeeAmountEditModal({ editContent, setEditContent, isEdit
           <label>{t("module.fees.class")}</label>
           <select
             onChange={(e) => setEditContent({ ...editContent, class: e.target.value })}
-            className="bg-bgGray appearance-none w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray appearance-none w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue="1"
             name="status"
             id="status"
@@ -26,7 +26,7 @@ export default function FeeAmountEditModal({ editContent, setEditContent, isEdit
           <label>{t("module.fees.fee_type")}</label>
           <select
             onChange={(e) => setEditContent({ ...editContent, type_name: e.target.value })}
-            className="bg-bgGray appearance-none w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray appearance-none w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue="0"
             name="fee_type"
             id="fee_type"
@@ -47,7 +47,7 @@ export default function FeeAmountEditModal({ editContent, setEditContent, isEdit
             onChange={(e) => setEditContent({ ...editContent, late_fee: e.target.value })}
             type="number"
             placeholder={t("module.fees.amount")}
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -55,7 +55,7 @@ export default function FeeAmountEditModal({ editContent, setEditContent, isEdit
           <label>{t("module.fees.admission_year")}</label>
           <select
             onChange={(e) => setEditContent({ ...editContent, admission_year: e.target.value })}
-            className="bg-bgGray appearance-none w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray appearance-none w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue="2024"
             name="admission_year"
             id="admission_year"

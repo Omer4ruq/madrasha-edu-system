@@ -21,7 +21,7 @@ const AssignedFees = () => {
   return (
     <div className="bg-white shadow rounded-md">
       {/* component title */}
-      <h3 className="bg-primary text-white text-lg text-center p-4 leading-[20px] rounded-t-md shadow-md">
+      <h3 className="bg-#DB9E30 text-white text-lg text-center p-4 leading-[20px] rounded-t-md shadow-md">
         {t("module.fees.assigned_fees_title")}
       </h3>
 

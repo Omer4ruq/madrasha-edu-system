@@ -14,7 +14,7 @@ export default function AddPackageModal({ isAdd, onClose }) {
           <input
             type="text"
             placeholder={t("module.service.packageName")} 
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
 
@@ -23,7 +23,7 @@ export default function AddPackageModal({ isAdd, onClose }) {
           <input
             type="number"
             placeholder={t("module.service.packageAmount")} 
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
           />
         </div>
       </div>

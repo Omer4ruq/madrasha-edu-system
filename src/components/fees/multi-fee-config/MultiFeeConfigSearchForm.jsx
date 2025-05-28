@@ -10,7 +10,7 @@ const MultiFeeConfigSearchForm = () => {
           <label>{t("module.fees.select_year")}</label>
 
           <select
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue="0"
             name="select_year"
             id="select_year"
@@ -25,7 +25,7 @@ const MultiFeeConfigSearchForm = () => {
           <label>{t("module.fees.select_class")}</label>
 
           <select
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue="0"
             name="select_class"
             id="select_class"
@@ -40,7 +40,7 @@ const MultiFeeConfigSearchForm = () => {
           <label>{t("module.fees.select_group")}</label>
 
           <select
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue="0"
             name="select_group"
             id="select_group"
@@ -54,7 +54,7 @@ const MultiFeeConfigSearchForm = () => {
         <div className="space-y-2">
           <label>{t("module.fees.select_category")}</label>
           <select
-            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-primary focus:outline-none"
+            className="bg-bgGray w-full rounded p-2 border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
             defaultValue=""
             name="select_category"
             id="select_category"
@@ -71,7 +71,7 @@ const MultiFeeConfigSearchForm = () => {
       <div className="flex justify-end">
         <button
           type="submit"
-          className="rounded mt-4 w-44 p-2 bg-primary hover:bg-buttonHover text-white shadow-md hover:-translate-y-[2px] duration-200 flex items-center justify-center gap-2"
+          className="rounded mt-4 w-44 p-2 bg-#DB9E30 hover:bg-buttonHover text-white shadow-md hover:-translate-y-[2px] duration-200 flex items-center justify-center gap-2"
         >
           {t("module.fees.save")}
         </button>

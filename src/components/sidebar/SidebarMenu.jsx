@@ -15,7 +15,7 @@ export default function SidebarMenu() {
           className={
             item.icon
               ? "py-0.5"
-              : "relative pt-5 px-6 before:absolute before:h-px before:w-full before:start-0 before:top-1/2 before:bg-[#ffffff35] text-[#ffffff70] uppercase font-bold text-sm leading-10 tracking-wide"
+              : "relative pt-5 px-6 text-[#ffffff70] uppercase font-bold text-sm leading-10 tracking-wide"
           }
         >
           {item.icon ? (

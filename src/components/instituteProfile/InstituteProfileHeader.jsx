@@ -19,20 +19,20 @@ export default function InstituteProfileHeader({data}) {
             {/* header info */}
             <div className="flex-1 md:flex items-end justify-between">
                <div className="space-y-2 md:space-y-4">
-                  <h4 className="text-xl md:text-2xl text-primary font-medium">{data?.institute_name}</h4>
+                  <h4 className="text-xl md:text-2xl text-#DB9E30 font-medium">{data?.institute_name}</h4>
                   <div className="flex gap-4">
-                     <div className="text-secondary flex items-center gap-1">
+                     <div className="text-#57A68F flex items-center gap-1">
                      <IoPersonCircleOutline/>
                      <h6 className="pt-[2px]">{data?.institute_gender_type} {t("general.school")}</h6>
                      </div>
-                     <div className="text-secondary flex items-center gap-1">
+                     <div className="text-#57A68F flex items-center gap-1">
                      <MdOutlineLocationOn /> 
                      <h6 className="pt-[2px]">{data?.institute_address}</h6>
                      </div>
                   </div> 
                </div>
                
-               <button className="bg-primary hover:bg-buttonHover w-24 md:w-28 h-10 md:h-11 rounded shadow text-white hover:-translate-y-[2px] duration-200 mt-4">
+               <button className="bg-#DB9E30 hover:bg-buttonHover w-24 md:w-28 h-10 md:h-11 rounded shadow text-white hover:-translate-y-[2px] duration-200 mt-4">
                   <AiOutlineRise className="inline mr-1 md:mr-2"/>
                   {t("module.instituteInfo.active")}
                </button>

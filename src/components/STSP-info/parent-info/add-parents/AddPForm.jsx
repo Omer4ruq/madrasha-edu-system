@@ -9,7 +9,7 @@ export default function AddPForm() {
             <div className="space-y-1">
                 <label className="text-textGray" htmlFor="avatar">{t("module.communication.avatar")}:</label>
                 <input
-                    className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-primary focus:outline-none"
+                    className="block w-full cursor-pointer rounded bg-gray-100 text-textGray border-transparent focus:border-#DB9E30 focus:outline-none"
                     id="avatar"
                     type="file"
                 />
@@ -21,7 +21,7 @@ export default function AddPForm() {
                 <input
                     type="text"
                     placeholder={t("module.communication.enter_parent_name")}
-                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                 />
             </div>
 
@@ -31,7 +31,7 @@ export default function AddPForm() {
                 <input
                     type="text"
                     placeholder={t("module.communication.enter_phone_number")}
-                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                 />
             </div>
 
@@ -41,7 +41,7 @@ export default function AddPForm() {
                 <input
                     type="text"
                     placeholder={t("module.communication.enter_occupation")}
-                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                 />
             </div>
 
@@ -51,7 +51,7 @@ export default function AddPForm() {
                 <input
                     type="text"
                     placeholder={t("module.communication.enter_nid")}
-                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                 />
             </div>
 
@@ -61,7 +61,7 @@ export default function AddPForm() {
                 <input
                     type="text"
                     placeholder={t("module.communication.enter_relation")}
-                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                 />
             </div>
 
@@ -71,7 +71,7 @@ export default function AddPForm() {
                 <input
                     type="text"
                     placeholder={t("module.communication.enter_father_name")}
-                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                 />
             </div>
 
@@ -81,7 +81,7 @@ export default function AddPForm() {
                 <input
                     type="text"
                     placeholder={t("module.communication.enter_father_phone_no")}
-                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                 />
             </div>
 
@@ -91,7 +91,7 @@ export default function AddPForm() {
                 <input
                     type="text"
                     placeholder={t("module.communication.enter_mother_name")}
-                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                 />
             </div>
 
@@ -101,7 +101,7 @@ export default function AddPForm() {
                 <input
                     type="text"
                     placeholder={t("module.communication.enter_mother_phone_no")}
-                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-primary focus:outline-none"
+                    className="bg-bgGray text-textGray w-full rounded px-2 py-[6px] border-2 border-transparent focus:border-#DB9E30 focus:outline-none"
                 />
             </div>
         </div>

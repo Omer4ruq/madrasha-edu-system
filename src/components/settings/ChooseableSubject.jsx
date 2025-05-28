@@ -15,7 +15,7 @@ export default function ChooseableSubject() {
       <SelectSubject />
 
       {/* save button */}
-      {/* <button className="bg-primary px-6 py-2 rounded shadow text-white hover:-translate-y-[2px] duration-200">
+      {/* <button className="bg-#DB9E30 px-6 py-2 rounded shadow text-white hover:-translate-y-[2px] duration-200">
         Save
       </button> */}
     </div>
