@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   useCreateStudentSectionApiMutation,
   useGetStudentSectionApiQuery,
@@ -13,6 +13,7 @@ const AddSection = () => {
   const [sectionName, setSectionName] = useState("");
   const [editSectionId, setEditSectionId] = useState(null);
   const [editSectionName, setEditSectionName] = useState("");
+  const modalRef = useRef(null);
 
   // API hooks
   const {
@@ -130,6 +131,30 @@ const AddSection = () => {
     }
   };
 
+  // Close modal on outside click or Escape key
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        setEditSectionId(null);
+        setEditSectionName("");
+      }
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setEditSectionId(null);
+        setEditSectionName("");
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
   return (
     <div className="py-8 w-full relative">
       <style>
@@ -185,49 +210,6 @@ const AddSection = () => {
 
         {/* Form to Add Section */}
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-          <style>
-            {`
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      @keyframes scaleIn {
-        from { transform: scale(0.95); opacity: 0; }
-        to { transform: scale(1); opacity: 1; }
-      }
-      .animate-fadeIn {
-        animation: fadeIn 0.6s ease-out forwards;
-      }
-      .animate-scaleIn {
-        animation: scaleIn 0.4s ease-out forwards;
-      }
-      .tick-glow {
-        transition: all 0.3s ease;
-      }
-      .tick-glow:checked + span {
-        box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
-      }
-      .btn-glow:hover {
-        box-shadow: 0 0 20px rgba(37, 99, 235, 0.4); /* Stronger glow */
-      }
-
-      /* Custom Scrollbar */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: rgba(22, 31, 48, 0.26);
-        border-radius: 10px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: rgba(10, 13, 21, 0.44);
-      }
-    `}
-          </style>
-
           <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
             <IoAddCircle className="text-4xl text-[#441a05]" />
             <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
@@ -256,8 +238,8 @@ const AddSection = () => {
               title="Create a new section"
               className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
                 isLoading
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:text-white hover:shadow-md"
+                  ? "cursor-not-allowed"
+                  : "hover:text-white hover:shadow-md"
               }`}
             >
               {isLoading ? (
@@ -286,48 +268,8 @@ const AddSection = () => {
           )}
         </div>
 
-        {/* Edit Section Form (appears when editing) */}
-        {editSectionId && (
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-2xl mb-8 animate-fadeIn">
-            <h3 className="text-lg font-semibold text-[#441a05] mb-4">
-              Edit Section
-            </h3>
-            <form onSubmit={handleUpdate} className="flex gap-4 items-center">
-              <div className="relative border-2 border-blue-600 rounded-lg p-4 flex-1">
-                <label
-                  htmlFor="editSectionName"
-                  className="absolute -top-3 left-4 bg-white/10 px-2 text-blue-600 text-sm"
-                >
-                  Section Name
-                </label>
-                <input
-                  type="text"
-                  id="editSectionName"
-                  value={editSectionName}
-                  onChange={(e) => setEditSectionName(e.target.value)}
-                  className="w-full bg-transparent text-[#441a05] focus:outline-none placeholder-white/50"
-                  placeholder="Edit section name"
-                />
-              </div>
-              <button
-                type="submit"
-                className="relative inline-flex items-center px-6 py-2 rounded-xl font-medium text-[#441a05] bg-blue-600 hover:bg-blue-700 btn-glow transition-all duration-300 animate-scaleIn"
-              >
-                Update Section
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditSectionId(null)}
-                className="relative inline-flex items-center px-6 py-2 rounded-xl font-medium text-[#441a05] bg-gray-500 hover:bg-gray-600 btn-glow transition-all duration-300 animate-scaleIn"
-              >
-                Cancel
-              </button>
-            </form>
-          </div>
-        )}
-
         {/* Sections Table */}
-        <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh]">
+        <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
           <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">
             Sections List
           </h3>
@@ -435,6 +377,62 @@ const AddSection = () => {
             </div>
           )}
         </div>
+
+        {/* Edit Section Modal */}
+        {editSectionId && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fadeIn">
+            <div
+              ref={modalRef}
+              className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 max-w-md sm:max-w-lg w-full shadow-xl animate-scaleIn"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Edit section"
+            >
+              <h3 className="text-xl font-semibold text-[#441a05] mb-6 tracking-tight flex item-center gap-2">
+                <FaEdit className="w-5 h-5 mt-1" /> Edit Section
+              </h3>
+              <form onSubmit={handleUpdate} className="space-y-6">
+                <div>
+                  <label
+                    htmlFor="editSectionName"
+                    className="block text-sm font-medium text-[#441a05] mb-2"
+                  >
+                    Section Name
+                  </label>
+                  <input
+                    type="text"
+                    id="editSectionName"
+                    value={editSectionName}
+                    onChange={(e) => setEditSectionName(e.target.value)}
+                    className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
+                    placeholder="Edit section name (e.g., Section A)"
+                    aria-describedby="edit-section-error"
+                  />
+                </div>
+                <div className="flex gap-4">
+                  <button
+                    type="submit"
+                    className="flex-1 px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
+                    aria-label="Update section"
+                  >
+                    Update Section
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditSectionId(null);
+                      setEditSectionName("");
+                    }}
+                    className="flex-1 px-6 py-3 rounded-lg font-medium bg-gray-500 text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
+                    aria-label="Cancel edit"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
