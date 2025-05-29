@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { useGetClassListApiQuery } from "../../redux/features/api/classListApi";
-import { useGetStudentSectionApiQuery } from "../../redux/features/api/studentSectionApi";
-import { useGetStudentShiftApiQuery } from "../../redux/features/api/studentShiftApi";
-import { useGetStudentClassApIQuery } from "../../redux/features/api/studentClassApi";
+import { useGetClassListApiQuery } from "../../redux/features/api/class/classListApi";
+import { useGetStudentSectionApiQuery } from "../../redux/features/api/student/studentSectionApi";
+import { useGetStudentShiftApiQuery } from "../../redux/features/api/student/studentShiftApi";
+import { useGetStudentClassApIQuery } from "../../redux/features/api/student/studentClassApi";
 import {
   useCreateClassConfigApiMutation,
   useDeleteClassConfigApiMutation,
   useGetclassConfigApiQuery,
-} from "../../redux/features/api/classConfigApi";
+} from "../../redux/features/api/class/classConfigApi";
 import { FaChalkboard, FaSpinner, FaTrash } from "react-icons/fa";
 import { IoAdd, IoBookmark, IoSettings, IoTime } from "react-icons/io5";
 

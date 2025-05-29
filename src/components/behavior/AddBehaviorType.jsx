@@ -4,7 +4,7 @@ import {
   useGetBehaviorTypeApiQuery,
   useUpdateBehaviorTypeApiMutation,
   useDeleteBehaviorTypeApiMutation,
-} from "../../redux/features/api/behaviorTypeApi";
+} from "../../redux/features/api/behavior/behaviorTypeApi";
 import { FaEdit, FaSpinner, FaTrash } from "react-icons/fa";
 import { IoAdd, IoAddCircle } from "react-icons/io5";
 

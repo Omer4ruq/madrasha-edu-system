@@ -7,7 +7,7 @@ import Loading from "../common/Loading.jsx";
 import InstituteContact from "./InstituteContact";
 import InstituteInfo from "./InstituteInfo";
 import InstituteProfileHeader from "./InstituteProfileHeader";
-import { useCreateInstituteMutation, useDeleteInstituteMutation, useGetInstitutesQuery, useUpdateInstituteMutation } from "../../redux/features/api/instituteApi.js";
+import { useCreateInstituteMutation, useDeleteInstituteMutation, useGetInstitutesQuery, useUpdateInstituteMutation } from "../../redux/features/api/institute/instituteApi.js";
 import InstituteProfileForm from "./InstituteProfileForm.jsx";
 import InstituteDetails from "./InstituteDetails.jsx";
 import '../../styles/institute-profile.css'

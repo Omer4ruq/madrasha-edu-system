@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FaBuilding, FaGlobe, FaUser, FaInfoCircle, FaGraduationCap, FaChevronDown, FaChevronUp } from 'react-icons/fa';
-import { useCreateInstituteMutation, useUpdateInstituteMutation } from '../../redux/features/api/instituteApi';
-import { useGetInstituteTypesQuery } from '../../redux/features/api/instituteTypeApi';
+import { useCreateInstituteMutation, useUpdateInstituteMutation } from '../../redux/features/api/institute/instituteApi';
+import { useGetInstituteTypesQuery } from '../../redux/features/api/institute/instituteTypeApi';
 
 // Custom CSS for pressed-in effect, transitions, and header styling
 const customStyles = `

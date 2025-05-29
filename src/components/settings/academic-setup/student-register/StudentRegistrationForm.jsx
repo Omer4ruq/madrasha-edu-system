@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { useGetStudentClassApIQuery } from '../../../../redux/features/api/studentClassApi';
-import { useGetclassConfigApiQuery } from '../../../../redux/features/api/classConfigApi';
-import { useCreateStudentRegistrationApiMutation } from '../../../../redux/features/api/studentRegistrationApi';
+import { useGetStudentClassApIQuery } from '../../../../redux/features/api/student/studentClassApi';
+import { useGetclassConfigApiQuery } from '../../../../redux/features/api/class/classConfigApi';
+import { useCreateStudentRegistrationApiMutation } from '../../../../redux/features/api/student/studentRegistrationApi';
 
 
 const StudentRegistrationForm = () => {
   const { data: classList, isLoading: isListLoading, error: listError } = useGetStudentClassApIQuery();
   const { data: classConfig, isLoading: isConfigLoading, error: configError } = useGetclassConfigApiQuery();
-console.log("class config", classConfig)
+console.log("class config", classList)
   const [formData, setFormData] = useState({
     name: '',
     password: '',

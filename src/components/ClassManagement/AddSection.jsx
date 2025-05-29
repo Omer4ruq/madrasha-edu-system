@@ -5,7 +5,7 @@ import {
   useGetStudentSectionApiByIdQuery,
   useDeleteStudentSectionApiMutation,
   useUpdateStudentSectionApiMutation,
-} from '../../redux/features/api/studentSectionApi';
+} from '../../redux/features/api/student/studentSectionApi';
 import { FaEdit, FaSpinner, FaTrash } from 'react-icons/fa';
 import { IoAdd, IoAddCircle } from 'react-icons/io5';
 

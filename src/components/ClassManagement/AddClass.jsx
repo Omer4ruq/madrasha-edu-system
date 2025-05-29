@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { IoSchool } from "react-icons/io5";
 import { FaSpinner, FaTrash } from "react-icons/fa";
-import { useGetClassListApiQuery } from "../../redux/features/api/classListApi";
+import { useGetClassListApiQuery } from "../../redux/features/api/class/classListApi";
 import {
   useCreateStudentClassApIMutation,
   useGetStudentClassApIQuery,
-} from "../../redux/features/api/studentClassApi";
+} from "../../redux/features/api/student/studentClassApi";
 
 const AddClass = () => {
   const navigate = useNavigate();
@@ -16,6 +16,7 @@ const AddClass = () => {
     isLoading: isListLoading,
     error: listError,
   } = useGetStudentClassApIQuery();
+  console.log("class list of selected", classList)
   const [createClass, { isLoading: isCreating }] =
     useCreateStudentClassApIMutation();
   const [selectedClasses, setSelectedClasses] = useState({});

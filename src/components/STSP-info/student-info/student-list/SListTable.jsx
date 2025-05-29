@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 export default function SListTable({studentsData, amountToShow, index, handleDelete}) {
 
-  const showItems = studentsData.slice(index*Math.floor(amountToShow), index*Math.floor(amountToShow) + Math.floor(amountToShow));
+  const showItems = studentsData?.slice(index*Math.floor(amountToShow), index*Math.floor(amountToShow) + Math.floor(amountToShow));
   
 
     return (
@@ -24,7 +24,7 @@ export default function SListTable({studentsData, amountToShow, index, handleDel
         </tr>
       </thead>
       <tbody className="divide-y-2 font-medium">
-        {showItems.map((item, index) => (
+        {showItems?.map((item, index) => (
           <tr key={index} className="text-start leading-8 even:bg-slate-200">
           <td className="min-w-10 pl-2">{index+1}</td>
           <td className="min-w-12">{item.id}</td>

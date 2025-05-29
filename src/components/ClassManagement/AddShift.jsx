@@ -4,7 +4,7 @@ import {
   useGetStudentShiftApiQuery,
   useUpdateStudentShiftApiMutation,
   useDeleteStudentShiftApiMutation,
-} from '../../redux/features/api/studentShiftApi';
+} from '../../redux/features/api/student/studentShiftApi';
 import { FaEdit, FaSpinner, FaTrash } from 'react-icons/fa';
 import { IoAdd, IoTime } from 'react-icons/io5';
 

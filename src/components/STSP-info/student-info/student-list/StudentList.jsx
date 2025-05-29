@@ -4,7 +4,7 @@ import DeleteModal from "../../../common/DeleleModal";
 import Pagination from "../../../common/Pagination";
 import InfoAction from "../../InfoAction";
 import SListTable from "./SListTable";
-import { useGetStudentListApIByIdQuery, useGetStudentListApIQuery } from "../../../../redux/features/api/studentListApi";
+import { useGetStudentListApIByIdQuery, useGetStudentListApIQuery } from "../../../../redux/features/api/student/studentListApi";
 
 export default function StudentList() {
    const [isDelete, setIsDelete] = useState(false);
@@ -32,7 +32,7 @@ export default function StudentList() {
 
         <SListTable studentsData={studentsData} amountToShow={amountToShow} index={index} handleDelete={handleDelete} />
 
-        <Pagination show={amountToShow} total={studentsData.length} index={index} setIndex={setIndex} />
+        <Pagination show={amountToShow} total={studentsData?.length} index={index} setIndex={setIndex} />
 
          {/* show only when isDelete is true */}
         <DeleteModal title={toDelete} isOpen={isDelete} onClose={()=>setIsDelete(false)} />

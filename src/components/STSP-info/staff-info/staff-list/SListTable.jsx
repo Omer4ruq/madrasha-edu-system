@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useGetStaffListApIQuery } from "../../../../redux/features/api/staffListApi";
+import { useGetStaffListApIQuery } from "../../../../redux/features/api/staff/staffListApi";
 
 export const staffs = [
    {

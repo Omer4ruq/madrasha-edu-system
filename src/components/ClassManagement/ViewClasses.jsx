@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoSchool } from "react-icons/io5";
-import { useGetStudentClassApIQuery } from '../../redux/features/api/studentClassApi';
+import { useGetStudentClassApIQuery } from '../../redux/features/api/student/studentClassApi';
 
 const ViewClasses = () => {
   const navigate = useNavigate();

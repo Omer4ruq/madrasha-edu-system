@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useCreateStaffRegistrationApiMutation } from '../../../redux/features/api/staffRegistration';
+import { useCreateStaffRegistrationApiMutation } from '../../../redux/features/api/staff/staffRegistration';
 
 
 

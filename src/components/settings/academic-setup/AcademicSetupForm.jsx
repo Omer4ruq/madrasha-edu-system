@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useCreateInstituteMutation } from "../../../redux/features/api/instituteApi";
+import { useCreateInstituteMutation } from "../../../redux/features/api/institute/instituteApi";
 
 
 export default function AcademicSetupForm({acSetupFields}) {

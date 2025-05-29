@@ -1,17 +1,18 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
-import { instituteApi } from './features/api/instituteApi';
-import { instituteTypeApi } from './features/api/instituteTypeApi';
-import { studentClassApi } from './features/api/studentClassApi';
-import { classListApi } from './features/api/classListApi';
-import { studentSectionApi } from './features/api/studentSectionApi';
-import { studentShiftApi } from './features/api/studentShiftApi';
-import { classConfigApi } from './features/api/classConfigApi';
-import { studentRegistrationApi } from './features/api/studentRegistrationApi';
-import { staffRegistrationApi } from './features/api/staffRegistration';
-import { studentListApi } from './features/api/studentListApi';
-import { staffListApi } from './features/api/staffListApi';
-import { behaviorTypeApi } from './features/api/behaviorTypeApi';
+import { instituteApi } from './features/api/institute/instituteApi';
+import { instituteTypeApi } from './features/api/institute/instituteTypeApi';
+import { studentClassApi } from './features/api/student/studentClassApi';
+import { classListApi } from './features/api/class/classListApi';
+import { studentSectionApi } from './features/api/student/studentSectionApi';
+import { studentShiftApi } from './features/api/student/studentShiftApi';
+import { classConfigApi } from './features/api/class/classConfigApi';
+import { studentRegistrationApi } from './features/api/student/studentRegistrationApi';
+import { staffRegistrationApi } from './features/api/staff/staffRegistration';
+import { studentListApi } from './features/api/student/studentListApi';
+import { staffListApi } from './features/api/staff/staffListApi';
+import { behaviorTypeApi } from './features/api/behavior/behaviorTypeApi';
+import { behaviorMarksApi } from './features/api/behavior/behaviorMarksApi';
 
 
 
@@ -30,6 +31,7 @@ export const store = configureStore({
     [studentListApi.reducerPath]: studentListApi.reducer,
     [staffListApi.reducerPath]: staffListApi.reducer,
     [behaviorTypeApi.reducerPath]: behaviorTypeApi.reducer,
+    [behaviorMarksApi.reducerPath]: behaviorMarksApi.reducer,
     
     
    
@@ -49,6 +51,7 @@ export const store = configureStore({
     .concat(studentListApi.middleware)
     .concat(staffListApi.middleware)
     .concat(behaviorTypeApi.middleware)
+    .concat(behaviorMarksApi.middleware)
     
 });
 
