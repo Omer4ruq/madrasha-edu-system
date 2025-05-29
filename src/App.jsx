@@ -34,7 +34,7 @@ export default function App() {
         >
           {/* Background Image Layer */}
           <div
-            className="absolute inset-0 bg-cover bg-center z-0 rounded-lg"
+            className="fixed inset-0 bg-cover bg-center z-0"
             style={{
               backgroundImage: `url("https://shaha.ancorathemes.com/wp-content/uploads/2017/06/bg-16.jpg?id=371")`,
             }}

@@ -11,6 +11,7 @@ import { studentRegistrationApi } from './features/api/studentRegistrationApi';
 import { staffRegistrationApi } from './features/api/staffRegistration';
 import { studentListApi } from './features/api/studentListApi';
 import { staffListApi } from './features/api/staffListApi';
+import { behaviorTypeApi } from './features/api/behaviorTypeApi';
 
 
 
@@ -28,6 +29,7 @@ export const store = configureStore({
     [staffRegistrationApi.reducerPath]: staffRegistrationApi.reducer,
     [studentListApi.reducerPath]: studentListApi.reducer,
     [staffListApi.reducerPath]: staffListApi.reducer,
+    [behaviorTypeApi.reducerPath]: behaviorTypeApi.reducer,
     
     
    
@@ -46,6 +48,7 @@ export const store = configureStore({
     .concat(staffRegistrationApi.middleware)
     .concat(studentListApi.middleware)
     .concat(staffListApi.middleware)
+    .concat(behaviorTypeApi.middleware)
     
 });
 

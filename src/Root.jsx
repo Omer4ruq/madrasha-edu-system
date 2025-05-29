@@ -165,6 +165,7 @@ import AddShift from "./components/ClassManagement/AddShift";
 import AddClassConfig from "./components/ClassManagement/AddClassConfig.jsx";
 import StudentRegister from "./components/settings/academic-setup/student-register/StudentRegister";
 import StuffRegister from "./components/settings/staff-register/StaffRegister";
+import AddBehaviorType from "./components/behavior/AddBehaviorType";
 
 
 function Root() {
@@ -271,6 +272,10 @@ function Root() {
                  {
               path: "stuff-registration",
               element: <StuffRegister></StuffRegister>,
+            },
+             {
+              path: "behavior-type",
+              element: <AddBehaviorType />,
             },
             {
               path: "class-config",
@@ -402,6 +407,7 @@ function Root() {
               path: "student-migration",
               element: <StMigration />,
             },
+               
             {
               path: "rfid-update",
               element: <RfidUpdate />,

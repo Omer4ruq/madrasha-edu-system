@@ -99,6 +99,11 @@ const mainMenu = [
         title: "Stuff Registration",
         link: "settings/stuff-registration",
       },
+      {
+        id: "05/10",
+        title: "Behavior Type",
+        link: "settings/behavior-type",
+      },
     ],
   },
   {

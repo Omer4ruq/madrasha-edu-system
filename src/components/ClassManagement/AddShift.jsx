@@ -19,9 +19,6 @@ const AddShift = () => {
   const [updateShift] = useUpdateStudentShiftApiMutation();
   const [deleteShift] = useDeleteStudentShiftApiMutation();
 
-  // Log shiftData for debugging
-  console.log('shiftData:', shiftData);
-
   // Handle form submission for creating a new shift
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,7 +32,6 @@ const AddShift = () => {
         name: shiftName.trim(),
         is_active: true,
       };
-      console.log('Create Shift Payload:', payload);
       await createShift(payload).unwrap();
       alert('Shift created successfully!');
       setShiftName('');
@@ -70,7 +66,6 @@ const AddShift = () => {
         name: editShiftName.trim(),
         is_active: selectedShift.is_active || true,
       };
-      console.log('Update Shift Payload:', { id: editShiftId, ...payload });
       await updateShift({ id: editShiftId, ...payload }).unwrap();
       alert('Shift updated successfully!');
       setEditShiftId(null);
@@ -93,7 +88,6 @@ const AddShift = () => {
         name: shift.name,
         is_active: !shift.is_active,
       };
-      console.log('Toggle Active Payload:', { id: shift.id, ...payload });
       await updateShift({ id: shift.id, ...payload }).unwrap();
       alert(`Shift ${shift.name} is now ${!shift.is_active ? 'active' : 'inactive'}!`);
     } catch (err) {
@@ -111,7 +105,6 @@ const AddShift = () => {
 
     if (window.confirm('Are you sure you want to delete this shift?')) {
       try {
-        console.log('Deleting Shift ID:', id);
         await deleteShift(id).unwrap();
         alert('Shift deleted successfully!');
       } catch (err) {
@@ -122,276 +115,254 @@ const AddShift = () => {
   };
 
   return (
-    <div className="py-12 w-full relative backdrop-blur-xl">
-  <style>
-    {`
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      @keyframes scaleIn {
-        from { transform: scale(0.95); opacity: 0; }
-        to { transform: scale(1); opacity: 1; }
-      }
-      .animate-fadeIn {
-        animation: fadeIn 0.6s ease-out forwards;
-      }
-      .animate-scaleIn {
-        animation: scaleIn 0.4s ease-out forwards;
-      }
-      .tick-glow {
-        transition: all 0.3s ease;
-      }
-      .tick-glow:checked + span {
-        box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
-      }
-      .btn-glow:hover {
-        box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
-      }
-      .label-hover:hover {
-        transform: scale(1.05);
-      }
+    <div className="py-8 w-full relative">
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes scaleIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 0.6s ease-out forwards;
+          }
+          .animate-scaleIn {
+            animation: scaleIn 0.4s ease-out forwards;
+          }
+          .tick-glow {
+            transition: all 0.3s ease;
+          }
+          .tick-glow:checked + span {
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+          }
+          .btn-glow:hover {
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
+          }
+          ::-webkit-scrollbar {
+            width: 8px;
+          }
+          ::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          ::-webkit-scrollbar-thumb {
+            background: rgba(22, 31, 48, 0.26);
+            border-radius: 10px;
+          }
+          ::-webkit-scrollbar-thumb:hover {
+            background: rgba(10, 13, 21, 0.44);
+          }
+        `}
+      </style>
 
-      /* Custom Scrollbar */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: rgba(22, 31, 48, 0.26);
-        border-radius: 10px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: rgba(10, 13, 21, 0.44);
-      }
-    `}
-  </style>
+      <div className="mx-auto">
+        <div className="flex items-center space-x-4 mb-10 animate-fadeIn">
+          <IoTime className="text-4xl text-[#441a05]" />
+          <h2 className="text-3xl font-bold text-[#441a05] tracking-tight">Add Shift</h2>
+        </div>
 
-  <div className="mx-auto">
-    <div className="flex items-center space-x-4 mb-10 animate-fadeIn">
-      <IoTime className="text-4xl text-white" />
-      <h2 className="text-3xl font-bold text-white tracking-tight">Add Shift</h2>
-    </div>
+        {/* Form to Add Shift */}
+        <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+          <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
+            <IoTime className="text-4xl text-[#441a05]" />
+            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">Add New Shift</h3>
+          </div>
 
-    {/* Form to Add Shift */}
-    <div className="bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-      <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-        <IoTime className="text-4xl text-white" />
-        <h3 className="text-2xl font-bold text-white tracking-tight">Add New Shift</h3>
-      </div>
-
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
-
-
-
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
             <input
               type="text"
               id="shiftName"
               value={shiftName}
               onChange={(e) => setShiftName(e.target.value)}
-              className="w-full bg-transparent text-white pl-3 focus:outline-none focus:ring-2 border border-white/70 rounded-lg placeholder-white/70 transition-all duration-300"
+              className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
               placeholder="Enter shift name (e.g., Day Shift)"
               disabled={isCreating}
               aria-label="Shift Name"
               aria-describedby={createError ? "shift-error" : undefined}
             />
-    
-        <button
-          type="submit"
-          disabled={isCreating}
-          title="Create a new shift"
-          className={`relative inline-flex bg-#DB9E30 items-center px-8 py-3 rounded-lg font-medium text-white transition-all duration-300 animate-scaleIn ${
-            isCreating ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 btn-glow"
-          }`}
-        >
-          {isCreating ? (
-            <span className="flex items-center space-x-3">
-              <FaSpinner className="animate-spin text-lg" />
-              <span>Creating...</span>
-            </span>
-          ) : (
-            <span className="flex items-center space-x-2">
-              <IoAdd className="w-5 h-5" />
-              <span>Create Shift</span>
-            </span>
-          )}
-        </button>
-      </form>
-      {createError && (
-        <div
-          id="shift-error"
-          className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
-          style={{ animationDelay: "0.4s" }}
-        >
-          Error: {createError.status || "Unknown"} - {JSON.stringify(createError.data || {})}
-        </div>
-      )}
-    </div>
-
-    {/* Edit Shift Form (appears when editing) */}
-    {editShiftId && (
-      <div className="bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-        <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-          <IoTime className="text-4xl text-blue-600" />
-          <h3 className="text-2xl font-bold text-white tracking-tight">Edit Shift</h3>
-        </div>
-        <form onSubmit={handleUpdate} className="flex gap-4 items-center max-w-3xl">
-          <div
-            className="relative border-2 border-blue-600 rounded-2xl p-5 flex-1 bg-white/5 hover:border-blue-400 transition-all duration-300 animate-fadeIn"
-            style={{ animationDelay: "0.2s" }}
-          >
-            <label
-              htmlFor="editShiftName"
-              className="absolute -top-3 left-4 bg-white/20 px-2 text-blue-500 text-sm font-medium label-hover transition-transform duration-300"
+            <button
+              type="submit"
+              disabled={isCreating}
+              title="Create a new shift"
+              className={`relative inline-flex items-center px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
+                isCreating ? 'cursor-not-allowed opacity-60' : 'hover:text-white'
+              }`}
             >
-              Shift Name
-            </label>
-            <div className="relative">
-              <IoTime
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500 w-5 h-5 animate-scaleIn"
-                title="Edit shift name"
-              />
+              {isCreating ? (
+                <span className="flex items-center space-x-3">
+                  <FaSpinner className="animate-spin text-lg" />
+                  <span>Creating...</span>
+                </span>
+              ) : (
+                <span className="flex items-center space-x-2">
+                  <IoAdd className="w-5 h-5" />
+                  <span>Create Shift</span>
+                </span>
+              )}
+            </button>
+          </form>
+          {createError && (
+            <div
+              id="shift-error"
+              className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
+              style={{ animationDelay: '0.4s' }}
+            >
+              Error: {createError.status || 'Unknown'} - {JSON.stringify(createError.data || {})}
+            </div>
+          )}
+        </div>
+
+        {/* Edit Shift Form */}
+        {editShiftId && (
+          <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+            <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
+              <FaEdit className="text-3xl text-[#441a05]" />
+              <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">Edit Shift</h3>
+            </div>
+            <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl">
               <input
                 type="text"
                 id="editShiftName"
                 value={editShiftName}
                 onChange={(e) => setEditShiftName(e.target.value)}
-                className="w-full bg-transparent text-white pl-10 pr-4 py-2 focus:outline-none focus:ring-4 focus:ring-blue-500/50 rounded-lg placeholder-white/60 transition-all duration-300"
-                placeholder="Edit shift name"
+                className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
+                placeholder="Edit shift name (e.g., Day Shift)"
                 aria-label="Edit Shift Name"
+                aria-describedby="edit-shift-error"
               />
-            </div>
+              <button
+                type="submit"
+                title="Update shift"
+                className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
+              >
+                Update Shift
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditShiftId(null);
+                  setEditShiftName('');
+                }}
+                title="Cancel editing"
+                className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
+              >
+                Cancel
+              </button>
+            </form>
           </div>
-          <button
-            type="submit"
-            title="Update shift"
-            className="relative inline-flex items-center px-6 py-3 rounded-xl font-medium text-white bg-blue-600 hover:bg-blue-700 btn-glow transition-all duration-300 animate-scaleIn"
-          >
-            Update Shift
-          </button>
-          <button
-            type="button"
-            onClick={() => setEditShiftId(null)}
-            title="Cancel editing"
-            className="relative inline-flex items-center px-6 py-3 rounded-xl font-medium text-white bg-gray-500 hover:bg-gray-600 btn-glow transition-all duration-300 animate-scaleIn"
-          >
-            Cancel
-          </button>
-        </form>
-      </div>
-    )}
+        )}
 
-    {/* Shifts Table */}
-    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh]">
-      <h3 className="text-lg font-semibold text-white p-4 border-b border-white/20">Shifts List</h3>
-      {isShiftLoading ? (
-        <p className="p-4 text-white/70">Loading shifts...</p>
-      ) : shiftDataError ? (
-        <p className="p-4 text-red-400">
-          Error loading shifts: {shiftDataError.status || "Unknown"} -{" "}
-          {JSON.stringify(shiftDataError.data || {})}
-        </p>
-      ) : shiftData?.length === 0 ? (
-        <p className="p-4 text-white/70">No shifts available.</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-white/20">
-            <thead className="bg-white/5">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                  Shift Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                  Active
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                  Created At
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                  Updated At
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/20">
-              {shiftData?.map((shift, index) => (
-                <tr
-                  key={shift.id}
-                  className="bg-white/5 animate-fadeIn"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
-                    {shift.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                    <label className="inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={shift.is_active}
-                        onChange={() => handleToggleActive(shift)}
-                        className="hidden tick-glow"
-                      />
-                      <span
-                        className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn ${
-                          shift.is_active
-                            ? "bg-blue-600 border-blue-600"
-                            : "bg-white/10 border-white/30 hover:border-blue-400"
-                        }`}
-                      >
-                        {shift.is_active && (
-                          <svg
-                            className="w-4 h-4 text-white animate-scaleIn"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
+        {/* Shifts Table */}
+        <div className="bg-black/10 px-6 py-2 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] border border-white/20">
+          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">Shifts List</h3>
+          {isShiftLoading ? (
+            <p className="p-4 text-[#441a05]/70">Loading shifts...</p>
+          ) : shiftDataError ? (
+            <p className="p-4 text-red-400">
+              Error loading shifts: {shiftDataError.status || 'Unknown'} -{' '}
+              {JSON.stringify(shiftDataError.data || {})}
+            </p>
+          ) : shiftData?.length === 0 ? (
+            <p className="p-4 text-[#441a05]/70">No shifts available.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-white/20">
+                <thead className="bg-white/5">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      Shift Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      Active
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      Created At
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      Updated At
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/20">
+                  {shiftData?.map((shift, index) => (
+                    <tr
+                      key={shift.id}
+                      className="bg-white/5 animate-fadeIn"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                        {shift.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
+                        <label className="inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={shift.is_active}
+                            onChange={() => handleToggleActive(shift)}
+                            className="hidden"
+                          />
+                          <span
+                            className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn ${
+                              shift.is_active
+                                ? 'bg-[#DB9E30] border-[#DB9E30]'
+                                : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
+                            }`}
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                        )}
-                      </span>
-                    </label>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white/70">
-                    {new Date(shift.created_at).toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white/70">
-                    {new Date(shift.updated_at).toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => handleEditClick(shift)}
-                      title="Edit shift"
-                      className="text-white hover:text-blue-200 mr-4 transition-colors duration-300"
-                    >
-                      <FaEdit className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(shift.id)}
-                      title="Delete shift"
-                      className="text-white hover:text-red-400 transition-colors duration-300"
-                    >
-                      <FaTrash className="w-5 h-5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                            {shift.is_active && (
+                              <svg
+                                className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            )}
+                          </span>
+                        </label>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
+                        {new Date(shift.created_at).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
+                        {new Date(shift.updated_at).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => handleEditClick(shift)}
+                          title="Edit shift"
+                          className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
+                        >
+                          <FaEdit className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(shift.id)}
+                          title="Delete shift"
+                          className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                        >
+                          <FaTrash className="w-5 h-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
-  </div>
-</div>
   );
 };
 

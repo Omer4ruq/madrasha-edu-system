@@ -1,7 +1,7 @@
 export default function Footer() {
   return (
     <footer
-      className="p-4 sm:p-6 mx-4 sm:mx-6 lg:mx-8 bg-black/10 backdrop-blur-sm border border-white/20 text-white text-base rounded-xl mt-4 shadow-xl animate-fadeIn"
+      className="p-3 px-6 mx-4 sm:mx-6 lg:mx-8 bg-black/10 backdrop-blur-sm border border-white/20 text-white text-base rounded-lg shadow-xl animate-fadeIn"
       aria-label="Footer"
     >
       <style>
@@ -16,13 +16,13 @@ export default function Footer() {
         `}
       </style>
       <div className="flex flex-col gap-2 sm:flex-row items-center justify-between leading-6">
-        <p className="text-center font-medium text-[#441a05]">
+        <p className="text-center font-medium text-[#441a05] text-xs">
           © 2025 All Rights Reserved by FreelanceHub (BD) Limited
         </p>
         <div className="flex gap-4 text-center font-medium">
           <a
             href="#"
-            className="hover:text-blue-400 hover:underline transition-all duration-300 text-[#441a05]"
+            className="hover:text-blue-400 hover:underline transition-all duration-300 text-[#441a05] text-xs"
             target="_blank"
             rel="noopener noreferrer"
             title="Privacy Policy"
@@ -31,7 +31,7 @@ export default function Footer() {
           </a>
           <a
             href="#"
-            className="hover:text-blue-400 hover:underline transition-all duration-300 text-[#441a05]"
+            className="hover:text-blue-400 hover:underline transition-all duration-300 text-[#441a05] text-xs"
             target="_blank"
             rel="noopener noreferrer"
             title="Terms of Use"
