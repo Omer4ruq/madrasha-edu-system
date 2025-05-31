@@ -307,7 +307,7 @@ const AddClassConfig = () => {
         </div>
 
         {/* Configurations Table */}
-        <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] border border-white/20">
+        <div className="bg-black/10 px-5 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] border border-white/20">
           <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">
             Configurations List
           </h3>

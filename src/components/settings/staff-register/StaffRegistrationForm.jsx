@@ -1,8 +1,13 @@
-
 import React, { useState } from 'react';
+<<<<<<< HEAD
 import { useCreateStaffRegistrationApiMutation } from '../../../redux/features/api/staff/staffRegistration';
 
 
+=======
+import { useCreateStaffRegistrationApiMutation } from '../../../redux/features/api/staffRegistration';
+import { FaSpinner, FaUser, FaLock, FaEnvelope, FaPhone, FaHome, FaBriefcase, FaIdCard, FaCalendarAlt, FaVenusMars, FaHeart, FaMap, FaMapMarkerAlt, FaWheelchair, FaUserTag, FaChild, FaFileAlt, FaBuilding, FaBusinessTime, FaRing } from 'react-icons/fa';
+import { IoAddCircleOutline } from 'react-icons/io5';
+>>>>>>> b8aa66256e5f0937d2cb4c04a0066f0bda8b77f9
 
 const StaffRegistrationForm = () => {
   const [formData, setFormData] = useState({
@@ -50,7 +55,6 @@ const StaffRegistrationForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Required fields validation
     const requiredFields = [
       'username', 'password', 'name', 'user_id', 'phone_number', 'email',
       'gender', 'dob', 'blood_group', 'present_address', 'permanent_address',
@@ -65,21 +69,18 @@ const StaffRegistrationForm = () => {
       return;
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       alert('Please enter a valid email address');
       return;
     }
 
-    // Phone number validation
     const phoneRegex = /^\+?\d{10,15}$/;
     if (!phoneRegex.test(formData.phone_number) || (formData.spouse_phone_number && !phoneRegex.test(formData.spouse_phone_number))) {
       alert('Please enter valid phone numbers (10-15 digits, optional + prefix)');
       return;
     }
 
-    // Numeric field validation
     if (
       isNaN(parseInt(formData.user_id)) ||
       (formData.children_no && isNaN(parseInt(formData.children_no))) ||
@@ -153,89 +154,194 @@ const StaffRegistrationForm = () => {
   };
 
   return (
-    <div className="py-10 px-4 sm:px-6 lg:px-8 bg-gray-100 min-h-screen">
-      <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-lg">
-        <h2 className="text-3xl font-bold text-center text-purple-800 mb-8 pt-8">Staff Registration Form</h2>
-        
-        <form onSubmit={handleSubmit} className="space-y-8 px-6 pb-8">
+    <div className="py-12 w-full min-h-screen">
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes scaleIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+          }
+          @keyframes ripple {
+            0% { transform: scale(0); opacity: 0.5; }
+            100% { transform: scale(4); opacity: 0; }
+          }
+          @keyframes iconHover {
+            to { transform: scale(1.1); }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 0.6s ease-out forwards;
+          }
+          .animate-scaleIn {
+            animation: scaleIn 0.4s ease-out forwards;
+          }
+          .btn-glow:hover {
+            box-shadow: 0 0 20px rgba(219, 158, 48, 0.4);
+          }
+          .input-icon:hover svg {
+            animation: iconHover 0.3s ease-out forwards;
+          }
+          .btn-ripple {
+            position: relative;
+            overflow: hidden;
+          }
+          .btn-ripple::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1);
+            transform-origin: 50% 50%;
+            animation: none;
+          }
+          .btn-ripple:active::after {
+            animation: ripple 0.6s ease-out;
+          }
+          .title-underline::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 3px;
+            background: #DB9E30;
+            margin: 8px auto 0;
+          }
+          ::-webkit-scrollbar {
+            width: 6px;
+          }
+          ::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          ::-webkit-scrollbar-thumb {
+            background: #9d9087;
+            border-radius: 10px;
+          }
+          ::-webkit-scrollbar-thumb:hover {
+            background: #441a05;
+          }
+        `}
+      </style>
+
+      <div className="mx-auto">
+        <div className="sticky top-0 z-10 backdrop-blur-sm pt-6 mb-8 animate-fadeIn">
+          <div className="flex items-center justify-center space-x-3">
+            <IoAddCircleOutline className="text-4xl text-[#DB9E30] mb-3" />
+            <h2 className="text-3xl font-bold text-[#441a05] title-underline">Staff Registration</h2>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="rounded-2xl animate-fadeIn space-y-10">
           {/* Personal Information */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2">Personal Information</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username *</label>
+          <div className="relative bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-xl shadow-md">
+            <div className="flex items-center justify-center mb-4">
+              <FaUser className="text-3xl text-[#DB9E30]" />
+            </div>
+            <h3 className="text-2xl font-semibold text-[#441a05] text-center">Personal Information</h3>
+            <div className="border-t border-[#9d9087]/50 mt-4 pt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="relative input-icon">
+                <label htmlFor="username" className="block text-lg font-medium text-[#441a05]">
+                  Username <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="text"
                   id="username"
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter username"
                   required
-                  required
+                  aria-label="Username"
                 />
               </div>
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+              <div className="relative input-icon">
+                <label htmlFor="password" className="block text-lg font-medium text-[#441a05]">
+                  Password <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaLock className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="password"
                   id="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter password"
                   required
+                  aria-label="Password"
                 />
               </div>
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
+              <div className="relative input-icon">
+                <label htmlFor="name" className="block text-lg font-medium text-[#441a05]">
+                  Full Name <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="text"
                   id="name"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter full name"
                   required
+                  aria-label="Full Name"
                 />
               </div>
-              <div>
-                <label htmlFor="name_in_bangla" className="block text-sm font-medium text-gray-700">Name in Bangla</label>
+              <div className="relative input-icon">
+                <label htmlFor="name_in_bangla" className="block text-lg font-medium text-[#441a05]">
+                  Name in Bangla
+                </label>
+                <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="text"
                   id="name_in_bangla"
                   name="name_in_bangla"
                   value={formData.name_in_bangla}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter name in Bangla"
+                  aria-label="Name in Bangla"
                 />
               </div>
-              <div>
-                <label htmlFor="user_id" className="block text-sm font-medium text-gray-700">User ID *</label>
+              <div className="relative input-icon">
+                <label htmlFor="user_id" className="block text-lg font-medium text-[#441a05]">
+                  User ID <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaIdCard className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="number"
                   id="user_id"
                   name="user_id"
                   value={formData.user_id}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter user ID"
                   required
+                  aria-label="User ID"
                 />
               </div>
-              <div>
-                <label htmlFor="gender" className="block text-sm font-medium text-gray-700">Gender *</label>
+              <div className="relative input-icon">
+                <label htmlFor="gender" className="block text-lg font-medium text-[#441a05]">
+                  Gender <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaVenusMars className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
                   id="gender"
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   required
+                  aria-label="Gender"
                 >
                   <option value="">Select gender</option>
                   <option value="Male">Male</option>
@@ -243,27 +349,35 @@ const StaffRegistrationForm = () => {
                   <option value="Other">Other</option>
                 </select>
               </div>
-              <div>
-                <label htmlFor="dob" className="block text-sm font-medium text-gray-700">Date of Birth *</label>
+              <div className="relative input-icon">
+                <label htmlFor="dob" className="block text-lg font-medium text-[#441a05]">
+                  Date of Birth <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaCalendarAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="date"
                   id="dob"
                   name="dob"
                   value={formData.dob}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   required
+                  aria-label="Date of Birth"
                 />
               </div>
-              <div>
-                <label htmlFor="blood_group" className="block text-sm font-medium text-gray-700">Blood Group *</label>
+              <div className="relative input-icon">
+                <label htmlFor="blood_group" className="block text-lg font-medium text-[#441a05]">
+                  Blood Group <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaHeart className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
                   id="blood_group"
                   name="blood_group"
                   value={formData.blood_group}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   required
+                  aria-label="Blood Group"
                 >
                   <option value="">Select blood group</option>
                   <option value="A+">A+</option>
@@ -276,53 +390,69 @@ const StaffRegistrationForm = () => {
                   <option value="O-">O-</option>
                 </select>
               </div>
-              <div>
-                <label htmlFor="nid" className="block text-sm font-medium text-gray-700">NID</label>
+              <div className="relative input-icon">
+                <label htmlFor="nid" className="block text-lg font-medium text-[#441a05]">
+                  NID
+                </label>
+                <FaIdCard className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="text"
                   id="nid"
                   name="nid"
                   value={formData.nid}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter NID"
+                  aria-label="NID"
                 />
               </div>
-              <div>
-                <label htmlFor="fathers_name" className="block text-sm font-medium text-gray-700">Father's Name *</label>
+              <div className="relative input-icon">
+                <label htmlFor="fathers_name" className="block text-lg font-medium text-[#441a05]">
+                  Father's Name <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="text"
                   id="fathers_name"
                   name="fathers_name"
                   value={formData.fathers_name}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter father's name"
                   required
+                  aria-label="Father's Name"
                 />
               </div>
-              <div>
-                <label htmlFor="mothers_name" className="block text-sm font-medium text-gray-700">Mother's Name *</label>
+              <div className="relative input-icon">
+                <label htmlFor="mothers_name" className="block text-lg font-medium text-[#441a05]">
+                  Mother's Name <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="text"
                   id="mothers_name"
                   name="mothers_name"
                   value={formData.mothers_name}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter mother's name"
                   required
+                  aria-label="Mother's Name"
                 />
               </div>
-              <div>
-                <label htmlFor="marital_status" className="block text-sm font-medium text-gray-700">Marital Status *</label>
+              <div className="relative input-icon">
+                <label htmlFor="marital_status" className="block text-lg font-medium text-[#441a05]">
+                  Marital Status <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaRing className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
                   id="marital_status"
                   name="marital_status"
                   value={formData.marital_status}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   required
+                  aria-label="Marital Status"
                 >
                   <option value="">Select marital status</option>
                   <option value="MARRIED">Married</option>
@@ -335,206 +465,275 @@ const StaffRegistrationForm = () => {
           </div>
 
           {/* Contact Details */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2">Contact Details</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700">Phone Number *</label>
+          <div className="relative bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-xl shadow-md">
+            <div className="flex items-center justify-center mb-4">
+              <FaPhone className="text-3xl text-[#DB9E30]" />
+            </div>
+            <h3 className="text-2xl font-semibold text-[#441a05] text-center">Contact Details</h3>
+            <div className="border-t border-[#9d9087]/50 mt-4 pt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="relative input-icon">
+                <label htmlFor="phone_number" className="block text-lg font-medium text-[#441a05]">
+                  Phone Number <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaPhone className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="text"
                   id="phone_number"
                   name="phone_number"
                   value={formData.phone_number}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter phone number"
                   required
+                  aria-label="Phone Number"
                 />
               </div>
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email *</label>
+              <div className="relative input-icon">
+                <label htmlFor="email" className="block text-lg font-medium text-[#441a05]">
+                  Email <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaEnvelope className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="email"
                   id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter email address"
                   required
+                  aria-label="Email"
                 />
               </div>
-              <div>
-                <label htmlFor="rfid" className="block text-sm font-medium text-gray-700">RFID</label>
+              <div className="relative input-icon">
+                <label htmlFor="rfid" className="block text-lg font-medium text-[#441a05]">
+                  RFID
+                </label>
+                <FaIdCard className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="text"
                   id="rfid"
                   name="rfid"
                   value={formData.rfid}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter RFID"
+                  aria-label="RFID"
                 />
               </div>
-              <div>
-                <label htmlFor="present_address" className="block text-sm font-medium text-gray-700">Present Address *</label>
+              <div className="relative input-icon">
+                <label htmlFor="present_address" className="block text-lg font-medium text-[#441a05]">
+                  Present Address <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaMapMarkerAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="text"
                   id="present_address"
                   name="present_address"
                   value={formData.present_address}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter present address"
                   required
+                  aria-label="Present Address"
                 />
               </div>
-              <div>
-                <label htmlFor="permanent_address" className="block text-sm font-medium text-gray-700">Permanent Address *</label>
+              <div className="relative input-icon">
+                <label htmlFor="permanent_address" className="block text-lg font-medium text-[#441a05]">
+                  Permanent Address <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaMap className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="text"
                   id="permanent_address"
                   name="permanent_address"
                   value={formData.permanent_address}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter permanent address"
                   required
+                  aria-label="Permanent Address"
                 />
               </div>
-              <div>
-                <label htmlFor="disability_info" className="block text-sm font-medium text-gray-700">Disability Information</label>
+              <div className="relative input-icon">
+                <label htmlFor="disability_info" className="block text-lg font-medium text-[#441a05]">
+                  Disability Information
+                </label>
+                <FaWheelchair className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <textarea
                   id="disability_info"
                   name="disability_info"
                   value={formData.disability_info}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter any disability information"
                   rows="3"
+                  aria-label="Disability Information"
                 />
               </div>
             </div>
           </div>
 
           {/* Family Details */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2">Family Details</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="spouse_name" className="block text-sm font-medium text-gray-700">Spouse Name</label>
+          <div className="relative bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-xl shadow-md">
+            <div className="flex items-center justify-center mb-4">
+              <FaHome className="text-3xl text-[#DB9E30]" />
+            </div>
+            <h3 className="text-2xl font-semibold text-[#441a05] text-center">Family Details</h3>
+            <div className="border-t border-[#9d9087]/50 mt-4 pt-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="relative input-icon">
+                <label htmlFor="spouse_name" className="block text-lg font-medium text-[#441a05]">
+                  Spouse Name
+                </label>
+                <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="text"
                   id="spouse_name"
                   name="spouse_name"
                   value={formData.spouse_name}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter spouse name"
+                  aria-label="Spouse Name"
                 />
               </div>
-              <div>
-                <label htmlFor="spouse_phone_number" className="block text-sm font-medium text-gray-700">Spouse Phone Number</label>
+              <div className="relative input-icon">
+                <label htmlFor="spouse_phone_number" className="block text-lg font-medium text-[#441a05]">
+                  Spouse Phone Number
+                </label>
+                <FaPhone className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="text"
                   id="spouse_phone_number"
                   name="spouse_phone_number"
                   value={formData.spouse_phone_number}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter spouse phone number"
+                  aria-label="Spouse Phone Number"
                 />
               </div>
-              <div>
-                <label htmlFor="children_no" className="block text-sm font-medium text-gray-700">Number of Children</label>
+              <div className="relative input-icon">
+                <label htmlFor="children_no" className="block text-lg font-medium text-[#441a05]">
+                  Number of Children
+                </label>
+                <FaChild className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="number"
                   id="children_no"
                   name="children_no"
                   value={formData.children_no}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter number of children"
+                  aria-label="Number of Children"
                 />
               </div>
             </div>
           </div>
 
           {/* Employment Details */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2">Employment Details</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="short_name" className="block text-sm font-medium text-gray-700">Short Name *</label>
+          <div className="relative bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-xl shadow-md">
+            <div className="flex items-center justify-center mb-4">
+              <FaBriefcase className="text-3xl text-[#DB9E30]" />
+            </div>
+            <h3 className="text-2xl font-semibold text-[#441a05] text-center">Employment Details</h3>
+            <div className="border-t border-[#9d9087]/50 mt-4 pt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="relative input-icon">
+                <label htmlFor="short_name" className="block text-lg font-medium text-[#441a05]">
+                  Short Name <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaUserTag className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="text"
                   id="short_name"
                   name="short_name"
                   value={formData.short_name}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter short name"
                   required
+                  aria-label="Short Name"
                 />
               </div>
-              <div>
-                <label htmlFor="name_tag" className="block text-sm font-medium text-gray-700">Name Tag</label>
+              <div className="relative input-icon">
+                <label htmlFor="name_tag" className="block text-lg font-medium text-[#441a05]">
+                  Name Tag
+                </label>
+                <FaUserTag className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="text"
                   id="name_tag"
                   name="name_tag"
                   value={formData.name_tag}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter name tag (e.g., Senior Teacher)"
+                  aria-label="Name Tag"
                 />
               </div>
-              <div>
-                <label htmlFor="tin" className="block text-sm font-medium text-gray-700">TIN</label>
+              <div className="relative input-icon">
+                <label htmlFor="tin" className="block text-lg font-medium text-[#441a05]">
+                  TIN
+                </label>
+                <FaFileAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="text"
                   id="tin"
                   name="tin"
                   value={formData.tin}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter TIN"
+                  aria-label="TIN"
                 />
               </div>
-              <div>
-                <label htmlFor="qualification" className="block text-sm font-medium text-gray-700">Qualification</label>
+              <div className="relative input-icon">
+                <label htmlFor="qualification" className="block text-lg font-medium text-[#441a05]">
+                  Qualification
+                </label>
+                <FaFileAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="text"
                   id="qualification"
                   name="qualification"
                   value={formData.qualification}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter qualification"
+                  aria-label="Qualification"
                 />
               </div>
-              <div>
-                <label htmlFor="staff_id_no" className="block text-sm font-medium text-gray-700">Staff ID No. *</label>
+              <div className="relative input-icon">
+                <label htmlFor="staff_id_no" className="block text-lg font-medium text-[#441a05]">
+                  Staff ID No. <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaIdCard className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="text"
                   id="staff_id_no"
                   name="staff_id_no"
                   value={formData.staff_id_no}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter staff ID number"
                   required
+                  aria-label="Staff ID No."
                 />
               </div>
-              <div>
-                <label htmlFor="employee_type" className="block text-sm font-medium text-gray-700">Employee Type *</label>
+              <div className="relative input-icon">
+                <label htmlFor="employee_type" className="block text-lg font-medium text-[#441a05]">
+                  Employee Type <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaBuilding className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
                   id="employee_type"
                   name="employee_type"
                   value={formData.employee_type}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   required
+                  aria-label="Employee Type"
                 >
                   <option value="">Select employee type</option>
                   <option value="Permanent">Permanent</option>
@@ -542,54 +741,70 @@ const StaffRegistrationForm = () => {
                   <option value="PartTime">Part-Time</option>
                 </select>
               </div>
-              <div>
-                <label htmlFor="job_nature" className="block text-sm font-medium text-gray-700">Job Nature *</label>
+              <div className="relative input-icon">
+                <label htmlFor="job_nature" className="block text-lg font-medium text-[#441a05]">
+                  Job Nature <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaBusinessTime className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
                   id="job_nature"
                   name="job_nature"
                   value={formData.job_nature}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   required
+                  aria-label="Job Nature"
                 >
                   <option value="">Select job nature</option>
                   <option value="Fulltime">Full-Time</option>
                   <option value="Parttime">Part-Time</option>
                 </select>
               </div>
-              <div>
-                <label htmlFor="designation" className="block text-sm font-medium text-gray-700">Designation *</label>
+              <div className="relative input-icon">
+                <label htmlFor="designation" className="block text-lg font-medium text-[#441a05]">
+                  Designation <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="text"
                   id="designation"
                   name="designation"
                   value={formData.designation}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter designation"
                   required
+                  aria-label="Designation"
                 />
               </div>
-              <div>
-                <label htmlFor="joining_date" className="block text-sm font-medium text-gray-700">Joining Date</label>
+              <div className="relative input-icon">
+                <label htmlFor="joining_date" className="block text-lg font-medium text-[#441a05]">
+                  Joining Date
+                </label>
+                <FaCalendarAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
                   type="date"
                   id="joining_date"
                   name="joining_date"
                   value={formData.joining_date}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
+                  aria-label="Joining Date"
                 />
               </div>
-              <div>
-                <label htmlFor="role_id" className="block text-sm font-medium text-gray-700">Role ID *</label>
+              <div className="relative input-icon">
+                <label htmlFor="role_id" className="block text-lg font-medium text-[#441a05]">
+                  Role ID <span className="text-[#DB9E30]">*</span>
+                </label>
+                <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
                   id="role_id"
                   name="role_id"
                   value={formData.role_id}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   required
+                  aria-label="Role ID"
                 >
                   <option value="">Select role</option>
                   <option value="1">Teacher</option>
@@ -597,14 +812,18 @@ const StaffRegistrationForm = () => {
                   <option value="3">Support Staff</option>
                 </select>
               </div>
-              <div>
-                <label htmlFor="department_id" className="block text-sm font-medium text-gray-700">Department ID</label>
+              <div className="relative input-icon">
+                <label htmlFor="department_id" className="block text-lg font-medium text-[#441a05]">
+                  Department ID
+                </label>
+                <FaBuilding className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
                   id="department_id"
                   name="department_id"
                   value={formData.department_id}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-600 focus:ring-purple-600 sm:text-sm"
+                  className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
+                  aria-label="Department ID"
                 >
                   <option value="">Select department</option>
                   <option value="1">Mathematics</option>
@@ -613,25 +832,35 @@ const StaffRegistrationForm = () => {
                 </select>
               </div>
             </div>
-          </div>
+        </div>
 
           {/* Submit Button */}
           <div className="text-center">
             <button
               type="submit"
               disabled={isLoading}
-              className={`inline-flex items-center px-6 py-3 rounded-full text-white font-semibold transition ${
-                isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
-              }`}
+              className="btn btn-ripple inline-flex items-center gap-2 px-10 py-3.5 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-200 animate-scale-in ${isLoading ? 'opacity-50 cursor-not-allowed' : 'btn-glow'}"
+              title="Register staff"
             >
-              {isLoading ? 'Submitting...' : 'Register Staff'}
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <FaSpinner className="animate-spin text-lg" />
+                  <span>Submitting...</span>
+                </span>
+              ) : (
+                <span>Register Staff</span>
+              )}
             </button>
           </div>
 
-          {/* Error Messages */}
+          {/* Error Message */}
           {error && (
-            <div className="mt-4 text-red-600 text-center">
-              <p>Error: {error.data?.message || error.data?.error || error.data?.detail || error.status || 'Unknown'}</p>
+            <div
+              id="error-message"
+              className="text-red-600 bg-red-50 p-4 rounded-lg shadow-inner animate-fadeIn text-center"
+              aria-describedby="error-message"
+            >
+              Error: {error.data?.message || error.data?.error || error.data?.detail || error.status || 'Unknown error'}
             </div>
           )}
         </form>

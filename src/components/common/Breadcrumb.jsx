@@ -138,7 +138,7 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
         `}
       </style>
 
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between w-full gap-4 px-4">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between w-full gap-4">
         {/* Breadcrumb Path */}
         {breadcrumbModule && (
           <h3 className="text-sm md:text-lg text-white capitalize flex-1 space-x-1 font-medium">
@@ -235,7 +235,7 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
 
          {/* New Tab System */}
         {tabs.length > 0 && (
-          <div className="relative w-full flex items-center justify-start mt-4 border-t border-white/20 pt-4">
+          <div className="relative w-full flex items-center justify-start mt-4 border-t border-white/20 pt-4 -left-6">
             {/* Left Arrow for New Tabs */}
             {isNewTabsOverflowing && (
               <button

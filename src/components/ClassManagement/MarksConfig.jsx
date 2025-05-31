@@ -123,7 +123,7 @@ const MarksConfig = () => {
       </h3>
 
       {/* Form to Add/Edit Configuration */}
-      <div className="backdrop-blur-sm border border-white/20 p-6 rounded-2xl mb-6 animate-fadeIn">
+      <div className="backdrop-blur-sm border border-white/20 p-6 rounded-2xl mb-6 animate-fadeIn shadow-xl">
         <div className="flex items-center space-x-4 mb-4 animate-fadeIn">
           <IoSettings className="text-3xl text-[#441a05]" />
           <h4 className="text-lg font-semibold text-[#441a05]">

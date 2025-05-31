@@ -69,7 +69,7 @@ export default function TopNavbar({ setShowSidebar }) {
         `}
       </style>
 
-      <div className="flex items-center justify-between bg-black/10 backdrop-blur-sm border border-white/20 rounded-xl p-3 sm:p-3 mx-4 sm:mx-6 lg:mx-8 shadow-xl animate-fadeIn">
+      <div className="flex items-center justify-between bg-black/10 backdrop-blur-sm border border-white/20 rounded-xl p-3 sm:p-3 shadow-xl animate-fadeIn">
         {/* School Name and Sidebar Toggle */}
         <div className="flex gap-3 sm:gap-4 items-center">
           <button
