@@ -1,51 +1,69 @@
+
 import React, { useState } from 'react';
 import { FaBuilding, FaGlobe, FaUser, FaInfoCircle, FaGraduationCap, FaEdit } from 'react-icons/fa';
 
-// Custom CSS for hover effects, transitions, and header styling
+// Custom CSS for animations and styling
 const customStyles = `
-  .institute-card {
-    transition: box-shadow 0.3s ease-in-out;
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-  .institute-card:hover {
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  @keyframes scaleIn {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
   }
-  .profile-header {
-    background-color: #f3f4f6;
-    border-radius: 12px 12px 0 0;
-    padding: 24px;
+  @keyframes ripple {
+    0% { transform: scale(0); opacity: 0.5; }
+    100% { transform: scale(4); opacity: 0; }
   }
-  .profile-icon {
-    background-color: #ffffff;
-    border: 4px solid #ffffff;
-    border-radius: 50%;
-    padding: 16px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  @keyframes iconHover {
+    to { transform: scale(1.1); }
   }
-  .tab {
-    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  .animate-fadeIn {
+    animation: fadeIn 0.6s ease-out forwards;
   }
-  .tab:hover {
-    background-color: #e5e7eb;
+  .animate-scaleIn {
+    animation: scaleIn 0.4s ease-out forwards;
   }
-  .tab.active {
-    background-color: #4f46e5;
-    color: #ffffff;
-    font-weight: 600;
+  .btn-glow:hover {
+    box-shadow: 0 0 20px rgba(219, 158, 48, 0.4);
+  }
+  .tab-glow:hover {
+    box-shadow: 0 0 10px rgba(219, 158, 48, 0.3);
   }
   .edit-icon {
-    background-color: #e5e7eb;
-    border-radius: 50%;
-    padding: 8px;
-    transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
-  }
-  .edit-icon:hover {
-    background-color: #d1d5db;
     transform: scale(1.1);
+    background-color: #DB9E30;
+    color: #441a05;
   }
-  .edit-icon:focus {
-    outline: none;
-    ring: 2px solid #4f46e5;
-    ring-offset: 2px;
+  .title-underline::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 3px;
+    background: #DB9E30;
+    margin: 8px auto 0;
+  }
+  .btn-ripple {
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-ripple::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1);
+    transform-origin: 50% 50%;
+    animation: none;
+  }
+  .btn-ripple:active::after {
+    animation: ripple 0.6s ease-out;
   }
 `;
 
@@ -61,34 +79,36 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
   };
 
   return (
-    <div className="mx-auto">
+    <div className="mx-auto py-8">
       <style>{customStyles}</style>
-      {/* <h1 className="text-3xl md:text-4xl font-extrabold mb-8 text-center text-gray-900">Institute Profiles</h1> */}
+      <h1 className="text-3xl md:text-4xl font-extrabold mb-8 text-center text-[#441a05] title-underline animate-fadeIn">
+        Institute Profiles
+      </h1>
       {institutes.map((institute) => {
         const activeTab = activeTabs[institute.id] || 'basic';
 
         return (
           <div
             key={institute.id}
-            className="institute-card bg-white rounded-xl shadow-md mb-10 overflow-hidden relative"
+            className="bg-black/10 backdrop-blur-sm border border-white/20 rounded-xl shadow-md mb-10 overflow-hidden relative animate-fadeIn"
           >
             {/* Profile Header */}
-            <div className="profile-header relative flex items-center justify-between">
+            <div className="relative flex items-center justify-between p-6 bg-[#441a05]/10">
               <div className="flex items-center space-x-4">
-                <div className="profile-icon">
-                  <FaBuilding className="text-indigo-600 text-4xl" />
+                <div className="bg-white/20 border-4 border-white rounded-full p-4 shadow-md animate-scaleIn">
+                  <FaBuilding className="text-[#DB9E30] text-4xl" />
                 </div>
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900">{institute.institute_name}</h2>
-                  <p className="text-sm text-gray-600">
+                  <h2 className="text-2xl md:text-3xl font-bold text-[#441a05]">{institute.institute_name}</h2>
+                  <p className="text-sm text-[#9d9087]">
                     {institute.institute_type?.name || 'N/A'} • {institute.institute_address || 'N/A'}
                   </p>
                 </div>
               </div>
-              {/* Edit Icon in Top-Right Corner */}
+              {/* Edit Icon */}
               <button
                 onClick={() => handleEditInstitute(institute)}
-                className="edit-icon text-gray-700 hover:text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                className="edit-icon text-[#9d9087] p-2 rounded-full transition-all duration-300 btn-ripple"
                 title="Edit Profile"
               >
                 <FaEdit className="text-xl" />
@@ -96,20 +116,24 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
             </div>
 
             {/* Tab Navigation */}
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-              <div className="flex flex-wrap gap-2">
-                {['basic', 'online', 'manager', 'additional'].map((tab) => (
+            <div className="px-6 py-4 bg-[#441a05]/5 border-b border-[#9d9087]/50">
+              <div className="flex flex-wrap gap-3">
+                {[
+                  { id: 'basic', label: 'Basic Info' },
+                  { id: 'online', label: 'Online Presence' },
+                  { id: 'manager', label: 'Incharge Manager' },
+                  { id: 'additional', label: 'Additional Info' },
+                ].map((tab) => (
                   <button
-                    key={tab}
-                    className={`tab px-4 py-2 rounded-full text-sm font-medium ${
-                      activeTab === tab ? 'active' : 'text-gray-600'
-                    }`}
-                    onClick={() => setActiveTab(institute.id, tab)}
+                    key={tab.id}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                      activeTab === tab.id
+                        ? 'bg-[#DB9E30] text-[#441a05] font-semibold'
+                        : 'text-[#9d9087] hover:bg-[#9d9087]/20 tab-glow'
+                    } animate-scaleIn`}
+                    onClick={() => setActiveTab(institute.id, tab.id)}
                   >
-                    {tab === 'basic' && 'Basic Info'}
-                    {tab === 'online' && 'Online Presence'}
-                    {tab === 'manager' && 'Incharge Manager'}
-                    {tab === 'additional' && 'Additional Info'}
+                    {tab.label}
                   </button>
                 ))}
               </div>
@@ -118,18 +142,18 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
             {/* Tab Content */}
             <div className="p-6">
               {activeTab === 'basic' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-3 text-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                      <FaBuilding className="mr-2 text-indigo-600" /> Basic Information
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fadeIn">
+                  <div className="space-y-4 text-[#441a05]">
+                    <h3 className="text-lg font-semibold flex items-center">
+                      <FaBuilding className="mr-2 text-[#DB9E30]" /> Basic Info
                     </h3>
                     <p><span className="font-medium">Headmaster:</span> {institute.headmaster_name}</p>
                     <p><span className="font-medium">Mobile:</span> {institute.headmaster_mobile}</p>
                     <p><span className="font-medium">Address:</span> {institute.institute_address || 'N/A'}</p>
                   </div>
-                  <div className="space-y-3 text-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                      <FaInfoCircle className="mr-2 text-indigo-600" /> Institute Details
+                  <div className="space-y-4 text-[#441a05]">
+                    <h3 className="text-lg font-semibold flex items-center">
+                      <FaInfoCircle className="mr-2 text-[#DB9E30]" /> Institute Details
                     </h3>
                     <p><span className="font-medium">Email:</span> {institute.institute_email_address || 'N/A'}</p>
                     <p><span className="font-medium">EIIN Number:</span> {institute.institute_eiin_no || 'N/A'}</p>
@@ -140,16 +164,16 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
               )}
 
               {activeTab === 'online' && (
-                <div className="space-y-3 text-gray-700">
-                  <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                    <FaGlobe className="mr-2 text-indigo-600" /> Online Presence
+                <div className="space-y-4 text-[#441a05] animate-fadeIn">
+                  <h3 className="text-lg font-semibold flex items-center">
+                    <FaGlobe className="mr-2 text-[#DB9E30]" /> Online Presence
                   </h3>
                   <p>
                     <span className="font-medium">Website:</span>{' '}
                     {institute.institute_web ? (
                       <a
                         href={institute.institute_web}
-                        className="text-indigo-600 hover:text-indigo-800"
+                        className="text-[#DB9E30] hover:text-[#441a05] transition-colors duration-300"
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -164,7 +188,7 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
                     {institute.institute_management_web ? (
                       <a
                         href={institute.institute_management_web}
-                        className="text-indigo-600 hover:text-indigo-800"
+                        className="text-[#DB9E30] hover:text-[#441a05] transition-colors duration-300"
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -179,7 +203,7 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
                     {institute.institute_fb ? (
                       <a
                         href={institute.institute_fb}
-                        className="text-indigo-600 hover:text-indigo-800"
+                        className="text-[#DB9E30] hover:text-[#441a05] transition-colors duration-300"
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -194,7 +218,7 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
                     {institute.institute_youtube ? (
                       <a
                         href={institute.institute_youtube}
-                        className="text-indigo-600 hover:text-indigo-800"
+                        className="text-[#DB9E30] hover:text-[#441a05] transition-colors duration-300"
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -208,9 +232,9 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
               )}
 
               {activeTab === 'manager' && (
-                <div className="space-y-3 text-gray-700">
-                  <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                    <FaUser className="mr-2 text-indigo-600" /> Incharge Manager
+                <div className="space-y-4 text-[#441a05] animate-fadeIn">
+                  <h3 className="text-lg font-semibold flex items-center">
+                    <FaUser className="mr-2 text-[#DB9E30]" /> Incharge Manager
                   </h3>
                   <p><span className="font-medium">Name:</span> {institute.incharge_manager || 'N/A'}</p>
                   <p><span className="font-medium">Email:</span> {institute.incharge_manager_email || 'N/A'}</p>
@@ -219,18 +243,18 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
               )}
 
               {activeTab === 'additional' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-3 text-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                      <FaInfoCircle className="mr-2 text-indigo-600" /> Additional Information
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fadeIn">
+                  <div className="space-y-4 text-[#441a05]">
+                    <h3 className="text-lg font-semibold flex items-center">
+                      <FaInfoCircle className="mr-2 text-[#DB9E30]" /> Additional Info
                     </h3>
                     <p><span className="font-medium">Vision Heading:</span> {institute.institute_v_heading || 'N/A'}</p>
                     <p><span className="font-medium">Signature:</span> {institute.signature || 'N/A'}</p>
                     <p><span className="font-medium">Status:</span> {institute.status}</p>
                   </div>
-                  <div className="space-y-3 text-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                      <FaGraduationCap className="mr-2 text-indigo-600" /> Education Details
+                  <div className="space-y-4 text-[#441a05]">
+                    <h3 className="text-lg font-semibold flex items-center">
+                      <FaGraduationCap className="mr-2 text-[#DB9E30]" /> Education Details
                     </h3>
                     <p><span className="font-medium">Board ID:</span> {institute.education_board_id || 'N/A'}</p>
                     <p><span className="font-medium">District ID:</span> {institute.education_district_id || 'N/A'}</p>

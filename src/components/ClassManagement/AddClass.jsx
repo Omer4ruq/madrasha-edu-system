@@ -147,19 +147,19 @@ const AddClass = () => {
         `}
       </style>
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 animate-fadeIn w-full">
-        <div className="flex items-center space-x-4 mb-4 sm:mb-0">
+      <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center animate-fadeIn w-full">
+        {/* <div className="flex items-center space-x-4 mb-4 sm:mb-0">
           <IoSchool className="text-4xl text-[#441a05]" />
           <h2 className="text-3xl font-bold text-[#441a05] tracking-tight">
             Add Classes
           </h2>
-        </div>
-        <button
+        </div> */}
+        {/* <button
           onClick={handleViewClasses}
           className="relative inline-flex items-center px-6 py-3 bg-[#DB9E30] text-[#441a05] font-medium rounded-lg hover:text-white  transition-all duration-300 animate-scaleIn"
         >
           View Classes
-        </button>
+        </button> */}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">

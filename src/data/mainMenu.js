@@ -105,7 +105,7 @@ const mainMenu = [
         link: "settings/behavior-type",
       },
        {
-        id: "05/10",
+        id: "05/11",
         title: "Behavior Marks",
         link: "settings/behavior-marks",
       },

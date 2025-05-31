@@ -57,7 +57,7 @@ const ClassTabs = () => {
       </style>
 
       <section className="mx-auto">
-        <div className="flex items-center mb-6 animate-fadeIn">
+        {/* <div className="flex items-center mb-6 animate-fadeIn">
           <button
             className="flex items-center gap-2 px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg font-medium hover:text-white transition-all duration-300 animate-scaleIn"
             onClick={() => navigate('/class-management')}
@@ -66,11 +66,11 @@ const ClassTabs = () => {
             <IoArrowBack className="text-lg" />
             Back
           </button>
-        </div>
+        </div> */}
 
         <div className="grid grid-cols-1">
           <div>
-            <div className="flex items-center justify-between mb-10 animate-fadeIn">
+            {/* <div className="flex items-center justify-between mb-10 animate-fadeIn">
               <div className="flex items-center gap-4">
                 <div>
                   <h6 className="text-2xl font-bold text-[#441a05] tracking-tight">
@@ -83,7 +83,7 @@ const ClassTabs = () => {
               <div className="flex items-center gap-4">
                 <span className="text-base font-medium text-[#441a05]/70">Classes Managed: 12</span>
               </div>
-            </div>
+            </div> */}
 
             <div className="mb-6">
               <ul className="flex flex-wrap gap-2 border-b border-white/20">

@@ -158,10 +158,10 @@ const AddShift = () => {
       </style>
 
       <div className="mx-auto">
-        <div className="flex items-center space-x-4 mb-10 animate-fadeIn">
+        {/* <div className="flex items-center space-x-4 mb-10 animate-fadeIn">
           <IoTime className="text-4xl text-[#441a05]" />
           <h2 className="text-3xl font-bold text-[#441a05] tracking-tight">Add Shift</h2>
-        </div>
+        </div> */}
 
         {/* Form to Add Shift */}
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
