@@ -1,13 +1,8 @@
 import React, { useState } from 'react';
-<<<<<<< HEAD
-import { useCreateStaffRegistrationApiMutation } from '../../../redux/features/api/staff/staffRegistration';
 
-
-=======
-import { useCreateStaffRegistrationApiMutation } from '../../../redux/features/api/staffRegistration';
 import { FaSpinner, FaUser, FaLock, FaEnvelope, FaPhone, FaHome, FaBriefcase, FaIdCard, FaCalendarAlt, FaVenusMars, FaHeart, FaMap, FaMapMarkerAlt, FaWheelchair, FaUserTag, FaChild, FaFileAlt, FaBuilding, FaBusinessTime, FaRing } from 'react-icons/fa';
 import { IoAddCircleOutline } from 'react-icons/io5';
->>>>>>> b8aa66256e5f0937d2cb4c04a0066f0bda8b77f9
+import { useCreateStaffRegistrationApiMutation } from '../../../redux/features/api/staff/staffRegistration';
 
 const StaffRegistrationForm = () => {
   const [formData, setFormData] = useState({

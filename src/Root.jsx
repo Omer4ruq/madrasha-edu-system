@@ -167,6 +167,7 @@ import StudentRegister from "./components/settings/academic-setup/student-regist
 import StuffRegister from "./components/settings/staff-register/StaffRegister";
 import AddBehaviorType from "./components/behavior/AddBehaviorType";
 import BehaviorMarks from "./components/behavior/BehaviorMarks";
+import AddBehaviorMarks from "./components/behavior/AddBehaviorMarks";
 
 
 function Root() {
@@ -280,7 +281,8 @@ function Root() {
             },
               {
               path: "behavior-marks",
-              element: <BehaviorMarks />,
+              // element: <BehaviorMarks />,
+              element: <AddBehaviorMarks />,
             },
             {
               path: "class-config",

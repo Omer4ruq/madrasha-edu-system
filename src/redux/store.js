@@ -12,10 +12,11 @@ import { staffRegistrationApi } from './features/api/staff/staffRegistration';
 import { studentListApi } from './features/api/student/studentListApi';
 import { staffListApi } from './features/api/staff/staffListApi';
 import { behaviorTypeApi } from './features/api/behavior/behaviorTypeApi';
-import { behaviorMarksApi } from './features/api/behavior/behaviorMarksApi';
+
 import { mealsNameApi } from './features/api/meal/mealsNameApi';
 import { mealItemApi } from './features/api/meal/mealItemApi';
 import { mealSetupApi } from './features/api/meal/mealSetupApi';
+import { behaviorMarksApi } from './features/api/behavior/behaviorMarksApi';
 
 
 

@@ -5,17 +5,13 @@ import {
 import {
   useGetBehaviorTypeApiQuery,
 } from "../../redux/features/api/behavior/behaviorTypeApi";
-import {
-  useCreateBehaviorMarksApiMutation,
-  useDeleteBehaviorMarksApiMutation,
-  useUpdateBehaviorMarksApiMutation,
-  useGetBehaviorMarksApiQuery,
-} from "../../redux/features/api/behavior/behaviorMarksApi";
+
 import {
   useGetclassConfigApiQuery,
 } from "../../redux/features/api/class/classConfigApi";
 import { FaEdit, FaSpinner, FaTrash } from "react-icons/fa";
 import { IoAdd, IoAddCircle } from "react-icons/io5";
+import { useCreateBehaviorMarksApiMutation, useDeleteBehaviorMarksApiMutation, useGetBehaviorMarksApiQuery, useUpdateBehaviorMarksApiMutation } from "../../redux/features/api/behavior/behaviorMarksApi";
 
 const BehaviorMarks = () => {
   const [selectedClass, setSelectedClass] = useState("");
