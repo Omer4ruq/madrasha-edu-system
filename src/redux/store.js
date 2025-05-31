@@ -12,11 +12,15 @@ import { staffRegistrationApi } from './features/api/staff/staffRegistration';
 import { studentListApi } from './features/api/student/studentListApi';
 import { staffListApi } from './features/api/staff/staffListApi';
 import { behaviorTypeApi } from './features/api/behavior/behaviorTypeApi';
-
 import { mealsNameApi } from './features/api/meal/mealsNameApi';
 import { mealItemApi } from './features/api/meal/mealItemApi';
 import { mealSetupApi } from './features/api/meal/mealSetupApi';
 import { behaviorMarksApi } from './features/api/behavior/behaviorMarksApi';
+import { examApi } from './features/api/exam/examApi';
+import { leaveApi } from './features/api/leave/leaveApi';
+import { leaveQuotasApi } from './features/api/leave/leaveQuotasApi';
+import { leaveRequestApi } from './features/api/leave/leaveRequestApi';
+import { cleanReportApi } from './features/api/clean/cleanReportApi';
 
 
 
@@ -39,6 +43,11 @@ export const store = configureStore({
     [mealsNameApi.reducerPath]: mealsNameApi.reducer,
     [mealItemApi.reducerPath]: mealItemApi.reducer,
     [mealSetupApi.reducerPath]: mealSetupApi.reducer,
+    [examApi.reducerPath]: examApi.reducer,
+    [leaveApi.reducerPath]: leaveApi.reducer,
+    [leaveQuotasApi.reducerPath]: leaveQuotasApi.reducer,
+    [leaveRequestApi.reducerPath]: leaveRequestApi.reducer,
+    [cleanReportApi.reducerPath]: cleanReportApi.reducer,
     
     
     
@@ -63,6 +72,11 @@ export const store = configureStore({
     .concat(mealsNameApi.middleware)
     .concat(mealItemApi.middleware)
     .concat(mealSetupApi.middleware)
+    .concat(examApi.middleware)
+    .concat(leaveApi.middleware)
+    .concat(leaveQuotasApi.middleware)
+    .concat(leaveRequestApi.middleware)
+    .concat(cleanReportApi.middleware)
     
 });
 
