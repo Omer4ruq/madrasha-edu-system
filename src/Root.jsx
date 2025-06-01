@@ -168,6 +168,7 @@ import StuffRegister from "./components/settings/staff-register/StaffRegister";
 import AddBehaviorType from "./components/behavior/AddBehaviorType";
 import BehaviorMarks from "./components/behavior/BehaviorMarks";
 import AddBehaviorMarks from "./components/behavior/AddBehaviorMarks";
+import CleanReport from "./components/clean/CleanReport";
 
 
 function Root() {
@@ -279,11 +280,7 @@ function Root() {
               path: "behavior-type",
               element: <AddBehaviorType />,
             },
-              {
-              path: "behavior-marks",
-              // element: <BehaviorMarks />,
-              element: <AddBehaviorMarks />,
-            },
+              
             {
               path: "class-config",
               element: <ClassConfig />,
@@ -963,6 +960,59 @@ function Root() {
               path: "contact",
               element: <Contact />,
             },
+          ],
+        },
+       {
+          path: "darul-iqam",
+          element: <AddBehaviorType />, 
+          children: [
+            {
+              path: "settings",
+              children: [
+                {
+                  path: "behavior-type",
+                  element: <AddBehaviorType />,
+                },
+                {
+                  path: "leave-type",
+                  element: <LeaveType />,
+                },
+              ],
+            },
+            {
+              path: "behavior-marks",
+              element: <AddBehaviorMarks />,
+            },
+            {
+              path: "clean-report",
+              element: <CleanReport />,
+            },
+          ],
+        },
+         {
+          path: "Talimat",
+          children: [
+            {
+              path: "behavior-marks",
+              // element: <BehaviorMarks />,
+              element: <AddBehaviorMarks />,
+            },
+             {
+          path: "settings",
+          children: [
+            
+             {
+              path: "behavior-type",
+              element: <AddBehaviorType />,
+            },
+              
+          {
+              path: "leave-type",
+              element: <LeaveType />,
+            },
+          ],
+        },
+           
           ],
         },
         {

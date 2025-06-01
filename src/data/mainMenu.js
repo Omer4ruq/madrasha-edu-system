@@ -16,81 +16,75 @@ const mainMenu = [
     icon: "HiOutlineBuildingStorefront",
     link: "/institute-profile",
   },
+{
+    id: "04",
+    title: "দারুল ইকাম",
+    icon: "HiOutlineBuildingStorefront",
+    link: "/darul-iqam",
+    children: [
+      {
+        id: "04/01",
+        title: "সেটিং",
+        link: "/darul-iqam/settings",
+        children: [
+          {
+            id: "04/01/01",
+            title: "আচরন ধরন",
+            link: "/darul-iqam/settings/behavior-type",
+          },
+          {
+            id: "04/01/02",
+            title: "ছুটির ধরন",
+            link: "/darul-iqam/settings/leave-type",
+          },
+        ],
+      },
+      {
+        id: "04/02",
+        title: "আচরন মার্কস",
+        link: "/darul-iqam/behavior-marks",
+      },
+      {
+        id: "04/03",
+        title: "ক্লিন রিপোর্ট",
+        link: "/darul-iqam/clean-report",
+      },
+    ],
+  },
   {
-  id: "04",
-  title: "Darul Iqam",
-  icon: "HiOutlineBuildingStorefront",
-  link: "/darul-iqam",
-  children: [
-    {
-      id: "04/01",
-      title: "setting",
-      link: "/settings/behavior-type", // Updated to match router path
-      children: [
-        {
-          id: "04/01/01",
-          title: "behavior Type",
-          link: "/settings/behavior-type", // Updated to absolute path
-        },
-        {
-          id: "04/01/02",
-          title: "Leave Type",
-          link: "/settings/leave-type", // Corrected to match router path
-        },
-      ]
-    },
-  ]
-}
-  ,
-    {
     id: "05",
-    title: "Talimat",
+    title: "তালিমাত",
     icon: "HiOutlineBuildingStorefront",
     link: "/class-management",
     children: [
       {
         id: "05/01",
-        title: "Class Managment",
+        title: "শ্রেনী পরিচালনা",
         link: "/class-management",
-          children: [
-      {
-        id: "05/01",
-        title: "Add Classes",
-        link: "/class-management",
+        children: [
+          {
+            id: "05/01/01",
+            title: "শ্রেনী সংযোজন",
+            link: "/class-management",
+          },
+          {
+            id: "05/01/02",
+            title: "সেকশন সংযোজন",
+            link: "/class-management/add-section",
+          },
+          {
+            id: "05/01/03",
+            title: "শিফট সংযোজন",
+            link: "/class-management/add-shift",
+          },
+          {
+            id: "05/01/04",
+            title: "ক্লাস কনফিগারেশন",
+            link: "/class-management/add-config",
+          },
+        ],
       },
-        {
-        id: "05/02",
-        title: "Add Section",
-        link: "/class-management/add-section",
-      },
-       {
-        id: "05/03",
-        title: "Add Shift",
-        link: "/class-management/add-shift",
-      },
-       {
-        id: "05/04",
-        title: "Class Config",
-        link: "/class-management/add-config",
-      },
-    ]
-      },
-      //   {
-      //   id: "30/02",
-      //   title: "Add Section",
-      //   link: "/class-management/add-section",
-      // },
-      //  {
-      //   id: "30/03",
-      //   title: "Add Shift",
-      //   link: "/class-management/add-shift",
-      // },
-      //  {
-      //   id: "30/04",
-      //   title: "Class Config",
-      //   link: "/class-management/add-config",
-      // },
-    ]
+    ],
   },
   {
     id: "04",
