@@ -169,6 +169,7 @@ import AddBehaviorType from "./components/behavior/AddBehaviorType";
 import BehaviorMarks from "./components/behavior/BehaviorMarks";
 import AddBehaviorMarks from "./components/behavior/AddBehaviorMarks";
 import CleanReport from "./components/clean/CleanReport";
+import ExamType from "./components/exam/examType/ExamType";
 
 
 function Root() {
@@ -220,28 +221,28 @@ function Root() {
             },
           ],
         },
+       {
+      path: "class-management",
+      element: <ClassManagement />,
+      children: [
         {
-          path: "Talimat",
-          children: [
-            {
-              path: "behavior-marks",
-              element: <AddBehaviorMarks />,
-            },
-            {
-              path: "settings",
-              children: [
-                {
-                  path: "behavior-type",
-                  element: <AddBehaviorType />,
-                },
-                {
-                  path: "leave-type",
-                  element: <LeaveType />,
-                },
-              ],
-            },
-          ],
+          index: true,
+          element: <AddClass />,
         },
+        {
+          path: "add-section",
+          element: <AddSection />,
+        },
+        {
+          path: "add-shift",
+          element: <AddShift />,
+        },
+        {
+          path: "add-config",
+          element: <AddClassConfig />, // Ensure correct component
+        },
+      ],
+    },
       ],
     },
   ]);
