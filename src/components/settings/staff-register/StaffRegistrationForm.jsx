@@ -225,7 +225,7 @@ const StaffRegistrationForm = () => {
       </style>
 
       <div className="mx-auto">
-        <div className="sticky top-0 z-10 backdrop-blur-sm pt-6 mb-8 animate-fadeIn">
+        <div className="sticky top-0 z-10 pt-6 mb-8 animate-fadeIn backdrop-blur-sm ">
           <div className="flex items-center justify-center space-x-3">
             <IoAddCircleOutline className="text-4xl text-[#DB9E30] mb-3" />
             <h2 className="text-3xl font-bold text-[#441a05] title-underline">Staff Registration</h2>
@@ -234,7 +234,7 @@ const StaffRegistrationForm = () => {
 
         <form onSubmit={handleSubmit} className="rounded-2xl animate-fadeIn space-y-10">
           {/* Personal Information */}
-          <div className="relative bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-xl shadow-md">
+          <div className=" bg-black/10 backdrop-blur-sm border animate-fadeIn border-white/20 p-6 rounded-xl shadow-md">
             <div className="flex items-center justify-center mb-4">
               <FaUser className="text-3xl text-[#DB9E30]" />
             </div>
@@ -460,7 +460,7 @@ const StaffRegistrationForm = () => {
           </div>
 
           {/* Contact Details */}
-          <div className="relative bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-xl shadow-md">
+          <div className=" bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-xl shadow-md">
             <div className="flex items-center justify-center mb-4">
               <FaPhone className="text-3xl text-[#DB9E30]" />
             </div>
@@ -570,7 +570,7 @@ const StaffRegistrationForm = () => {
           </div>
 
           {/* Family Details */}
-          <div className="relative bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-xl shadow-md">
+          <div className=" bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-xl shadow-md">
             <div className="flex items-center justify-center mb-4">
               <FaHome className="text-3xl text-[#DB9E30]" />
             </div>
@@ -628,7 +628,7 @@ const StaffRegistrationForm = () => {
           </div>
 
           {/* Employment Details */}
-          <div className="relative bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-xl shadow-md">
+          <div className=" bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-xl shadow-md">
             <div className="flex items-center justify-center mb-4">
               <FaBriefcase className="text-3xl text-[#DB9E30]" />
             </div>

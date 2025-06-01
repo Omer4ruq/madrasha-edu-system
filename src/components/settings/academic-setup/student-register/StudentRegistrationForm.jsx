@@ -338,7 +338,7 @@ const StudentRegistrationForm = () => {
       </style>
 
       <div className="mx-auto">
-        <div className="sticky top-0 z-10 pt-6 mb-8 animate-fadeIn">
+        <div className="sticky top-0 z-10 pt-6 mb-8 animate-fadeIn backdrop-blur-sm">
           <div className="flex items-center justify-center space-x-3">
             <IoAddCircleOutline className="text-4xl text-[#DB9E30] mb-3" />
             <h2 className="text-3xl font-bold text-[#441a05] title-underline">

@@ -5,17 +5,14 @@ import Notifications from "./Notifications";
 import Profile from "./Profile";
 import SchoolName from "./SchoolName";
 import { useState, useEffect } from "react";
-import './topNavbar.css'
+import "./topNavbar.css";
+
 export default function TopNavbar({ setShowSidebar }) {
   const [isFloating, setIsFloating] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setIsFloating(true);
-      } else {
-        setIsFloating(false);
-      }
+      setIsFloating(window.scrollY > 50);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -44,15 +41,14 @@ export default function TopNavbar({ setShowSidebar }) {
             box-shadow: 0 0 15px rgba(37, 99, 235, 0.4);
           }
           .floating-bars {
-            background: rgba(255, 255, 255, 0.2);
+            // background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            transform: scale(1.1);
             transition: all 0.3s ease;
           }
 
-          /* Custom Scrollbar */
           ::-webkit-scrollbar {
             width: 8px;
           }
@@ -69,45 +65,53 @@ export default function TopNavbar({ setShowSidebar }) {
         `}
       </style>
 
-      <div className="flex items-center justify-between bg-black/10 backdrop-blur-sm border border-white/20 rounded-xl p-3 sm:p-3 shadow-xl animate-fadeIn">
-        {/* School Name and Sidebar Toggle */}
-        <div className="flex gap-3 sm:gap-4 items-center">
-          <button
-            className={`
-              border border-white/30 rounded w-8 h-8 p-1.5 xl:hidden cursor-pointer
-              transition-all duration-300 ease-in-out
-              ${isFloating
-                ? "fixed top-4 left-4 z-50 floating-bars text-white"
-                : "text-white hover:bg-blue-600/20 btn-glow"
-              }
-            `}
-            onClick={() => setShowSidebar((state) => !state)}
-            aria-label="Toggle sidebar"
-            title="Toggle sidebar"
-          >
-            <FaBars className="w-full h-full animate-scaleIn" />
-          </button>
-          <div className="animate-fadeIn">
-            <SchoolName />
-          </div>
-        </div>
+      {/* Sidebar toggle button that always floats when scrolling */}
+      {isFloating && (
+        <button
+          className="fixed top-4 left-4 z-50 w-9 h-9 p-2 bg-[#DB9E30] text-white rounded border border-white/30 floating-bars xl:hidden"
+          onClick={() => setShowSidebar((state) => !state)}
+          aria-label="Toggle sidebar"
+          title="Toggle sidebar"
+        >
+          <FaBars className="w-full h-full animate-scaleIn " />
+        </button>
+      )}
 
-        {/* Actions */}
-        <div className="flex items-center gap-2 sm:gap-4">
-          <div className="animate-scaleIn" style={{ animationDelay: "0.1s" }}>
-            <LangSwitcher />
+      {/* Full navbar (hidden on scroll) */}
+      {!isFloating && (
+        <div className="flex items-center justify-between bg-black/10 backdrop-blur-sm border border-white/20 rounded-xl p-3 sm:p-3 shadow-xl animate-fadeIn">
+          {/* Left side */}
+          <div className="flex gap-3 sm:gap-4 items-center">
+            <button
+              className="w-8 h-8 p-1.5 rounded border border-white/30 bg-[#DB9E30] text-white hover:bg-blue-600/20 btn-glow xl:hidden transition-all duration-300 ease-in-out"
+              onClick={() => setShowSidebar((state) => !state)}
+              aria-label="Toggle sidebar"
+              title="Toggle sidebar"
+            >
+              <FaBars className="w-full h-full animate-scaleIn" />
+            </button>
+            <div className="animate-fadeIn">
+              <SchoolName />
+            </div>
           </div>
-          <div className="animate-scaleIn" style={{ animationDelay: "0.2s" }}>
-            <Mail />
-          </div>
-          <div className="animate-scaleIn" style={{ animationDelay: "0.3s" }}>
-            <Notifications />
-          </div>
-          <div className="animate-scaleIn" style={{ animationDelay: "0.4s" }}>
-            <Profile />
+
+          {/* Right side */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="animate-scaleIn" style={{ animationDelay: "0.1s" }}>
+              <LangSwitcher />
+            </div>
+            <div className="animate-scaleIn" style={{ animationDelay: "0.2s" }}>
+              <Mail />
+            </div>
+            <div className="animate-scaleIn" style={{ animationDelay: "0.3s" }}>
+              <Notifications />
+            </div>
+            <div className="animate-scaleIn" style={{ animationDelay: "0.4s" }}>
+              <Profile />
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
