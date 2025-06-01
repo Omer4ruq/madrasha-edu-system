@@ -37,6 +37,11 @@ const mainMenu = [
             title: "ছুটির ধরন",
             link: "/darul-iqam/settings/leave-type",
           },
+          {
+            id: "04/01/03",
+            title: "খাবারের ধরন",
+            link: "/darul-iqam/settings/meal-type",
+          },
         ],
       },
       {
@@ -49,13 +54,18 @@ const mainMenu = [
         title: "ক্লিন রিপোর্ট",
         link: "/darul-iqam/clean-report",
       },
+        {
+        id: "04/03",
+        title: "ছুটির আবেদন",
+        link: "/darul-iqam/leave-request",
+      },
     ],
   },
   {
     id: "05",
     title: "তালিমাত",
     icon: "HiOutlineBuildingStorefront",
-    link: "/class-management",
+    link: "/talimat",
     children: [
       {
         id: "05/01",
@@ -82,6 +92,19 @@ const mainMenu = [
             title: "ক্লাস কনফিগারেশন",
             link: "/class-management/add-config",
           },
+        ],
+      },
+       {
+        id: "05/02",
+        title: "সেটিং",
+        link: "/talimat/settings",
+        children: [
+          {
+            id: "05/02/01",
+            title: "পরীক্ষার ধরন",
+            link: "/talimat/settings/exam-type",
+          },
+       
         ],
       },
     ],

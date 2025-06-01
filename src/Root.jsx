@@ -169,7 +169,13 @@ import AddBehaviorType from "./components/behavior/AddBehaviorType";
 import BehaviorMarks from "./components/behavior/BehaviorMarks";
 import AddBehaviorMarks from "./components/behavior/AddBehaviorMarks";
 import CleanReport from "./components/clean/CleanReport";
-import ExamType from "./components/exam/examType/ExamType";
+import ExamType from "./components/exam/examType/AddExamTypes";
+
+import AddExamTypes from "./components/exam/examType/AddExamTypes";
+import AddMealsType from "./components/meals/AddMealsType";
+import AddLeaveType from "./components/leave/AddLeaveType";
+import AddLeaveRequest from "./components/leave/AddLeaveRequest";
+
 
 
 function Root() {
@@ -207,7 +213,11 @@ function Root() {
                 },
                 {
                   path: "leave-type",
-                  element: <LeaveType />,
+                  element: <AddLeaveType />,
+                },
+                 {
+                  path: "meal-type",
+                  element: <AddMealsType />,
                 },
               ],
             },
@@ -218,6 +228,10 @@ function Root() {
             {
               path: "clean-report",
               element: <CleanReport />,
+            },
+             {
+              path: "leave-request",
+              element: <AddLeaveRequest />,
             },
           ],
         },
@@ -243,6 +257,29 @@ function Root() {
         },
       ],
     },
+      {
+          path: "talimat",
+          children: [
+            {
+              path: "settings",
+              children: [
+                {
+                  path: "exam-type",
+                  element: <AddExamTypes />,
+                },
+                
+              ],
+            },
+            {
+              path: "behavior-marks",
+              element: <AddBehaviorMarks />,
+            },
+            {
+              path: "clean-report",
+              element: <CleanReport />,
+            },
+          ],
+        },
       ],
     },
   ]);
