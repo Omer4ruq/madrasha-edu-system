@@ -53,14 +53,36 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
     : "/";
 
   // Get the deepest selected child for tabs
-  const getSelectedChildren = () => {
-    if (!selectedMenuItem) return [];
-    let currentItem = selectedMenuItem;
-    if (currentItem.activeChild && currentItem.activeChild.children) {
-      currentItem = currentItem.activeChild;
-    }
-    return currentItem.children || [];
-  };
+  // const getSelectedChildren = () => {
+  //   if (!selectedMenuItem) return [];
+  //   let currentItem = selectedMenuItem;
+  //   if (currentItem.activeChild && currentItem.activeChild.children) {
+  //     currentItem = currentItem.activeChild;
+  //   }
+  //   return currentItem.children || [];
+  // };
+
+
+
+const getSelectedChildren = () => {
+  if (!selectedMenuItem) return [];
+
+  // Go two levels deep to get nested children if available
+  const firstLevel = selectedMenuItem.activeChild;
+  const secondLevel = firstLevel?.activeChild;
+
+  if (secondLevel?.children?.length) {
+    return secondLevel.children;
+  }
+
+  if (firstLevel?.children?.length) {
+    return firstLevel.children;
+  }
+
+  return [];
+};
+
+
 
   // Handle breadcrumb path display
   const getBreadcrumbPaths = () => {
@@ -174,7 +196,7 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
         {/* Breadcrumb Path */}
         {breadcrumbModule && (
           <h3 className="text-sm md:text-lg text-white capitalize flex-1 space-x-1 pl-3 font-medium">
-            <Link
+            {/* <Link
               to={modulePath}
               className={`${
                 breadcrumbRoute
@@ -184,7 +206,7 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
             >
               {t(breadcrumbModule)}
               {breadcrumbRoute && " / "}
-            </Link>
+            </Link> */}
             {breadcrumbRoute && (
               <span
                 className={`${

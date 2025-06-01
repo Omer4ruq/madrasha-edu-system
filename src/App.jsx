@@ -14,9 +14,11 @@ export default function App() {
   const [showSidebar, setShowSidebar] = useState(false);
   const { pathname } = useLocation();
 
-  const moduleName = pathname?.split("/")[1]?.replace(/-/g, " ");
-  const routeName = pathname?.split("/")[2]?.replace(/-/g, " ");
-  const nestedRouteName = pathname?.split("/")[3]?.replace(/-/g, " ");
+  const segments = pathname?.split("/") || [];
+const moduleName = segments[1]?.replace(/-/g, " ") || "";
+const routeName = segments[2]?.replace(/-/g, " ") || "";
+const nestedRouteName = segments[3]?.replace(/-/g, " ") || "";
+
 
   useEffect(() => {
     window.scrollTo(0, 0);
