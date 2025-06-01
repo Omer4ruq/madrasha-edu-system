@@ -48,7 +48,9 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
   }, [selectedMenuItem]);
 
   // Construct URLs for module path
-  const modulePath = module ? `/${module.replace(/\s/g, "-").toLowerCase()}` : "/";
+  const modulePath = module
+    ? `/${module.replace(/\s/g, "-").toLowerCase()}`
+    : "/";
 
   // Get the deepest selected child for tabs
   const getSelectedChildren = () => {
@@ -63,7 +65,11 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
   // Handle breadcrumb path display
   const getBreadcrumbPaths = () => {
     if (!selectedMenuItem) {
-      return { module: module || null, route: route || null, nestedRoute: nestedRoute || null };
+      return {
+        module: module || null,
+        route: route || null,
+        nestedRoute: nestedRoute || null,
+      };
     }
 
     let currentModule = module || selectedMenuItem.title;
@@ -88,7 +94,11 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
     };
   };
 
-  const { module: breadcrumbModule, route: breadcrumbRoute, nestedRoute: breadcrumbNestedRoute } = getBreadcrumbPaths();
+  const {
+    module: breadcrumbModule,
+    route: breadcrumbRoute,
+    nestedRoute: breadcrumbNestedRoute,
+  } = getBreadcrumbPaths();
   const tabs = getSelectedChildren();
 
   // Scroll functions (original tabs)
@@ -118,7 +128,7 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
   };
 
   return (
-    <div className="pl-2 md:pl-6 xl:pl-5 rounded-lg mt-6">
+    <div className="pl-2 md:pl-6 xl:pl-3 rounded-lg mt-6">
       <style>
         {`
           @keyframes scaleIn {
@@ -135,13 +145,35 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
             -ms-overflow-style: none;
             scrollbar-width: none;
           }
+     @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes underlineGrow {
+    from { width: 0; }
+    to { width: 100%; }
+  }
+  .tab-glow:hover {
+    box-shadow: 0 0 10px rgba(219, 158, 48, 0.3);
+  }
+  .active-underline::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: #DB9E30;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    animation: underlineGrow 0.3s ease-out forwards;
+  }
         `}
       </style>
 
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between w-full gap-4">
         {/* Breadcrumb Path */}
         {breadcrumbModule && (
-          <h3 className="text-sm md:text-lg text-white capitalize flex-1 space-x-1 font-medium">
+          <h3 className="text-sm md:text-lg text-white capitalize flex-1 space-x-1 pl-3 font-medium">
             <Link
               to={modulePath}
               className={`${
@@ -166,7 +198,9 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
               </span>
             )}
             {breadcrumbNestedRoute && (
-              <span className="text-[#DB9E30] font-bold">{t(breadcrumbNestedRoute)}</span>
+              <span className="text-[#DB9E30] font-bold">
+                {t(breadcrumbNestedRoute)}
+              </span>
             )}
           </h3>
         )}
@@ -229,68 +263,37 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
             )}
           </div>
         )}
-
-     
       </div>
 
-         {/* New Tab System */}
-        {tabs.length > 0 && (
-          <div className="relative w-full flex items-center justify-start mt-4 border-t border-white/20 pt-4 -left-6">
-            {/* Left Arrow for New Tabs */}
-            {isNewTabsOverflowing && (
-              <button
-                onClick={scrollNewTabsLeft}
-                className="absolute left-0 p-2 bg-white/80 text-[#441a05] rounded-full hover:bg-[#DB9E30] hover:text-white transition-colors z-10 animate-scaleIn focus:ring-2 ring-[#DB9E30]"
-                aria-label="Scroll new tabs left"
-                title="Scroll left"
-                style={{ animationDelay: "0.1s" }}
-              >
-                <FaChevronLeft className="w-4 h-4" />
-              </button>
-            )}
+      {/* New Tab System */}
+      {tabs.length > 0 && (
+        <div className="relative w-full mt-4 border-b pt-4 animate-fadeIn">
+          {/* Tabs Container */}
+          <div className="flex flex-wrap gap-3 rounded-xl">
+            {tabs.map((child, index) => {
+              const childPath = child.link || "#";
+              const isActive = activeTab === childPath;
 
-            {/* New Tabs Container */}
-            <div
-              ref={newTabsContainerRef}
-              className="flex overflow-x-auto whitespace-nowrap no-scrollbar mx-6 gap-3 py-2"
-            >
-              {tabs.map((child, index) => {
-                const childPath = child.link || "#";
-                const isActive = activeTab === childPath;
-
-                return (
-                  <Link
-                    key={child.id}
-                    to={childPath}
-                    className={`px-5 py-2 rounded-xl text-xs sm:text-sm capitalize font-semibold transition-all duration-300 flex-shrink-0 animate-scaleIn ${
-                      isActive
-                        ? "bg-[#DB9E30] text-white"
-                        : "bg-white text-[#441a05] hover:bg-[#DB9E30] hover:text-white border border-[#DB9E30]"
-                    }`}
-                    style={{ animationDelay: `${0.3 + index * 0.1}s` }}
-                    aria-current={isActive ? "page" : undefined}
-                    title={t(child.title)}
-                  >
-                    {t(child.title)}
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Right Arrow for New Tabs */}
-            {isNewTabsOverflowing && (
-              <button
-                onClick={scrollNewTabsRight}
-                className="absolute right-0 p-2 bg-white/80 text-[#441a05] rounded-full hover:bg-[#DB9E30] hover:text-white transition-colors z-10 animate-scaleIn focus:ring-2 ring-[#DB9E30]"
-                aria-label="Scroll new tabs right"
-                title="Scroll right"
-                style={{ animationDelay: "0.1s" }}
-              >
-                <FaChevronRight className="w-4 h-4" />
-              </button>
-            )}
+              return (
+                <Link
+                  key={child.id}
+                  to={childPath}
+                  className={`relative px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-base capitalize font-semibold transition-all duration-300 flex-shrink-0 animate-scaleIn ${
+                    isActive
+                      ? " text-[#DB9E30] active-underline"
+                      : "text-[#441a05]/70 hover:text-[#DB9E30]"
+                  }`}
+                  style={{ animationDelay: `${0.3 + index * 0.1}s` }}
+                  aria-current={isActive ? "page" : undefined}
+                  title={t(child.title)}
+                >
+                  {t(child.title)}
+                </Link>
+              );
+            })}
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 }

@@ -106,7 +106,7 @@ const AddClassConfig = () => {
   };
 
   return (
-    <div className="py-12 w-full relative">
+    <div className="py-8 w-full relative">
       <style>
         {`
           @keyframes fadeIn {
@@ -150,12 +150,12 @@ const AddClassConfig = () => {
       </style>
 
       <div className="mx-auto">
-        <div className="flex items-center space-x-4 mb-10 animate-fadeIn">
+        {/* <div className="flex items-center space-x-4 mb-10 animate-fadeIn">
           <IoSettings className="text-4xl text-[#441a05]" />
           <h2 className="text-3xl font-bold text-[#441a05] tracking-tight">
             Class Configuration
           </h2>
-        </div>
+        </div> */}
 
         {/* Form to Create Configuration */}
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
