@@ -14,6 +14,7 @@ import {
 } from "../../redux/features/api/behavior/behaviorReportApi";
 import { useGetBehaviorTypeApiQuery } from "../../redux/features/api/behavior/behaviorTypeApi";
 import { useGetExamApiQuery } from "../../redux/features/api/exam/examApi";
+import { useGetStudentActiveApiQuery } from "../../redux/features/api/student/studentActiveApi";
 
 const AddBehaviorMarks = () => {
   const [selectedClass, setSelectedClass] = useState("");
@@ -24,8 +25,8 @@ const AddBehaviorMarks = () => {
 
   // API hooks
   const { data: classConfig, isLoading: isConfigLoading, error: configError } = useGetclassConfigApiQuery();
-  const { data: studentsList, isLoading: isStudentLoading, error: studentError } = useGetStudentListApIQuery();
-  // const { data: studentsList, isLoading: isStudentLoading, error: studentError } = useGetStudentActiveApiQuery();
+  // const { data: studentsList, isLoading: isStudentLoading, error: studentError } = useGetStudentListApIQuery();
+  const { data: studentsList, isLoading: isStudentLoading, error: studentError } = useGetStudentActiveApiQuery();
   const { data: examlist, isLoading: isExamLoading, error: examError } = useGetExamApiQuery();
   const [createBehaviorReportMarks, { isLoading: isCreating, error: createError }] = useCreateBehaviorReportApiMutation();
   const [deleteBehaviorReportMarks, { isLoading: isDeleting, error: deleteError }] = useUpdateBehaviorReportApiMutation();
@@ -34,9 +35,10 @@ const AddBehaviorMarks = () => {
     isLoading: isBehaviorLoading,
     error: behaviorError,
   } = useGetBehaviorTypeApiQuery();
-
+console.log(studentsList)
+console.log(classConfig)
   // Filter students by selected class
-  const filteredStudents = studentsList?.students?.filter((student) => student?.class_name === selectedClass) || [];
+  const filteredStudents = studentsList?.filter((student) => student?.class_name === selectedClass) || [];
 
   // Handle marks and comment input
   const handleMarksInput = (studentId, behaviorType, value = "", isEditing = false) => {
