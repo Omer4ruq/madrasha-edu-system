@@ -148,10 +148,10 @@ const AddMealsType = () => {
       </style>
 
       <div className="">
-        <div className="flex items-center space-x-4 mb-10 animate-fadeIn">
+        {/* <div className="flex items-center space-x-4 mb-10 animate-fadeIn">
           <IoAddCircle className="text-4xl text-[#441a05]" />
           <h2 className="text-3xl font-bold text-[#441a05] tracking-tight">Add Meal Type</h2>
-        </div>
+        </div> */}
 
         {/* Form to Add Meal Type */}
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">

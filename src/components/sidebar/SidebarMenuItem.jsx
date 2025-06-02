@@ -57,10 +57,10 @@ export default function SidebarMenuItem({ item, itemId, setItemId }) {
         {`
           @keyframes menuSlide {
             from { max-height: 0; opacity: 0; transform: translateY(-10px); }
-            to { max-height: 500px; opacity: 1; transform: translateY(0); }
+            to { max-height: 5000px; opacity: 1; transform: translateY(0); }
           }
           @keyframes menuSlideUp {
-            from { max-height: 500px; opacity: 1; transform: translateY(0); }
+            from { max-height: 0px; opacity: 1; transform: translateY(0); }
             to { max-height: 0; opacity: 0; transform: translateY(-10px); }
           }
           .menu-open {

@@ -1,7 +1,7 @@
 const mainMenu = [
   {
     id: "01",
-    title: "sidebarSingle.profile",
+    title: "প্রোফাইল",
     icon: false,
   },
   {
@@ -55,7 +55,7 @@ const mainMenu = [
         link: "/darul-iqam/clean-report",
       },
         {
-        id: "04/03",
+        id: "04/04",
         title: "ছুটির আবেদন",
         link: "/darul-iqam/leave-request",
       },
@@ -109,11 +109,11 @@ const mainMenu = [
       },
     ],
   },
-  {
-    id: "04",
-    title: "sidebarSingle.appsAndPages",
-    icon: false,
-  },
+  // {
+  //   id: "04",
+  //   title: "sidebarSingle.appsAndPages",
+  //   icon: false,
+  // },
 
   
 ];

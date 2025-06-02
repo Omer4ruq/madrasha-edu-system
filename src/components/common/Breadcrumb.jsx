@@ -12,6 +12,8 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
   const [isOverflowing, setIsOverflowing] = useState(false);
   const tabsContainerRef = useRef(null);
 
+  console.log(route)
+
   // Update active tab when location changes
   useEffect(() => {
     setActiveTab(location.pathname);
@@ -139,7 +141,7 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
         {/* Breadcrumb Path (Top-Left) */}
         {breadcrumbModule && (
           <h3 className="text-sm md:text-lg text-white capitalize flex-1 space-x-1 pl-3 font-medium">
-            <Link
+            {/* <Link
               to={modulePath}
               className={`${
                 breadcrumbRoute
@@ -149,7 +151,7 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
             >
               {t(breadcrumbModule)}
               {breadcrumbRoute && " / "}
-            </Link>
+            </Link> */}
             {breadcrumbRoute && (
               <Link
                 to={`${modulePath}/${breadcrumbRoute.replace(/\s/g, "-").toLowerCase()}`}

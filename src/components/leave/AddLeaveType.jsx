@@ -155,13 +155,13 @@ const AddLeaveType = () => {
       </style>
 
       <div className="">
-        <div className="flex items-center space-x-4 mb-10 animate-fadeIn">
+        {/* <div className="flex items-center space-x-4 mb-10 animate-fadeIn">
           <IoAddCircle className="text-4xl text-[#441a05]" />
           <h2 className="text-3xl font-bold text-[#441a05] tracking-tight">Add Leave Type</h2>
-        </div>
+        </div> */}
 
         {/* Toggle Buttons */}
-        <div className="flex space-x-4 mb-6 animate-fadeIn">
+        {/* <div className="flex space-x-4 mb-6 animate-fadeIn">
           <button
             onClick={() => setIsAdd(true)}
             className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
@@ -178,7 +178,7 @@ const AddLeaveType = () => {
           >
             Edit Leave Type
           </button>
-        </div>
+        </div> */}
 
         {/* Add Leave Form */}
         {isAdd && (

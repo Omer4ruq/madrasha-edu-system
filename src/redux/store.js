@@ -21,6 +21,7 @@ import { leaveApi } from './features/api/leave/leaveApi';
 import { leaveQuotasApi } from './features/api/leave/leaveQuotasApi';
 import { leaveRequestApi } from './features/api/leave/leaveRequestApi';
 import { cleanReportApi } from './features/api/clean/cleanReportApi';
+import { behaviorReportApi } from './features/api/behavior/behaviorReportApi';
 
 
 
@@ -48,6 +49,7 @@ export const store = configureStore({
     [leaveQuotasApi.reducerPath]: leaveQuotasApi.reducer,
     [leaveRequestApi.reducerPath]: leaveRequestApi.reducer,
     [cleanReportApi.reducerPath]: cleanReportApi.reducer,
+    [behaviorReportApi.reducerPath]: cleanReportApi.reducer,
     
     
     
@@ -77,6 +79,7 @@ export const store = configureStore({
     .concat(leaveQuotasApi.middleware)
     .concat(leaveRequestApi.middleware)
     .concat(cleanReportApi.middleware)
+    .concat(behaviorReportApi.middleware)
     
 });
 
