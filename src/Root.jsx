@@ -49,7 +49,7 @@ function Root() {
           path: "/darul-iqam",
           children: [
             {
-              path: "settings",
+              path: "/darul-iqam/settings",
               children: [
                 {
                   path: "behavior-type",
