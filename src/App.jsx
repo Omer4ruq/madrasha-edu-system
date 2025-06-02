@@ -9,16 +9,16 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./i18n/i18n.js";
 import { SelectedMenuProvider } from "./context/SelectedMenuContext";
+import { Toaster } from "react-hot-toast";
 
 export default function App() {
   const [showSidebar, setShowSidebar] = useState(false);
   const { pathname } = useLocation();
 
   const segments = pathname?.split("/") || [];
-const moduleName = segments[1]?.replace(/-/g, " ") || "";
-const routeName = segments[2]?.replace(/-/g, " ") || "";
-const nestedRouteName = segments[3]?.replace(/-/g, " ") || "";
-
+  const moduleName = segments[1]?.replace(/-/g, " ") || "";
+  const routeName = segments[2]?.replace(/-/g, " ") || "";
+  const nestedRouteName = segments[3]?.replace(/-/g, " ") || "";
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -60,17 +60,10 @@ const nestedRouteName = segments[3]?.replace(/-/g, " ") || "";
           <Footer />
         </div>
 
-        <ToastContainer
-          position="bottom-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="colored"
+        <Toaster
+          position="top-right"
+          reverseOrder={false}
+          // theme="colored"
         />
       </div>
     </SelectedMenuProvider>

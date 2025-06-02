@@ -13,7 +13,6 @@ import AddClassConfig from "./components/ClassManagement/AddClassConfig.jsx";
 import AddBehaviorType from "./components/behavior/AddBehaviorType";
 import AddBehaviorMarks from "./components/behavior/AddBehaviorMarks";
 import CleanReport from "./components/clean/CleanReport";
-<<<<<<< HEAD
 import ExamType from "./components/exam/examType/AddExamTypes";
 
 import AddExamTypes from "./components/exam/examType/AddExamTypes";
@@ -22,8 +21,6 @@ import AddLeaveType from "./components/leave/AddLeaveType";
 import AddLeaveRequest from "./components/leave/AddLeaveRequest";
 
 
-=======
->>>>>>> 3a423bc563c3e6b0d2125cd40f1a6a8de352a4a6
 
 function Root() {
   const router = createBrowserRouter([
