@@ -6,75 +6,67 @@ import {
   useGetclassConfigApiQuery,
 } from "../../redux/features/api/class/classConfigApi";
 import { FaSpinner } from "react-icons/fa";
-import { IoAddCircle } from "react-icons/io5";
-import { IoClose } from "react-icons/io5";
+import { IoAddCircle, IoClose } from "react-icons/io5";
 import toast from "react-hot-toast";
-
-// Placeholder for marks API (replace with actual API)
-const useCreateSubjectMarksApiMutation = () => {
-  const [createMarks, { isLoading, error }] = React.useState({ isLoading: false, error: null });
-  const mutate = async (payload) => {
-    // Simulate API call
-    console.log("মার্কস সংরক্ষণ করা হচ্ছে:", payload);
-    return { data: payload };
-  };
-  return [mutate, { isLoading, error }];
-};
-
-// Placeholder for delete marks API
-const useDeleteSubjectMarksApiMutation = () => {
-  const [deleteMarks, { isLoading, error }] = React.useState({ isLoading: false, error: null });
-  const mutate = async (studentId) => {
-    // Simulate API call
-    console.log("ছাত্রের মার্কস মুছে ফেলা হচ্ছে:", studentId);
-    return { data: { studentId } };
-  };
-  return [mutate, { isLoading, error }];
-};
+import {
+  useCreateBehaviorReportApiMutation,
+  useUpdateBehaviorReportApiMutation,
+} from "../../redux/features/api/behavior/behaviorReportApi";
+import { useGetBehaviorTypeApiQuery } from "../../redux/features/api/behavior/behaviorTypeApi";
+import { useGetExamApiQuery } from "../../redux/features/api/exam/examApi";
 
 const AddBehaviorMarks = () => {
   const [selectedClass, setSelectedClass] = useState("");
-  const [marksInput, setMarksInput] = useState({}); // { studentId: { subjectName: { marks, isEditing } } }
+  const [selectedExam, setSelectedExam] = useState(""); // New state for exam selection
+  const [marksInput, setMarksInput] = useState({}); // { studentId: { behaviorType: { marks, isEditing }, comment } }
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, studentId: null });
   const inputRefs = useRef({}); // To store input refs for focusing
 
   // API hooks
   const { data: classConfig, isLoading: isConfigLoading, error: configError } = useGetclassConfigApiQuery();
   const { data: studentsList, isLoading: isStudentLoading, error: studentError } = useGetStudentListApIQuery();
-  const [createSubjectMarks, { isLoading: isCreating, error: createError }] = useCreateSubjectMarksApiMutation();
-  const [deleteSubjectMarks, { isLoading: isDeleting, error: deleteError }] = useDeleteSubjectMarksApiMutation();
+  const { data: examlist, isLoading: isExamLoading, error: examError } = useGetExamApiQuery();
+  const [createBehaviorReportMarks, { isLoading: isCreating, error: createError }] = useCreateBehaviorReportApiMutation();
+  const [deleteBehaviorReportMarks, { isLoading: isDeleting, error: deleteError }] = useUpdateBehaviorReportApiMutation();
+  const {
+    data: behaviorTypes,
+    isLoading: isBehaviorLoading,
+    error: behaviorError,
+  } = useGetBehaviorTypeApiQuery();
 
   // Filter students by selected class
   const filteredStudents = studentsList?.students?.filter((student) => student?.class_name === selectedClass) || [];
 
-  // Static subjects list (replace with API if available)
-  const subjects = [
-    { name: "গণিত", maxMarks: 100 },
-    { name: "বিজ্ঞান", maxMarks: 100 },
-    { name: "ইংরেজি", maxMarks: 100 },
-    { name: "ইতিহাস", maxMarks: 100 },
-    { name: "ভূগোল", maxMarks: 100 },
-  ];
-
-  // Handle marks input toggle and change
-  const handleMarksInput = (studentId, subjectName, value = "", isEditing = false) => {
+  // Handle marks and comment input
+  const handleMarksInput = (studentId, behaviorType, value = "", isEditing = false) => {
     setMarksInput((prev) => ({
       ...prev,
       [studentId]: {
         ...prev[studentId],
-        [subjectName]: { marks: value, isEditing },
+        [behaviorType]: { marks: value, isEditing },
       },
     }));
   };
 
-  // Handle Enter key press to move focus to next student's same subject
-  const handleKeyDown = (e, studentId, subjectName) => {
+  // Handle comment input
+  const handleCommentInput = (studentId, value) => {
+    setMarksInput((prev) => ({
+      ...prev,
+      [studentId]: {
+        ...prev[studentId],
+        comment: value,
+      },
+    }));
+  };
+
+  // Handle Enter key press to move focus to next student's same behavior type
+  const handleKeyDown = (e, studentId, behaviorType) => {
     if (e.key === "Enter") {
       e.preventDefault();
       const currentStudentIndex = filteredStudents.findIndex((s) => s.id === studentId);
       const nextStudent = filteredStudents[currentStudentIndex + 1];
       if (nextStudent) {
-        const nextInput = inputRefs.current[`${nextStudent.id}-${subjectName}`];
+        const nextInput = inputRefs.current[`${nextStudent.id}-${behaviorType}`];
         if (nextInput) {
           nextInput.focus();
         }
@@ -84,39 +76,48 @@ const AddBehaviorMarks = () => {
 
   // Handle submit marks for a student
   const handleSubmitMarks = async (studentId) => {
-    const studentMarks = marksInput[studentId] || {};
-    const subjectMarks = subjects
-      .map((subject) => ({
-        subject_name: subject.name,
-        marks: Number(studentMarks[subject.name]?.marks) || 0,
-      }))
-      .filter((sm) => sm.marks > 0); // Only include non-zero marks
+    if (!selectedExam) {
+      toast.error("পরীক্ষা নির্বাচন করুন।");
+      return;
+    }
 
-    if (subjectMarks.length === 0) {
+    const studentMarks = marksInput[studentId] || {};
+    const behaviorMarks = behaviorTypes
+      .map((behavior) => ({
+        student_id: studentId,
+        behavior_type: behavior.id,
+        mark: Number(studentMarks[behavior.name]?.marks) || 0,
+      }))
+      .filter((bm) => bm.mark > 0); // Only include non-zero marks
+
+    if (behaviorMarks.length === 0) {
       toast.error("অন্তত একটি মার্ক প্রবেশ করুন।");
       return;
     }
 
-    for (const { marks, subject_name } of subjectMarks) {
-      const maxMarks = subjects.find((s) => s.name === subject_name).maxMarks;
-      if (marks > maxMarks) {
-        toast.error(`${subject_name} এর মার্কস ${maxMarks} এর বেশি হতে পারে না।`);
+    for (const { mark, behavior_type } of behaviorMarks) {
+      const behavior = behaviorTypes.find((b) => b.id === behavior_type);
+      if (mark > behavior.obtain_mark) {
+        toast.error(`${behavior.name} এর মার্কস ${behavior.obtain_mark} এর বেশি হতে পারে না।`);
         return;
       }
-      if (marks < 0) {
-        toast.error(`${subject_name} এর মার্কস নেগেটিভ হতে পারে না।`);
+      if (mark < 0) {
+        toast.error(`${behavior.name} এর মার্কস নেগেটিভ হতে পারে না।`);
         return;
       }
     }
 
     try {
-      const payload = {
-        student_id: studentId,
-        subject_marks: subjectMarks,
-      };
-      await createSubjectMarks(payload).unwrap();
+      const payload = [
+        {
+          exam_name_id: Number(selectedExam),
+          comment: studentMarks.comment || "",
+          behavior_marks: behaviorMarks,
+        },
+      ];
+      await createBehaviorReportMarks(payload).unwrap();
       toast.success("মার্কস সফলভাবে সংরক্ষিত হয়েছে!");
-      setMarksInput((prev) => ({ ...prev, [studentId]: {} })); // Clear marks for this student
+      setMarksInput((prev) => ({ ...prev, [studentId]: {} })); // Clear marks and comment for this student
     } catch (err) {
       console.error("মার্কস সংরক্ষণে ত্রুটি:", err);
       toast.error(`মার্কস সংরক্ষণে ব্যর্থ: ${err.status || "অজানা ত্রুটি"}`);
@@ -126,7 +127,7 @@ const AddBehaviorMarks = () => {
   // Handle delete marks confirmation
   const handleDeleteMarks = async (studentId) => {
     try {
-      await deleteSubjectMarks(studentId).unwrap();
+      await deleteBehaviorReportMarks(studentId).unwrap();
       toast.success("মার্কস সফলভাবে মুছে ফেলা হয়েছে!");
       setMarksInput((prev) => ({ ...prev, [studentId]: {} })); // Clear marks for this student
       setDeleteConfirm({ isOpen: false, studentId: null });
@@ -221,54 +222,82 @@ const AddBehaviorMarks = () => {
         `}
       </style>
 
-
-
       <div className="">
-        {/* Class Selection */}
-        <div className="bg-black/10 backdrop-blur-sm borderດ
-        border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+        {/* Class and Exam Selection */}
+        <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
           <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
             <IoAddCircle className="text-4xl text-[#441a05]" />
-            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">শ্রেণি নির্বাচন করুন</h3>
+            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">শ্রেণি এবং পরীক্ষা নির্বাচন করুন</h3>
           </div>
-          <div className="max-w-md">
-            <select
-              value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value)}
-              className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
-              disabled={isConfigLoading}
-            >
-              <option value="">শ্রেণি নির্বাচন করুন</option>
-              {classConfig?.map((cls) => (
-                <option key={cls.id} value={cls.class_name}>
-                  {cls.class_name}
-                </option>
-              ))}
-            </select>
-            {configError && (
-              <div
-                className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
-                style={{ animationDelay: "0.4s" }}
+          <div className="flex space-x-4 max-w-2xl">
+            <div className="flex-1">
+              <select
+                value={selectedClass}
+                onChange={(e) => setSelectedClass(e.target.value)}
+                className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+                disabled={isConfigLoading}
               >
-                শ্রেণি লোড করতে ত্রুটি: {configError.status || "অজানা"} -{" "}
-                {JSON.stringify(configError.data || {})}
-              </div>
-            )}
+                <option value="">শ্রেণি নির্বাচন করুন</option>
+                {classConfig?.map((cls) => (
+                  <option key={cls.id} value={cls.class_name}>
+                    {cls.class_name}
+                  </option>
+                ))}
+              </select>
+              {configError && (
+                <div
+                  className="mt-2 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
+                  style={{ animationDelay: "0.4s" }}
+                >
+                  শ্রেণি লোড করতে ত্রুটি: {configError.status || "অজানা"} -{" "}
+                  {JSON.stringify(configError.data || {})}
+                </div>
+              )}
+            </div>
+            <div className="flex-1">
+              <select
+                value={selectedExam}
+                onChange={(e) => setSelectedExam(e.target.value)}
+                className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+                disabled={isExamLoading}
+              >
+                <option value="">পরীক্ষা নির্বাচন করুন</option>
+                {examlist?.map((exam) => (
+                  <option key={exam.id} value={exam.id}>
+                    {exam.name}
+                  </option>
+                ))}
+              </select>
+              {examError && (
+                <div
+                  className="mt-2 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
+                  style={{ animationDelay: "0.4s" }}
+                >
+                  পরীক্ষা লোড করতে ত্রুটি: {examError.status || "অজানা"} -{" "}
+                  {JSON.stringify(examError.data || {})}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Students Table */}
         <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-x-auto max-h-[60vh] py-2 px-6">
           <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">ছাত্রদের মার্কস</h3>
-          {isStudentLoading || isConfigLoading ? (
+          {isStudentLoading || isConfigLoading || isExamLoading || isBehaviorLoading ? (
             <p className="p-4 text-[#441a05]/70">ছাত্রদের তথ্য লোড হচ্ছে...</p>
           ) : studentError ? (
             <p className="p-4 text-red-400">
               ছাত্রদের তথ্য লোড করতে ত্রুটি: {studentError.status || "অজানা"} -{" "}
               {JSON.stringify(studentError.data || {})}
             </p>
-          ) : !selectedClass ? (
-            <p className="p-4 text-[#441a05]/70">ছাত্রদের দেখতে একটি শ্রেণি নির্বাচন করুন।</p>
+          ) : behaviorError ? (
+            <p className="p-4 text-red-400">
+              আচরণের ধরন লোড করতে ত্রুটি: {behaviorError.status || "অজানা"} -{" "}
+              {JSON.stringify(behaviorError.data || {})}
+            </p>
+          ) : !selectedClass || !selectedExam ? (
+            <p className="p-4 text-[#441a05]/70">ছাত্রদের দেখতে একটি শ্রেণি এবং পরীক্ষা নির্বাচন করুন।</p>
           ) : filteredStudents.length === 0 ? (
             <p className="p-4 text-yellow-400 bg-yellow-500/10 rounded-lg">
               নির্বাচিত শ্রেণির জন্য কোনো ছাত্র পাওয়া যায়নি। শ্রেণি নিয়োগ পরীক্ষা করুন।
@@ -290,15 +319,21 @@ const AddBehaviorMarks = () => {
                     >
                       রোল নম্বর
                     </th>
-                    {subjects.map((subject) => (
+                    {behaviorTypes?.map((behavior) => (
                       <th
-                        key={subject.name}
+                        key={behavior.id}
                         className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider"
                         style={{ minWidth: "150px" }}
                       >
-                        {subject.name} ({subject.maxMarks} এর মধ্যে)
+                        {behavior.name} ({behavior.obtain_mark} এর মধ্যে)
                       </th>
                     ))}
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider"
+                      style={{ minWidth: "200px" }}
+                    >
+                      মন্তব্য
+                    </th>
                     <th
                       className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider"
                       style={{ minWidth: "150px" }}
@@ -326,11 +361,11 @@ const AddBehaviorMarks = () => {
                       >
                         {student.roll_no}
                       </td>
-                      {subjects.map((subject) => {
-                        const studentMarks = marksInput[student.id]?.[subject.name] || {};
+                      {behaviorTypes?.map((behavior) => {
+                        const studentMarks = marksInput[student.id]?.[behavior.name] || {};
                         return (
                           <td
-                            key={subject.name}
+                            key={behavior.id}
                             className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]"
                             style={{ minWidth: "150px" }}
                           >
@@ -338,21 +373,33 @@ const AddBehaviorMarks = () => {
                               type="number"
                               value={studentMarks.marks || ""}
                               onChange={(e) =>
-                                handleMarksInput(student.id, subject.name, e.target.value, true)
+                                handleMarksInput(student.id, behavior.name, e.target.value, true)
                               }
                               onBlur={() =>
-                                handleMarksInput(student.id, subject.name, studentMarks.marks, false)
+                                handleMarksInput(student.id, behavior.name, studentMarks.marks, false)
                               }
-                              onKeyDown={(e) => handleKeyDown(e, student.id, subject.name)}
-                              ref={(el) => (inputRefs.current[`${student.id}-${subject.name}`] = el)}
+                              onKeyDown={(e) => handleKeyDown(e, student.id, behavior.name)}
+                              ref={(el) => (inputRefs.current[`${student.id}-${behavior.name}`] = el)}
                               className="w-20 bg-transparent text-[#441a05] placeholder:text-[#441a05] pl-3 py-1 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
                               placeholder="মার্কস"
                               min={0}
-                              max={subject.maxMarks}
+                              max={behavior.obtain_mark}
                             />
                           </td>
                         );
                       })}
+                      <td
+                        className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]"
+                        style={{ minWidth: "200px" }}
+                      >
+                        <input
+                          type="text"
+                          value={marksInput[student.id]?.comment || ""}
+                          onChange={(e) => handleCommentInput(student.id, e.target.value)}
+                          className="w-full bg-transparent text-[#441a05] placeholder:text-[#441a05] pl-3 py-1 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+                          placeholder="মন্তব্য (ঐচ্ছিক)"
+                        />
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium" style={{ minWidth: "150px" }}>
                         <button
                           onClick={() => handleSubmitMarks(student.id)}
