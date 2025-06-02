@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
 import App from "./App";
 import LeaveType from "./components/attendance/leave-type/LeaveType";
 import Home from "./components/homePage/Home";
@@ -31,7 +31,7 @@ function Root() {
       children: [
         {
           path: "/",
-          element: <Home />,
+          element: <Navigate to="/dashboard" replace />,
         },
         {
           path: "dashboard",
@@ -46,7 +46,7 @@ function Root() {
           element: <EditInstituteInfo />,
         },
         {
-          path: "darul-iqam",
+          path: "/darul-iqam",
           children: [
             {
               path: "settings",

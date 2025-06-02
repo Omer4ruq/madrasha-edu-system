@@ -6,13 +6,13 @@ const mainMenu = [
   },
   {
     id: "02",
-    title: "sidebarSingle.dashboard",
+    title: "ড্যাশবোর্ড",
     icon: "RiDashboardHorizontalFill",
     link: "/dashboard",
   },
   {
     id: "03",
-    title: "sidebarSingle.insProfile",
+    title: "প্রতিষ্ঠানের তথ্য",
     icon: "HiOutlineBuildingStorefront",
     link: "/institute-profile",
   },

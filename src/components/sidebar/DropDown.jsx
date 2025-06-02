@@ -12,26 +12,23 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
   const dropdownRef = useRef(null);
   const [contentHeight, setContentHeight] = useState(0);
 
-  // Recursive function to check if any child or subchild is active
-  const isChildActive = (children) => {
-    if (!children) return false;
-    return children.some(
-      (child) =>
-        child.link === location.pathname ||
-        (child.children && isChildActive(child.children))
-    );
-  };
+  // Only show first-level children in dropdown
+  const childrenToShow = data.children?.filter(child => !child.children) || [];
 
   // Check if this dropdown or any of its children are active
-  const isActive = data.link === location.pathname || isChildActive(data.children);
+  const isChildActive = (children) => {
+    if (!children) return false;
+    return children.some(child => child.link === location.pathname);
+  };
+
+  const isActive = data.link === location.pathname || isChildActive(childrenToShow);
 
   // Open dropdown if it or its children are active
   useEffect(() => {
-    if (isActive && !isOpen && data.children) {
+    if (isActive && !isOpen && childrenToShow.length > 0) {
       setIsOpen(true);
       setDDId(data.id);
     }
-    console.log(`DropDown ${data.title}: isOpen=${isOpen}, isActive=${isActive}`);
   }, [location.pathname, isActive, data, setDDId]);
 
   // Close dropdown if another one is opened
@@ -46,25 +43,43 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
     if (dropdownRef.current) {
       const height = dropdownRef.current.scrollHeight;
       setContentHeight(height);
-      console.log(`DropDown ${data.title}: contentHeight=${height}px`);
     }
-  }, [data.children, isOpen]);
+  }, [childrenToShow, isOpen]);
 
   function handleDropdownClick() {
-    if (data.children) {
+    if (childrenToShow.length > 0) {
       setIsOpen((prev) => !prev);
       setDDId(data.id);
-      setItemId(data.parent.id); // Ensure parent dropdown remains open
+      setItemId(data.parent.id);
+      setSelectedMenuItem({ ...data.parent, activeChild: data });
     }
   }
 
   return (
     <li
-      className={`text-white group/dd duration-200 relative ${
+      className={`text-white group/dd duration-300 relative ${
         isOpen || isActive ? "bg-[#00000010]" : ""
       }`}
     >
-      {data?.children ? (
+      <style>
+        {`
+          @keyframes dropdownSlide {
+            from { max-height: 0; opacity: 0; transform: translateY(-10px); }
+            to { max-height: ${contentHeight + 20}px; opacity: 1; transform: translateY(0); }
+          }
+          @keyframes dropdownSlideUp {
+            from { max-height: ${contentHeight + 20}px; opacity: 1; transform: translateY(0); }
+            to { max-height: 0; opacity: 0; transform: translateY(-10px); }
+          }
+          .dropdown-open {
+            animation: dropdownSlide 0.5s ease-in-out forwards;
+          }
+          .dropdown-closed {
+            animation: dropdownSlideUp 0.5s ease-in-out forward;
+          }
+        `}
+      </style>
+      {childrenToShow.length > 0 ? (
         <div
           className="flex items-center gap-2 pl-12 pr-6 hover:bg-[#00000010] hover:text-white cursor-pointer"
           onClick={handleDropdownClick}
@@ -77,11 +92,11 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
           <h5 className={`flex-1 ${isOpen || isActive ? "text-white" : ""}`}>
             {t(data.title)}
           </h5>
-          <FaAngleDown
-            className={`font-thin text-sm duration-200 ${
+          {/* <FaAngleDown
+            className={`font-thin text-sm duration-300 ${
               isOpen ? "rotate-180" : ""
             }`}
-          />
+          /> */}
         </div>
       ) : (
         <Link
@@ -91,7 +106,7 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
               ...data.parent,
               activeChild: data,
             });
-            setItemId(data.parent.id); // Keep parent dropdown open
+            setItemId(data.parent.id);
           }}
         >
           <div className="flex items-center gap-2 pl-12 pr-6 hover:bg-[#00000010] hover:text-white">
@@ -106,17 +121,15 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
           </div>
         </Link>
       )}
-      {data?.children && (
+      {/* {childrenToShow.length > 0 && (
         <div
-          className={`overflow-hidden transition-all duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[max-height,opacity,transform] ${
-            isOpen
-              ? `max-h-[${contentHeight + 20}px] opacity-100 translate-y-0`
-              : "max-h-0 opacity-0 -translate-y-2"
+          className={`overflow-hidden transition-all will-change-[max-height,opacity,transform] ${
+            isOpen ? "dropdown-open" : "dropdown-closed max-h-0 opacity-0"
           }`}
           style={{ transitionProperty: "max-height, opacity, transform" }}
         >
           <ul ref={dropdownRef} className="py-2">
-            {data.children.map((innerDD) => (
+            {childrenToShow.map((innerDD) => (
               <Link
                 to={innerDD.link || "#"}
                 key={innerDD.id}
@@ -128,8 +141,8 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
                       activeChild: innerDD,
                     },
                   });
-                  setItemId(data.parent.id); // Keep parent dropdown open
-                  setDDId(innerDD.id); // Set sub-dropdown ID
+                  setItemId(data.parent.id);
+                  setDDId(innerDD.id);
                 }}
               >
                 <li
@@ -145,7 +158,7 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
             ))}
           </ul>
         </div>
-      )}
+      )} */}
     </li>
   );
 }

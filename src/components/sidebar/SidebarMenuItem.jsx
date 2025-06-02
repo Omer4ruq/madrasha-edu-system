@@ -13,17 +13,12 @@ export default function SidebarMenuItem({ item, itemId, setItemId }) {
   const { t } = useTranslation();
   const location = useLocation();
 
-  // Recursive function to check if any child or subchild is active
+  // Check if this menu item or any of its first-level children are active
   const isChildActive = (children) => {
     if (!children) return false;
-    return children.some(
-      (child) =>
-        child.link === location.pathname ||
-        (child.children && isChildActive(child.children))
-    );
+    return children.some(child => child.link === location.pathname);
   };
 
-  // Check if this menu item or any of its children are active
   const isActive = item.link === location.pathname || isChildActive(item.children);
 
   // Open menu item if it or its children are active
@@ -35,7 +30,6 @@ export default function SidebarMenuItem({ item, itemId, setItemId }) {
         setSelectedMenuItem(item);
       }
     }
-    console.log(`SidebarMenuItem ${item.title}: isOpen=${isOpen}, isActive=${isActive}`);
   }, [location.pathname, isActive, item, setItemId, setSelectedMenuItem]);
 
   // Close this dropdown if another one is opened
@@ -55,10 +49,28 @@ export default function SidebarMenuItem({ item, itemId, setItemId }) {
 
   return (
     <li
-      className={`leading-10 group/main text-white hover:text-[#ffffffab] hover:bg-[#00000010] duration-200 relative ${
+      className={`leading-10 group/main text-white hover:text-[#ffffffab] hover:bg-[#00000010] duration-300 relative ${
         isOpen || isActive ? "bg-[#00000010] text-[#b4a0d2]" : ""
       }`}
     >
+      <style>
+        {`
+          @keyframes menuSlide {
+            from { max-height: 0; opacity: 0; transform: translateY(-10px); }
+            to { max-height: 500px; opacity: 1; transform: translateY(0); }
+          }
+          @keyframes menuSlideUp {
+            from { max-height: 500px; opacity: 1; transform: translateY(0); }
+            to { max-height: 0; opacity: 0; transform: translateY(-10px); }
+          }
+          .menu-open {
+            animation: menuSlide 0.4s ease-in-out forwards;
+          }
+          .menu-closed {
+            animation: menuSlideUp 0.4s ease-in-out forwards;
+          }
+        `}
+      </style>
       {item.children ? (
         <div
           className="flex gap-2 items-center px-6 cursor-pointer"
@@ -66,14 +78,14 @@ export default function SidebarMenuItem({ item, itemId, setItemId }) {
         >
           <Icons name={item.icon} />
           <h4
-            className={`text-white group-hover/main:text-white duration-200 flex-1 ${
+            className={`text-white group-hover/main:text-white duration-300 flex-1 ${
               isOpen || isActive ? "text-[#fff]" : ""
             }`}
           >
             {t(item.title)}
           </h4>
           <FaAngleDown
-            className={`font-thin text-sm duration-200 ${
+            className={`font-thin text-sm duration-300 ${
               isOpen ? "rotate-180" : ""
             }`}
           />
@@ -89,7 +101,7 @@ export default function SidebarMenuItem({ item, itemId, setItemId }) {
         >
           <Icons name={item.icon} />
           <h4
-            className={`text-white group-hover/main:text-white duration-200 flex-1 ${
+            className={`text-white group-hover/main:text-white duration-300 flex-1 ${
               isActive ? "text-[#fff]" : ""
             }`}
           >
@@ -98,14 +110,14 @@ export default function SidebarMenuItem({ item, itemId, setItemId }) {
         </Link>
       )}
       {isOpen && item?.children && (
-        <ul className="py-2 before:content-[''] before:block before:absolute before:z-1 before:left-[30px] before:top-10 before:bottom-0 before:border-l before:border-solid before:border-[#ffffff35]">
+        <ul className={`py-2 before:content-[''] before:block before:absolute before:z-1 before:left-[30px] before:top-10 before:bottom-0 before:border-l before:border-solid before:border-[#ffffff35] ${isOpen ? "menu-open" : "menu-closed"}`}>
           {item.children.map((dropdown) => (
             <DropDown
               key={dropdown.id}
               data={{ ...dropdown, parent: item }}
               ddId={ddId}
               setDDId={setDDId}
-              setItemId={setItemId} // Pass setItemId to control top-level dropdowns
+              setItemId={setItemId}
             />
           ))}
         </ul>

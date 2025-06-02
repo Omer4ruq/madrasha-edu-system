@@ -14,6 +14,7 @@ import { Toaster } from "react-hot-toast";
 export default function App() {
   const [showSidebar, setShowSidebar] = useState(false);
   const { pathname } = useLocation();
+  
 
   const segments = pathname?.split("/") || [];
   const moduleName = segments[1]?.replace(/-/g, " ") || "";
