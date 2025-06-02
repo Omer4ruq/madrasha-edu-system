@@ -187,12 +187,12 @@ console.log(leaveTypes)
       </style>
 
       <div className="">
-        <div className="flex items-center space-x-4 mb-10 animate-fadeIn">
+        {/* <div className="flex items-center space-x-4 mb-10 animate-fadeIn">
           <IoAddCircle className="text-4xl text-[#441a05]" />
           <h2 className="text-3xl font-bold text-[#441a05] tracking-tight">Leave Request</h2>
         </div>
 
-        {/* Toggle Buttons */}
+    
         <div className="flex space-x-4 mb-6 animate-fadeIn">
           <button
             onClick={() => setIsAdd(true)}
@@ -210,7 +210,7 @@ console.log(leaveTypes)
           >
             Edit Leave Request
           </button>
-        </div>
+        </div> */}
 
         {/* Add Leave Request Form */}
         {isAdd && (

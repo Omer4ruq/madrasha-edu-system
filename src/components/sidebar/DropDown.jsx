@@ -12,18 +12,22 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
   const dropdownRef = useRef(null);
   const [contentHeight, setContentHeight] = useState(0);
 
-  // Only show first-level children in dropdown
-  const childrenToShow = data.children?.filter(child => !child.children) || [];
-
-  // Check if this dropdown or any of its children are active
+  // Recursive check for active child
   const isChildActive = (children) => {
     if (!children) return false;
-    return children.some(child => child.link === location.pathname);
+    return children.some((child) => {
+      if (child.link === location.pathname) return true;
+      if (child.children) return isChildActive(child.children);
+      return false;
+    });
   };
 
-  const isActive = data.link === location.pathname || isChildActive(childrenToShow);
+  const isActive = data.link === location.pathname || isChildActive(data.children);
 
-  // Open dropdown if it or its children are active
+  // Show first-level children only
+  const childrenToShow = data.children?.filter(child => !child.children) || [];
+
+  // Automatically open dropdown if current route is active
   useEffect(() => {
     if (isActive && !isOpen && childrenToShow.length > 0) {
       setIsOpen(true);
@@ -31,7 +35,7 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
     }
   }, [location.pathname, isActive, data, setDDId]);
 
-  // Close dropdown if another one is opened
+  // Close dropdown if another dropdown is opened
   useEffect(() => {
     if (isOpen && data.id !== ddId) {
       setIsOpen(false);
@@ -48,7 +52,7 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
 
   function handleDropdownClick() {
     if (childrenToShow.length > 0) {
-      setIsOpen((prev) => !prev);
+      setIsOpen(prev => !prev);
       setDDId(data.id);
       setItemId(data.parent.id);
       setSelectedMenuItem({ ...data.parent, activeChild: data });
@@ -75,10 +79,11 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
             animation: dropdownSlide 0.5s ease-in-out forwards;
           }
           .dropdown-closed {
-            animation: dropdownSlideUp 0.5s ease-in-out forward;
+            animation: dropdownSlideUp 0.5s ease-in-out forwards;
           }
         `}
       </style>
+
       {childrenToShow.length > 0 ? (
         <div
           className="flex items-center gap-2 pl-12 pr-6 hover:bg-[#00000010] hover:text-white cursor-pointer"
@@ -92,11 +97,6 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
           <h5 className={`flex-1 ${isOpen || isActive ? "text-white" : ""}`}>
             {t(data.title)}
           </h5>
-          {/* <FaAngleDown
-            className={`font-thin text-sm duration-300 ${
-              isOpen ? "rotate-180" : ""
-            }`}
-          /> */}
         </div>
       ) : (
         <Link
@@ -121,44 +121,7 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
           </div>
         </Link>
       )}
-      {/* {childrenToShow.length > 0 && (
-        <div
-          className={`overflow-hidden transition-all will-change-[max-height,opacity,transform] ${
-            isOpen ? "dropdown-open" : "dropdown-closed max-h-0 opacity-0"
-          }`}
-          style={{ transitionProperty: "max-height, opacity, transform" }}
-        >
-          <ul ref={dropdownRef} className="py-2">
-            {childrenToShow.map((innerDD) => (
-              <Link
-                to={innerDD.link || "#"}
-                key={innerDD.id}
-                onClick={() => {
-                  setSelectedMenuItem({
-                    ...data.parent,
-                    activeChild: {
-                      ...data,
-                      activeChild: innerDD,
-                    },
-                  });
-                  setItemId(data.parent.id);
-                  setDDId(innerDD.id);
-                }}
-              >
-                <li
-                  className={`hover:bg-[#00000010] hover:text-white duration-200 pl-12 pr-6 ${
-                    location.pathname === innerDD.link
-                      ? "text-[#441a05] bg-[#00000010]"
-                      : ""
-                  }`}
-                >
-                  {t(innerDD.title)}
-                </li>
-              </Link>
-            ))}
-          </ul>
-        </div>
-      )} */}
+
     </li>
   );
 }
