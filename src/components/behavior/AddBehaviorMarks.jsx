@@ -25,6 +25,7 @@ const AddBehaviorMarks = () => {
   // API hooks
   const { data: classConfig, isLoading: isConfigLoading, error: configError } = useGetclassConfigApiQuery();
   const { data: studentsList, isLoading: isStudentLoading, error: studentError } = useGetStudentListApIQuery();
+  // const { data: studentsList, isLoading: isStudentLoading, error: studentError } = useGetStudentActiveApiQuery();
   const { data: examlist, isLoading: isExamLoading, error: examError } = useGetExamApiQuery();
   const [createBehaviorReportMarks, { isLoading: isCreating, error: createError }] = useCreateBehaviorReportApiMutation();
   const [deleteBehaviorReportMarks, { isLoading: isDeleting, error: deleteError }] = useUpdateBehaviorReportApiMutation();

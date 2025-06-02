@@ -12,18 +12,19 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
   const dropdownRef = useRef(null);
   const [contentHeight, setContentHeight] = useState(0);
 
-  // Only show first-level children in dropdown
-  const childrenToShow = data.children?.filter(child => !child.children) || [];
-
-  // Check if this dropdown or any of its children are active
   const isChildActive = (children) => {
     if (!children) return false;
-    return children.some(child => child.link === location.pathname);
+    return children.some((child) => {
+      if (child.link === location.pathname) return true;
+      if (child.children) return isChildActive(child.children);
+      return false;
+    });
   };
 
-  const isActive = data.link === location.pathname || isChildActive(childrenToShow);
+  const isActive = data.link === location.pathname || isChildActive(data.children);
 
-  // Open dropdown if it or its children are active
+  const childrenToShow = data.children?.filter(child => !child.children) || [];
+
   useEffect(() => {
     if (isActive && !isOpen && childrenToShow.length > 0) {
       setIsOpen(true);
@@ -31,14 +32,12 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
     }
   }, [location.pathname, isActive, data, setDDId]);
 
-  // Close dropdown if another one is opened
   useEffect(() => {
     if (isOpen && data.id !== ddId) {
       setIsOpen(false);
     }
   }, [ddId, data.id]);
 
-  // Calculate dropdown content height dynamically
   useEffect(() => {
     if (dropdownRef.current) {
       const height = dropdownRef.current.scrollHeight;
@@ -48,7 +47,7 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
 
   function handleDropdownClick() {
     if (childrenToShow.length > 0) {
-      setIsOpen((prev) => !prev);
+      setIsOpen(prev => !prev);
       setDDId(data.id);
       setItemId(data.parent.id);
       setSelectedMenuItem({ ...data.parent, activeChild: data });
@@ -58,7 +57,7 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
   return (
     <li
       className={`text-white group/dd duration-300 relative ${
-        isOpen || isActive ? "bg-[#00000010]" : ""
+        isActive ? "bg-[#00000020]" : ""
       }`}
     >
       <style>
@@ -75,90 +74,48 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
             animation: dropdownSlide 0.5s ease-in-out forwards;
           }
           .dropdown-closed {
-            animation: dropdownSlideUp 0.5s ease-in-out forward;
+            animation: dropdownSlideUp 0.5s ease-in-out forwards;
           }
         `}
       </style>
+
+      {/* Dropdown Parent */}
       {childrenToShow.length > 0 ? (
         <div
           className="flex items-center gap-2 pl-12 pr-6 hover:bg-[#00000010] hover:text-white cursor-pointer"
           onClick={handleDropdownClick}
         >
           <span
-            className={`w-[5px] h-[5px] rounded-full group-hover/dd:w-[7px] group-hover/dd:h-[7px] duration-100 bg-[#441a05] group-hover/dd:bg-[#ffffff90] absolute top-4 left-7 ${
-              isOpen || isActive ? "w-[7px] h-[7px] bg-[#ffffff90]" : ""
+            className={`w-[5px] h-[5px] rounded-full absolute top-4 left-7 duration-150 ${
+              isActive ? "w-[7px] h-[7px] bg-[#ffffff90]" : "bg-[#441a05] group-hover/dd:bg-[#ffffff90]"
             }`}
           ></span>
-          <h5 className={`flex-1 ${isOpen || isActive ? "text-white" : ""}`}>
+          <h5 className={`flex-1 ${isActive ? "text-white font-semibold" : ""}`}>
             {t(data.title)}
           </h5>
-          {/* <FaAngleDown
-            className={`font-thin text-sm duration-300 ${
-              isOpen ? "rotate-180" : ""
-            }`}
-          /> */}
         </div>
       ) : (
+        // No children (single-level link)
         <Link
           to={data.link || "#"}
           onClick={() => {
-            setSelectedMenuItem({
-              ...data.parent,
-              activeChild: data,
-            });
+            setSelectedMenuItem({ ...data.parent, activeChild: data });
             setItemId(data.parent.id);
           }}
         >
           <div className="flex items-center gap-2 pl-12 pr-6 hover:bg-[#00000010] hover:text-white">
             <span
-              className={`w-[5px] h-[5px] rounded-full group-hover/dd:w-[7px] group-hover/dd:h-[7px] duration-100 group-hover/dd:bg-[#ffffff90] absolute top-4 left-7 ${
-                isActive ? "w-[8px] h-[8px] bg-[#441a05]" : "bg-[#ffffff90]"
+              className={`w-[5px] h-[5px] rounded-full absolute top-4 left-7 duration-150 ${
+                isActive ? "w-[7px] h-[7px] bg-[#ffffff90]" : "bg-[#441a05] group-hover/dd:bg-[#ffffff90]"
               }`}
             ></span>
-            <h5 className={`flex-1 ${isActive ? "text-[#441a05]" : "text-white"}`}>
+            <h5 className={`flex-1 ${isActive ? "text-white font-semibold" : ""}`}>
               {t(data.title)}
             </h5>
           </div>
         </Link>
       )}
-      {/* {childrenToShow.length > 0 && (
-        <div
-          className={`overflow-hidden transition-all will-change-[max-height,opacity,transform] ${
-            isOpen ? "dropdown-open" : "dropdown-closed max-h-0 opacity-0"
-          }`}
-          style={{ transitionProperty: "max-height, opacity, transform" }}
-        >
-          <ul ref={dropdownRef} className="py-2">
-            {childrenToShow.map((innerDD) => (
-              <Link
-                to={innerDD.link || "#"}
-                key={innerDD.id}
-                onClick={() => {
-                  setSelectedMenuItem({
-                    ...data.parent,
-                    activeChild: {
-                      ...data,
-                      activeChild: innerDD,
-                    },
-                  });
-                  setItemId(data.parent.id);
-                  setDDId(innerDD.id);
-                }}
-              >
-                <li
-                  className={`hover:bg-[#00000010] hover:text-white duration-200 pl-12 pr-6 ${
-                    location.pathname === innerDD.link
-                      ? "text-[#441a05] bg-[#00000010]"
-                      : ""
-                  }`}
-                >
-                  {t(innerDD.title)}
-                </li>
-              </Link>
-            ))}
-          </ul>
-        </div>
-      )} */}
+
     </li>
   );
 }

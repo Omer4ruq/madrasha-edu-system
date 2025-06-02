@@ -5,14 +5,12 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { useSelectedMenu } from "../../context/SelectedMenuContext";
 
 export default function Breadcrumb({ module, route, nestedRoute }) {
-  const { selectedMenuItem } = useSelectedMenu();
+  const { selectedMenuItem, setSelectedMenuItem } = useSelectedMenu();
   const { t } = useTranslation();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(location.pathname);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const tabsContainerRef = useRef(null);
-
-  console.log(route)
 
   // Update active tab when location changes
   useEffect(() => {
@@ -33,11 +31,6 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
     return () => window.removeEventListener("resize", checkOverflow);
   }, [selectedMenuItem]);
 
-  // Construct URLs for module path
-  const modulePath = module
-    ? `/${module.replace(/\s/g, "-").toLowerCase()}`
-    : "/";
-
   // Get the first-level children for top-right tabs
   const getFirstLevelChildren = () => {
     if (!selectedMenuItem || !selectedMenuItem.children) return [];
@@ -56,25 +49,33 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
       return {
         module: module || null,
         route: route || null,
+        modulePath: "/",
+        routePath: null,
       };
     }
 
-    let currentModule = module || selectedMenuItem.title;
+    let currentModule = selectedMenuItem.title;
     let currentRoute = null;
+    let modulePath = `/${selectedMenuItem.link?.split("/")[1] || ""}`;
+    let routePath = null;
 
     if (selectedMenuItem.activeChild) {
       currentRoute = selectedMenuItem.activeChild.title;
+      routePath = selectedMenuItem.activeChild.link;
     } else {
       currentRoute = selectedMenuItem.title;
+      routePath = selectedMenuItem.link;
     }
 
     return {
       module: currentModule,
       route: currentRoute,
+      modulePath,
+      routePath,
     };
   };
 
-  const { module: breadcrumbModule, route: breadcrumbRoute } = getBreadcrumbPaths();
+  const { module: breadcrumbModule, route: breadcrumbRoute, modulePath, routePath } = getBreadcrumbPaths();
   const firstLevelTabs = getFirstLevelChildren();
   const secondLevelTabs = getSecondLevelChildren();
 
@@ -141,20 +142,22 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
         {/* Breadcrumb Path (Top-Left) */}
         {breadcrumbModule && (
           <h3 className="text-sm md:text-lg text-white capitalize flex-1 space-x-1 pl-3 font-medium">
-            {/* <Link
-              to={modulePath}
-              className={`${
-                breadcrumbRoute
-                  ? "text-[#441a05] font-semibold hover:text-[#DB9E30] transition-colors"
-                  : "text-[#DB9E30] font-bold"
-              }`}
-            >
-              {t(breadcrumbModule)}
-              {breadcrumbRoute && " / "}
-            </Link> */}
+            {breadcrumbModule === breadcrumbRoute ? null : (
+              <Link
+                to={modulePath}
+                className={`${
+                  breadcrumbRoute
+                    ? "text-[#441a05] font-semibold hover:text-[#DB9E30] transition-colors"
+                    : "text-[#DB9E30] font-bold"
+                }`}
+              >
+                {t(breadcrumbModule)}
+                {breadcrumbRoute && " / "}
+              </Link>
+            )}
             {breadcrumbRoute && (
               <Link
-                to={`${modulePath}/${breadcrumbRoute.replace(/\s/g, "-").toLowerCase()}`}
+                to={routePath || modulePath}
                 className="text-[#DB9E30] font-bold"
               >
                 {t(breadcrumbRoute)}
@@ -190,6 +193,12 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
                   <Link
                     key={child.id}
                     to={childPath}
+                    onClick={() => {
+                      setSelectedMenuItem({
+                        ...selectedMenuItem,
+                        activeChild: child,
+                      });
+                    }}
                     className={`px-4 py-2 rounded-full text-xs md:text-sm capitalize transition-all duration-300 flex-shrink-0 tab-glow ${
                       isActive
                         ? "bg-[#DB9E30] text-white font-bold"
@@ -232,6 +241,15 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
                 <Link
                   key={child.id}
                   to={childPath}
+                  onClick={() => {
+                    setSelectedMenuItem({
+                      ...selectedMenuItem,
+                      activeChild: {
+                        ...selectedMenuItem.activeChild,
+                        activeChild: child,
+                      },
+                    });
+                  }}
                   className={`relative px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-base capitalize font-semibold transition-all duration-300 flex-shrink-0 animate-scaleIn ${
                     isActive
                       ? "text-[#DB9E30] active-underline"

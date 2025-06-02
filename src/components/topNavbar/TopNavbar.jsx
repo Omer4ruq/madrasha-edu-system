@@ -82,7 +82,7 @@ export default function TopNavbar({ setShowSidebar }) {
         {/* Right section */}
         <div className="flex items-center gap-2 sm:gap-4">
           <div className="animate-scaleIn" style={{ animationDelay: "0.1s" }}>
-            <LangSwitcher />
+            {/* <LangSwitcher /> */}
           </div>
           <div className="animate-scaleIn" style={{ animationDelay: "0.2s" }}>
             <Mail />

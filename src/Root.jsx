@@ -49,7 +49,7 @@ function Root() {
           path: "/darul-iqam",
           children: [
             {
-              path: "settings",
+              path: "/darul-iqam/settings",
               children: [
                 {
                   path: "behavior-type",
@@ -79,7 +79,23 @@ function Root() {
             },
           ],
         },
-       {
+ 
+      {
+          path: "talimat",
+          children: [
+            {
+              path: "settings",
+              
+              children: [
+                {
+                  path: "exam-type",
+                  element: <AddExamTypes />,
+                },
+                
+                
+              ],
+            },
+                  {
       path: "class-management",
       element: <ClassManagement />,
       children: [
@@ -101,27 +117,7 @@ function Root() {
         },
       ],
     },
-      {
-          path: "talimat",
-          children: [
-            {
-              path: "settings",
-              children: [
-                {
-                  path: "exam-type",
-                  element: <AddExamTypes />,
-                },
-                
-              ],
-            },
-            {
-              path: "behavior-marks",
-              element: <AddBehaviorMarks />,
-            },
-            {
-              path: "clean-report",
-              element: <CleanReport />,
-            },
+            
           ],
         },
       ],
