@@ -155,32 +155,7 @@ const AddLeaveType = () => {
       </style>
 
       <div className="">
-        {/* <div className="flex items-center space-x-4 mb-10 animate-fadeIn">
-          <IoAddCircle className="text-4xl text-[#441a05]" />
-          <h2 className="text-3xl font-bold text-[#441a05] tracking-tight">Add Leave Type</h2>
-        </div> */}
 
-        {/* Toggle Buttons */}
-        {/* <div className="flex space-x-4 mb-6 animate-fadeIn">
-          <button
-            onClick={() => setIsAdd(true)}
-            className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-              isAdd ? "bg-[#DB9E30] text-[#441a05]" : "bg-gray-500 text-white"
-            }`}
-          >
-            Add New Leave Type
-          </button>
-          <button
-            onClick={() => setIsAdd(false)}
-            className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-              !isAdd ? "bg-[#DB9E30] text-[#441a05]" : "bg-gray-500 text-white"
-            }`}
-          >
-            Edit Leave Type
-          </button>
-        </div> */}
-
-        {/* Add Leave Form */}
         {isAdd && (
           <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
             <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
