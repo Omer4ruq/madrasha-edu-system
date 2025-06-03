@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   useGetStudentListApIQuery,
 } from "../../redux/features/api/student/studentListApi";
@@ -9,8 +9,8 @@ import { FaSpinner, FaCheck, FaTimes } from "react-icons/fa";
 import { IoAddCircle, IoClose } from "react-icons/io5";
 import toast from "react-hot-toast";
 import {
-  useCreateBehaviorReportApiMutation,
   useGetBehaviorReportApiQuery,
+  useCreateBehaviorReportApiMutation,
   useUpdateBehaviorReportApiMutation,
 } from "../../redux/features/api/behavior/behaviorReportApi";
 import { useGetBehaviorTypeApiQuery } from "../../redux/features/api/behavior/behaviorTypeApi";
@@ -21,15 +21,14 @@ const AddBehaviorMarks = () => {
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedExam, setSelectedExam] = useState("");
   const [marksInput, setMarksInput] = useState({});
-  const [existingMarks, setExistingMarks] = useState({}); // Store existing marks from database
-  const [savingStatus, setSavingStatus] = useState({}); // Track saving status for each input
+  const [savingStatus, setSavingStatus] = useState({});
   const inputRefs = useRef({});
 
   // API hooks
   const { data: classConfig, isLoading: isConfigLoading, error: configError } = useGetclassConfigApiQuery();
   const { data: studentsList, isLoading: isStudentLoading, error: studentError } = useGetStudentActiveApiQuery();
-  const { data: updatedmarks, isLoading: isMarksLoading, error: marksError } =   useGetBehaviorReportApiQuery();
   const { data: examlist, isLoading: isExamLoading, error: examError } = useGetExamApiQuery();
+  const { data: existingReports, isLoading: isReportsLoading, error: reportsError, refetch: refetchReports } = useGetBehaviorReportApiQuery();
   const [createBehaviorReportMarks, { isLoading: isCreating }] = useCreateBehaviorReportApiMutation();
   const [updateBehaviorReportMarks, { isLoading: isUpdating }] = useUpdateBehaviorReportApiMutation();
   const {
@@ -38,31 +37,51 @@ const AddBehaviorMarks = () => {
     error: behaviorError,
   } = useGetBehaviorTypeApiQuery();
 
+  console.log("Existing Reports:", existingReports);
+  console.log("Students List:", studentsList);
+  console.log("Behavior Types:", behaviorTypes);
+
   // Filter students by selected class
   const filteredStudents = studentsList?.filter((student) => student?.class_name === selectedClass) || [];
-console.log(updatedmarks)
-  // Fetch existing marks when class and exam are selected
-  useEffect(() => {
-    const fetchExistingMarks = async () => {
-      if (selectedClass && selectedExam) {
-        try {
-          // You'll need to create this API endpoint to fetch existing marks
-          // const response = await fetch(`${BASE_URL}/behavior-report/get-by-exam/${selectedExam}/`);
-          // const data = await response.json();
-          // setExistingMarks(data);
+
+  // Process existing marks data for easier access
+  const existingMarksMap = useMemo(() => {
+    if (!existingReports || !selectedExam) return {};
+    
+    const marksMap = {};
+    
+    existingReports.forEach(report => {
+      if (report.exam_name_id === parseInt(selectedExam)) {
+        report.behavior_marks?.forEach(behaviorMark => {
+          const studentId = behaviorMark.student_id;
+          const behaviorTypeId = behaviorMark.behavior_type;
           
-          // For now, initialize empty existing marks
-          setExistingMarks({});
-        } catch (error) {
-          console.error("Error fetching existing marks:", error);
-        }
+          // Find behavior type name
+          const behaviorType = behaviorTypes?.find(bt => bt.id === behaviorTypeId);
+          if (behaviorType) {
+            if (!marksMap[studentId]) {
+              marksMap[studentId] = {
+                reportId: report.id,
+                comment: report.comment || "",
+                marks: {}
+              };
+            }
+            marksMap[studentId].marks[behaviorType.name] = {
+              id: behaviorMark.id,
+              marks: behaviorMark.mark,
+              behaviorTypeId: behaviorTypeId
+            };
+          }
+        });
       }
-    };
+    });
+    
+    return marksMap;
+  }, [existingReports, selectedExam, behaviorTypes]);
 
-    fetchExistingMarks();
-  }, [selectedClass, selectedExam]);
+  console.log("Existing Marks Map:", existingMarksMap);
 
-  // Handle marks input with auto-save
+  // Handle marks input
   const handleMarksInput = (studentId, behaviorType, value) => {
     setMarksInput((prev) => ({
       ...prev,
@@ -114,7 +133,7 @@ console.log(updatedmarks)
     const studentMarks = marksInput[studentId] || {};
     const behaviorMarkData = studentMarks[behaviorType];
     
-    if (!behaviorMarkData || !behaviorMarkData.marks) {
+    if (!behaviorMarkData || behaviorMarkData.marks === "") {
       return;
     }
 
@@ -143,38 +162,46 @@ console.log(updatedmarks)
         mark: mark,
       }];
 
+      const currentComment = studentMarks.comment !== undefined 
+        ? studentMarks.comment 
+        : existingMarksMap[studentId]?.comment || "";
+
       const payload = [{
         exam_name_id: Number(selectedExam),
-        comment: studentMarks.comment || "",
+        comment: currentComment,
         behavior_marks: behaviorMarks,
       }];
 
-      // Check if this is an update or create operation
-      const existingMark = existingMarks[studentId]?.[behaviorType];
+      // Check if this student already has a report for this exam
+      const existingStudentData = existingMarksMap[studentId];
       
-      if (existingMark) {
-        // Update existing mark
-        await updateBehaviorReportMarks({ id: existingMark.id, ...payload[0] }).unwrap();
+      if (existingStudentData && existingStudentData.reportId) {
+        // Update existing report
+        await updateBehaviorReportMarks({ 
+          id: existingStudentData.reportId, 
+          ...payload[0] 
+        }).unwrap();
+        toast.success("মার্কস আপডেট হয়েছে!");
       } else {
-        // Create new mark
+        // Create new report
         await createBehaviorReportMarks(payload).unwrap();
+        toast.success("মার্কস সংরক্ষিত হয়েছে!");
       }
 
-      // Update existing marks state
-      setExistingMarks(prev => ({
-        ...prev,
-        [studentId]: {
-          ...prev[studentId],
-          [behaviorType]: {
-            id: existingMark?.id || Date.now(), // Use actual ID from response
-            marks: mark,
-            comment: studentMarks.comment || ""
-          }
-        }
-      }));
+      // Refetch data to get updated marks
+      refetchReports();
 
       // Set success status
       setSavingStatus(prev => ({ ...prev, [inputKey]: 'success' }));
+      
+      // Clear input for this field after successful save
+      setMarksInput(prev => ({
+        ...prev,
+        [studentId]: {
+          ...prev[studentId],
+          [behaviorType]: { marks: "", isEditing: false }
+        }
+      }));
       
       // Clear success status after 2 seconds
       setTimeout(() => {
@@ -195,24 +222,44 @@ console.log(updatedmarks)
 
   // Handle comment save on blur
   const handleCommentBlur = async (studentId) => {
-    if (!selectedExam || !marksInput[studentId]?.comment) return;
+    if (!selectedExam) return;
+
+    const currentComment = marksInput[studentId]?.comment;
+    const existingComment = existingMarksMap[studentId]?.comment || "";
+    
+    // Only save if comment has changed
+    if (currentComment === undefined || currentComment === existingComment) return;
 
     try {
-      const payload = [{
-        exam_name_id: Number(selectedExam),
-        comment: marksInput[studentId].comment,
-        behavior_marks: [], // Empty array as we're only updating comment
-      }];
-
-      const existingRecord = Object.values(existingMarks[studentId] || {})[0];
+      const existingStudentData = existingMarksMap[studentId];
       
-      if (existingRecord) {
-        await updateBehaviorReportMarks({ id: existingRecord.id, ...payload[0] }).unwrap();
-      } else {
+      if (existingStudentData && existingStudentData.reportId) {
+        // Update existing report with new comment
+        const payload = {
+          id: existingStudentData.reportId,
+          exam_name_id: Number(selectedExam),
+          comment: currentComment,
+          behavior_marks: Object.entries(existingStudentData.marks).map(([behaviorName, data]) => ({
+            student_id: studentId,
+            behavior_type: data.behaviorTypeId,
+            mark: data.marks,
+          }))
+        };
+        
+        await updateBehaviorReportMarks(payload).unwrap();
+      } else if (currentComment.trim()) {
+        // Create new report with just comment
+        const payload = [{
+          exam_name_id: Number(selectedExam),
+          comment: currentComment,
+          behavior_marks: [],
+        }];
+        
         await createBehaviorReportMarks(payload).unwrap();
       }
 
       toast.success("মন্তব্য সংরক্ষিত হয়েছে!");
+      refetchReports();
     } catch (err) {
       console.error("মন্তব্য সংরক্ষণে ত্রুটি:", err);
       toast.error("মন্তব্য সংরক্ষণে ব্যর্থ!");
@@ -222,15 +269,23 @@ console.log(updatedmarks)
   // Get current marks value (from input or existing)
   const getCurrentMarks = (studentId, behaviorType) => {
     const inputValue = marksInput[studentId]?.[behaviorType]?.marks;
-    const existingValue = existingMarks[studentId]?.[behaviorType]?.marks;
-    return inputValue !== undefined ? inputValue : existingValue || "";
+    if (inputValue !== undefined && inputValue !== "") {
+      return inputValue;
+    }
+    
+    const existingValue = existingMarksMap[studentId]?.marks[behaviorType]?.marks;
+    return existingValue || "";
   };
 
   // Get current comment value
   const getCurrentComment = (studentId) => {
     const inputValue = marksInput[studentId]?.comment;
-    const existingValue = Object.values(existingMarks[studentId] || {})[0]?.comment;
-    return inputValue !== undefined ? inputValue : existingValue || "";
+    if (inputValue !== undefined) {
+      return inputValue;
+    }
+    
+    const existingValue = existingMarksMap[studentId]?.comment;
+    return existingValue || "";
   };
 
   // Get saving status icon
@@ -248,6 +303,11 @@ console.log(updatedmarks)
       default:
         return null;
     }
+  };
+
+  // Check if a field has existing data
+  const hasExistingData = (studentId, behaviorType) => {
+    return existingMarksMap[studentId]?.marks[behaviorType]?.marks > 0;
   };
 
   return (
@@ -292,6 +352,10 @@ console.log(updatedmarks)
           }
           .sticky-col-second {
             left: 200px;
+          }
+          .has-existing-data {
+            background-color: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.3);
           }
         `}
       </style>
@@ -353,11 +417,12 @@ console.log(updatedmarks)
             <h3 className="text-lg font-semibold text-[#441a05]">ছাত্রদের মার্কস</h3>
             <div className="text-sm text-[#441a05]/70">
               <span className="bg-blue-100 px-2 py-1 rounded mr-2">💡 Enter চেপে সংরক্ষণ করুন</span>
+              <span className="bg-green-100 px-2 py-1 rounded">✅ সবুজ = বিদ্যমান মার্কস</span>
             </div>
           </div>
           
-          {isStudentLoading || isConfigLoading || isExamLoading || isBehaviorLoading ? (
-            <p className="p-4 text-[#441a05]/70">ছাত্রদের তথ্য লোড হচ্ছে...</p>
+          {isStudentLoading || isConfigLoading || isExamLoading || isBehaviorLoading || isReportsLoading ? (
+            <p className="p-4 text-[#441a05]/70">তথ্য লোড হচ্ছে...</p>
           ) : studentError ? (
             <p className="p-4 text-red-400">
               ছাত্রদের তথ্য লোড করতে ত্রুটি: {studentError.status || "অজানা"}
@@ -365,6 +430,10 @@ console.log(updatedmarks)
           ) : behaviorError ? (
             <p className="p-4 text-red-400">
               আচরণের ধরন লোড করতে ত্রুটি: {behaviorError.status || "অজানা"}
+            </p>
+          ) : reportsError ? (
+            <p className="p-4 text-red-400">
+              রিপোর্ট লোড করতে ত্রুটি: {reportsError.status || "অজানা"}
             </p>
           ) : !selectedClass || !selectedExam ? (
             <p className="p-4 text-[#441a05]/70">ছাত্রদের দেখতে একটি শ্রেণি এবং পরীক্ষা নির্বাচন করুন।</p>
@@ -440,7 +509,11 @@ console.log(updatedmarks)
                               }
                               onKeyDown={(e) => handleKeyDown(e, student.id, behavior.name)}
                               ref={(el) => (inputRefs.current[`${student.id}-${behavior.name}`] = el)}
-                              className="w-20 bg-transparent text-[#441a05] placeholder:text-[#441a05] pl-3 py-1 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-1 focus:ring-[#441a05]"
+                              className={`w-20 bg-transparent text-[#441a05] placeholder:text-[#441a05] pl-3 py-1 focus:outline-none border rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-1 focus:ring-[#441a05] ${
+                                hasExistingData(student.id, behavior.name) 
+                                  ? 'has-existing-data border-green-300' 
+                                  : 'border-[#9d9087]'
+                              }`}
                               placeholder="মার্কস"
                               min={0}
                               max={behavior.obtain_mark}
@@ -458,7 +531,11 @@ console.log(updatedmarks)
                           value={getCurrentComment(student.id)}
                           onChange={(e) => handleCommentInput(student.id, e.target.value)}
                           onBlur={() => handleCommentBlur(student.id)}
-                          className="w-full bg-transparent text-[#441a05] placeholder:text-[#441a05] pl-3 py-1 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-1 focus:ring-[#441a05]"
+                          className={`w-full bg-transparent text-[#441a05] placeholder:text-[#441a05] pl-3 py-1 focus:outline-none border rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-1 focus:ring-[#441a05] ${
+                            existingMarksMap[student.id]?.comment 
+                              ? 'has-existing-data border-green-300' 
+                              : 'border-[#9d9087]'
+                          }`}
                           placeholder="মন্তব্য (ঐচ্ছিক)"
                         />
                       </td>

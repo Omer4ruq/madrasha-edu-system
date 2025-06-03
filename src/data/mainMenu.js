@@ -30,7 +30,7 @@ const mainMenu = [
           {
             id: "04/01/01",
             title: "আচরন ধরন",
-            link: "/darul-iqam/settings/behavior-type",
+            link: "/darul-iqam/settings",
           },
           {
             id: "04/01/02",
@@ -67,44 +67,46 @@ const mainMenu = [
     icon: "HiOutlineBuildingStorefront",
     link: "/talimat",
     children: [
-      {
-        id: "05/01",
-        title: "শ্রেনী পরিচালনা",
-        link: "/class-management",
-        children: [
-          {
-            id: "05/01/01",
-            title: "শ্রেনী সংযোজন",
-            link: "/class-management",
-          },
-          {
-            id: "05/01/02",
-            title: "সেকশন সংযোজন",
-            link: "/class-management/add-section",
-          },
-          {
-            id: "05/01/03",
-            title: "শিফট সংযোজন",
-            link: "/class-management/add-shift",
-          },
-          {
-            id: "05/01/04",
-            title: "ক্লাস কনফিগারেশন",
-            link: "/class-management/add-config",
-          },
-        ],
-      },
+
        {
-        id: "05/02",
+        id: "05/01",
         title: "সেটিং",
         link: "/talimat/settings",
         children: [
           {
-            id: "05/02/01",
+            id: "05/01/01",
             title: "পরীক্ষার ধরন",
-            link: "/talimat/settings/exam-type",
+            link: "/talimat/settings",
           },
        
+        ],
+      },
+
+            {
+        id: "05/02",
+        title: "শ্রেনী পরিচালনা",
+        link: "/talimat/class-management",
+        children: [
+          {
+            id: "05/02/01",
+            title: "শ্রেনী সংযোজন",
+            link: "/talimat/class-management",
+          },
+          {
+            id: "05/02/02",
+            title: "সেকশন সংযোজন",
+            link: "/talimat/class-management/add-section",
+          },
+          {
+            id: "05/02/03",
+            title: "শিফট সংযোজন",
+            link: "/talimat/class-management/add-shift",
+          },
+          {
+            id: "05/02/04",
+            title: "ক্লাস কনফিগারেশন",
+            link: "/talimat/class-management/add-config",
+          },
         ],
       },
     ],
