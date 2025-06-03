@@ -24,17 +24,17 @@ export const behaviorReportApi = createApi({
   }),
   tagTypes: ['behaviorReportApi'],
   endpoints: (builder) => ({
-    // // GET: Fetch all behaviorReportApis
-    // getBehaviorReportApi: builder.query({
-    //   query: () => '/behavior-report/',
-    //   providesTags: ['behaviorReportApi'],
-    // }),
+    // GET: Fetch all behaviorReportApis
+    getBehaviorReportApi: builder.query({
+      query: () => '/behavior-report/create/',
+      providesTags: ['behaviorReportApi'],
+    }),
 
-    // // GET: Fetch single behaviorReportApi by ID
-    // getBehaviorReportApiById: builder.query({
-    //   query: (id) => `/behavior-report/${id}/`,
-    //   providesTags: ['behaviorReportApi'],
-    // }),
+    // GET: Fetch single behaviorReportApi by ID
+    getBehaviorReportApiById: builder.query({
+      query: (id) => `/behavior-report/create/${id}/`,
+      providesTags: ['behaviorReportApi'],
+    }),
 
     // POST: Create a new behaviorReportApi
     createBehaviorReportApi: builder.mutation({
@@ -56,22 +56,22 @@ export const behaviorReportApi = createApi({
       invalidatesTags: ['behaviorReportApi'],
     }),
 
-    // // DELETE: Delete an behaviorReportApi
-    // deleteBehaviorReportApi: builder.mutation({
-    //   query: (id) => ({
-    //     url: `/behavior-report/${id}/`,
-    //     method: 'DELETE',
-    //   }),
-    //   invalidatesTags: ['behaviorReportApi'],
-    // }),
+    // DELETE: Delete an behaviorReportApi
+    deleteBehaviorReportApi: builder.mutation({
+      query: (id) => ({
+        url: `/behavior-report/${id}/`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['behaviorReportApi'],
+    }),
   }),
 });
 
 // Export hooks for usage in components
 export const {
-//   useGetBehaviorReportApiQuery,
-//   useGetBehaviorReportApiByIdQuery,
+  useGetBehaviorReportApiQuery,
+  useGetBehaviorReportApiByIdQuery,
   useCreateBehaviorReportApiMutation,
   useUpdateBehaviorReportApiMutation,
-//   useDeleteBehaviorReportApiMutation,
+  useDeleteBehaviorReportApiMutation,
 } = behaviorReportApi;
