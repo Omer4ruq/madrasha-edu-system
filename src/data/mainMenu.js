@@ -111,11 +111,11 @@ const mainMenu = [
       },
     ],
   },
-  // {
-  //   id: "04",
-  //   title: "sidebarSingle.appsAndPages",
-  //   icon: false,
-  // },
+  {
+    id: "06",
+    title: "অ্যাপস এবং পেজ",
+    icon: false,
+  },
 
   
 ];
