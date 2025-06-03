@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-import {
-  useGetLeaveApiQuery,
-} from "../../redux/features/api/leave/leaveApi";
+import { useGetLeaveApiQuery } from "../../redux/features/api/leave/leaveApi";
 import {
   useGetLeaveRequestApiQuery,
   useCreateLeaveRequestApiMutation,
@@ -24,12 +22,23 @@ const AddLeaveRequest = () => {
   const [editReason, setEditReason] = useState("");
 
   // API hooks
-  const { data: leaveTypes, isLoading: isLeaveLoading, error: leaveError } = useGetLeaveApiQuery();
-  const { data: leaveRequests, isLoading: isRequestLoading, error: requestError } = useGetLeaveRequestApiQuery();
-  const [createRequest, { isLoading: isCreating, error: createError }] = useCreateLeaveRequestApiMutation();
-  const [updateRequest, { isLoading: isUpdating, error: updateError }] = useUpdateLeaveRequestApiMutation();
-  const [deleteRequest, { isLoading: isDeleting, error: deleteError }] = useDeleteLeaveRequestApiMutation();
-console.log(leaveTypes)
+  const {
+    data: leaveTypes,
+    isLoading: isLeaveLoading,
+    error: leaveError,
+  } = useGetLeaveApiQuery();
+  const {
+    data: leaveRequests,
+    isLoading: isRequestLoading,
+    error: requestError,
+  } = useGetLeaveRequestApiQuery();
+  const [createRequest, { isLoading: isCreating, error: createError }] =
+    useCreateLeaveRequestApiMutation();
+  const [updateRequest, { isLoading: isUpdating, error: updateError }] =
+    useUpdateLeaveRequestApiMutation();
+  const [deleteRequest, { isLoading: isDeleting, error: deleteError }] =
+    useDeleteLeaveRequestApiMutation();
+  console.log(leaveTypes);
   // Filter active leave types
   const activeLeaveTypes = leaveTypes?.filter((lt) => lt.is_active) || [];
 
@@ -70,7 +79,11 @@ console.log(leaveTypes)
       setReason("");
     } catch (err) {
       console.error("Error creating leave request:", err);
-      alert(`Failed to create leave request: ${err.status || "Unknown error"} - ${JSON.stringify(err.data || {})}`);
+      alert(
+        `Failed to create leave request: ${
+          err.status || "Unknown error"
+        } - ${JSON.stringify(err.data || {})}`
+      );
     }
   };
 
@@ -91,7 +104,12 @@ console.log(leaveTypes)
   // Handle update leave request
   const handleUpdate = async (e) => {
     e.preventDefault();
-    if (!editLeaveTypeId || !editStartDate || !editEndDate || !editReason.trim()) {
+    if (
+      !editLeaveTypeId ||
+      !editStartDate ||
+      !editEndDate ||
+      !editReason.trim()
+    ) {
       alert("Please fill in all fields");
       return;
     }
@@ -128,7 +146,11 @@ console.log(leaveTypes)
       setIsAdd(true);
     } catch (err) {
       console.error("Error updating leave request:", err);
-      alert(`Failed to update leave request: ${err.status || "Unknown error"} - ${JSON.stringify(err.data || {})}`);
+      alert(
+        `Failed to update leave request: ${
+          err.status || "Unknown error"
+        } - ${JSON.stringify(err.data || {})}`
+      );
     }
   };
 
@@ -144,7 +166,11 @@ console.log(leaveTypes)
         alert("Leave request deleted successfully!");
       } catch (err) {
         console.error("Error deleting leave request:", err);
-        alert(`Failed to delete leave request: ${err.status || "Unknown error"} - ${JSON.stringify(err.data || {})}`);
+        alert(
+          `Failed to delete leave request: ${
+            err.status || "Unknown error"
+          } - ${JSON.stringify(err.data || {})}`
+        );
       }
     }
   };
@@ -187,39 +213,19 @@ console.log(leaveTypes)
       </style>
 
       <div className="">
-        {/* <div className="flex items-center space-x-4 mb-10 animate-fadeIn">
-          <IoAddCircle className="text-4xl text-[#441a05]" />
-          <h2 className="text-3xl font-bold text-[#441a05] tracking-tight">Leave Request</h2>
-        </div>
-
-    
-        <div className="flex space-x-4 mb-6 animate-fadeIn">
-          <button
-            onClick={() => setIsAdd(true)}
-            className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-              isAdd ? "bg-[#DB9E30] text-[#441a05]" : "bg-gray-500 text-white"
-            }`}
-          >
-            Apply for Leave
-          </button>
-          <button
-            onClick={() => setIsAdd(false)}
-            className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-              !isAdd ? "bg-[#DB9E30] text-[#441a05]" : "bg-gray-500 text-white"
-            }`}
-          >
-            Edit Leave Request
-          </button>
-        </div> */}
-
         {/* Add Leave Request Form */}
         {isAdd && (
           <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
             <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
               <IoAddCircle className="text-4xl text-[#441a05]" />
-              <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">Apply for Leave</h3>
+              <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
+                Apply for Leave
+              </h3>
             </div>
-            <form onSubmit={handleSubmitRequest} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
+            <form
+              onSubmit={handleSubmitRequest}
+              className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl"
+            >
               <select
                 value={leaveTypeId}
                 onChange={(e) => setLeaveTypeId(e.target.value)}
@@ -235,28 +241,28 @@ console.log(leaveTypes)
                 ))}
               </select>
               <div className="flex gap-2 items-center">
-     <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
-                disabled={isCreating}
-                aria-describedby={createError ? "request-error" : undefined}
-              />
-              <label htmlFor="">To</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+                  disabled={isCreating}
+                  aria-describedby={createError ? "request-error" : undefined}
+                />
+                <label htmlFor="">To</label>
               </div>
-         <div className="flex gap-2 items-center">
-  <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
-                disabled={isCreating}
-                aria-describedby={createError ? "request-error" : undefined}
-              />
-              <label htmlFor="">From</label>
-         </div>
-            
+              <div className="flex gap-2 items-center">
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+                  disabled={isCreating}
+                  aria-describedby={createError ? "request-error" : undefined}
+                />
+                <label htmlFor="">From</label>
+              </div>
+
               <textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
@@ -271,7 +277,9 @@ console.log(leaveTypes)
                 disabled={isCreating}
                 title="Submit leave request"
                 className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn md:col-span-2 ${
-                  isCreating ? "cursor-not-allowed" : "hover:text-white hover:shadow-md"
+                  isCreating
+                    ? "cursor-not-allowed"
+                    : "hover:text-white hover:shadow-md"
                 }`}
               >
                 {isCreating ? (
@@ -290,7 +298,8 @@ console.log(leaveTypes)
                 className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
                 style={{ animationDelay: "0.4s" }}
               >
-                Error: {createError.status || "Unknown"} - {JSON.stringify(createError.data || {})}
+                Error: {createError.status || "Unknown"} -{" "}
+                {JSON.stringify(createError.data || {})}
               </div>
             )}
             {leaveError && (
@@ -298,7 +307,8 @@ console.log(leaveTypes)
                 className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
                 style={{ animationDelay: "0.4s" }}
               >
-                Error loading leave types: {leaveError.status || "Unknown"} - {JSON.stringify(leaveError.data || {})}
+                Error loading leave types: {leaveError.status || "Unknown"} -{" "}
+                {JSON.stringify(leaveError.data || {})}
               </div>
             )}
           </div>
@@ -309,15 +319,22 @@ console.log(leaveTypes)
           <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
             <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
               <FaEdit className="text-3xl text-[#441a05]" />
-              <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">Edit Leave Request</h3>
+              <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
+                Edit Leave Request
+              </h3>
             </div>
-            <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
+            <form
+              onSubmit={handleUpdate}
+              className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl"
+            >
               <select
                 value={editLeaveTypeId}
                 onChange={(e) => setEditLeaveTypeId(e.target.value)}
                 className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
                 disabled={isUpdating || isLeaveLoading}
-                aria-describedby={updateError ? "edit-request-error" : undefined}
+                aria-describedby={
+                  updateError ? "edit-request-error" : undefined
+                }
               >
                 <option value="">Select Leave Type</option>
                 {activeLeaveTypes.map((lt) => (
@@ -332,7 +349,9 @@ console.log(leaveTypes)
                 onChange={(e) => setEditStartDate(e.target.value)}
                 className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
                 disabled={isUpdating}
-                aria-describedby={updateError ? "edit-request-error" : undefined}
+                aria-describedby={
+                  updateError ? "edit-request-error" : undefined
+                }
               />
               <input
                 type="date"
@@ -340,7 +359,9 @@ console.log(leaveTypes)
                 onChange={(e) => setEditEndDate(e.target.value)}
                 className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
                 disabled={isUpdating}
-                aria-describedby={updateError ? "edit-request-error" : undefined}
+                aria-describedby={
+                  updateError ? "edit-request-error" : undefined
+                }
               />
               <textarea
                 value={editReason}
@@ -349,14 +370,18 @@ console.log(leaveTypes)
                 placeholder="Edit reason for leave"
                 rows={4}
                 disabled={isUpdating}
-                aria-describedby={updateError ? "edit-request-error" : undefined}
+                aria-describedby={
+                  updateError ? "edit-request-error" : undefined
+                }
               />
               <button
                 type="submit"
                 disabled={isUpdating}
                 title="Update leave request"
                 className={`relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                  isUpdating ? "cursor-not-allowed" : "hover:text-white hover:shadow-md"
+                  isUpdating
+                    ? "cursor-not-allowed"
+                    : "hover:text-white hover:shadow-md"
                 }`}
               >
                 {isUpdating ? (
@@ -390,7 +415,8 @@ console.log(leaveTypes)
                 className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
                 style={{ animationDelay: "0.4s" }}
               >
-                Error: {updateError.status || "Unknown"} - {JSON.stringify(updateError.data || {})}
+                Error: {updateError.status || "Unknown"} -{" "}
+                {JSON.stringify(updateError.data || {})}
               </div>
             )}
           </div>
@@ -398,7 +424,9 @@ console.log(leaveTypes)
 
         {/* Leave Requests Table */}
         <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
-          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">Your Leave Requests</h3>
+          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">
+            Your Leave Requests
+          </h3>
           {isRequestLoading ? (
             <p className="p-4 text-[#441a05]/70">Loading leave requests...</p>
           ) : requestError ? (
@@ -438,7 +466,9 @@ console.log(leaveTypes)
                 </thead>
                 <tbody className="divide-y divide-white/20">
                   {leaveRequests?.map((request, index) => {
-                    const leaveType = leaveTypes?.find((lt) => lt.id === request.leave_type_id)?.name || "Unknown";
+                    const leaveType =
+                      leaveTypes?.find((lt) => lt.id === request.leave_type_id)
+                        ?.name || "Unknown";
                     return (
                       <tr
                         key={request.id}
@@ -483,7 +513,9 @@ console.log(leaveTypes)
                             <FaEdit className="w-5 h-5" />
                           </button>
                           <button
-                            onClick={() => handleDelete(request.id, request.status)}
+                            onClick={() =>
+                              handleDelete(request.id, request.status)
+                            }
                             title="Delete leave request"
                             className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
                             disabled={request.status !== "Pending"}
@@ -505,9 +537,9 @@ console.log(leaveTypes)
             >
               {isDeleting
                 ? "Deleting leave request..."
-                : `Error deleting leave request: ${deleteError?.status || "Unknown"} - ${JSON.stringify(
-                    deleteError?.data || {}
-                  )}`}
+                : `Error deleting leave request: ${
+                    deleteError?.status || "Unknown"
+                  } - ${JSON.stringify(deleteError?.data || {})}`}
             </div>
           )}
         </div>

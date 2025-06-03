@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { useSelectedMenu } from "../../context/SelectedMenuContext";
@@ -39,7 +39,12 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
 
   // Get the second-level children for content area tabs
   const getSecondLevelChildren = () => {
-    if (!selectedMenuItem || !selectedMenuItem.activeChild || !selectedMenuItem.activeChild.children) return [];
+    if (
+      !selectedMenuItem ||
+      !selectedMenuItem.activeChild ||
+      !selectedMenuItem.activeChild.children
+    )
+      return [];
     return selectedMenuItem.activeChild.children;
   };
 
@@ -75,7 +80,12 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
     };
   };
 
-  const { module: breadcrumbModule, route: breadcrumbRoute, modulePath, routePath } = getBreadcrumbPaths();
+  const {
+    module: breadcrumbModule,
+    route: breadcrumbRoute,
+    modulePath,
+    routePath,
+  } = getBreadcrumbPaths();
   const firstLevelTabs = getFirstLevelChildren();
   const secondLevelTabs = getSecondLevelChildren();
 
@@ -143,25 +153,25 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
         {breadcrumbModule && (
           <h3 className="text-sm md:text-lg text-white capitalize flex-1 space-x-1 pl-3 font-medium">
             {breadcrumbModule === breadcrumbRoute ? null : (
-              <Link
-                to={modulePath}
+              <span
+                // to={modulePath}
                 className={`${
                   breadcrumbRoute
-                    ? "text-[#441a05] font-semibold hover:text-[#DB9E30] transition-colors"
+                    ? "text-[#441a05] font-semibold transition-colors"
                     : "text-[#DB9E30] font-bold"
                 }`}
               >
                 {t(breadcrumbModule)}
                 {breadcrumbRoute && " / "}
-              </Link>
+              </span>
             )}
             {breadcrumbRoute && (
-              <Link
-                to={routePath || modulePath}
+              <span
+                // to={routePath || modulePath}
                 className="text-[#DB9E30] font-bold"
               >
                 {t(breadcrumbRoute)}
-              </Link>
+              </span>
             )}
           </h3>
         )}
@@ -190,7 +200,7 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
                 const isActive = activeTab === childPath;
 
                 return (
-                  <Link
+                  <NavLink
                     key={child.id}
                     to={childPath}
                     onClick={() => {
@@ -199,17 +209,19 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
                         activeChild: child,
                       });
                     }}
-                    className={`px-4 py-2 rounded-full text-xs md:text-sm capitalize transition-all duration-300 flex-shrink-0 tab-glow ${
-                      isActive
-                        ? "bg-[#DB9E30] text-white font-bold"
-                        : "bg-white text-[#441a05] font-bold hover:bg-[#DB9E30] hover:text-white"
-                    }`}
+                    className={({ isActive }) =>
+                      `px-4 py-2 rounded-full text-xs md:text-sm capitalize transition-all duration-300 flex-shrink-0 tab-glow ${
+                        isActive
+                          ? "bg-[#DB9E30] text-white font-bold"
+                          : "bg-white text-[#441a05] font-bold hover:bg-[#DB9E30] hover:text-white"
+                      }`
+                    }
                     style={{ animationDelay: `${0.2 + index * 0.1}s` }}
-                    aria-current={isActive ? "page" : undefined}
+                    aria-current="page"
                     title={t(child.title)}
                   >
                     {t(child.title)}
-                  </Link>
+                  </NavLink>
                 );
               })}
             </div>
