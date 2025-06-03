@@ -81,6 +81,13 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
 
       {/* Dropdown Parent */}
       {childrenToShow.length > 0 ? (
+        <Link
+        to={data.link || "#"}
+          onClick={() => {
+            setSelectedMenuItem({ ...data.parent, activeChild: data });
+            setItemId(data.parent.id);
+          }}
+        >
         <div
           className="flex items-center gap-2 pl-12 pr-6 hover:bg-[#00000010] hover:text-white cursor-pointer"
           onClick={handleDropdownClick}
@@ -93,7 +100,7 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
           <h5 className={`flex-1 ${isActive ? "text-white font-semibold" : ""}`}>
             {t(data.title)}
           </h5>
-        </div>
+        </div></Link>
       ) : (
         // No children (single-level link)
         <Link

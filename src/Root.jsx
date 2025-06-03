@@ -1,4 +1,8 @@
-import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+} from "react-router-dom";
 import App from "./App";
 import LeaveType from "./components/attendance/leave-type/LeaveType";
 import Home from "./components/homePage/Home";
@@ -19,8 +23,6 @@ import AddExamTypes from "./components/exam/examType/AddExamTypes";
 import AddMealsType from "./components/meals/AddMealsType";
 import AddLeaveType from "./components/leave/AddLeaveType";
 import AddLeaveRequest from "./components/leave/AddLeaveRequest";
-
-
 
 function Root() {
   const router = createBrowserRouter([
@@ -52,15 +54,16 @@ function Root() {
               path: "/darul-iqam/settings",
               children: [
                 {
-                  path: "behavior-type",
+                  index : true,
+                  // path: "/darul-iqam/settings/behavior-type",
                   element: <AddBehaviorType />,
                 },
                 {
-                  path: "leave-type",
+                  path: "/darul-iqam/settings/leave-type",
                   element: <AddLeaveType />,
                 },
-                 {
-                  path: "meal-type",
+                {
+                  path: "/darul-iqam/settings/meal-type",
                   element: <AddMealsType />,
                 },
               ],
@@ -73,51 +76,49 @@ function Root() {
               path: "clean-report",
               element: <CleanReport />,
             },
-             {
+            {
               path: "leave-request",
               element: <AddLeaveRequest />,
             },
           ],
         },
- 
-      {
+
+        {
           path: "talimat",
           children: [
             {
-              path: "settings",
-              
+              path: "/talimat/settings",
+
               children: [
                 {
-                  path: "exam-type",
+                  path: "/talimat/settings",
                   element: <AddExamTypes />,
                 },
-                
-                
               ],
             },
-                  {
-      path: "class-management",
-      element: <ClassManagement />,
-      children: [
-        {
-          index: true,
-          element: <AddClass />,
-        },
-        {
-          path: "add-section",
-          element: <AddSection />,
-        },
-        {
-          path: "add-shift",
-          element: <AddShift />,
-        },
-        {
-          path: "add-config",
-          element: <AddClassConfig />, // Ensure correct component
-        },
-      ],
-    },
-            
+            {
+              path: "/talimat/class-management",
+              element: <ClassManagement />,
+              children: [
+                {
+                  index : true,
+                  // path: "/talimat/class-management",
+                  element: <AddClass />,
+                },
+                {
+                  path: "/talimat/class-management/add-section",
+                  element: <AddSection />,
+                },
+                {
+                  path: "/talimat/class-management/add-shift",
+                  element: <AddShift />,
+                },
+                {
+                  path: "/talimat/class-management/add-config",
+                  element: <AddClassConfig />, // Ensure correct component
+                },
+              ],
+            },
           ],
         },
       ],
@@ -126,8 +127,5 @@ function Root() {
 
   return <RouterProvider router={router} />;
 }
-
-
-
 
 export default Root;
