@@ -1,12 +1,9 @@
-
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-// Assuming your Django backend API is hosted at this base URL
 const BASE_URL = 'https://demo.easydr.xyz/api';
 
-// Helper function to get JWT token from localStorage or your preferred storage
 const getToken = () => {
-  return localStorage.getItem('token'); // Adjust based on your token storage method
+  return localStorage.getItem('token');
 };
 
 export const behaviorReportApi = createApi({
@@ -24,19 +21,14 @@ export const behaviorReportApi = createApi({
   }),
   tagTypes: ['behaviorReportApi'],
   endpoints: (builder) => ({
-    // // GET: Fetch all behaviorReportApis
-    // getBehaviorReportApi: builder.query({
-    //   query: () => '/behavior-report/',
-    //   providesTags: ['behaviorReportApi'],
-    // }),
-
-    // // GET: Fetch single behaviorReportApi by ID
-    // getBehaviorReportApiById: builder.query({
-    //   query: (id) => `/behavior-report/${id}/`,
-    //   providesTags: ['behaviorReportApi'],
-    // }),
-
-    // POST: Create a new behaviorReportApi
+    getBehaviorReportApi: builder.query({
+      query: () => '/behavior-report/create/',
+      providesTags: ['behaviorReportApi'],
+    }),
+    getBehaviorReportApiById: builder.query({
+      query: (id) => `/behavior-report/create/${id}/`,
+      providesTags: ['behaviorReportApi'],
+    }),
     createBehaviorReportApi: builder.mutation({
       query: (behaviorReportApiData) => ({
         url: '/behavior-report/create/',
@@ -45,8 +37,6 @@ export const behaviorReportApi = createApi({
       }),
       invalidatesTags: ['behaviorReportApi'],
     }),
-
-    // PUT: Update an existing behaviorReportApi
     updateBehaviorReportApi: builder.mutation({
       query: ({ id, ...behaviorReportApiData }) => ({
         url: `/behavior-report/update/${id}/`,
@@ -55,23 +45,20 @@ export const behaviorReportApi = createApi({
       }),
       invalidatesTags: ['behaviorReportApi'],
     }),
-
-    // // DELETE: Delete an behaviorReportApi
-    // deleteBehaviorReportApi: builder.mutation({
-    //   query: (id) => ({
-    //     url: `/behavior-report/${id}/`,
-    //     method: 'DELETE',
-    //   }),
-    //   invalidatesTags: ['behaviorReportApi'],
-    // }),
+    deleteBehaviorReportApi: builder.mutation({
+      query: (id) => ({
+        url: `/behavior-report/create/${id}/`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['behaviorReportApi'],
+    }),
   }),
 });
 
-// Export hooks for usage in components
 export const {
-//   useGetBehaviorReportApiQuery,
-//   useGetBehaviorReportApiByIdQuery,
+  useGetBehaviorReportApiQuery,
+  useGetBehaviorReportApiByIdQuery,
   useCreateBehaviorReportApiMutation,
   useUpdateBehaviorReportApiMutation,
-//   useDeleteBehaviorReportApiMutation,
+  useDeleteBehaviorReportApiMutation,
 } = behaviorReportApi;

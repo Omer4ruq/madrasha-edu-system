@@ -53,7 +53,10 @@ export const store = configureStore({
     [leaveRequestApi.reducerPath]: leaveRequestApi.reducer,
     [cleanReportApi.reducerPath]: cleanReportApi.reducer,
     [behaviorReportApi.reducerPath]: behaviorReportApi.reducer,
+<<<<<<< HEAD
     [jointUsersApi.reducerPath]: jointUsersApi.reducer,
+=======
+>>>>>>> cf7030f48def02313387d489b2b4fd4f5cbfb6fe
     
     
     
