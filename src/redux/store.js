@@ -23,6 +23,7 @@ import { leaveRequestApi } from './features/api/leave/leaveRequestApi';
 import { cleanReportApi } from './features/api/clean/cleanReportApi';
 import { behaviorReportApi } from './features/api/behavior/behaviorReportApi';
 import { studentActiveApi } from './features/api/student/studentActiveApi';
+import { performanceApi } from './features/api/performance/performanceApi';
 
 
 
@@ -52,6 +53,7 @@ export const store = configureStore({
     [leaveRequestApi.reducerPath]: leaveRequestApi.reducer,
     [cleanReportApi.reducerPath]: cleanReportApi.reducer,
     [behaviorReportApi.reducerPath]: behaviorReportApi.reducer,
+    [performanceApi.reducerPath]: performanceApi.reducer,
     
     
     
@@ -83,6 +85,7 @@ export const store = configureStore({
     .concat(leaveRequestApi.middleware)
     .concat(cleanReportApi.middleware)
     .concat(behaviorReportApi.middleware)
+    .concat(performanceApi.middleware)
     
 });
 

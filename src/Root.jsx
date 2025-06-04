@@ -24,6 +24,7 @@ import AddMealsType from "./components/meals/AddMealsType";
 import AddLeaveType from "./components/leave/AddLeaveType";
 import AddLeaveRequest from "./components/leave/AddLeaveRequest";
 import { useEffect } from "react";
+import PerformanceType from "./components/performance/PerformanceType";
 
 // 🧠 Custom layout to handle reload redirection
 const RootLayout = () => {
@@ -90,6 +91,10 @@ function Root() {
                     {
                       path: "/darul-iqam/settings/meal-type",
                       element: <AddMealsType />,
+                    },
+                     {
+                      path: "/darul-iqam/settings/performance-type",
+                      element: <PerformanceType />,
                     },
                   ],
                 },
