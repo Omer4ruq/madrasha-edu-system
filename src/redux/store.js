@@ -23,6 +23,7 @@ import { leaveRequestApi } from './features/api/leave/leaveRequestApi';
 import { cleanReportApi } from './features/api/clean/cleanReportApi';
 import { behaviorReportApi } from './features/api/behavior/behaviorReportApi';
 import { studentActiveApi } from './features/api/student/studentActiveApi';
+import { jointUsersApi } from './features/api/jointUsers/jointUsersApi';
 
 
 
@@ -51,7 +52,8 @@ export const store = configureStore({
     [leaveQuotasApi.reducerPath]: leaveQuotasApi.reducer,
     [leaveRequestApi.reducerPath]: leaveRequestApi.reducer,
     [cleanReportApi.reducerPath]: cleanReportApi.reducer,
-    [behaviorReportApi.reducerPath]: cleanReportApi.reducer,
+    [behaviorReportApi.reducerPath]: behaviorReportApi.reducer,
+    [jointUsersApi.reducerPath]: jointUsersApi.reducer,
     
     
     
@@ -83,6 +85,7 @@ export const store = configureStore({
     .concat(leaveRequestApi.middleware)
     .concat(cleanReportApi.middleware)
     .concat(behaviorReportApi.middleware)
+    .concat(jointUsersApi.middleware)
     
 });
 
