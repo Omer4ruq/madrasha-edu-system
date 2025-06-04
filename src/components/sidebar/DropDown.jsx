@@ -88,7 +88,7 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
             setItemId(data.parent.id);
           }}
         >
-          <div className="flex items-center gap-2 pl-12 pr-6 hover:bg-[#00000010] hover:text-white">
+          <div className="flex items-center gap-2 pl-12 pr-6 hover:bg-[#00000010] hover:text-white duration-300">
             <span
               className={`w-[5px] h-[5px] rounded-full absolute top-4 left-7 duration-150 ${
                 isActive ? "w-[7px] h-[7px] bg-[#ffffff90]" : "bg-[#441a05] group-hover/dd:bg-[#ffffff90]"
