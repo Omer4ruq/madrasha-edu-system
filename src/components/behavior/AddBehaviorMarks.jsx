@@ -1,150 +1,162 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
-import { useGetclassConfigApiQuery } from "../../redux/features/api/class/classConfigApi";
-import { FaSpinner, FaCheck, FaTimes } from "react-icons/fa";
-import { IoAddCircle } from "react-icons/io5";
-import toast from "react-hot-toast";
-import {
-  useCreateBehaviorReportApiMutation,
-  useGetBehaviorReportApiQuery,
-  useUpdateBehaviorReportApiMutation,
-} from "../../redux/features/api/behavior/behaviorReportApi";
-import { useGetBehaviorTypeApiQuery } from "../../redux/features/api/behavior/behaviorTypeApi";
-import { useGetExamApiQuery } from "../../redux/features/api/exam/examApi";
-import { useGetStudentActiveApiQuery } from "../../redux/features/api/student/studentActiveApi";
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
+import { useGetExamApiQuery } from '../../redux/features/api/exam/examApi';
+import { useGetStudentActiveApiQuery } from '../../redux/features/api/student/studentActiveApi';
+import { useGetBehaviorTypeApiQuery } from '../../redux/features/api/behavior/behaviorTypeApi';
+import { useCreateBehaviorReportApiMutation, useGetBehaviorReportApiQuery, useUpdateBehaviorReportApiMutation } from '../../redux/features/api/behavior/behaviorReportApi';
+import { FaSpinner, FaCheck, FaTimes } from 'react-icons/fa';
+import { IoAddCircle } from 'react-icons/io5';
+import toast from 'react-hot-toast';
 
 const AddBehaviorMarks = () => {
-  const [selectedClass, setSelectedClass] = useState("");
-  const [selectedExam, setSelectedExam] = useState("");
+  const [selectedClass, setSelectedClass] = useState('');
+  const [selectedExam, setSelectedExam] = useState('');
   const [marksInput, setMarksInput] = useState({});
   const [savingStatus, setSavingStatus] = useState({});
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const inputRefs = useRef({});
 
-  // API hooks
-  const { data: classConfig, isLoading: isConfigLoading, error: configError } = useGetclassConfigApiQuery();
-  const { data: studentsList, isLoading: isStudentLoading, error: studentError } = useGetStudentActiveApiQuery();
-  const { data: markssList, isLoading: ismarksLoading, error: marksError, refetch: refetchReports } = useGetBehaviorReportApiQuery();
-  const { data: examlist, isLoading: isExamLoading, error: examError } = useGetExamApiQuery();
-  const [createBehaviorReportMarks, { isLoading: isCreating }] = useCreateBehaviorReportApiMutation();
-  const [updateBehaviorReportMarks, { isLoading: isUpdating }] = useUpdateBehaviorReportApiMutation();
-  const {
-    data: behaviorTypes,
-    isLoading: isBehaviorLoading,
-    error: behaviorError,
-  } = useGetBehaviorTypeApiQuery();
+  // Fetch class configurations
+  const { data: classData, isLoading: classLoading, error: classError } = useGetclassConfigApiQuery();
+  const classes = classData || [];
+
+  // Fetch exams
+  const { data: examData, isLoading: examLoading, error: examError } = useGetExamApiQuery();
+  const exams = examData || [];
+
+  // Fetch students based on selected class
+  const { data: studentData, isLoading: studentLoading, error: studentError } = useGetStudentActiveApiQuery(
+    { class_name: selectedClass },
+    { skip: !selectedClass }
+  );
+  const students = studentData || [];
+
+  // Fetch behavior types
+  const { data: behaviorTypeData, isLoading: behaviorTypeLoading, error: behaviorTypeError } = useGetBehaviorTypeApiQuery();
+  const behaviorTypes = behaviorTypeData || [];
+
+  // Fetch existing behavior reports
+  const { data: behaviorReportData, isLoading: reportLoading, error: reportError, refetch } = useGetBehaviorReportApiQuery(
+    { exam_name_id: selectedExam, class_name: selectedClass },
+    { skip: !selectedClass || !selectedExam }
+  );
+  const behaviorReports = behaviorReportData?.data || [];
+
+  // Mutations for creating and updating behavior reports
+  const [createBehaviorReport] = useCreateBehaviorReportApiMutation();
+  const [updateBehaviorReport] = useUpdateBehaviorReportApiMutation();
 
   // Timeout for loading states
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (isStudentLoading || isConfigLoading || isExamLoading || isBehaviorLoading) {
+      if (classLoading || examLoading || studentLoading || behaviorTypeLoading || reportLoading) {
         setLoadingTimeout(true);
       }
     }, 10000); // 10 seconds
     return () => clearTimeout(timer);
-  }, [isStudentLoading, isConfigLoading, isExamLoading, isBehaviorLoading]);
+  }, [classLoading, examLoading, studentLoading, behaviorTypeLoading, reportLoading]);
 
   // Debugging logs
   useEffect(() => {
-    console.log("Debugging State:", {
-      classConfig: classConfig,
-      studentsList: studentsList,
-      markssList: markssList,
-      examlist: examlist,
-      behaviorTypes: behaviorTypes,
-      selectedClass: selectedClass,
-      selectedExam: selectedExam,
-      isStudentLoading,
-      isConfigLoading,
-      isExamLoading,
-      isBehaviorLoading,
-      ismarksLoading,
-      studentError,
-      configError,
+    console.log('Debugging State:', {
+      classData,
+      examData,
+      studentData,
+      behaviorTypeData,
+      behaviorReportData,
+      selectedClass,
+      selectedExam,
+      classLoading,
+      examLoading,
+      studentLoading,
+      behaviorTypeLoading,
+      reportLoading,
+      classError,
       examError,
-      behaviorError,
-      marksError,
+      studentError,
+      behaviorTypeError,
+      reportError,
       loadingTimeout,
     });
   }, [
-    classConfig,
-    studentsList,
-    markssList,
-    examlist,
-    behaviorTypes,
+    classData,
+    examData,
+    studentData,
+    behaviorTypeData,
+    behaviorReportData,
     selectedClass,
     selectedExam,
-    isStudentLoading,
-    isConfigLoading,
-    isExamLoading,
-    isBehaviorLoading,
-    ismarksLoading,
-    studentError,
-    configError,
+    classLoading,
+    examLoading,
+    studentLoading,
+    behaviorTypeLoading,
+    reportLoading,
+    classError,
     examError,
-    behaviorError,
-    marksError,
+    studentError,
+    behaviorTypeError,
+    reportError,
     loadingTimeout,
   ]);
 
   // Filter students by selected class
   const filteredStudents = useMemo(() => {
-    const students = studentsList?.filter((student) => student?.class_name === selectedClass) || [];
-    console.log("filteredStudents:", students);
+    const students = studentData?.filter((student) => student?.class_name === selectedClass) || [];
+    console.log('filteredStudents:', students);
     return students;
-  }, [studentsList, selectedClass]);
-console.log(markssList)
+  }, [studentData, selectedClass]);
+
   // Process existing marks data
   const existingMarks = useMemo(() => {
-    if (!markssList?.data || !selectedExam || !behaviorTypes || !studentsList) {
-      console.log("existingMarks: Skipping due to missing data", {
-        markssList: !!markssList?.data,
+    if (!behaviorReportData?.data || !selectedExam || !behaviorTypes || !studentData) {
+      console.log('existingMarks: Skipping due to missing data', {
+        behaviorReportData: !!behaviorReportData?.data,
         selectedExam: !!selectedExam,
         behaviorTypes: !!behaviorTypes,
-        studentsList: !!studentsList,
+        studentData: !!studentData,
       });
       return {};
     }
 
     const marksMap = {};
-
-    markssList.data.forEach(report => {
+    behaviorReportData?.data.forEach((report) => {
       if (report.exam_name_id === parseInt(selectedExam)) {
-        const student = studentsList.find(s => s.id === report.student_id && s.class_name === selectedClass);
+        const student = studentData.find((s) => s.id === report.student_id && s.class_name === selectedClass);
         if (!student) return;
 
-        report.behavior_marks?.forEach(behaviorMark => {
+        report.behavior_marks?.forEach((behaviorMark) => {
           const studentId = behaviorMark.student_id;
           const behaviorTypeId = behaviorMark.behavior_type;
-          const behaviorType = behaviorTypes.find(bt => bt.id === behaviorTypeId);
+          const behaviorType = behaviorTypes.find((bt) => bt.id === behaviorTypeId);
           if (behaviorType) {
             if (!marksMap[studentId]) {
               marksMap[studentId] = {
                 reportId: report.id,
-                comment: report.comment || "",
-                marks: {}
+                comment: report.comment || '',
+                marks: {},
               };
             }
-            marksMap[studentId].marks[behaviorType.name] = {
+            marksMap[studentId].marks[behaviorTypeId] = {
               id: behaviorMark.id,
               marks: behaviorMark.mark,
-              behaviorTypeId: behaviorTypeId
+              behaviorTypeId: behaviorTypeId,
             };
           }
         });
       }
     });
 
-    console.log("existingMarks:", marksMap);
+    console.log('existingMarks:', marksMap);
     return marksMap;
-  }, [markssList, selectedExam, behaviorTypes, studentsList, selectedClass]);
+  }, [behaviorReportData, selectedExam, behaviorTypes, studentData, selectedClass]);
 
   // Handle marks input
-  const handleMarksInput = (studentId, behaviorType, value) => {
+  const handleMarksInput = (studentId, behaviorTypeId, value) => {
     setMarksInput((prev) => ({
       ...prev,
       [studentId]: {
         ...prev[studentId],
-        [behaviorType]: { marks: value, isEditing: true },
+        [behaviorTypeId]: { marks: value, isEditing: true },
       },
     }));
   };
@@ -160,190 +172,143 @@ console.log(markssList)
     }));
   };
 
-  // Auto-save marks when Enter is pressed
-  const handleKeyDown = async (e, studentId, behaviorType) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-
-      if (!selectedExam) {
-        toast.error("পরীক্ষা নির্বাচন করুন।");
-        return;
-      }
-
-      await handleAutoSave(studentId, behaviorType);
-
-      const currentStudentIndex = filteredStudents.findIndex((s) => s.id === studentId);
-      const nextStudent = filteredStudents[currentStudentIndex + 1];
-      if (nextStudent) {
-        const nextInput = inputRefs.current[`${nextStudent.id}-${behaviorType}`];
-        if (nextInput) {
-          nextInput.focus();
-        }
-      }
-    }
-  };
-
-  // Auto-save function
-  const handleAutoSave = async (studentId, behaviorType) => {
-    const inputKey = `${studentId}-${behaviorType}`;
-    const studentMarks = marksInput[studentId] || {};
-    const behaviorMarkData = studentMarks[behaviorType];
-
-    if (!behaviorMarkData || behaviorMarkData.marks === "") {
+  // Unified save function for marks and comments
+  const handleSave = async (studentId, behaviorTypeId = null) => {
+    if (!selectedExam) {
+      toast.error('পরীক্ষা নির্বাচন করুন।');
       return;
     }
 
-    const mark = Number(behaviorMarkData.marks);
-    const behavior = behaviorTypes.find((b) => b.name === behaviorType);
+    const inputKey = behaviorTypeId ? `${studentId}-${behaviorTypeId}` : `${studentId}-comment`;
+    const studentMarks = marksInput[studentId] || {};
+    const behaviorMarkData = behaviorTypeId ? studentMarks[behaviorTypeId] : null;
 
-    if (!behavior) return;
+    // Validate mark if provided
+    if (behaviorTypeId && (!behaviorMarkData || behaviorMarkData.marks === '')) {
+      return;
+    }
 
-    if (mark > behavior.obtain_mark) {
+    const mark = behaviorTypeId ? Number(behaviorMarkData.marks) : null;
+    const behavior = behaviorTypeId ? behaviorTypes.find((b) => b.id === parseInt(behaviorTypeId)) : null;
+
+    if (behaviorTypeId && !behavior) {
+      toast.error('আচরণের ধরন পাওয়া যায়নি।');
+      return;
+    }
+
+    if (behaviorTypeId && mark > behavior.obtain_mark) {
       toast.error(`${behavior.name} এর মার্কস ${behavior.obtain_mark} এর বেশি হতে পারে না।`);
       return;
     }
-    if (mark < 0) {
+    if (behaviorTypeId && mark < 0) {
       toast.error(`${behavior.name} এর মার্কস নেগেটিভ হতে পারে না।`);
       return;
     }
 
-    setSavingStatus(prev => ({ ...prev, [inputKey]: 'saving' }));
+    setSavingStatus((prev) => ({ ...prev, [inputKey]: 'saving' }));
 
     try {
       const existingStudentData = existingMarks[studentId];
-      const behaviorMarks = existingStudentData
-        ? Object.entries(existingStudentData.marks).map(([btName, data]) => ({
-            student_id: studentId,
-            behavior_type: data.behaviorTypeId,
-            mark: btName === behaviorType ? mark : data.marks,
-          }))
-        : [{
-            student_id: studentId,
-            behavior_type: behavior.id,
-            mark: mark,
-          }];
+      // Include all behavior marks
+      const behaviorMarks = behaviorTypes.map((bt) => {
+        const existingMark = existingStudentData?.marks[bt.id];
+        const isCurrentBehavior = bt.id === parseInt(behaviorTypeId);
+        return {
+          student_id: parseInt(studentId),
+          behavior_type: parseInt(bt.id),
+          mark: isCurrentBehavior ? mark : existingMark?.marks ?? 0,
+        };
+      });
 
-      if (behaviorMarks.every(bm => bm.behavior_type !== behavior.id)) {
-        behaviorMarks.push({
-          student_id: studentId,
-          behavior_type: behavior.id,
-          mark: mark,
-        });
-      }
-
-      const currentComment = studentMarks.comment !== undefined 
-        ? studentMarks.comment 
-        : existingStudentData?.comment || "";
+      const currentComment = studentMarks.comment !== undefined ? studentMarks.comment : existingStudentData?.comment || '';
 
       const payload = {
-        exam_name_id: Number(selectedExam),
-        comment: currentComment,
+        exam_name_id: parseInt(selectedExam),
+        student_id: parseInt(studentId),
         behavior_marks: behaviorMarks,
-        student_id: studentId,
+        comment: currentComment,
       };
 
+      console.log('Saving payload:', JSON.stringify(payload, null, 2));
+
+      let response;
       if (existingStudentData && existingStudentData.reportId) {
-        await updateBehaviorReportMarks({ 
-          id: existingStudentData.reportId, 
-          ...payload 
+        response = await updateBehaviorReport({
+          id: existingStudentData.reportId,
+          ...payload,
         }).unwrap();
-        toast.success("মার্কস আপডেট হয়েছে!");
+        console.log('Update response:', response);
+        toast.success(behaviorTypeId ? 'মার্কস আপডেট হয়েছে!' : 'মন্তব্য আপডেট হয়েছে!');
       } else {
-        await createBehaviorReportMarks([payload]).unwrap();
-        toast.success("মার্কস সংরক্ষিত হয়েছে!");
+        response = await createBehaviorReport(payload).unwrap();
+        console.log('Create response:', response);
+        toast.success(behaviorTypeId ? 'মার্কস সংরক্ষিত হয়েছে!' : 'মন্তব্য সংরক্ষিত হয়েছে!');
       }
 
-      refetchReports();
+      await refetch();
 
-      setMarksInput(prev => ({
-        ...prev,
-        [studentId]: {
-          ...prev[studentId],
-          [behaviorType]: { marks: "", isEditing: false }
-        }
-      }));
+      if (behaviorTypeId) {
+        setMarksInput((prev) => ({
+          ...prev,
+          [studentId]: {
+            ...prev[studentId],
+            [behaviorTypeId]: { marks: '', isEditing: false },
+          },
+        }));
+      }
 
-      setSavingStatus(prev => ({ ...prev, [inputKey]: 'success' }));
+      setSavingStatus((prev) => ({ ...prev, [inputKey]: 'success' }));
 
       setTimeout(() => {
-        setSavingStatus(prev => ({ ...prev, [inputKey]: null }));
+        setSavingStatus((prev) => ({ ...prev, [inputKey]: null }));
       }, 2000);
     } catch (err) {
-      console.error("মার্কস সংরক্ষণে ত্রুটি:", err);
-      toast.error(`মার্কস সংরক্ষণে ব্যর্থ: ${err.status || "অজানা ত্রুটি"}`);
-      setSavingStatus(prev => ({ ...prev, [inputKey]: 'error' }));
+      console.error('সংরক্ষণে ত্রুটি:', err);
+      console.error('Error details:', err?.data || err);
+      toast.error(`সংরক্ষণে ব্যর্থ: ${err.status || 'অজানা ত্রুটি'}`);
+      setSavingStatus((prev) => ({ ...prev, [inputKey]: 'error' }));
 
       setTimeout(() => {
-        setSavingStatus(prev => ({ ...prev, [inputKey]: null }));
+        setSavingStatus((prev) => ({ ...prev, [inputKey]: null }));
       }, 3000);
     }
   };
 
-  // Handle comment save on blur
-  const handleCommentBlur = async (studentId) => {
-    if (!selectedExam) return;
-
-    const currentComment = marksInput[studentId]?.comment;
-    const existingStudentData = existingMarks[studentId];
-    const existingComment = existingStudentData?.comment || "";
-
-    if (currentComment === undefined || currentComment === existingComment) return;
-
-    try {
-      const behaviorMarks = existingStudentData
-        ? Object.entries(existingStudentData.marks).map(([_, data]) => ({
-            student_id: studentId,
-            behavior_type: data.behaviorTypeId,
-            mark: data.marks,
-          }))
-        : [];
-
-      const payload = {
-        exam_name_id: Number(selectedExam),
-        comment: currentComment,
-        behavior_marks: behaviorMarks,
-        student_id: studentId,
-      };
-
-      if (existingStudentData && existingStudentData.reportId) {
-        await updateBehaviorReportMarks({ id: existingStudentData.reportId, ...payload }).unwrap();
-      } else if (currentComment.trim()) {
-        await createBehaviorReportMarks([payload]).unwrap();
+  // Handle Enter key for marks
+  const handleKeyDown = async (e, studentId, behaviorTypeId, studentIndex) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      await handleSave(studentId, behaviorTypeId);
+      const nextStudentIndex = studentIndex + 1;
+      if (nextStudentIndex < filteredStudents.length) {
+        const nextInput = inputRefs.current[`${filteredStudents[nextStudentIndex].id}-${behaviorTypeId}`];
+        if (nextInput) nextInput.focus();
       }
-
-      toast.success("মন্তব্য সংরক্ষিত হয়েছে!");
-      refetchReports();
-    } catch (err) {
-      console.error("মন্তব্য সংরক্ষণে ত্রুটি:", err);
-      toast.error("মন্তব্য সংরক্ষণে ব্যর্থ!");
     }
   };
 
   // Get current marks value
-  const getCurrentMarks = (studentId, behaviorType) => {
-    const inputValue = marksInput[studentId]?.[behaviorType]?.marks;
-    if (inputValue !== undefined && inputValue !== "") {
+  const getCurrentMarks = (studentId, behaviorTypeId) => {
+    const inputValue = marksInput[studentId]?.[behaviorTypeId]?.marks;
+    if (inputValue !== undefined && inputValue !== '') {
       return inputValue;
     }
-    const existingValue = existingMarks[studentId]?.marks[behaviorType]?.marks;
-    return existingValue !== undefined ? existingValue : "";
+    const existingValue = existingMarks[studentId]?.marks[behaviorTypeId]?.marks;
+    return existingValue !== undefined ? existingValue.toString() : '';
   };
 
   // Get current comment value
   const getCurrentComment = (studentId) => {
     const inputValue = marksInput[studentId]?.comment;
-    if (inputValue !== undefined) {
-      return inputValue;
-    }
+    if (inputValue !== undefined) return inputValue;
     const existingValue = existingMarks[studentId]?.comment;
-    return existingValue || "";
+    return existingValue || '';
   };
 
   // Get saving status icon
-  const getSavingStatusIcon = (studentId, behaviorType) => {
-    const inputKey = `${studentId}-${behaviorType}`;
+  const getSavingStatusIcon = (studentId, behaviorTypeId) => {
+    const inputKey = behaviorTypeId ? `${studentId}-${behaviorTypeId}` : `${studentId}-comment`;
     const status = savingStatus[inputKey];
-
     switch (status) {
       case 'saving':
         return <FaSpinner className="animate-spin text-blue-500 ml-2" />;
@@ -357,8 +322,8 @@ console.log(markssList)
   };
 
   // Check if a field has existing data
-  const hasExistingData = (studentId, behaviorType) => {
-    return existingMarks[studentId]?.marks[behaviorType]?.marks !== undefined;
+  const hasExistingData = (studentId, behaviorTypeId) => {
+    return existingMarks[studentId]?.marks[behaviorTypeId]?.marks !== undefined;
   };
 
   return (
@@ -423,22 +388,22 @@ console.log(markssList)
               <select
                 value={selectedClass}
                 onChange={(e) => {
-                  console.log("Selected Class:", e.target.value);
+                  console.log('Selected Class:', e.target.value);
                   setSelectedClass(e.target.value);
                 }}
                 className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
-                disabled={isConfigLoading}
+                disabled={classLoading}
               >
                 <option value="">শ্রেণি নির্বাচন করুন</option>
-                {classConfig?.map((cls) => (
+                {classes.map((cls) => (
                   <option key={cls.id} value={cls.class_name}>
                     {cls.class_name}
                   </option>
                 ))}
               </select>
-              {configError && (
+              {classError && (
                 <div className="mt-2 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
-                  শ্রেণি লোড করতে ত্রুটি: {configError.status || "অজানা"}
+                  শ্রেণি লোড করতে ত্রুটি: {classError.status || 'অজানা'}
                 </div>
               )}
             </div>
@@ -446,14 +411,14 @@ console.log(markssList)
               <select
                 value={selectedExam}
                 onChange={(e) => {
-                  console.log("Selected Exam:", e.target.value);
+                  console.log('Selected Exam:', e.target.value);
                   setSelectedExam(e.target.value);
                 }}
                 className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
-                disabled={isExamLoading}
+                disabled={examLoading}
               >
                 <option value="">পরীক্ষা নির্বাচন করুন</option>
-                {examlist?.map((exam) => (
+                {exams.map((exam) => (
                   <option key={exam.id} value={exam.id}>
                     {exam.name}
                   </option>
@@ -461,14 +426,14 @@ console.log(markssList)
               </select>
               {examError && (
                 <div className="mt-2 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
-                  পরীক্ষা লোড করতে ত্রুটি: {examError.status || "অজানা"}
+                  পরীক্ষা লোড করতে ত্রুটি: {examError.status || 'অজানা'}
                 </div>
               )}
             </div>
           </div>
-          {marksError && (
+          {reportError && (
             <div className="mt-2 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
-              মার্কস লোড করতে ত্রুটি: {marksError.status || "অজানা"}
+              মার্কস লোড করতে ত্রুটি: {reportError.status || 'অজানা'}
             </div>
           )}
         </div>
@@ -478,17 +443,19 @@ console.log(markssList)
           <div className="flex items-center justify-between p-4 border-b border-white/20">
             <h3 className="text-lg font-semibold text-[#441a05]">ছাত্রদের মার্কস</h3>
             <div className="text-sm text-[#441a05]/70">
-              <span className="bg-blue-100 px-2 py-1 rounded mr-2">💡 Enter চেপে সংরক্ষণ করুন</span>
+              <span className="bg-blue-100 px-2 py-1 rounded mr-2">💡 Enter বা বাইরে ক্লিক করে সংরক্ষণ করুন</span>
               <span className="bg-green-100 px-2 py-1 rounded">✅ সবুজ = বিদ্যমান মার্কস</span>
             </div>
           </div>
 
           {(() => {
-            console.log("Rendering Conditions:", {
-              isAnyLoading: isStudentLoading || isConfigLoading || isExamLoading || isBehaviorLoading,
+            console.log('Rendering Conditions:', {
+              isAnyLoading: classLoading || examLoading || studentLoading || behaviorTypeLoading || reportLoading,
+              hasClassError: !!classError,
+              hasExamError: !!examError,
               hasStudentError: !!studentError,
-              hasBehaviorError: !!behaviorError,
-              hasMarksError: !!marksError,
+              hasBehaviorError: !!behaviorTypeError,
+              hasReportError: !!reportError,
               hasBehaviorTypes: behaviorTypes?.length > 0,
               hasSelectedClassAndExam: !!selectedClass && !!selectedExam,
               hasFilteredStudents: filteredStudents.length > 0,
@@ -503,22 +470,22 @@ console.log(markssList)
               );
             }
 
-            if (isStudentLoading || isConfigLoading || isExamLoading || isBehaviorLoading) {
+            if (classLoading || examLoading || studentLoading || behaviorTypeLoading || reportLoading) {
               return <p className="p-4 text-[#441a05]/70">তথ্য লোড হচ্ছে...</p>;
             }
 
             if (studentError) {
               return (
                 <p className="p-4 text-red-400">
-                  ছাত্রদের তথ্য লোড করতে ত্রুটি: {studentError.status || "অজানা"}
+                  ছাত্রদের তথ্য লোড করতে ত্রুটি: {studentError.status || 'অজানা'}
                 </p>
               );
             }
 
-            if (behaviorError) {
+            if (behaviorTypeError) {
               return (
                 <p className="p-4 text-red-400">
-                  আচরণের ধরন লোড করতে ত্রুটি: {behaviorError.status || "অজানা"}
+                  আচরণের ধরন লোড করতে ত্রুটি: {behaviorTypeError.status || 'অজানা'}
                 </p>
               );
             }
@@ -552,13 +519,13 @@ console.log(markssList)
                     <tr>
                       <th
                         className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider sticky-col sticky-col-first"
-                        style={{ minWidth: "200px" }}
+                        style={{ minWidth: '200px' }}
                       >
                         ছাত্রের নাম
                       </th>
                       <th
                         className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider sticky-col sticky-col-second"
-                        style={{ minWidth: "100px" }}
+                        style={{ minWidth: '100px' }}
                       >
                         রোল নম্বর
                       </th>
@@ -566,14 +533,14 @@ console.log(markssList)
                         <th
                           key={behavior.id}
                           className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider"
-                          style={{ minWidth: "180px" }}
+                          style={{ minWidth: '180px' }}
                         >
                           {behavior.name} ({behavior.obtain_mark} এর মধ্যে)
                         </th>
                       ))}
                       <th
                         className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider"
-                        style={{ minWidth: "200px" }}
+                        style={{ minWidth: '200px' }}
                       >
                         মন্তব্য
                       </th>
@@ -588,13 +555,13 @@ console.log(markssList)
                       >
                         <td
                           className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05] sticky-col sticky-col-first"
-                          style={{ minWidth: "200px" }}
+                          style={{ minWidth: '200px' }}
                         >
                           {student.name}
                         </td>
                         <td
                           className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05] sticky-col sticky-col-second"
-                          style={{ minWidth: "100px" }}
+                          style={{ minWidth: '100px' }}
                         >
                           {student.roll_no}
                         </td>
@@ -602,19 +569,18 @@ console.log(markssList)
                           <td
                             key={behavior.id}
                             className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]"
-                            style={{ minWidth: "180px" }}
+                            style={{ minWidth: '180px' }}
                           >
                             <div className="flex items-center">
                               <input
                                 type="number"
-                                value={getCurrentMarks(student.id, behavior.name)}
-                                onChange={(e) =>
-                                  handleMarksInput(student.id, behavior.name, e.target.value)
-                                }
-                                onKeyDown={(e) => handleKeyDown(e, student.id, behavior.name)}
-                                ref={(el) => (inputRefs.current[`${student.id}-${behavior.name}`] = el)}
+                                value={getCurrentMarks(student.id, behavior.id)}
+                                onChange={(e) => handleMarksInput(student.id, behavior.id, e.target.value)}
+                                onKeyDown={(e) => handleKeyDown(e, student.id, behavior.id, index)}
+                                onBlur={() => handleSave(student.id, behavior.id)}
+                                ref={(el) => (inputRefs.current[`${student.id}-${behavior.id}`] = el)}
                                 className={`w-20 bg-transparent text-[#441a05] placeholder:text-[#441a05] pl-3 py-1 focus:outline-none border rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-1 focus:ring-[#441a05] ${
-                                  hasExistingData(student.id, behavior.name)
+                                  hasExistingData(student.id, behavior.id)
                                     ? 'has-existing-data border-green-300'
                                     : 'border-[#9d9087]'
                                 }`}
@@ -622,19 +588,20 @@ console.log(markssList)
                                 min={0}
                                 max={behavior.obtain_mark}
                               />
-                              {getSavingStatusIcon(student.id, behavior.name)}
+                              {getSavingStatusIcon(student.id, behavior.id)}
                             </div>
                           </td>
                         ))}
                         <td
                           className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]"
-                          style={{ minWidth: "200px" }}
+                          style={{ minWidth: '200px' }}
                         >
                           <input
                             type="text"
                             value={getCurrentComment(student.id)}
                             onChange={(e) => handleCommentInput(student.id, e.target.value)}
-                            onBlur={() => handleCommentBlur(student.id)}
+                            onBlur={() => handleSave(student.id)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSave(student.id)}
                             className={`w-full bg-transparent text-[#441a05] placeholder:text-[#441a05] pl-3 py-1 focus:outline-none border rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-1 focus:ring-[#441a05] ${
                               existingMarks[student.id]?.comment
                                 ? 'has-existing-data border-green-300'
@@ -642,6 +609,7 @@ console.log(markssList)
                             }`}
                             placeholder="মন্তব্য (ঐচ্ছিক)"
                           />
+                          {getSavingStatusIcon(student.id, null)}
                         </td>
                       </tr>
                     ))}

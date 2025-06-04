@@ -51,7 +51,7 @@ export const store = configureStore({
     [leaveQuotasApi.reducerPath]: leaveQuotasApi.reducer,
     [leaveRequestApi.reducerPath]: leaveRequestApi.reducer,
     [cleanReportApi.reducerPath]: cleanReportApi.reducer,
-    [behaviorReportApi.reducerPath]: cleanReportApi.reducer,
+    [behaviorReportApi.reducerPath]: behaviorReportApi.reducer,
     
     
     
