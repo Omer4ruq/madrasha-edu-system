@@ -2,8 +2,6 @@ import {
   createBrowserRouter,
   Navigate,
   RouterProvider,
-  Outlet,
-  useLocation,
 } from "react-router-dom";
 import App from "./App";
 import LeaveType from "./components/attendance/leave-type/LeaveType";
@@ -15,7 +13,7 @@ import ClassManagement from "./components/ClassManagement/ClassManagement";
 import AddSection from "./components/ClassManagement/AddSection";
 import AddClass from "./components/ClassManagement/AddClass";
 import AddShift from "./components/ClassManagement/AddShift";
-import AddClassConfig from "./components/ClassManagement/AddClassConfig";
+import AddClassConfig from "./components/ClassManagement/AddClassConfig.jsx";
 import AddBehaviorType from "./components/behavior/AddBehaviorType";
 import AddBehaviorMarks from "./components/behavior/AddBehaviorMarks";
 import CleanReport from "./components/clean/CleanReport";
@@ -23,6 +21,7 @@ import AddExamTypes from "./components/exam/examType/AddExamTypes";
 import AddMealsType from "./components/meals/AddMealsType";
 import AddLeaveType from "./components/leave/AddLeaveType";
 import AddLeaveRequest from "./components/leave/AddLeaveRequest";
+<<<<<<< HEAD
 import { useEffect } from "react";
 import PerformanceType from "./components/performance/PerformanceType";
 
@@ -47,6 +46,8 @@ const RootLayout = () => {
 
   return <Outlet />;
 };
+=======
+>>>>>>> 9b6cda81f28561d9707cccd57c3fe91b1cf6b607
 
 function Root() {
   const router = createBrowserRouter([
@@ -60,24 +61,25 @@ function Root() {
           element: <Navigate to="/dashboard" replace />,
         },
         {
-          element: <RootLayout />, // 🔁 Handles reload redirect
+          path: "dashboard",
+          element: <Home />,
+        },
+        {
+          path: "institute-profile",
+          element: <InstituteProfile />,
+        },
+        {
+          path: "institute-profile/edit-info",
+          element: <EditInstituteInfo />,
+        },
+        {
+          path: "darul-iqam",
           children: [
             {
-              path: "dashboard",
-              element: <Home />,
-            },
-            {
-              path: "institute-profile",
-              element: <InstituteProfile />,
-            },
-            {
-              path: "institute-profile/edit-info",
-              element: <EditInstituteInfo />,
-            },
-            {
-              path: "/darul-iqam",
+              path: "settings",
               children: [
                 {
+<<<<<<< HEAD
                   path: "/darul-iqam/settings",
                   children: [
                     {
@@ -97,54 +99,78 @@ function Root() {
                       element: <PerformanceType />,
                     },
                   ],
+=======
+                  index: true,
+                  element: <AddBehaviorType />,
+>>>>>>> 9b6cda81f28561d9707cccd57c3fe91b1cf6b607
                 },
                 {
-                  path: "behavior-marks",
-                  element: <AddBehaviorMarks />,
+                  path: "leave-type",
+                  element: <AddLeaveType />,
                 },
                 {
-                  path: "clean-report",
-                  element: <CleanReport />,
+                  path: "meal-type",
+                  element: <AddMealsType />,
                 },
                 {
-                  path: "leave-request",
-                  element: <AddLeaveRequest />,
+                  path: "*",
+                  element: <Navigate to="/darul-iqam/settings" replace />,
                 },
               ],
             },
             {
-              path: "talimat",
+              path: "behavior-marks",
+              element: <AddBehaviorMarks />,
+            },
+            {
+              path: "clean-report",
+              element: <CleanReport />,
+            },
+            {
+              path: "leave-request",
+              element: <AddLeaveRequest />,
+            },
+          ],
+        },
+        {
+          path: "talimat",
+          children: [
+            {
+              path: "settings",
               children: [
                 {
-                  path: "/talimat/settings",
-                  children: [
-                    {
-                      path: "/talimat/settings",
-                      element: <AddExamTypes />,
-                    },
-                  ],
+                  index: true,
+                  element: <AddExamTypes />,
                 },
                 {
-                  path: "/talimat/class-management",
-                  element: <ClassManagement />,
-                  children: [
-                    {
-                      index: true,
-                      element: <AddClass />,
-                    },
-                    {
-                      path: "/talimat/class-management/add-section",
-                      element: <AddSection />,
-                    },
-                    {
-                      path: "/talimat/class-management/add-shift",
-                      element: <AddShift />,
-                    },
-                    {
-                      path: "/talimat/class-management/add-config",
-                      element: <AddClassConfig />,
-                    },
-                  ],
+                  path: "*",
+                  element: <Navigate to="/talimat/settings" replace />,
+                },
+              ],
+            },
+            {
+              path: "class-management",
+              element: <ClassManagement />,
+              children: [
+                {
+                  index: true,
+                  element: <AddClass />,
+                },
+                {
+                  path: "add-section",
+                  element: <AddSection />,
+                },
+                {
+                  path: "add-shift",
+                  element: <AddShift />,
+                },
+                {
+                  path: "add-config",
+                  element: <AddClassConfig />,
+                },
+                {
+                  path: "*",
+                  element: <Navigate to="/talimat/class-management" replace />,
                 },
               ],
             },
