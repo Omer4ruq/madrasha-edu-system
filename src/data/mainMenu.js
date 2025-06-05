@@ -42,6 +42,11 @@ const mainMenu = [
             title: "খাবারের ধরন",
             link: "/darul-iqam/settings/meal-type",
           },
+             {
+            id: "04/01/04",
+            title: "পার্ফরমেন্স ধরন",
+            link: "/darul-iqam/settings/performance-type",
+          },
         ],
       },
       {

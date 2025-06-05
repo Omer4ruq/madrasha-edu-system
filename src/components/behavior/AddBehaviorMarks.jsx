@@ -7,6 +7,7 @@ import { useCreateBehaviorReportApiMutation, useGetBehaviorReportApiQuery, useUp
 import { FaSpinner, FaCheck, FaTimes } from 'react-icons/fa';
 import { IoAddCircle } from 'react-icons/io5';
 import toast from 'react-hot-toast';
+import { jsPDF } from 'jspdf';
 
 const AddBehaviorMarks = () => {
   const [selectedClass, setSelectedClass] = useState('');
@@ -155,7 +156,7 @@ const AddBehaviorMarks = () => {
     setMarksInput((prev) => ({
       ...prev,
       [studentId]: {
-        ...prev[studentId],
+        ...prev[studentId] || {},
         [behaviorTypeId]: { marks: value, isEditing: true },
       },
     }));
@@ -166,7 +167,7 @@ const AddBehaviorMarks = () => {
     setMarksInput((prev) => ({
       ...prev,
       [studentId]: {
-        ...prev[studentId],
+        ...prev[studentId] || {},
         comment: value,
       },
     }));
@@ -213,10 +214,11 @@ const AddBehaviorMarks = () => {
       const behaviorMarks = behaviorTypes.map((bt) => {
         const existingMark = existingStudentData?.marks[bt.id];
         const isCurrentBehavior = bt.id === parseInt(behaviorTypeId);
+        const inputMark = isCurrentBehavior ? mark : studentMarks[bt.id]?.marks;
         return {
           student_id: parseInt(studentId),
           behavior_type: parseInt(bt.id),
-          mark: isCurrentBehavior ? mark : existingMark?.marks ?? 0,
+          mark: inputMark !== null && inputMark !== undefined && isFinite(Number(inputMark)) ? Number(inputMark) : (existingMark?.marks || 0),
         };
       });
 
@@ -290,7 +292,7 @@ const AddBehaviorMarks = () => {
   // Get current marks value
   const getCurrentMarks = (studentId, behaviorTypeId) => {
     const inputValue = marksInput[studentId]?.[behaviorTypeId]?.marks;
-    if (inputValue !== undefined && inputValue !== '') {
+    if (inputValue !== undefined) {
       return inputValue;
     }
     const existingValue = existingMarks[studentId]?.marks[behaviorTypeId]?.marks;
@@ -324,6 +326,54 @@ const AddBehaviorMarks = () => {
   // Check if a field has existing data
   const hasExistingData = (studentId, behaviorTypeId) => {
     return existingMarks[studentId]?.marks[behaviorTypeId]?.marks !== undefined;
+  };
+
+  // Generate PDF report
+  const generateReport = (student) => {
+    const doc = new jsPDF();
+    const studentMarks = existingMarks[student.id] || { marks: {}, comment: '' };
+    const exam = exams.find((e) => e.id === parseInt(selectedExam)) || { name: 'Unknown Exam' };
+    const totalMarks = behaviorTypes.reduce((sum, bt) => {
+      const mark = studentMarks.marks[bt.id]?.marks || 0;
+      return sum + mark;
+    }, 0);
+    const maxTotalMarks = behaviorTypes.reduce((sum, bt) => sum + bt.obtain_mark, 0);
+
+    // Header
+    doc.setFontSize(16);
+    doc.text('Behavior Assessment Report', 105, 20, { align: 'center' });
+    doc.setFontSize(12);
+    doc.text(`Student: ${student.name}`, 20, 30);
+    doc.text(`Roll No: ${student.roll_no}`, 20, 40);
+    doc.text(`Class: ${selectedClass}`, 20, 50);
+    doc.text(`Exam: ${exam.name}`, 20, 60);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 70);
+
+    // Table
+    const tableData = behaviorTypes.map((bt) => [
+      bt.name,
+      studentMarks.marks[bt.id]?.marks || 0,
+      bt.obtain_mark,
+    ]);
+    tableData.push(['Total', totalMarks, maxTotalMarks]);
+
+    doc.autoTable({
+      startY: 80,
+      head: [['Behavior Type', 'Marks Obtained', 'Maximum Marks']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [68, 26, 5], textColor: [255, 255, 255] },
+      styles: { fontSize: 10, cellPadding: 3 },
+    });
+
+    // Comment
+    const finalY = doc.lastAutoTable.finalY || 80;
+    doc.setFontSize(12);
+    doc.text('Comment:', 20, finalY + 10);
+    doc.text(studentMarks.comment || 'No comments provided.', 20, finalY + 20, { maxWidth: 170 });
+
+    // Save PDF
+    doc.save(`Behavior_Report_${student.name}_${exam.name}.pdf`);
   };
 
   return (
@@ -372,6 +422,16 @@ const AddBehaviorMarks = () => {
           .has-existing-data {
             background-color: rgba(34, 197, 94, 0.1);
             border-color: rgba(34, 197, 94, 0.3);
+          }
+          .report-button {
+            background-color: #441a05;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: background-color 0.3s;
+          }
+          .report-button:hover {
+            background-color: #5a2e0a;
           }
         `}
       </style>
@@ -544,6 +604,12 @@ const AddBehaviorMarks = () => {
                       >
                         মন্তব্য
                       </th>
+                      <th
+                        className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider"
+                        style={{ minWidth: '120px' }}
+                      >
+                        রিপোর্ট
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/20">
@@ -610,6 +676,18 @@ const AddBehaviorMarks = () => {
                             placeholder="মন্তব্য (ঐচ্ছিক)"
                           />
                           {getSavingStatusIcon(student.id, null)}
+                        </td>
+                        <td
+                          className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]"
+                          style={{ minWidth: '120px' }}
+                        >
+                          <button
+                            onClick={() => generateReport(student)}
+                            className="report-button"
+                            title="Download Behavior Report"
+                          >
+                            রিপোর্ট
+                          </button>
                         </td>
                       </tr>
                     ))}
