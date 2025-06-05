@@ -40,7 +40,7 @@ export const leaveRequestApi = createApi({
       query: (leaveRequestApiData) => ({
         url: '/leave-requests/',
         method: 'POST',
-        body: leaveRequestApiData,
+        body: formData,
       }),
       invalidatesTags: ['leaveRequestApi'],
     }),
@@ -50,7 +50,7 @@ export const leaveRequestApi = createApi({
       query: ({ id, ...leaveRequestApiData }) => ({
         url: `/leave-requests/${id}/`,
         method: 'PUT',
-        body: leaveRequestApiData,
+        body: formData,
       }),
       invalidatesTags: ['leaveRequestApi'],
     }),

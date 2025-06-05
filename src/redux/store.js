@@ -23,11 +23,7 @@ import { leaveRequestApi } from './features/api/leave/leaveRequestApi';
 import { cleanReportApi } from './features/api/clean/cleanReportApi';
 import { behaviorReportApi } from './features/api/behavior/behaviorReportApi';
 import { studentActiveApi } from './features/api/student/studentActiveApi';
-<<<<<<< HEAD
-import { performanceApi } from './features/api/performance/performanceApi';
-=======
 import { jointUsersApi } from './features/api/jointUsers/jointUsersApi';
->>>>>>> 9b6cda81f28561d9707cccd57c3fe91b1cf6b607
 
 
 
@@ -57,14 +53,7 @@ export const store = configureStore({
     [leaveRequestApi.reducerPath]: leaveRequestApi.reducer,
     [cleanReportApi.reducerPath]: cleanReportApi.reducer,
     [behaviorReportApi.reducerPath]: behaviorReportApi.reducer,
-<<<<<<< HEAD
-    [performanceApi.reducerPath]: performanceApi.reducer,
-=======
-<<<<<<< HEAD
     [jointUsersApi.reducerPath]: jointUsersApi.reducer,
-=======
->>>>>>> cf7030f48def02313387d489b2b4fd4f5cbfb6fe
->>>>>>> 9b6cda81f28561d9707cccd57c3fe91b1cf6b607
     
     
     
@@ -96,11 +85,7 @@ export const store = configureStore({
     .concat(leaveRequestApi.middleware)
     .concat(cleanReportApi.middleware)
     .concat(behaviorReportApi.middleware)
-<<<<<<< HEAD
-    .concat(performanceApi.middleware)
-=======
     .concat(jointUsersApi.middleware)
->>>>>>> 9b6cda81f28561d9707cccd57c3fe91b1cf6b607
     
 });
 
