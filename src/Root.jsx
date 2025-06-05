@@ -21,33 +21,6 @@ import AddExamTypes from "./components/exam/examType/AddExamTypes";
 import AddMealsType from "./components/meals/AddMealsType";
 import AddLeaveType from "./components/leave/AddLeaveType";
 import AddLeaveRequest from "./components/leave/AddLeaveRequest";
-<<<<<<< HEAD
-import { useEffect } from "react";
-import PerformanceType from "./components/performance/PerformanceType";
-
-// 🧠 Custom layout to handle reload redirection
-const RootLayout = () => {
-  const { pathname } = useLocation();
-
-  useEffect(() => {
-    const redirectMap = {
-      "/talimat/class-management/add-section": "/talimat/class-management",
-      "/talimat/class-management/add-shift": "/talimat/class-management",
-      "/talimat/class-management/add-config": "/talimat/class-management",
-      "/darul-iqam/settings/leave-type": "/darul-iqam/settings",
-      "/darul-iqam/settings/meal-type": "/darul-iqam/settings",
-    };
-
-    const parentPath = redirectMap[pathname];
-    if (parentPath && window.performance?.navigation.type === 1) {
-      window.location.replace(parentPath);
-    }
-  }, [pathname]);
-
-  return <Outlet />;
-};
-=======
->>>>>>> 9b6cda81f28561d9707cccd57c3fe91b1cf6b607
 
 function Root() {
   const router = createBrowserRouter([
@@ -79,30 +52,8 @@ function Root() {
               path: "settings",
               children: [
                 {
-<<<<<<< HEAD
-                  path: "/darul-iqam/settings",
-                  children: [
-                    {
-                      index: true,
-                      element: <AddBehaviorType />,
-                    },
-                    {
-                      path: "/darul-iqam/settings/leave-type",
-                      element: <AddLeaveType />,
-                    },
-                    {
-                      path: "/darul-iqam/settings/meal-type",
-                      element: <AddMealsType />,
-                    },
-                     {
-                      path: "/darul-iqam/settings/performance-type",
-                      element: <PerformanceType />,
-                    },
-                  ],
-=======
                   index: true,
                   element: <AddBehaviorType />,
->>>>>>> 9b6cda81f28561d9707cccd57c3fe91b1cf6b607
                 },
                 {
                   path: "leave-type",
