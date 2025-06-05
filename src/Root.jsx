@@ -21,6 +21,7 @@ import AddExamTypes from "./components/exam/examType/AddExamTypes";
 import AddMealsType from "./components/meals/AddMealsType";
 import AddLeaveType from "./components/leave/AddLeaveType";
 import AddLeaveRequest from "./components/leave/AddLeaveRequest";
+import PerformanceType from "./components/performance/PerformanceType";
 
 function Root() {
   const router = createBrowserRouter([
@@ -63,6 +64,10 @@ function Root() {
                   path: "meal-type",
                   element: <AddMealsType />,
                 },
+                  {
+                  path: "performance-type",
+                  element: <PerformanceType />,
+                },
                 {
                   path: "*",
                   element: <Navigate to="/darul-iqam/settings" replace />,
@@ -81,6 +86,7 @@ function Root() {
               path: "leave-request",
               element: <AddLeaveRequest />,
             },
+         
           ],
         },
         {

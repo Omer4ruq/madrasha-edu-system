@@ -8,6 +8,12 @@ import { FaSpinner, FaCheck, FaTimes } from 'react-icons/fa';
 import { IoAddCircle } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 import { jsPDF } from 'jspdf';
+import 'jspdf-autotable'; 
+
+// Base64 ফন্ট ডেটা ইম্পোর্ট করুন
+// যেহেতু fonts.js এবং AddBehaviorMarks.jsx একই ফোল্ডারে আছে, পাথটি './fonts' হবে।
+import { NotoSansBengaliBase64 } from './font'; 
+
 
 const AddBehaviorMarks = () => {
   const [selectedClass, setSelectedClass] = useState('');
@@ -151,6 +157,21 @@ const AddBehaviorMarks = () => {
     return marksMap;
   }, [behaviorReportData, selectedExam, behaviorTypes, studentData, selectedClass]);
 
+  // Calculate total marks for each student
+  const totalMarks = useMemo(() => {
+    const totals = {};
+    filteredStudents.forEach((student) => {
+      const studentMarks = existingMarks[student.id]?.marks || {};
+      const total = behaviorTypes.reduce((sum, behavior) => {
+        const mark = studentMarks[behavior.id]?.marks || 0;
+        return sum + (isFinite(Number(mark)) ? Number(mark) : 0);
+      }, 0);
+      totals[student.id] = total;
+    });
+    console.log('totalMarks:', totals);
+    return totals;
+  }, [existingMarks, filteredStudents, behaviorTypes]);
+
   // Handle marks input
   const handleMarksInput = (studentId, behaviorTypeId, value) => {
     setMarksInput((prev) => ({
@@ -210,7 +231,6 @@ const AddBehaviorMarks = () => {
 
     try {
       const existingStudentData = existingMarks[studentId];
-      // Include all behavior marks
       const behaviorMarks = behaviorTypes.map((bt) => {
         const existingMark = existingStudentData?.marks[bt.id];
         const isCurrentBehavior = bt.id === parseInt(behaviorTypeId);
@@ -328,52 +348,84 @@ const AddBehaviorMarks = () => {
     return existingMarks[studentId]?.marks[behaviorTypeId]?.marks !== undefined;
   };
 
-  // Generate PDF report
-  const generateReport = (student) => {
-    const doc = new jsPDF();
-    const studentMarks = existingMarks[student.id] || { marks: {}, comment: '' };
-    const exam = exams.find((e) => e.id === parseInt(selectedExam)) || { name: 'Unknown Exam' };
-    const totalMarks = behaviorTypes.reduce((sum, bt) => {
-      const mark = studentMarks.marks[bt.id]?.marks || 0;
-      return sum + mark;
-    }, 0);
-    const maxTotalMarks = behaviorTypes.reduce((sum, bt) => sum + bt.obtain_mark, 0);
+  // Generate and download PDF report
+  const generatePDFReport = async () => {
+    if (!selectedClass || !selectedExam || filteredStudents.length === 0 || behaviorTypes.length === 0) {
+      toast.error('শ্রেণি, পরীক্ষা, ছাত্র, এবং আচরণের ধরন নির্বাচন করুন।');
+      return;
+    }
 
-    // Header
-    doc.setFontSize(16);
-    doc.text('Behavior Assessment Report', 105, 20, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text(`Student: ${student.name}`, 20, 30);
-    doc.text(`Roll No: ${student.roll_no}`, 20, 40);
-    doc.text(`Class: ${selectedClass}`, 20, 50);
-    doc.text(`Exam: ${exam.name}`, 20, 60);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 70);
+    try {
+      const doc = new jsPDF();
 
-    // Table
-    const tableData = behaviorTypes.map((bt) => [
-      bt.name,
-      studentMarks.marks[bt.id]?.marks || 0,
-      bt.obtain_mark,
-    ]);
-    tableData.push(['Total', totalMarks, maxTotalMarks]);
+      // Step 1: Add the Base64 font to jsPDF's VFS (Virtual File System)
+      doc.addFileToVFS('NotoSansBengali-Regular.ttf', NotoSansBengaliBase64);
 
-    doc.autoTable({
-      startY: 80,
-      head: [['Behavior Type', 'Marks Obtained', 'Maximum Marks']],
-      body: tableData,
-      theme: 'grid',
-      headStyles: { fillColor: [68, 26, 5], textColor: [255, 255, 255] },
-      styles: { fontSize: 10, cellPadding: 3 },
-    });
+      // Step 2: Add the font to jsPDF's font list
+      doc.addFont('NotoSansBengali-Regular.ttf', 'NotoSansBengali', 'normal');
 
-    // Comment
-    const finalY = doc.lastAutoTable.finalY || 80;
-    doc.setFontSize(12);
-    doc.text('Comment:', 20, finalY + 10);
-    doc.text(studentMarks.comment || 'No comments provided.', 20, finalY + 20, { maxWidth: 170 });
+      // Step 3: Set the font for the document
+      doc.setFont('NotoSansBengali'); 
+      doc.setFontSize(16);
 
-    // Save PDF
-    doc.save(`Behavior_Report_${student.name}_${exam.name}.pdf`);
+      // Add title
+      doc.text(`আচরণের রিপোর্ট - শ্রেণি: ${selectedClass} (পরীক্ষা: ${exams.find(e => e.id == selectedExam)?.name})`, 10, 20);
+
+      // Table headers and data
+      const headers = [['ছাত্রের নাম', 'রোল নম্বর', ...behaviorTypes.map((bt) => `${bt.name} (${bt.obtain_mark})`), 'মোট মার্কস', 'মন্তব্য']];
+      
+      const body = filteredStudents.map((student) => [
+        student.name || 'N/A',
+        student.roll_no || 'N/A',
+        ...behaviorTypes.map((bt) => {
+          const mark = existingMarks[student.id]?.marks[bt.id]?.marks || 0;
+          return mark.toString();
+        }),
+        totalMarks[student.id]?.toString() || '0',
+        existingMarks[student.id]?.comment || '',
+      ]);
+
+      // Log data for debugging
+      console.log('PDF Data:', { headers, body });
+
+      // Generate table using jspdf-autotable
+      doc.autoTable({
+        startY: 30,
+        head: headers,
+        body: body,
+        theme: 'grid',
+        styles: {
+          font: 'NotoSansBengali', // Use the Bengali font for table content
+          fontSize: 10,
+          cellPadding: 3,
+          overflow: 'linebreak',
+          textColor: [0, 0, 0],
+        },
+        headStyles: {
+          fillColor: [68, 26, 5],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+        },
+        bodyStyles: {
+          textColor: [0, 0, 0],
+        },
+        columnStyles: {
+          0: { cellWidth: 40 }, // Student Name
+          1: { cellWidth: 20 }, // Roll No
+          ...behaviorTypes.reduce((acc, _, index) => ({ ...acc, [index + 2]: { cellWidth: 20, overflow: 'linebreak' } }), {}), // Behavior Marks
+          [behaviorTypes.length + 2]: { cellWidth: 20 }, // Total Marks
+          [behaviorTypes.length + 3]: { cellWidth: 60, overflow: 'linebreak' }, // Comment
+        },
+        margin: { top: 30, left: 10, right: 10 },
+      });
+
+      // Save the PDF
+      doc.save(`Behavior_Report_${selectedClass}_Exam_${selectedExam}.pdf`);
+      toast.success('রিপোর্ট সফলভাবে ডাউনলোড হয়েছে!');
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error(`রিপোর্ট তৈরি করতে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
+    }
   };
 
   return (
@@ -504,7 +556,13 @@ const AddBehaviorMarks = () => {
             <h3 className="text-lg font-semibold text-[#441a05]">ছাত্রদের মার্কস</h3>
             <div className="text-sm text-[#441a05]/70">
               <span className="bg-blue-100 px-2 py-1 rounded mr-2">💡 Enter বা বাইরে ক্লিক করে সংরক্ষণ করুন</span>
-              <span className="bg-green-100 px-2 py-1 rounded">✅ সবুজ = বিদ্যমান মার্কস</span>
+              <button
+                onClick={generatePDFReport}
+                className="report-button"
+                title="Download Behavior Report"
+              >
+                রিপোর্ট
+              </button>
             </div>
           </div>
 
@@ -608,7 +666,7 @@ const AddBehaviorMarks = () => {
                         className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider"
                         style={{ minWidth: '120px' }}
                       >
-                        রিপোর্ট
+                        মোট মার্কস
                       </th>
                     </tr>
                   </thead>
@@ -681,13 +739,7 @@ const AddBehaviorMarks = () => {
                           className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]"
                           style={{ minWidth: '120px' }}
                         >
-                          <button
-                            onClick={() => generateReport(student)}
-                            className="report-button"
-                            title="Download Behavior Report"
-                          >
-                            রিপোর্ট
-                          </button>
+                          {totalMarks[student.id] || 0}
                         </td>
                       </tr>
                     ))}

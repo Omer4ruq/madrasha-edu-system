@@ -24,6 +24,7 @@ import { cleanReportApi } from './features/api/clean/cleanReportApi';
 import { behaviorReportApi } from './features/api/behavior/behaviorReportApi';
 import { studentActiveApi } from './features/api/student/studentActiveApi';
 import { jointUsersApi } from './features/api/jointUsers/jointUsersApi';
+import { performanceApi } from './features/api/performance/performanceApi';
 
 
 
@@ -54,6 +55,7 @@ export const store = configureStore({
     [cleanReportApi.reducerPath]: cleanReportApi.reducer,
     [behaviorReportApi.reducerPath]: behaviorReportApi.reducer,
     [jointUsersApi.reducerPath]: jointUsersApi.reducer,
+    [performanceApi.reducerPath]: performanceApi.reducer,
     
     
     
@@ -86,6 +88,7 @@ export const store = configureStore({
     .concat(cleanReportApi.middleware)
     .concat(behaviorReportApi.middleware)
     .concat(jointUsersApi.middleware)
+    .concat(performanceApi.middleware)
     
 });
 
