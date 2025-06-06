@@ -16,7 +16,7 @@ const mainMenu = [
     icon: "HiOutlineBuildingStorefront",
     link: "/institute-profile",
   },
-{
+  {
     id: "04",
     title: "দারুল ইকাম",
     icon: "HiOutlineBuildingStorefront",
@@ -42,7 +42,7 @@ const mainMenu = [
             title: "খাবারের ধরন",
             link: "/darul-iqam/settings/meal-type",
           },
-             {
+          {
             id: "04/01/04",
             title: "পার্ফরমেন্স ধরন",
             link: "/darul-iqam/settings/performance-type",
@@ -59,10 +59,15 @@ const mainMenu = [
         title: "ক্লিন রিপোর্ট",
         link: "/darul-iqam/clean-report",
       },
-        {
+      {
         id: "04/04",
         title: "ছুটির আবেদন",
         link: "/darul-iqam/leave-request",
+      },
+      {
+        id: "04/05",
+        title: "শিক্ষকের পারফরমেন্স",
+        link: "/darul-iqam/teacher-performance",
       },
     ],
   },
@@ -72,8 +77,7 @@ const mainMenu = [
     icon: "HiOutlineBuildingStorefront",
     link: "/talimat",
     children: [
-
-       {
+      {
         id: "05/01",
         title: "সেটিং",
         link: "/talimat/settings",
@@ -83,11 +87,10 @@ const mainMenu = [
             title: "পরীক্ষার ধরন",
             link: "/talimat/settings",
           },
-       
         ],
       },
 
-            {
+      {
         id: "05/02",
         title: "শ্রেনী পরিচালনা",
         link: "/talimat/class-management",
@@ -121,8 +124,6 @@ const mainMenu = [
     title: "অ্যাপস এবং পেজ",
     icon: false,
   },
-
-  
 ];
 
 export default mainMenu;
