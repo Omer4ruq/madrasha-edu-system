@@ -17,7 +17,7 @@ export const leaveRequestApi = createApi({
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
-      // headers.set('Content-Type', 'application/json');
+      // Let FormData set Content-Type automatically
       return headers;
     },
   }),
@@ -37,7 +37,7 @@ export const leaveRequestApi = createApi({
 
     // POST: Create a new leaveRequestApi
     createLeaveRequestApi: builder.mutation({
-      query: (leaveRequestApiData) => ({
+      query: (formData) => ({
         url: '/leave-requests/',
         method: 'POST',
         body: formData,
@@ -47,7 +47,7 @@ export const leaveRequestApi = createApi({
 
     // PUT: Update an existing leaveRequestApi
     updateLeaveRequestApi: builder.mutation({
-      query: ({ id, ...leaveRequestApiData }) => ({
+      query: ({ id, ...formData }) => ({
         url: `/leave-requests/${id}/`,
         method: 'PUT',
         body: formData,

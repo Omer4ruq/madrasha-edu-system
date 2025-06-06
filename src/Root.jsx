@@ -65,6 +65,10 @@ function Root() {
                   path: "meal-type",
                   element: <AddMealsType />,
                 },
+                  {
+                  path: "performance-type",
+                  element: <PerformanceType />,
+                },
                 {
                   path: "performance-type",
                   element: <PerformanceType />,
