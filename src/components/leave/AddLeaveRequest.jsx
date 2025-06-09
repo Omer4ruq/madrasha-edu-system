@@ -1,41 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSearchJointUsersQuery } from '../../redux/features/api/jointUsers/jointUsersApi';
-import { useCreateLeaveRequestApiMutation } from '../../redux/features/api/leave/leaveRequestApi';
+import { useCreateLeaveRequestApiMutation, useGetLeaveRequestApiQuery } from '../../redux/features/api/leave/leaveRequestApi';
 import { useGetLeaveApiQuery } from '../../redux/features/api/leave/leaveApi';
-import { useGetLeaveRequestApiQuery } from '../../redux/features/api/leave/leaveRequestApi';
+import { FaSpinner } from 'react-icons/fa';
 
 const AddLeaveRequest = () => {
-  // State for form inputs
+  // ফর্ম ইনপুটের জন্য স্টেট
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [leaveType, setLeaveType] = useState('');
   const [description, setDescription] = useState('');
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [updateMessage, setUpdateMessage] = useState(null);
 
-  // API hooks
-  const { data: users, isLoading: usersLoading } = useSearchJointUsersQuery(searchTerm);
-  const { data: leaveTypes, isLoading: leaveTypesLoading } = useGetLeaveApiQuery();
-  const { data: leaveRequests, isLoading: leaveRequestsLoading } = useGetLeaveRequestApiQuery();
-  const [createLeaveRequestApi, { isLoading: isSubmitting, isSuccess, isError, error }] = useCreateLeaveRequestApiMutation();
+  // API হুক
+  const { data: users = [], isLoading: usersLoading } = useSearchJointUsersQuery(searchTerm, {
+    skip: searchTerm.length < 3, // ৩+ অক্ষর হলে কেবল ফেচ করবে
+  });
+  const { data: leaveTypes = [], isLoading: leaveTypesLoading, error: leaveTypesError } = useGetLeaveApiQuery();
+  const { data: leaveRequests = [], isLoading: leaveRequestsLoading, error: leaveRequestsError } = useGetLeaveRequestApiQuery();
+  const [createLeaveRequestApi, { isLoading: isSubmitting, error: submitError }] = useCreateLeaveRequestApiMutation();
 
-  // Handle user selection
+  // ইউজার নির্বাচন হ্যান্ডলার
   const handleUserSelect = (user) => {
     setSelectedUser(user);
-    setSearchTerm(user.name);
+    setSearchTerm(`${user.name} (${user.email})`);
     setShowDropdown(false);
   };
 
-  // Handle form submission
+  // ফর্ম সাবমিশন হ্যান্ডলার
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedUser || !startDate || !endDate || !leaveType || !description) {
-      alert('Please fill all required fields');
+      setUpdateMessage({ type: 'error', text: 'দয়া করে সব প্রয়োজনীয় ক্ষেত্র পূরণ করুন।' });
       return;
     }
 
-    // Create FormData object
     const formData = new FormData();
     formData.append('user_id', selectedUser.id);
     formData.append('start_date', startDate);
@@ -46,167 +48,249 @@ const AddLeaveRequest = () => {
     formData.append('status', 'PENDING');
 
     try {
-      console.log('Sending formData:', Object.fromEntries(formData)); // Debug payload
+      console.log('পাঠানো ফর্ম ডেটা:', Object.fromEntries(formData));
       await createLeaveRequestApi(formData).unwrap();
-      // Reset form
       setSelectedUser(null);
       setSearchTerm('');
       setStartDate('');
       setEndDate('');
       setLeaveType('');
       setDescription('');
+      setShowDropdown(false);
+      setUpdateMessage({ type: 'success', text: 'ছুটির আবেদন সফলভাবে জমা হয়েছে!' });
+      setTimeout(() => setUpdateMessage(null), 3000);
     } catch (err) {
-      console.error('Failed to submit leave request:', err);
+      console.error('সাবমিশন ত্রুটি:', err);
+      setUpdateMessage({
+        type: 'error',
+        text: `ত্রুটি: ${err.status || 'অজানা'} - ${JSON.stringify(err.data || err.message || {})}`,
+      });
     }
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">Add Leave Request</h2>
-      
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* User Search */}
-        <div className="relative">
-          <label className="block text-sm font-medium text-gray-700">Search User</label>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setShowDropdown(true);
-            }}
-            placeholder="Search by name..."
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          />
-          {showDropdown && searchTerm && (
-            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-              {usersLoading ? (
-                <div className="p-2">Loading...</div>
-              ) : users?.length > 0 ? (
-                users.map((user) => (
-                  <div
-                    key={user.id}
-                    onClick={() => handleUserSelect(user)}
-                    className="p-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    {user.name} ({user.email})
+    <div className="py-8 w-full relative mx-auto">
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes scaleIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 0.6s ease-out forwards;
+          }
+          .animate-scaleIn {
+            animation: scaleIn 0.4s ease-out forwards;
+          }
+          ::-webkit-scrollbar {
+            width: 8px;
+          }
+          ::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          ::-webkit-scrollbar-thumb {
+            background: rgba(22, 31, 48, 0.26);
+            border-radius: 10px;
+          }
+          ::-webkit-scrollbar-thumb:hover {
+            background: rgba(10, 13, 21, 0.44);
+          }
+        `}
+      </style>
+
+      <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+        <h3 className="text-2xl font-bold text-[#441a05] tracking-tight mb-6">ছুটির আবেদন যোগ করুন</h3>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* ইউজার সার্চ */}
+          <div className="relative ">
+            <label className="block text-sm font-medium text-[#441a05]">ইউজার খুঁজুন</label>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setShowDropdown(e.target.value.length >= 3);
+                if (!e.target.value) setSelectedUser(null);
+              }}
+              placeholder="অন্তত ৩টি অক্ষর লিখুন..."
+              className="mt-1 block w-full rounded-md border-[#9d9087] bg-transparent text-[#441a05] shadow-sm focus:border-[#DB9E30] focus:ring focus:ring-[#DB9E30] focus:ring-opacity-50 animate-scaleIn outline-none"
+            />
+            {showDropdown && searchTerm.length >= 3 && (
+              <div className="absolute z-10 mt-1 w-full bg-white border border-[#9d9087] rounded-md shadow-lg max-h-60 overflow-auto">
+                {usersLoading ? (
+                  <div className="p-2 text-[#441a05] flex items-center space-x-2">
+                    <FaSpinner className="animate-spin text-lg" />
+                    <span>ইউজার লোড হচ্ছে...</span>
                   </div>
-                ))
-              ) : (
-                <div className="p-2">No users found</div>
-              )}
-            </div>
-          )}
-          {selectedUser && (
-            <div className="mt-2 text-sm text-gray-600">
-              Selected: {selectedUser.name} ({selectedUser.email})
-            </div>
-          )}
-        </div>
-
-        {/* Leave Type */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Leave Type</label>
-          <select
-            value={leaveType}
-            onChange={(e) => setLeaveType(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          >
-            <option value="">Select Leave Type</option>
-            {leaveTypesLoading ? (
-              <option>Loading...</option>
-            ) : (
-              leaveTypes?.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.name}
-                </option>
-              ))
+                ) : users.length > 0 ? (
+                  users.map((user) => (
+                    <div
+                      key={user.id}
+                      onClick={() => handleUserSelect(user)}
+                      className="p-2 text-[#441a05] bg-white hover:bg-[#DB9E30] cursor-pointer"
+                    >
+                      {user.name} ({user.email})
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-2 text-[#441a05]">কোনো ইউজার পাওয়া যায়নি</div>
+                )}
+              </div>
             )}
-          </select>
-        </div>
-
-        {/* Date Inputs */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Start Date</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            />
+            {selectedUser && (
+              <div className="mt-2 text-sm text-[#441a05]/70">
+                নির্বাচিত: {selectedUser.name} ({selectedUser.email})
+              </div>
+            )}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">End Date</label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            />
+
+          {/* ছুটির ধরন */}
+          <div className="animate-fadeIn" style={{ animationDelay: '0.2s' }}>
+            <label className="block text-sm font-medium text-[#441a05]">ছুটির ধরন</label>
+            <select
+              value={leaveType}
+              onChange={(e) => setLeaveType(e.target.value)}
+              className="mt-1 block w-full rounded-md border-[#9d9087] bg-transparent text-[#441a05] shadow-sm focus:border-[#DB9E30] focus:ring focus:ring-[#DB9E30] focus:ring-opacity-50 animate-scaleIn outline-none"
+            >
+              <option value="" className="text-[#441a05]/70">ছুটির ধরন নির্বাচন করুন</option>
+              {leaveTypesLoading ? (
+                <option>লোড হচ্ছে...</option>
+              ) : leaveTypesError ? (
+                <option>ছুটির ধরন লোডে ত্রুটি</option>
+              ) : (
+                leaveTypes.map((type) => (
+                  <option key={type.id} value={type.id} className="text-[#441a05]">
+                    {type.name}
+                  </option>
+                ))
+              )}
+            </select>
           </div>
-        </div>
 
-        {/* Description */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Description</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            rows="4"
-          ></textarea>
-        </div>
+          {/* তারিখ ইনপুট */}
+          <div className="grid grid-cols-2 gap-4 animate-fadeIn" style={{ animationDelay: '0.4s' }}>
+            <div>
+              <label className="block text-sm font-medium text-[#441a05]">শুরুর তারিখ</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="mt-1 block w-full rounded-md border-[#9d9087] bg-transparent text-[#441a05] shadow-sm focus:border-[#DB9E30] focus:ring focus:ring-[#DB9E30] focus:ring-opacity-50 animate-scaleIn outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#441a05]">শেষের তারিখ</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="mt-1 block w-full rounded-md border-[#9d9087] bg-transparent text-[#441a05] shadow-sm focus:border-[#DB9E30] focus:ring focus:ring-[#DB9E30] focus:ring-opacity-50 animate-scaleIn outline-none"
+              />
+            </div>
+          </div>
 
-        {/* Submit Button */}
-        <div>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:bg-gray-400"
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Leave Request'}
-          </button>
-          {isSuccess && <p className="mt-2 text-green-600">Leave request submitted successfully!</p>}
-          {isError && <p className="mt-2 text-red-600">Error: {error?.data?.detail || 'Failed to submit'}</p>}
-        </div>
-      </form>
+          {/* বিবরণ */}
+          <div className="animate-fadeIn" style={{ animationDelay: '0.6s' }}>
+            <label className="block text-sm font-medium text-[#441a05]">বিবরণ</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="mt-1 block w-full rounded-md border-[#9d9087] bg-transparent text-[#441a05] shadow-sm focus:border-[#DB9E30] focus:ring focus:ring-[#DB9E30] focus:ring-opacity-50 animate-scaleIn outline-none"
+              rows="4"
+            ></textarea>
+          </div>
 
-      {/* Leave Requests Table */}
-      <div className="mt-8">
-        <h3 className="text-xl font-bold mb-4">Submitted Leave Requests</h3>
+          {/* সাবমিট বোতাম */}
+          <div className="animate-fadeIn" style={{ animationDelay: '0.8s' }}>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-[#DB9E30] text-[#441a05] py-2 px-4 rounded-md hover:bg-[#c48e2a] disabled:bg-[#9d9087] transition-all duration-300 animate-scaleIn"
+            >
+              {isSubmitting ? (
+                <span className="flex items-center justify-center">
+                  <FaSpinner className="animate-spin text-lg mr-2" />
+                  জমা হচ্ছে...
+                </span>
+              ) : (
+                'ছুটির আবেদন জমা দিন'
+              )}
+            </button>
+            {updateMessage && (
+              <div
+                className={`mt-4 p-3 rounded-lg animate-fadeIn ${
+                  updateMessage.type === 'error'
+                    ? 'text-red-400 bg-red-500/10'
+                    : 'text-[#441a05]/70 bg-[#DB9E30]/10'
+                }`}
+                style={{ animationDelay: '0.4s' }}
+              >
+                {updateMessage.type === 'info' && <FaSpinner className="animate-spin text-lg mr-2 inline" />}
+                {updateMessage.text}
+              </div>
+            )}
+            {(leaveTypesError || leaveRequestsError || submitError) && (
+              <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn" style={{ animationDelay: '0.4s' }}>
+                ত্রুটি: {(leaveTypesError || leaveRequestsError || submitError)?.status || 'অজানা'} -{' '}
+                {JSON.stringify((leaveTypesError || leaveRequestsError || submitError)?.data || {})}
+              </div>
+            )}
+          </div>
+        </form>
+      </div>
+
+      {/* ছুটির আবেদন টেবিল */}
+      <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
+        <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">জমাকৃত ছুটির আবেদনসমূহ</h3>
         {leaveRequestsLoading ? (
-          <p>Loading leave requests...</p>
-        ) : (
+          <p className="p-4 text-[#441a05]/70 animate-fadeIn">
+            <FaSpinner className="animate-spin text-lg mr-2" />
+            ছুটির আবেদন লোড হচ্ছে...
+          </p>
+        ) : leaveRequestsError ? (
+          <div className="p-4 text-red-400 bg-red-500/10 rounded-lg animate-fadeIn">
+            ছুটির আবেদন লোডে ত্রুটি: {leaveRequestsError?.status || 'অজানা'} -{' '}
+            {JSON.stringify(leaveRequestsError?.data || {})}
+          </div>
+        ) : leaveRequests.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-white/20">
+              <thead className="bg-white/5">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Leave Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ইউজার</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ছুটির ধরন</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">শুরুর তারিখ</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">শেষের তারিখ</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">বিবরণ</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">অবস্থা</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">তৈরির তারিখ</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {leaveRequests?.map((request) => (
-                  <tr key={request.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">{request.user.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{leaveTypes?.find((lt) => lt.id === request.leave_type)?.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{request.start_date}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{request.end_date}</td>
-                    <td className="px-6 py-4">{request.leave_description}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{request.status}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{new Date(request.created_at).toLocaleDateString()}</td>
+              <tbody className="divide-y divide-white/20">
+                {leaveRequests.map((request, index) => (
+                  <tr key={request.id} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.2}s` }}>
+                    <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">{request.user?.name || 'পাওয়া যায়নি'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
+                      {leaveTypes.find((lt) => lt.id === request.leave_type)?.name || 'অজানা'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">{request.start_date}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">{request.end_date}</td>
+                    <td className="px-6 py-4 text-[#441a05]">{request.leave_description}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">{request.status}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
+                      {new Date(request.created_at).toLocaleDateString('bn-BD')}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        ) : (
+          <p className="p-4 text-[#441a05]/70 animate-fadeIn">কোনো ছুটির আবেদন পাওয়া যায়নি।</p>
         )}
       </div>
     </div>

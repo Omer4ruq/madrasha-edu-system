@@ -25,7 +25,12 @@ import { behaviorReportApi } from './features/api/behavior/behaviorReportApi';
 import { studentActiveApi } from './features/api/student/studentActiveApi';
 import { jointUsersApi } from './features/api/jointUsers/jointUsersApi';
 import { performanceApi } from './features/api/performance/performanceApi';
+<<<<<<< HEAD
 import { attendanceApi } from './features/api/attendance/attendanceApi';
+=======
+import { roleStaffProfile } from './features/api/roleStaffProfile/roleStaffProfile';
+import { teacherPerformanceApi } from './features/api/performance/teacherPerformanceApi';
+>>>>>>> 5c148de3938b5a85e23e595351e0b515c386e93b
 
 
 
@@ -57,7 +62,8 @@ export const store = configureStore({
     [behaviorReportApi.reducerPath]: behaviorReportApi.reducer,
     [jointUsersApi.reducerPath]: jointUsersApi.reducer,
     [performanceApi.reducerPath]: performanceApi.reducer,
-    [attendanceApi.reducerPath]: attendanceApi.reducer,
+    [roleStaffProfile.reducerPath]: roleStaffProfile.reducer,
+    [teacherPerformanceApi.reducerPath]: teacherPerformanceApi.reducer,
     
     
     
@@ -91,7 +97,8 @@ export const store = configureStore({
     .concat(behaviorReportApi.middleware)
     .concat(jointUsersApi.middleware)
     .concat(performanceApi.middleware)
-    .concat(attendanceApi.middleware)
+    .concat(roleStaffProfile.middleware)
+    .concat(teacherPerformanceApi.middleware)
     
 });
 

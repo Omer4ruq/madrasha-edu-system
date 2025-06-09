@@ -89,6 +89,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "./i18n/i18n.js";
 import { SelectedMenuProvider } from "./context/SelectedMenuContext";
 import { Toaster } from "react-hot-toast";
+import bgImg from '../public/images/bg.png'
 // ... other imports
 
 export default function App() {
@@ -111,7 +112,12 @@ export default function App() {
       <div className="font-roboto text-base font-normal text-gray-600 dark:text-gray-400 dark:bg-gray-800 relative">
         <Sidebar showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
         <div className={`relative text-textBlack flex flex-col justify-between min-h-screen transition-all duration-500 ease-in-out p-3 ml-0 xl:ml-72 ${showSidebar && "max-xl:opacity-65"}`}>
-          <div className="fixed inset-0 bg-cover bg-center z-0" style={{ backgroundImage: `url("https://shaha.ancorathemes.com/wp-content/uploads/2017/06/bg-16.jpg?id=371")` }}></div>
+          <div className="fixed inset-0 bg-cover bg-center z-0" style={{
+
+            //  backgroundImage: `url("https://shaha.ancorathemes.com/wp-content/uploads/2017/06/bg-16.jpg?id=371")` 
+             backgroundImage: `url(${bgImg})` 
+             
+             }}></div>
           <div className="relative z-10 w-full">
             <TopNavbar setShowSidebar={setShowSidebar} />
             {pathname.length > 1 && (
