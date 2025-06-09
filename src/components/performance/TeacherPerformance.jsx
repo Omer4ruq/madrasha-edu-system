@@ -1,7 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { useGetTeachersQuery } from '../../redux/features/api/roleStaffProfile/roleStaffProfile';
 import { useGetPerformanceApiQuery } from '../../redux/features/api/performance/performanceApi';
-import { useGetTeacherPerformancesQuery, usePatchTeacherPerformanceMutation } from '../../redux/features/api/performance/teacherPerformanceApi';
+import {
+  useGetTeacherPerformancesQuery,
+  useCreateTeacherPerformanceMutation,
+  usePatchTeacherPerformanceMutation,
+} from '../../redux/features/api/performance/teacherPerformanceApi';
 import Select from 'react-select';
 import { FaSpinner } from 'react-icons/fa';
 
@@ -21,6 +25,7 @@ const TeacherPerformance = () => {
   const { data: allPerformances = [], isLoading: isPerformanceLoading, error: performanceError } = useGetTeacherPerformancesQuery();
   console.log('Performances API:', { allPerformances, isPerformanceLoading, performanceError });
 
+  const [createTeacherPerformance, { isLoading: isCreating, error: createError }] = useCreateTeacherPerformanceMutation();
   const [patchTeacherPerformance, { isLoading: isUpdating, error: updateError }] = usePatchTeacherPerformanceMutation();
 
   // Filter performances for selected teacher
@@ -70,27 +75,34 @@ const TeacherPerformance = () => {
     try {
       const existingPerf = teacherPerformances.find((p) => p.performance_name_id === metricId);
       const payload = {
-        id: existingPerf ? existingPerf.id : 0,
         teacher_id: selectedTeacher.value,
         performance_name_id: metricId,
         status: newStatus,
         comment: existingPerf?.comment || 'Default comment',
       };
-      console.log('Patch Payload:', payload);
 
-      await patchTeacherPerformance(payload).unwrap();
+      if (existingPerf) {
+        // Update existing performance (PATCH)
+        console.log('Patch Payload:', { id: existingPerf.id, ...payload });
+        await patchTeacherPerformance({ id: existingPerf.id, ...payload }).unwrap();
+      } else {
+        // Create new performance (POST)
+        console.log('Post Payload:', payload);
+        await createTeacherPerformance(payload).unwrap();
+      }
+
       setUpdateMessage({ type: 'success', text: 'Performance updated successfully!' });
       setTimeout(() => setUpdateMessage(null), 3000);
     } catch (err) {
-      console.error('Patch Error:', err);
+      console.error('Update Error:', err);
       setUpdateMessage({
         type: 'error',
-        text: `Error: ${err.status || 'Unknown'} - ${JSON.stringify(err.data || {})}`,
+        text: `Error: ${err.status || 'Unknown'} - ${JSON.stringify(err.data || err.message || {})}`,
       });
     }
   };
 
-  // Custom styles for React Select
+  // Custom styles for React Select (unchanged)
   const customStyles = {
     control: (provided, state) => ({
       ...provided,
@@ -143,7 +155,6 @@ const TeacherPerformance = () => {
     );
     if (performanceMetrics.length === 0) return <p className="p-4 text-[#441a05]/70 animate-fadeIn">No performance metrics available</p>;
 
-    // Split metrics into rows of 10
     const rows = [];
     for (let i = 0; i < performanceMetrics.length; i += 10) {
       rows.push(performanceMetrics.slice(i, i + 10));
@@ -157,7 +168,7 @@ const TeacherPerformance = () => {
               <tr key={rowIndex} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${rowIndex * 0.2}s` }}>
                 {rowMetrics.map((metric) => (
                   <td key={metric.id} className="px-6 py-4 whitespace-nowrap text-[#441a05]">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-col-reverse gap-3 items-center justify-center">
                       <label htmlFor={`checkbox-${metric.id}`} className="inline-flex items-center cursor-pointer">
                         <input
                           id={`checkbox-${metric.id}`}
@@ -165,7 +176,7 @@ const TeacherPerformance = () => {
                           checked={performanceData[metric.name] || false}
                           onChange={() => handleCheckboxChange(metric.name)}
                           className="hidden"
-                          disabled={isUpdating}
+                          disabled={isCreating || isUpdating}
                         />
                         <span
                           className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${
@@ -290,9 +301,9 @@ const TeacherPerformance = () => {
             {updateMessage.text}
           </div>
         )}
-        {updateError && (
+        {(createError || updateError) && (
           <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn" style={{ animationDelay: '0.4s' }}>
-            Update Error: {updateError.status || 'Unknown'} - {JSON.stringify(updateError.data || {})}
+            Update Error: {(createError || updateError).status || 'Unknown'} - {JSON.stringify((createError || updateError).data || {})}
           </div>
         )}
       </div>
