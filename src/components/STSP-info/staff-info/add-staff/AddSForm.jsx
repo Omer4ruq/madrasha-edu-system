@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useCreateStaffRegistrationApiMutation } from '../../../../redux/features/api/staff/staffRegistration';
+import { useCreateStaffRegistrationApiMutation } from '../../../redux/features/api/staff/staffRegistration';
 
 
 export default function AddSForm() {

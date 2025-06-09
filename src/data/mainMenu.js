@@ -19,7 +19,7 @@ const mainMenu = [
   {
     id: "04",
     title: "দারুল ইকাম",
-    icon: "HiOutlineBuildingStorefront",
+    icon: "HiOutlineHomeModern",
     link: "/darul-iqam",
     children: [
       {
@@ -123,6 +123,44 @@ const mainMenu = [
     id: "06",
     title: "অ্যাপস এবং পেজ",
     icon: false,
+  },
+  {
+    id: "07",
+    title: "হিসাব বিভাগ",
+    icon: "HiOutlineCalculator",
+    link: "/accounting",
+    children: [
+      {
+        id: "07/01",
+        title: "সেটিং",
+        link: "/accounting/settings",
+        children: [
+          {
+            id: "07/01/01",
+            title: "পরীক্ষার ধরন",
+            link: "/accounting/settings",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "08",
+    title: "ইউজারস",
+    icon: "HiOutlineCalculator",
+    link: "/users",
+    children: [
+      {
+        id: "08/01",
+        title: "ছাত্র নিবন্ধন",
+        link: "/users/student-registration",
+      },
+      {
+        id: "08/02",
+        title: "কর্মকর্তা নিবন্ধন",
+        link: "/users/staff-registration",
+      },
+    ],
   },
 ];
 

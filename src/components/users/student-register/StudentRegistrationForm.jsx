@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { useGetStudentClassApIQuery } from '../../../../redux/features/api/student/studentClassApi';
-import { useGetclassConfigApiQuery } from '../../../../redux/features/api/class/classConfigApi';
-import { useCreateStudentRegistrationApiMutation } from '../../../../redux/features/api/student/studentRegistrationApi';
+import { useGetStudentClassApIQuery } from '../../../redux/features/api/student/studentClassApi';
+import { useGetclassConfigApiQuery } from '../../../redux/features/api/class/classConfigApi';
+import { useCreateStudentRegistrationApiMutation } from '../../../redux/features/api/student/studentRegistrationApi';
 import {
   FaSpinner,
   FaUser,
@@ -262,7 +262,7 @@ const StudentRegistrationForm = () => {
   };
 
   return (
-    <div className="py-8 w-full min-h-screen">
+    <div className="pb-8 w-full min-h-screen">
       <style>
         {`
           @keyframes fadeIn {
@@ -338,7 +338,7 @@ const StudentRegistrationForm = () => {
       </style>
 
       <div className="mx-auto">
-        <div className="sticky top-0 z-10 pt-6 mb-8 animate-fadeIn backdrop-blur-sm">
+        <div className="sticky top-0 z-10 mb-8 animate-fadeIn backdrop-blur-sm">
           <div className="flex items-center justify-center space-x-3">
             <IoAddCircleOutline className="text-4xl text-[#DB9E30] mb-3" />
             <h2 className="text-3xl font-bold text-[#441a05] title-underline">

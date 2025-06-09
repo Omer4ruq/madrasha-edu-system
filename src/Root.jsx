@@ -23,6 +23,8 @@ import AddLeaveType from "./components/leave/AddLeaveType";
 import AddLeaveRequest from "./components/leave/AddLeaveRequest";
 import PerformanceType from "./components/performance/PerformanceType";
 import TeacherPerformance from "./components/performance/TeacherPerformance";
+import StaffRegistrationForm from "./components/users/staff-register/StaffRegistrationForm";
+import StudentRegistrationForm from "./components/users/student-register/StudentRegistrationForm";
 
 function Root() {
   const router = createBrowserRouter([
@@ -139,6 +141,45 @@ function Root() {
                 },
               ],
             },
+          ],
+        },
+        {
+          path: "users",
+          children: [
+            {
+              path: "student-registration",
+              element : <StudentRegistrationForm></StudentRegistrationForm>,
+            },
+            {
+              path: "staff-registration",
+              element : <StaffRegistrationForm></StaffRegistrationForm>,
+            },
+            // {
+            //   path: "class-management",
+            //   element: <ClassManagement />,
+            //   children: [
+            //     {
+            //       index: true,
+            //       element: <AddClass />,
+            //     },
+            //     {
+            //       path: "add-section",
+            //       element: <AddSection />,
+            //     },
+            //     {
+            //       path: "add-shift",
+            //       element: <AddShift />,
+            //     },
+            //     {
+            //       path: "add-config",
+            //       element: <AddClassConfig />,
+            //     },
+            //     {
+            //       path: "*",
+            //       element: <Navigate to="/talimat/class-management" replace />,
+            //     },
+            //   ],
+            // },
           ],
         },
       ],
