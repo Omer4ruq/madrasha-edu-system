@@ -99,83 +99,67 @@ const StudentRegistrationForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const requiredFields = [
-      "name",
-      "user_id",
-      "gender",
-      "dob",
-      "phone_number",
-      "email",
-      "present_address",
-      "permanent_address",
-      "blood_group",
-      "admission_year_id",
-      "class_id",
-      "roll_no",
-      "birth_certificate_no",
-      "nationality",
-      "admission_date",
-      "village",
-      "post_office",
-      "ps_or_upazilla",
-      "district",
-      "status",
-    ];
-    const requiredParentFields = [
-      "name",
-      "father_name",
-      "father_mobile_no",
-      "mother_name",
-      "mother_mobile_no",
-      "relation",
-    ];
+    // const requiredFields = [
+    //   "name",
+    //   "user_id",
+    //   "admission_year_id",
+    //   "class_id",
+    // ];
+    // const requiredParentFields = [
+    //   "name",
+    //   "father_name",
+    //   "father_mobile_no",
+    //   "mother_name",
+    //   "mother_mobile_no",
+    //   "relation",
+    // ];
 
-    const missingFields = requiredFields.filter((field) => !formData[field]);
-    const missingParentFields = requiredParentFields.filter(
-      (field) => !formData.parent[field]
-    );
+    // const missingFields = requiredFields.filter((field) => !formData[field]);
+    // const missingParentFields = requiredParentFields.filter(
+    //   (field) => !formData.parent[field]
+    // );
 
-    if (missingFields.length > 0 || missingParentFields.length > 0) {
-      alert(
-        `Please fill in all required fields: ${[
-          ...missingFields,
-          ...missingParentFields.map((f) => `parent.${f}`),
-        ].join(", ")}`
-      );
-      return;
-    }
+    // if (missingFields.length > 0 || missingParentFields.length > 0) {
+    //   alert(
+    //     `Please fill in all required fields: ${[
+    //       ...missingFields,
+    //       ...missingParentFields.map((f) => `parent.${f}`),
+    //     ].join(", ")}`
+    //   );
+    //   return;
+    // }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      alert("Please enter a valid email address");
-      return;
-    }
+    // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // if (!emailRegex.test(formData.email)) {
+    //   alert("Please enter a valid email address");
+    //   return;
+    // }
 
-    const phoneRegex = /^\+?\d{10,15}$/;
-    if (
-      !phoneRegex.test(formData.phone_number) ||
-      !phoneRegex.test(formData.parent.father_mobile_no) ||
-      !phoneRegex.test(formData.parent.mother_mobile_no) ||
-      (formData.parent.g_mobile_no &&
-        !phoneRegex.test(formData.parent.g_mobile_no))
-    ) {
-      alert(
-        "Please enter valid phone numbers (10-15 digits, optional + prefix)"
-      );
-      return;
-    }
+    // const phoneRegex = /^\+?\d{10,15}$/;
+    // if (
+    //   !phoneRegex.test(formData.phone_number) ||
+    //   !phoneRegex.test(formData.parent.father_mobile_no) ||
+    //   !phoneRegex.test(formData.parent.mother_mobile_no) ||
+    //   (formData.parent.g_mobile_no &&
+    //     !phoneRegex.test(formData.parent.g_mobile_no))
+    // ) {
+    //   alert(
+    //     "Please enter valid phone numbers (10-15 digits, optional + prefix)"
+    //   );
+    //   return;
+    // }
 
-    if (
-      isNaN(parseInt(formData.user_id)) ||
-      isNaN(parseInt(formData.admission_year_id)) ||
-      isNaN(parseInt(formData.class_id)) ||
-      isNaN(parseInt(formData.roll_no))
-    ) {
-      alert(
-        "Please enter valid numeric values for User ID, Admission Year, Class, and Roll No."
-      );
-      return;
-    }
+    // if (
+    //   isNaN(parseInt(formData.user_id)) ||
+    //   isNaN(parseInt(formData.admission_year_id)) ||
+    //   isNaN(parseInt(formData.class_id))
+    //   // isNaN(parseInt(formData.roll_no))
+    // ) {
+    //   alert(
+    //     "Please enter valid numeric values for User ID, Admission Year, Class, and Roll No."
+    //   );
+    //   return;
+    // }
 
     try {
       const payload = {
@@ -421,7 +405,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="gender"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  Gender <span className="text-[#DB9E30]">*</span>
+                  Gender 
                 </label>
                 <FaVenusMars className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
@@ -430,7 +414,7 @@ const StudentRegistrationForm = () => {
                   value={formData.gender}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  required
+                  // required
                   aria-label="Gender"
                 >
                   <option value="">Select gender</option>
@@ -444,7 +428,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="dob"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  Date of Birth <span className="text-[#DB9E30]">*</span>
+                  Date of Birth 
                 </label>
                 <FaCalendarAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -454,7 +438,7 @@ const StudentRegistrationForm = () => {
                   value={formData.dob}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  required
+                  // required
                   aria-label="Date of Birth"
                 />
               </div>
@@ -463,7 +447,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="blood_group"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  Blood Group <span className="text-[#DB9E30]">*</span>
+                  Blood Group 
                 </label>
                 <FaHeart className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
@@ -472,7 +456,7 @@ const StudentRegistrationForm = () => {
                   value={formData.blood_group}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  required
+                  // required
                   aria-label="Blood Group"
                 >
                   <option value="">Select blood group</option>
@@ -491,7 +475,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="nationality"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  Nationality <span className="text-[#DB9E30]">*</span>
+                  Nationality 
                 </label>
                 <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -502,7 +486,7 @@ const StudentRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter nationality"
-                  required
+                  // required
                   aria-label="Nationality"
                 />
               </div>
@@ -512,7 +496,7 @@ const StudentRegistrationForm = () => {
                   className="block text-lg font-medium text-[#441a05]"
                 >
                   Birth Certificate No.{" "}
-                  <span className="text-[#DB9E30]">*</span>
+                  {/* <span className="text-[#DB9E30]">*</span> */}
                 </label>
                 <FaIdCard className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -523,7 +507,7 @@ const StudentRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter birth certificate number"
-                  required
+                  // required
                   aria-label="Birth Certificate No."
                 />
               </div>
@@ -532,7 +516,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="status"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  Status <span className="text-[#DB9E30]">*</span>
+                  Status 
                 </label>
                 <FaUserGraduate className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
@@ -541,7 +525,7 @@ const StudentRegistrationForm = () => {
                   value={formData.status}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  required
+                  // required
                   aria-label="Status"
                 >
                   <option value="">Select status</option>
@@ -585,7 +569,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="phone_number"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  Phone Number <span className="text-[#DB9E30]">*</span>
+                  Phone Number 
                 </label>
                 <FaPhone className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -596,7 +580,7 @@ const StudentRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter phone number"
-                  required
+                  // required
                   aria-label="Phone Number"
                 />
               </div>
@@ -605,7 +589,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="email"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  Email <span className="text-[#DB9E30]">*</span>
+                  Email 
                 </label>
                 <FaEnvelope className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -616,7 +600,7 @@ const StudentRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter email address"
-                  required
+                  // required
                   aria-label="Email"
                 />
               </div>
@@ -644,7 +628,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="present_address"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  Present Address <span className="text-[#DB9E30]">*</span>
+                  Present Address 
                 </label>
                 <FaMapMarkerAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -655,7 +639,7 @@ const StudentRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter present address"
-                  required
+                  // required
                   aria-label="Present Address"
                 />
               </div>
@@ -664,7 +648,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="permanent_address"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  Permanent Address <span className="text-[#DB9E30]">*</span>
+                  Permanent Address 
                 </label>
                 <FaMap className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -675,7 +659,7 @@ const StudentRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter permanent address"
-                  required
+                  // required
                   aria-label="Permanent Address"
                 />
               </div>
@@ -684,7 +668,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="village"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  Village <span className="text-[#DB9E30]">*</span>
+                  Village 
                 </label>
                 <FaMapMarkerAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -695,7 +679,7 @@ const StudentRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter village"
-                  required
+                  // required
                   aria-label="Village"
                 />
               </div>
@@ -704,7 +688,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="post_office"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  Post Office <span className="text-[#DB9E30]">*</span>
+                  Post Office 
                 </label>
                 <FaMapMarkerAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -715,7 +699,7 @@ const StudentRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter post office"
-                  required
+                  // required
                   aria-label="Post Office"
                 />
               </div>
@@ -724,7 +708,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="ps_or_upazilla"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  PS/Upazilla <span className="text-[#DB9E30]">*</span>
+                  PS/Upazilla 
                 </label>
                 <FaMapMarkerAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -735,7 +719,7 @@ const StudentRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter PS or Upazilla"
-                  required
+                  // required
                   aria-label="PS/Upazilla"
                 />
               </div>
@@ -744,7 +728,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="district"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  District <span className="text-[#DB9E30]">*</span>
+                  District 
                 </label>
                 <FaMapMarkerAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -755,7 +739,7 @@ const StudentRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter district"
-                  required
+                  // required
                   aria-label="District"
                 />
               </div>
@@ -824,7 +808,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="roll_no"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  Roll No. <span className="text-[#DB9E30]">*</span>
+                  Roll No. 
                 </label>
                 <FaIdCard className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -835,7 +819,7 @@ const StudentRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter roll number"
-                  required
+                  // required
                   aria-label="Roll No."
                 />
               </div>
@@ -844,7 +828,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="admission_date"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  Admission Date <span className="text-[#DB9E30]">*</span>
+                  Admission Date 
                 </label>
                 <FaCalendarAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -854,7 +838,7 @@ const StudentRegistrationForm = () => {
                   value={formData.admission_date}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  required
+                  // required
                   aria-label="Admission Date"
                 />
               </div>
@@ -898,11 +882,11 @@ const StudentRegistrationForm = () => {
               </div>
               <div className="relative input-icon col-span-3">
                 <label className="block text-lg font-medium text-[#441a05]">
-                  Residential Status <span className="text-[#DB9E30]">*</span>
+                  Residential Status
                 </label>
                 <div className="mt-4 relative input-icon col-span-3 animate-scaleIn">
                   <label className="block text-lg font-medium text-[#441a05]">
-                    Residential Status <span className="text-[#DB9E30]">*</span>
+                    Residential Status 
                   </label>
                   <div className="mt-3 flex space-x-6">
                     <label className="inline-flex items-center group cursor-pointer">
@@ -918,7 +902,7 @@ const StudentRegistrationForm = () => {
                           })
                         }
                         className="hidden"
-                        required
+                        // required
                         aria-label="Residential"
                       />
                       <span className="relative flex items-center">
@@ -947,7 +931,7 @@ const StudentRegistrationForm = () => {
                           })
                         }
                         className="hidden"
-                        required
+                        // required
                         aria-label="NonResidential"
                       />
                       <span className="relative flex items-center">
@@ -1020,7 +1004,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="father_name"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  Father's Name <span className="text-[#DB9E30]">*</span>
+                  Father's Name 
                 </label>
                 <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -1031,7 +1015,7 @@ const StudentRegistrationForm = () => {
                   onChange={(e) => handleChange(e, true)}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter father's name"
-                  required
+                  // required
                   aria-label="Father's Name"
                 />
               </div>
@@ -1040,7 +1024,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="father_mobile_no"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  Father's Mobile No. <span className="text-[#DB9E30]">*</span>
+                  Father's Mobile No. 
                 </label>
                 <FaPhone className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -1051,7 +1035,7 @@ const StudentRegistrationForm = () => {
                   onChange={(e) => handleChange(e, true)}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter mobile number"
-                  required
+                  // required
                   aria-label="Father's Mobile No."
                 />
               </div>
@@ -1060,7 +1044,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="mother_name"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  Mother's Name <span className="text-[#DB9E30]">*</span>
+                  Mother's Name 
                 </label>
                 <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -1071,7 +1055,7 @@ const StudentRegistrationForm = () => {
                   onChange={(e) => handleChange(e, true)}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter mother's name"
-                  required
+                  // required
                   aria-label="Mother's Name"
                 />
               </div>
@@ -1080,7 +1064,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="mother_mobile_no"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  Mother's Mobile No. <span className="text-[#DB9E30]">*</span>
+                  Mother's Mobile No.
                 </label>
                 <FaPhone className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -1091,7 +1075,7 @@ const StudentRegistrationForm = () => {
                   onChange={(e) => handleChange(e, true)}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter mobile number"
-                  required
+                  // required
                   aria-label="Mother's Mobile No."
                 />
               </div>
@@ -1101,7 +1085,7 @@ const StudentRegistrationForm = () => {
                   className="block text-lg font-medium text-[#441a05]"
                 >
                   Relation with Student{" "}
-                  <span className="text-[#DB9E30]">*</span>
+                  {/* <span className="text-[#DB9E30]">*</span> */}
                 </label>
                 <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
@@ -1110,7 +1094,7 @@ const StudentRegistrationForm = () => {
                   value={formData.parent.relation}
                   onChange={(e) => handleChange(e, true)}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  required
+                  // required
                   aria-label="Relation with Student"
                 >
                   <option value="">Select relation</option>
