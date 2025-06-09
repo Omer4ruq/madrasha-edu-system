@@ -27,6 +27,15 @@ import { jointUsersApi } from './features/api/jointUsers/jointUsersApi';
 import { performanceApi } from './features/api/performance/performanceApi';
 import { teacherPerformanceApi } from './features/api/performance/teacherPerformanceApi';
 import { roleStaffProfileApi } from './features/api/roleStaffProfile/roleStaffProfileApi';
+import { fundsApi } from './features/api/funds/fundsApi';
+import { subfundsApi } from './features/api/subFunds/subFundsApi';
+import { incomeHeadsApi } from './features/api/income-heads/incomeHeadsApi';
+import { expenseHeadsApi } from './features/api/expense-heads/expenseHeadsApi';
+import { feeHeadsApi } from './features/api/fee-heads/feeHeadsApi';
+import { feePackagesApi } from './features/api/fee-packages/feePackagesApi';
+import { incomeItemsApi } from './features/api/income-items/incomeItemsApi';
+import { expenseItemsApi } from './features/api/expense-items/expenseItemsApi';
+import { waiversApi } from './features/api/waivers/waiversApi';
 
 
 
@@ -62,6 +71,15 @@ export const store = configureStore({
     [performanceApi.reducerPath]: performanceApi.reducer,
     [teacherPerformanceApi.reducerPath]: teacherPerformanceApi.reducer,
     [roleStaffProfileApi.reducerPath]: roleStaffProfileApi.reducer,
+    [fundsApi.reducerPath]: fundsApi.reducer,
+    [subfundsApi.reducerPath]: subfundsApi.reducer,
+    [incomeHeadsApi.reducerPath]: incomeHeadsApi.reducer,
+    [expenseHeadsApi.reducerPath]: expenseHeadsApi.reducer,
+    [feeHeadsApi.reducerPath]: feeHeadsApi.reducer,
+    [feePackagesApi.reducerPath]: feePackagesApi.reducer,
+    [incomeItemsApi.reducerPath]: incomeItemsApi.reducer,
+    [expenseItemsApi.reducerPath]: expenseItemsApi.reducer,
+    [waiversApi.reducerPath]: waiversApi.reducer,
 
 
   
@@ -100,6 +118,15 @@ export const store = configureStore({
     .concat(performanceApi.middleware)
     .concat(teacherPerformanceApi.middleware)
     .concat(roleStaffProfileApi.middleware)
+    .concat(fundsApi.middleware)
+    .concat(subfundsApi.middleware)
+    .concat(incomeHeadsApi.middleware)
+    .concat(expenseHeadsApi.middleware)
+    .concat(feeHeadsApi.middleware)
+    .concat(feePackagesApi.middleware)
+    .concat(incomeItemsApi.middleware)
+    .concat(expenseItemsApi.middleware)
+    .concat(waiversApi.middleware)
 
   
     
