@@ -1,24 +1,22 @@
 import React, { useState, useMemo } from 'react';
-import { useGetTeachersQuery } from '../../redux/features/api/roleStaffProfile/roleStaffProfile';
+
 import { useGetPerformanceApiQuery } from '../../redux/features/api/performance/performanceApi';
-import {
-  useGetTeacherPerformancesQuery,
-  useCreateTeacherPerformanceMutation,
-  usePatchTeacherPerformanceMutation,
-} from '../../redux/features/api/performance/teacherPerformanceApi';
+
 import Select from 'react-select';
 import { FaSpinner } from 'react-icons/fa';
 import toast, { Toaster } from 'react-hot-toast';
+import { useGetRoleStaffProfileApiQuery } from '../../redux/features/api/roleStaffProfile/roleStaffProfileApi';
+import { useCreateTeacherPerformanceApiMutation, useGetTeacherPerformanceApiQuery, useUpdateTeacherPerformanceApiMutation,  } from '../../redux/features/api/performance/teacherPerformanceApi';
 
 const TeacherPerformance = () => {
   const [selectedTeacher, setSelectedTeacher] = useState(null);
 
   // API হুক
-  const { data: teachers = [], isLoading: isTeachersLoading, error: teachersError } = useGetTeachersQuery();
+  const { data: teachers = [], isLoading: isTeachersLoading, error: teachersError } = useGetRoleStaffProfileApiQuery();
   const { data: performanceMetrics = [], isLoading: isMetricsLoading, error: metricsError } = useGetPerformanceApiQuery();
-  const { data: allPerformances = [], isLoading: isPerformanceLoading, error: performanceError } = useGetTeacherPerformancesQuery();
-  const [createTeacherPerformance, { isLoading: isCreating }] = useCreateTeacherPerformanceMutation();
-  const [patchTeacherPerformance, { isLoading: isUpdating }] = usePatchTeacherPerformanceMutation();
+  const { data: allPerformances = [], isLoading: isPerformanceLoading, error: performanceError } = useGetTeacherPerformanceApiQuery();
+  const [createTeacherPerformance, { isLoading: isCreating }] = useCreateTeacherPerformanceApiMutation();
+  const [patchTeacherPerformance, { isLoading: isUpdating }] = useUpdateTeacherPerformanceApiMutation();
 
   // নির্বাচিত শিক্ষকের জন্য কর্মক্ষমতা ফিল্টার
   const teacherPerformances = useMemo(() => {
@@ -324,3 +322,4 @@ const TeacherPerformance = () => {
 };
 
 export default TeacherPerformance;
+

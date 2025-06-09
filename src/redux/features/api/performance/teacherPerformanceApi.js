@@ -15,64 +15,50 @@ export const teacherPerformanceApi = createApi({
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
+      headers.set('Content-Type', 'application/json');
       return headers;
     },
   }),
-  tagTypes: ['TeacherPerformances'],
+  tagTypes: ['teacherPerformanceApi'],
   endpoints: (builder) => ({
-    // GET: Fetch all teacher performances
-    getTeacherPerformances: builder.query({
-      query: () => '/teacher-performances/',
-      providesTags: ['TeacherPerformances'],
+    getTeacherPerformanceApi: builder.query({
+      query: () => '/performance-names/',
+      providesTags: ['teacherPerformanceApi'],
     }),
-    // GET: Fetch a single teacher performance by ID
-    getTeacherPerformanceById: builder.query({
-      query: (id) => `/teacher-performances/${id}/`,
-      providesTags: ['TeacherPerformances'],
+    getTeacherPerformanceApiById: builder.query({
+      query: (id) => `/performance-names/${id}/`,
+      providesTags: ['teacherPerformanceApi'],
     }),
-    // POST: Create a new teacher performance
-    createTeacherPerformance: builder.mutation({
-      query: (performanceData) => ({
-        url: '/teacher-performances/',
+    createTeacherPerformanceApi: builder.mutation({
+      query: (teacherPerformanceApiData) => ({
+        url: '/performance-names/',
         method: 'POST',
-        body: performanceData,
+        body: teacherPerformanceApiData,
       }),
-      invalidatesTags: ['TeacherPerformances'],
+      invalidatesTags: ['teacherPerformanceApi'],
     }),
-    // PUT: Update a teacher performance by ID
-    updateTeacherPerformance: builder.mutation({
-      query: ({ id, ...performanceData }) => ({
-        url: `/teacher-performances/${id}/`,
+    updateTeacherPerformanceApi: builder.mutation({
+      query: ({ id, ...teacherPerformanceApiData }) => ({
+        url: `/performance-names/${id}/`,
         method: 'PUT',
-        body: performanceData,
+        body: teacherPerformanceApiData,
       }),
-      invalidatesTags: ['TeacherPerformances'],
+      invalidatesTags: ['teacherPerformanceApi'],
     }),
-    // PATCH: Partially update a teacher performance by ID
-    patchTeacherPerformance: builder.mutation({
-      query: ({ id, ...performanceData }) => ({
-        url: `/teacher-performances/${id}/`,
-        method: 'PATCH',
-        body: performanceData,
-      }),
-      invalidatesTags: ['TeacherPerformances'],
-    }),
-    // DELETE: Delete a teacher performance by ID
-    deleteTeacherPerformance: builder.mutation({
+    deleteTeacherPerformanceApi: builder.mutation({
       query: (id) => ({
-        url: `/teacher-performances/${id}/`,
+        url: `/performance-names/${id}/`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['TeacherPerformances'],
+      invalidatesTags: ['teacherPerformanceApi'],
     }),
   }),
 });
 
 export const {
-  useGetTeacherPerformancesQuery,
-  useGetTeacherPerformanceByIdQuery,
-  useCreateTeacherPerformanceMutation,
-  useUpdateTeacherPerformanceMutation,
-  usePatchTeacherPerformanceMutation,
-  useDeleteTeacherPerformanceMutation,
+  useGetTeacherPerformanceApiQuery,
+  useGetTeacherPerformanceApiByIdQuery,
+  useCreateTeacherPerformanceApiMutation,
+  useUpdateTeacherPerformanceApiMutation,
+  useDeleteTeacherPerformanceApiMutation,
 } = teacherPerformanceApi;
