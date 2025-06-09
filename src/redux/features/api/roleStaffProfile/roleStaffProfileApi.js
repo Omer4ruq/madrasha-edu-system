@@ -22,16 +22,16 @@ export const roleStaffProfileApi = createApi({
   tagTypes: ['roleStaffProfileApi'],
   endpoints: (builder) => ({
     getRoleStaffProfileApi: builder.query({
-      query: () => '/performance-names/',
+      query: () => '/role-staff-profiles/',
       providesTags: ['roleStaffProfileApi'],
     }),
     getRoleStaffProfileApiById: builder.query({
-      query: (id) => `/performance-names/${id}/`,
+      query: (id) => `/role-staff-profiles/${id}/`,
       providesTags: ['roleStaffProfileApi'],
     }),
     createRoleStaffProfileApi: builder.mutation({
       query: (roleStaffProfileApiData) => ({
-        url: '/performance-names/',
+        url: '/role-staff-profiles/',
         method: 'POST',
         body: roleStaffProfileApiData,
       }),
@@ -39,7 +39,7 @@ export const roleStaffProfileApi = createApi({
     }),
     updateRoleStaffProfileApi: builder.mutation({
       query: ({ id, ...roleStaffProfileApiData }) => ({
-        url: `/performance-names/${id}/`,
+        url: `/role-staff-profiles/${id}/`,
         method: 'PUT',
         body: roleStaffProfileApiData,
       }),
@@ -47,7 +47,7 @@ export const roleStaffProfileApi = createApi({
     }),
     deleteRoleStaffProfileApi: builder.mutation({
       query: (id) => ({
-        url: `/performance-names/${id}/`,
+        url: `/role-staff-profiles/${id}/`,
         method: 'DELETE',
       }),
       invalidatesTags: ['roleStaffProfileApi'],
