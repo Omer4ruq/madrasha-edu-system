@@ -153,7 +153,7 @@ const PerformanceType = () => {
                <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
                  <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
                    <IoAddCircle className="text-4xl text-[#441a05]" />
-                   <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">Add New Performance Type</h3>
+                   <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">নতুন পারফরম্যান্স টাইপ যোগ করুন</h3>
                  </div>
                  <form onSubmit={handleSubmitPerformance} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
                    <input
@@ -162,7 +162,7 @@ const PerformanceType = () => {
                      value={performanceName}
                      onChange={(e) => setPerformanceName(e.target.value)}
                      className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-                     placeholder="Enter Performance type (e.g., Sick Performance)"
+                     placeholder="পারফরম্যান্সের ধরণ লিখুন"
                      disabled={isCreating}
                      aria-describedby={createError ? "Performance-error" : undefined}
                    />
@@ -182,7 +182,7 @@ const PerformanceType = () => {
                      ) : (
                        <span className="flex items-center space-x-2">
                          <IoAdd className="w-5 h-5" />
-                         <span>Create Performance Type</span>
+                         <span>পারফরম্যান্স টাইপ তৈরি করুন</span>
                        </span>
                      )}
                    </button>
@@ -204,7 +204,7 @@ const PerformanceType = () => {
                <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
                  <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
                    <FaEdit className="text-3xl text-[#441a05]" />
-                   <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">Edit Performance Type</h3>
+                   <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">পারফরম্যান্সের ধরণ সম্পাদনা করুন</h3>
                  </div>
                  <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl">
                    <input
@@ -262,7 +262,7 @@ const PerformanceType = () => {
      
              {/* Performance Types Table */}
              <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
-               <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">Performance Types List</h3>
+               <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">কর্মক্ষমতা প্রকারের তালিকা</h3>
                {isPerformanceLoading ? (
                  <p className="p-4 text-[#441a05]/70">Loading Performance types...</p>
                ) : PerformanceError ? (
@@ -278,19 +278,19 @@ const PerformanceType = () => {
                      <thead className="bg-white/5">
                        <tr>
                          <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                           Performance Type
+                           কর্মক্ষমতা প্রকার
                          </th>
                          <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                           Active
+                           সক্রিয়
                          </th>
                          <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                           Created At
+                           তৈরি করা হয়েছে
                          </th>
                          <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                           Updated At
+                           আপডেট করা হয়েছে
                          </th>
                          <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                           Actions
+                           কর্ম
                          </th>
                        </tr>
                      </thead>
