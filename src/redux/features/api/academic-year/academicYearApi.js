@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 
-const BASE_URL = 'https://demo.easydr.xyz/api';
+const BASE_URL = 'https://easydr.xyz/api';
 
 
 const getToken = () => {
@@ -25,20 +25,20 @@ export const academicYearApi = createApi({
   endpoints: (builder) => ({
     // GET: Fetch all academicYearApis
     getAcademicYearApi: builder.query({
-      query: () => '/behavior-marks/',
+      query: () => '/academicyear/',
       providesTags: ['academicYearApi'],
     }),
 
     // GET: Fetch single academicYearApi by ID
     getAcademicYearApiById: builder.query({
-      query: (id) => `/behavior-marks/${id}/`,
+      query: (id) => `/academicyear/${id}/`,
       providesTags: ['academicYearApi'],
     }),
 
     // POST: Create a new academicYearApi
     createAcademicYearApi: builder.mutation({
       query: (academicYearApiData) => ({
-        url: '/behavior-marks/',
+        url: '/academicyear/',
         method: 'POST',
         body: academicYearApiData,
       }),
@@ -48,7 +48,7 @@ export const academicYearApi = createApi({
     // PUT: Update an existing academicYearApi
     updateAcademicYearApi: builder.mutation({
       query: ({ id, ...academicYearApiData }) => ({
-        url: `/behavior-marks/${id}/`,
+        url: `/academicyear/${id}/`,
         method: 'PUT',
         body: academicYearApiData,
       }),
@@ -58,7 +58,7 @@ export const academicYearApi = createApi({
     // DELETE: Delete an academicYearApi
     deleteAcademicYearApi: builder.mutation({
       query: (id) => ({
-        url: `/behavior-marks/${id}/`,
+        url: `/academicyear/${id}/`,
         method: 'DELETE',
       }),
       invalidatesTags: ['academicYearApi'],

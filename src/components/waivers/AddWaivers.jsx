@@ -1,17 +1,19 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import Select from "react-select";
 
 import { FaEdit, FaSpinner, FaTrash } from "react-icons/fa";
 import { IoAdd, IoAddCircle } from "react-icons/io5";
 import { useCreateWaiverMutation, useDeleteWaiverMutation, useGetWaiversQuery, useUpdateWaiverMutation } from "../../redux/features/api/waivers/waiversApi";
 import { useGetStudentActiveApiQuery } from "../../redux/features/api/student/studentActiveApi";
+import { useGetFeeHeadsQuery } from "../../redux/features/api/fee-heads/feeHeadsApi";
+import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
 
 const AddWaivers = () => {
   const [isAdd, setIsAdd] = useState(true);
   const [waiverData, setWaiverData] = useState({
     student_id: null,
     waiver_amount: "",
-    academic_year: "",
+    academic_year: null,
     description: "",
     fee_types: [],
   });
@@ -19,7 +21,7 @@ const AddWaivers = () => {
   const [editWaiverData, setEditWaiverData] = useState({
     student_id: null,
     waiver_amount: "",
-    academic_year: "",
+    academic_year: null,
     description: "",
     fee_types: [],
   });
@@ -27,9 +29,19 @@ const AddWaivers = () => {
   // API hooks
   const { data: waivers, isLoading: isWaiverLoading, error: waiverError } = useGetWaiversQuery();
   const { data: students, isLoading: isStudentLoading } = useGetStudentActiveApiQuery();
+  const { data: feeHeads, isLoading: isFeeHeadsLoading } = useGetFeeHeadsQuery();
+  const { data: academicYears, isLoading: isAcademicYearLoading } = useGetAcademicYearApiQuery();
   const [createWaiver, { isLoading: isCreating, error: createError }] = useCreateWaiverMutation();
   const [updateWaiver, { isLoading: isUpdating, error: updateError }] = useUpdateWaiverMutation();
   const [deleteWaiver, { isLoading: isDeleting, error: deleteError }] = useDeleteWaiverMutation();
+
+
+  console.log(academicYears)
+
+  // Get current +06 time as ISO string
+  const getCurrentTimeISO = () => {
+    return new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" });
+  };
 
   // Handle form submission for adding a new waiver
   const handleSubmitWaiver = async (e) => {
@@ -43,15 +55,17 @@ const AddWaivers = () => {
       const payload = {
         student_id: waiverData.student_id,
         waiver_amount: parseFloat(waiverData.waiver_amount),
-        academic_year: parseInt(waiverData.academic_year),
+        academic_year: waiverData.academic_year,
         description: waiverData.description.trim() || null,
         fee_types: waiverData.fee_types,
-        created_by: 1,
-        updated_by: 1,
+        created_by: "",
+        updated_by: "",
+        // created_at: getCurrentTimeISO(),
+        // updated_at: getCurrentTimeISO(),
       };
       await createWaiver(payload).unwrap();
       alert("Waiver created successfully!");
-      setWaiverData({ student_id: null, waiver_amount: "", academic_year: "", description: "", fee_types: [] });
+      setWaiverData({ student_id: null, waiver_amount: "", academic_year: null, description: "", fee_types: [] });
     } catch (err) {
       console.error("Error creating waiver:", err);
       alert(`Failed to create waiver: ${err.status || "Unknown error"} - ${JSON.stringify(err.data || {})}`);
@@ -64,7 +78,7 @@ const AddWaivers = () => {
     setEditWaiverData({
       student_id: waiver.student_id,
       waiver_amount: waiver.waiver_amount.toString(),
-      academic_year: waiver.academic_year.toString(),
+      academic_year: waiver.academic_year,
       description: waiver.description || "",
       fee_types: waiver.fee_types || [],
     });
@@ -84,15 +98,15 @@ const AddWaivers = () => {
         id: editWaiverId,
         student_id: editWaiverData.student_id,
         waiver_amount: parseFloat(editWaiverData.waiver_amount),
-        academic_year: parseInt(editWaiverData.academic_year),
+        academic_year: editWaiverData.academic_year,
         description: editWaiverData.description.trim() || null,
         fee_types: editWaiverData.fee_types,
-        updated_by: 1,
+        updated_by: getCurrentTimeISO(),
       };
       await updateWaiver(payload).unwrap();
       alert("Waiver updated successfully!");
       setEditWaiverId(null);
-      setEditWaiverData({ student_id: null, waiver_amount: "", academic_year: "", description: "", fee_types: [] });
+      setEditWaiverData({ student_id: null, waiver_amount: "", academic_year: null, description: "", fee_types: [] });
       setIsAdd(true);
     } catch (err) {
       console.error("Error updating waiver:", err);
@@ -113,26 +127,30 @@ const AddWaivers = () => {
     }
   };
 
-  // Prepare student options for react-select
+  // Prepare options for react-select
   const studentOptions = students?.map((student) => ({
     value: student.id,
     label: student.name || `Student ${student.id}`,
   })) || [];
 
-  // Fee types options (adjust based on your actual fee types)
-  const feeTypeOptions = [
-    { value: 1, label: "Tuition Fee" },
-    { value: 2, label: "Lab Fee" },
-  ];
+  const feeTypeOptions = feeHeads?.map((fee) => ({
+    value: fee.id,
+    label: fee.name || `Fee ${fee.id}`,
+  })) || [];
 
-  // Custom styles for react-select to match theme
+  const academicYearOptions = academicYears?.map((year) => ({
+    value: year.id,
+    label: year.year || `${year.name}`,
+  })) || [];
+
+  // Custom styles for react-select
   const selectStyles = {
     control: (provided) => ({
       ...provided,
       background: "transparent",
       borderColor: "#9d9087",
       color: "#441a05",
-      padding: "0.5rem",
+      padding: "4px",
       borderRadius: "0.5rem",
       "&:hover": { borderColor: "#441a05" },
     }),
@@ -167,7 +185,7 @@ const AddWaivers = () => {
     }),
   };
 
-  // Format dates for +06 timezone
+  // Format dates for +06 timezone display
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString("en-US", {
       timeZone: "Asia/Dhaka",
@@ -242,6 +260,7 @@ const AddWaivers = () => {
               value={feeTypeOptions.filter((option) => waiverData.fee_types.includes(option.value))}
               onChange={(selected) => setWaiverData({ ...waiverData, fee_types: selected.map((opt) => opt.value) })}
               placeholder="Select Fee Types"
+              isLoading={isFeeHeadsLoading}
               styles={selectStyles}
               className="w-full"
               isDisabled={isCreating}
@@ -256,14 +275,15 @@ const AddWaivers = () => {
               min="0"
               step="0.01"
             />
-            <input
-              type="number"
-              value={waiverData.academic_year}
-              onChange={(e) => setWaiverData({ ...waiverData, academic_year: e.target.value })}
-              className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-              placeholder="Academic Year (e.g., 2023)"
-              disabled={isCreating}
-              min="2000"
+            <Select
+              options={academicYearOptions}
+              value={academicYearOptions.find((option) => option.value === waiverData.academic_year) || null}
+              onChange={(selected) => setWaiverData({ ...waiverData, academic_year: selected?.value || null })}
+              placeholder="Select Academic Year"
+              isLoading={isAcademicYearLoading}
+              styles={selectStyles}
+              className="w-full"
+              isDisabled={isCreating}
             />
             <input
               type="text"
@@ -331,6 +351,7 @@ const AddWaivers = () => {
               value={feeTypeOptions.filter((option) => editWaiverData.fee_types.includes(option.value))}
               onChange={(selected) => setEditWaiverData({ ...editWaiverData, fee_types: selected.map((opt) => opt.value) })}
               placeholder="Select Fee Types"
+              isLoading={isFeeHeadsLoading}
               styles={selectStyles}
               className="w-full"
               isDisabled={isUpdating}
@@ -345,14 +366,15 @@ const AddWaivers = () => {
               min="0"
               step="0.01"
             />
-            <input
-              type="number"
-              value={editWaiverData.academic_year}
-              onChange={(e) => setEditWaiverData({ ...editWaiverData, academic_year: e.target.value })}
-              className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
-              placeholder="Academic Year (e.g., 2023)"
-              disabled={isUpdating}
-              min="2000"
+            <Select
+              options={academicYearOptions}
+              value={academicYearOptions.find((option) => option.value === editWaiverData.academic_year) || null}
+              onChange={(selected) => setEditWaiverData({ ...editWaiverData, academic_year: selected?.value || null })}
+              placeholder="Select Academic Year"
+              isLoading={isAcademicYearLoading}
+              styles={selectStyles}
+              className="w-full"
+              isDisabled={isUpdating}
             />
             <input
               type="text"
@@ -383,7 +405,7 @@ const AddWaivers = () => {
               type="button"
               onClick={() => {
                 setEditWaiverId(null);
-                setEditWaiverData({ student_id: null, waiver_amount: "", academic_year: "", description: "", fee_types: [] });
+                setEditWaiverData({ student_id: null, waiver_amount: "", academic_year: null, description: "", fee_types: [] });
                 setIsAdd(true);
               }}
               title="Cancel editing"
@@ -460,7 +482,7 @@ const AddWaivers = () => {
                       {waiver.waiver_amount}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {waiver.academic_year}
+                      {academicYears?.find((y) => y.id === waiver.academic_year)?.year || `Year ${waiver.academic_year}`}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
                       {waiver.fee_types
