@@ -3,6 +3,7 @@ import { FaEdit, FaSpinner, FaTrash } from "react-icons/fa";
 import { IoAdd, IoAddCircle } from "react-icons/io5";
 import { useCreateIncomeItemMutation, useDeleteIncomeItemMutation, useGetIncomeItemsQuery, useUpdateIncomeItemMutation } from "../../redux/features/api/income-items/incomeItemsApi";
 import { useGetIncomeHeadsQuery } from "../../redux/features/api/income-heads/incomeHeadsApi";
+import { useGetFundsQuery } from "../../redux/features/api/funds/fundsApi";
 
 const IncomeItems = () => {
   const [formData, setFormData] = useState({
@@ -25,7 +26,8 @@ const IncomeItems = () => {
   const [createIncomeItem, { isLoading: isCreating, error: createError }] = useCreateIncomeItemMutation();
   const [updateIncomeItem, { isLoading: isUpdating, error: updateError }] = useUpdateIncomeItemMutation();
   const [deleteIncomeItem, { isLoading: isDeleting, error: deleteError }] = useDeleteIncomeItemMutation();
-
+const { data: fundTypes, isLoading: isFundLoading, error: fundError } = useGetFundsQuery();
+console.log(fundTypes)
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -210,16 +212,21 @@ const IncomeItems = () => {
             disabled={isCreating || isUpdating}
             required
           />
-          <input
-            type="number"
+     
+           <select
             name="fund_id"
             value={formData.fund_id}
             onChange={handleChange}
-            className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-            placeholder="Enter fund ID"
-            disabled={isCreating || isUpdating}
+            className="w-full bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
+            disabled={isCreating || isUpdating || isHeadsLoading}
             required
-          />
+            aria-describedby={createError || updateError ? "form-error" : undefined}
+          >
+            <option value="" disabled>Select Fund Type</option>
+            {fundTypes?.map((fund) => (
+              <option key={fund.id} value={fund.id}>{fund.name}</option>
+            ))}
+          </select>
           <input
             type="number"
             name="transaction_book_id"
@@ -228,7 +235,7 @@ const IncomeItems = () => {
             className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
             placeholder="Enter transaction book ID"
             disabled={isCreating || isUpdating}
-            required
+            
           />
           <input
             type="number"
@@ -238,7 +245,7 @@ const IncomeItems = () => {
             className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
             placeholder="Enter transaction number"
             disabled={isCreating || isUpdating}
-            required
+            
           />
           <input
             type="text"
@@ -248,7 +255,7 @@ const IncomeItems = () => {
             className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
             placeholder="Enter invoice number"
             disabled={isCreating || isUpdating}
-            required
+            
           />
           <input
             type="date"
@@ -287,7 +294,7 @@ const IncomeItems = () => {
             className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
             placeholder="Enter academic year"
             disabled={isCreating || isUpdating}
-            required
+            
           />
           <textarea
             name="description"

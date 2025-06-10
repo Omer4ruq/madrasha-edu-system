@@ -30,6 +30,7 @@ import IncomeHead from "./components/income/IncomeHead";
 import AddWaivers from "./components/waivers/AddWaivers";
 import AddFeeHead from "./components/fees/AddFeeHead";
 import IncomeItems from "./components/income/IncomeItems";
+import ExpenseHead from "./components/expense/ExpenseHead";
 
 
 function Root() {
@@ -179,7 +180,7 @@ function Root() {
                 },
                 {
                   path: "expense-heads",
-                  element: <AddLeaveType />,
+                  element: <ExpenseHead />,
                 },
                     {
                   path: "fee-heads",
