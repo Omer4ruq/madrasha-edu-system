@@ -150,8 +150,18 @@ const mainMenu = [
             title: "ব্যয়ের ধরন",
             link: "/accounts/settings/expense-heads",
           },
+            {
+            id: "07/01/04",
+            title: "ফিসের ধরন",
+            link: "/accounts/settings/fee-heads",
+          },
         ],
       },
+       {
+        id: "07/02",
+        title: "আয়ের লিস্ট",
+        link: "/accounts/income-list",
+       },
     ],
   },
   {

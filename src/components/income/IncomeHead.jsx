@@ -22,7 +22,7 @@ const IncomeHead = () => {
       alert("Please enter an income head name");
       return;
     }
-    if (incomeHeads?.some((ih) => ih.name.toLowerCase() === incomeHeadName.toLowerCase())) {
+    if (incomeHeads?.some((ih) => ih.incometype.toLowerCase() === incomeHeadName.toLowerCase())) {
       alert("This income head already exists!");
       return;
     }
