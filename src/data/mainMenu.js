@@ -143,18 +143,18 @@ const mainMenu = [
           {
             id: "07/01/02",
             title: "আয়ের খাতসমূহ",
-            link: "/accounts/income-heads",
+            link: "/accounts/settings/income-heads",
           },
           {
             id: "07/01/03",
             title: "ব্যয়ের ধরন",
-            link: "/accounts/expense-heads",
+            link: "/accounts/settings/expense-heads",
           },
         ],
       },
       {
         id: "07/02/04",
-        title: "Waivers",
+        title: "ফি ছাড়",
         link: "/accounts/waivers",
       },
     ],
