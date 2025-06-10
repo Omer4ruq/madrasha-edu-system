@@ -30,13 +30,13 @@ export const fundsApi = createApi({
     }),
 
     // GET: Fetch single fund by ID
-    getFundById: builder.query({
+    getFundByIds: builder.query({
       query: (id) => `/funds/${id}/`,
       providesTags: ['Funds'],
     }),
 
     // POST: Create a new fund
-    createFund: builder.mutation({
+    createFunds: builder.mutation({
       query: (fundData) => ({
         url: '/funds/',
         method: 'POST',
@@ -46,7 +46,7 @@ export const fundsApi = createApi({
     }),
 
     // PUT: Update an existing fund
-    updateFund: builder.mutation({
+    updateFunds: builder.mutation({
       query: ({ id, ...fundData }) => ({
         url: `/funds/${id}/`,
         method: 'PUT',
@@ -56,7 +56,7 @@ export const fundsApi = createApi({
     }),
 
     // DELETE: Delete a fund
-    deleteFund: builder.mutation({
+    deleteFunds: builder.mutation({
       query: (id) => ({
         url: `/funds/${id}/`,
         method: 'DELETE',
@@ -69,8 +69,8 @@ export const fundsApi = createApi({
 // Export hooks for usage in components
 export const {
   useGetFundsQuery,
-  useGetFundByIdQuery,
-  useCreateFundMutation,
-  useUpdateFundMutation,
-  useDeleteFundMutation,
+  useGetFundsByIdQuery,
+  useCreateFundsMutation,
+  useUpdateFundsMutation,
+  useDeleteFundsMutation,
 } = fundsApi;
