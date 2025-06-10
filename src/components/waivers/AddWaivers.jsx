@@ -126,8 +126,9 @@ const AddWaivers = () => {
         academic_year: waiver.academic_year,
         description: waiver.description.trim() || null,
         fee_types: waiver.fee_types,
-        created_by: '',
-        updated_by: '',
+        fund_id: 8,
+        created_by: 1,
+        updated_by: 1,
         // created_at: getCurrentTimeISO(),
         // updated_at: getCurrentTimeISO(),
       };
