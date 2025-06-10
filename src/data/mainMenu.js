@@ -128,17 +128,27 @@ const mainMenu = [
     id: "07",
     title: "হিসাব বিভাগ",
     icon: "HiOutlineCalculator",
-    link: "/accounting",
+    link: "/accounts",
     children: [
       {
         id: "07/01",
         title: "সেটিং",
-        link: "/accounting/settings",
+        link: "/accounts/settings",
         children: [
           {
             id: "07/01/01",
-            title: "পরীক্ষার ধরন",
-            link: "/accounting/settings",
+            title: "ফান্ডের ধরন",
+            link: "/accounts/settings",
+          },
+             {
+            id: "07/01/02",
+            title: "আয়ের খাতসমূহ",
+            link: "/accounts/income-heads",
+          },
+             {
+            id: "07/01/03",
+            title: "ব্যয়ের ধরন",
+            link: "/accounts/expense-heads",
           },
         ],
       },

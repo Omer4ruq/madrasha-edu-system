@@ -25,6 +25,7 @@ import PerformanceType from "./components/performance/PerformanceType";
 import TeacherPerformance from "./components/performance/TeacherPerformance";
 import StaffRegistrationForm from "./components/users/staff-register/StaffRegistrationForm";
 import StudentRegistrationForm from "./components/users/student-register/StudentRegistrationForm";
+import AddFundsType from "./components/funds/AddFundsType";
 
 function Root() {
   const router = createBrowserRouter([
@@ -182,6 +183,33 @@ function Root() {
             // },
           ],
         },
+         {
+          path: "accounts",
+     children: [
+            {
+              path: "settings",
+              children: [
+                {
+                  index: true,
+                  element: <AddFundsType />,
+                },
+                {
+                  path: "income-heads",
+                  element: <AddLeaveType />,
+                },
+                  {
+                  path: "expense-heads",
+                  element: <AddLeaveType />,
+                },
+                // {
+                //   path: "*",
+                //   element: <Navigate to="/talimat/settings" replace />,
+                // },
+              ],
+            },
+            
+          ],
+          }
       ],
     },
   ]);
