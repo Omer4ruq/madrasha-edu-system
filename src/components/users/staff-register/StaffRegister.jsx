@@ -5,5 +5,5 @@ import StaffRegistrationForm from './StaffRegistrationForm'
 export default function StuffRegister() {
   return (
     <div><StaffRegistrationForm></StaffRegistrationForm></div>
-  )
+  );
 }
