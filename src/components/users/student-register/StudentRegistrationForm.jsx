@@ -1222,7 +1222,7 @@ const StudentRegistrationForm = () => {
                   htmlFor="g_mobile_no"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  Guardian's Mobile No.
+                  Guardian's Mobile No. <span className="text-[#DB9E30]">*</span>
                 </label>
                 <FaPhone className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -1234,6 +1234,7 @@ const StudentRegistrationForm = () => {
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter guardian's mobile number"
                   aria-label="Guardian's Mobile No."
+                  required
                 />
               </div>
             </div>
