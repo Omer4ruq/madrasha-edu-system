@@ -50,31 +50,31 @@ const StaffRegistrationForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const requiredFields = [
-      'username', 'password', 'name', 'user_id', 'phone_number', 'email',
-      'gender', 'dob', 'blood_group', 'present_address', 'permanent_address',
-      'fathers_name', 'mothers_name', 'marital_status', 'short_name',
-      'staff_id_no', 'employee_type', 'job_nature', 'designation', 'role_id',
-    ];
+    // const requiredFields = [
+    //   'username', 'password', 'name', 'user_id', 'phone_number', 'email',
+    //   'gender', 'dob', 'blood_group', 'present_address', 'permanent_address',
+    //   'fathers_name', 'mothers_name', 'marital_status', 'short_name',
+    //   'staff_id_no', 'employee_type', 'job_nature', 'designation', 'role_id',
+    // ];
 
-    const missingFields = requiredFields.filter((field) => !formData[field]);
+    // const missingFields = requiredFields.filter((field) => !formData[field]);
 
-    if (missingFields.length > 0) {
-      alert(`Please fill in all required fields: ${missingFields.join(', ')}`);
-      return;
-    }
+    // if (missingFields.length > 0) {
+    //   alert(`Please fill in all required fields: ${missingFields.join(', ')}`);
+    //   return;
+    // }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      alert('Please enter a valid email address');
-      return;
-    }
+    // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // if (!emailRegex.test(formData.email)) {
+    //   alert('Please enter a valid email address');
+    //   return;
+    // }
 
-    const phoneRegex = /^\+?\d{10,15}$/;
-    if (!phoneRegex.test(formData.phone_number) || (formData.spouse_phone_number && !phoneRegex.test(formData.spouse_phone_number))) {
-      alert('Please enter valid phone numbers (10-15 digits, optional + prefix)');
-      return;
-    }
+    // const phoneRegex = /^\+?\d{10,15}$/;
+    // if (!phoneRegex.test(formData.phone_number) || (formData.spouse_phone_number && !phoneRegex.test(formData.spouse_phone_number))) {
+    //   alert('Please enter valid phone numbers (10-15 digits, optional + prefix)');
+    //   return;
+    // }
 
     if (
       isNaN(parseInt(formData.user_id)) ||
@@ -90,18 +90,18 @@ const StaffRegistrationForm = () => {
       const payload = {
         ...formData,
         user_id: parseInt(formData.user_id),
-        children_no: formData.children_no ? parseInt(formData.children_no) : null,
+        children_no: formData.children_no ? parseInt(formData.children_no) : '',
         role_id: parseInt(formData.role_id),
-        department_id: formData.department_id ? parseInt(formData.department_id) : null,
-        joining_date: formData.joining_date || null,
-        disability_info: formData.disability_info || null,
-        rfid: formData.rfid || null,
-        tin: formData.tin || null,
-        spouse_name: formData.spouse_name || null,
-        spouse_phone_number: formData.spouse_phone_number || null,
-        name_in_bangla: formData.name_in_bangla || null,
-        qualification: formData.qualification || null,
-        name_tag: formData.name_tag || null,
+        department_id: formData.department_id ? parseInt(formData.department_id) : '',
+        joining_date: formData.joining_date || '',
+        disability_info: formData.disability_info || '',
+        rfid: formData.rfid || '',
+        tin: formData.tin || '',
+        spouse_name: formData.spouse_name || '',
+        spouse_phone_number: formData.spouse_phone_number || '',
+        name_in_bangla: formData.name_in_bangla || '',
+        qualification: formData.qualification || '',
+        name_tag: formData.name_tag || '',
       };
 
       console.log('Submitting Payload:', JSON.stringify(payload, null, 2));
@@ -240,7 +240,7 @@ const StaffRegistrationForm = () => {
             </div>
             <h3 className="text-2xl font-semibold text-[#441a05] text-center">Personal Information</h3>
             <div className="border-t border-[#9d9087]/50 mt-4 pt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="relative input-icon">
+              {/* <div className="relative input-icon">
                 <label htmlFor="username" className="block text-lg font-medium text-[#441a05]">
                   Username <span className="text-[#DB9E30]">*</span>
                 </label>
@@ -256,8 +256,8 @@ const StaffRegistrationForm = () => {
                   required
                   aria-label="Username"
                 />
-              </div>
-              <div className="relative input-icon">
+              </div> */}
+              {/* <div className="relative input-icon">
                 <label htmlFor="password" className="block text-lg font-medium text-[#441a05]">
                   Password <span className="text-[#DB9E30]">*</span>
                 </label>
@@ -273,7 +273,7 @@ const StaffRegistrationForm = () => {
                   required
                   aria-label="Password"
                 />
-              </div>
+              </div> */}
               <div className="relative input-icon">
                 <label htmlFor="name" className="block text-lg font-medium text-[#441a05]">
                   Full Name <span className="text-[#DB9E30]">*</span>
@@ -326,7 +326,7 @@ const StaffRegistrationForm = () => {
               </div>
               <div className="relative input-icon">
                 <label htmlFor="gender" className="block text-lg font-medium text-[#441a05]">
-                  Gender <span className="text-[#DB9E30]">*</span>
+                  Gender 
                 </label>
                 <FaVenusMars className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
@@ -335,7 +335,7 @@ const StaffRegistrationForm = () => {
                   value={formData.gender}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  required
+                  
                   aria-label="Gender"
                 >
                   <option value="">Select gender</option>
@@ -346,7 +346,7 @@ const StaffRegistrationForm = () => {
               </div>
               <div className="relative input-icon">
                 <label htmlFor="dob" className="block text-lg font-medium text-[#441a05]">
-                  Date of Birth <span className="text-[#DB9E30]">*</span>
+                  Date of Birth 
                 </label>
                 <FaCalendarAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -356,13 +356,13 @@ const StaffRegistrationForm = () => {
                   value={formData.dob}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  required
+                  
                   aria-label="Date of Birth"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="blood_group" className="block text-lg font-medium text-[#441a05]">
-                  Blood Group <span className="text-[#DB9E30]">*</span>
+                  Blood Group 
                 </label>
                 <FaHeart className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
@@ -371,7 +371,7 @@ const StaffRegistrationForm = () => {
                   value={formData.blood_group}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  required
+                  
                   aria-label="Blood Group"
                 >
                   <option value="">Select blood group</option>
@@ -403,7 +403,7 @@ const StaffRegistrationForm = () => {
               </div>
               <div className="relative input-icon">
                 <label htmlFor="fathers_name" className="block text-lg font-medium text-[#441a05]">
-                  Father's Name <span className="text-[#DB9E30]">*</span>
+                  Father's Name 
                 </label>
                 <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -414,13 +414,13 @@ const StaffRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter father's name"
-                  required
+                  
                   aria-label="Father's Name"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="mothers_name" className="block text-lg font-medium text-[#441a05]">
-                  Mother's Name <span className="text-[#DB9E30]">*</span>
+                  Mother's Name
                 </label>
                 <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -431,13 +431,13 @@ const StaffRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter mother's name"
-                  required
+                  
                   aria-label="Mother's Name"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="marital_status" className="block text-lg font-medium text-[#441a05]">
-                  Marital Status <span className="text-[#DB9E30]">*</span>
+                  Marital Status 
                 </label>
                 <FaRing className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
@@ -446,7 +446,7 @@ const StaffRegistrationForm = () => {
                   value={formData.marital_status}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  required
+                  
                   aria-label="Marital Status"
                 >
                   <option value="">Select marital status</option>
@@ -485,7 +485,7 @@ const StaffRegistrationForm = () => {
               </div>
               <div className="relative input-icon">
                 <label htmlFor="email" className="block text-lg font-medium text-[#441a05]">
-                  Email <span className="text-[#DB9E30]">*</span>
+                  Email
                 </label>
                 <FaEnvelope className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -496,7 +496,7 @@ const StaffRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter email address"
-                  required
+                  
                   aria-label="Email"
                 />
               </div>
@@ -518,7 +518,7 @@ const StaffRegistrationForm = () => {
               </div>
               <div className="relative input-icon">
                 <label htmlFor="present_address" className="block text-lg font-medium text-[#441a05]">
-                  Present Address <span className="text-[#DB9E30]">*</span>
+                  Present Address 
                 </label>
                 <FaMapMarkerAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -529,13 +529,13 @@ const StaffRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter present address"
-                  required
+                  
                   aria-label="Present Address"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="permanent_address" className="block text-lg font-medium text-[#441a05]">
-                  Permanent Address <span className="text-[#DB9E30]">*</span>
+                  Permanent Address
                 </label>
                 <FaMap className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -546,7 +546,7 @@ const StaffRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter permanent address"
-                  required
+                  
                   aria-label="Permanent Address"
                 />
               </div>
@@ -636,7 +636,7 @@ const StaffRegistrationForm = () => {
             <div className="border-t border-[#9d9087]/50 mt-4 pt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="relative input-icon">
                 <label htmlFor="short_name" className="block text-lg font-medium text-[#441a05]">
-                  Short Name <span className="text-[#DB9E30]">*</span>
+                  Short Name 
                 </label>
                 <FaUserTag className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -647,7 +647,7 @@ const StaffRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter short name"
-                  required
+                  
                   aria-label="Short Name"
                 />
               </div>
@@ -701,7 +701,7 @@ const StaffRegistrationForm = () => {
               </div>
               <div className="relative input-icon">
                 <label htmlFor="staff_id_no" className="block text-lg font-medium text-[#441a05]">
-                  Staff ID No. <span className="text-[#DB9E30]">*</span>
+                  Staff ID No. 
                 </label>
                 <FaIdCard className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -712,13 +712,13 @@ const StaffRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter staff ID number"
-                  required
+                  
                   aria-label="Staff ID No."
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="employee_type" className="block text-lg font-medium text-[#441a05]">
-                  Employee Type <span className="text-[#DB9E30]">*</span>
+                  Employee Type 
                 </label>
                 <FaBuilding className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
@@ -727,7 +727,7 @@ const StaffRegistrationForm = () => {
                   value={formData.employee_type}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  required
+                  
                   aria-label="Employee Type"
                 >
                   <option value="">Select employee type</option>
@@ -738,7 +738,7 @@ const StaffRegistrationForm = () => {
               </div>
               <div className="relative input-icon">
                 <label htmlFor="job_nature" className="block text-lg font-medium text-[#441a05]">
-                  Job Nature <span className="text-[#DB9E30]">*</span>
+                  Job Nature 
                 </label>
                 <FaBusinessTime className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
@@ -747,7 +747,7 @@ const StaffRegistrationForm = () => {
                   value={formData.job_nature}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  required
+                  
                   aria-label="Job Nature"
                 >
                   <option value="">Select job nature</option>
@@ -757,7 +757,7 @@ const StaffRegistrationForm = () => {
               </div>
               <div className="relative input-icon">
                 <label htmlFor="designation" className="block text-lg font-medium text-[#441a05]">
-                  Designation <span className="text-[#DB9E30]">*</span>
+                  Designation 
                 </label>
                 <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -768,7 +768,7 @@ const StaffRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   placeholder="Enter designation"
-                  required
+                  
                   aria-label="Designation"
                 />
               </div>
@@ -789,7 +789,7 @@ const StaffRegistrationForm = () => {
               </div>
               <div className="relative input-icon">
                 <label htmlFor="role_id" className="block text-lg font-medium text-[#441a05]">
-                  Role ID <span className="text-[#DB9E30]">*</span>
+                  Role <span className="text-[#DB9E30]">*</span>
                 </label>
                 <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select

@@ -28,6 +28,8 @@ import StudentRegistrationForm from "./components/users/student-register/Student
 import AddFundsType from "./components/funds/AddFundsType";
 import IncomeHead from "./components/income/IncomeHead";
 import AddWaivers from "./components/waivers/AddWaivers";
+import AddFeeHead from "./components/fees/AddFeeHead";
+import IncomeItems from "./components/income/IncomeItems";
 
 
 function Root() {
@@ -158,32 +160,7 @@ function Root() {
               path: "staff-registration",
               element: <StaffRegistrationForm></StaffRegistrationForm>,
             },
-            // {
-            //   path: "class-management",
-            //   element: <ClassManagement />,
-            //   children: [
-            //     {
-            //       index: true,
-            //       element: <AddClass />,
-            //     },
-            //     {
-            //       path: "add-section",
-            //       element: <AddSection />,
-            //     },
-            //     {
-            //       path: "add-shift",
-            //       element: <AddShift />,
-            //     },
-            //     {
-            //       path: "add-config",
-            //       element: <AddClassConfig />,
-            //     },
-            //     {
-            //       path: "*",
-            //       element: <Navigate to="/talimat/class-management" replace />,
-            //     },
-            //   ],
-            // },
+         
           ],
         },
         {
@@ -204,6 +181,10 @@ function Root() {
                   path: "expense-heads",
                   element: <AddLeaveType />,
                 },
+                    {
+                  path: "fee-heads",
+                  element: <AddFeeHead />,
+                },
                 // {
                 //   path: "*",
                 //   element: <Navigate to="/talimat/settings" replace />,
@@ -214,6 +195,11 @@ function Root() {
               path: "waivers",
               element: <AddWaivers></AddWaivers>
             },
+               {
+                  path: "income-list",
+                  element: <IncomeItems />,
+                },
+            
           ],
         },
       ],
