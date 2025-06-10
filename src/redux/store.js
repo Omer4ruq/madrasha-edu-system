@@ -37,6 +37,7 @@ import { incomeItemsApi } from './features/api/income-items/incomeItemsApi';
 import { expenseItemsApi } from './features/api/expense-items/expenseItemsApi';
 import { waiversApi } from './features/api/waivers/waiversApi';
 import { academicYearApi } from './features/api/academic-year/academicYearApi';
+import { transactionBooksApi } from './features/api/transaction-books/transactionBooksApi';
 
 
 
@@ -82,6 +83,7 @@ export const store = configureStore({
     [expenseItemsApi.reducerPath]: expenseItemsApi.reducer,
     [waiversApi.reducerPath]: waiversApi.reducer,
     [academicYearApi.reducerPath]: academicYearApi.reducer,
+    [transactionBooksApi.reducerPath]: transactionBooksApi.reducer,
 
 
   
@@ -130,6 +132,7 @@ export const store = configureStore({
     .concat(expenseItemsApi.middleware)
     .concat(waiversApi.middleware)
     .concat(academicYearApi.middleware)
+    .concat(transactionBooksApi.middleware)
 
   
     
