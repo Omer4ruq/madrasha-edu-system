@@ -68,10 +68,10 @@ const AddFundsType = () => {
   };
 
   // Handle delete fund type
-  const handleDelete = async (sl) => {
+  const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this fund type?")) {
       try {
-        await deleteFund(sl).unwrap();
+        await deleteFund(id).unwrap();
         alert("Fund type deleted successfully!");
       } catch (err) {
         console.error("Error deleting fund type:", err);
@@ -283,7 +283,7 @@ const AddFundsType = () => {
                           <FaEdit className="w-5 h-5" />
                         </button>
                         <button
-                          onClick={() => handleDelete(fund.sl)}
+                          onClick={() => handleDelete(fund?.id)}
                           title="Delete fund type"
                           className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
                         >
