@@ -41,7 +41,7 @@ const AddFundsType = () => {
 
   // Handle edit button click
   const handleEditClick = (fund) => {
-    setEditFundId(fund.sl);
+    setEditFundId(fund.id); // Use id as the identifier
     setEditFundName(fund.name);
   };
 
@@ -54,9 +54,10 @@ const AddFundsType = () => {
     }
     try {
       const payload = {
-        sl: editFundId,
+        id: editFundId, // Use id as the identifier
         name: editFundName.trim(),
       };
+      console.log("Update payload:", payload); // Log payload for debugging
       await updateFund(payload).unwrap();
       alert("Fund type updated successfully!");
       setEditFundId(null);
@@ -71,7 +72,7 @@ const AddFundsType = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this fund type?")) {
       try {
-        await deleteFund(id).unwrap();
+        await deleteFund(id).unwrap(); // Use id for deletion
         alert("Fund type deleted successfully!");
       } catch (err) {
         console.error("Error deleting fund type:", err);
@@ -186,11 +187,11 @@ const AddFundsType = () => {
                 id="editFundName"
                 value={editFundName}
                 onChange={(e) => setEditFundName(e.target.value)}
-                className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate Gomrok"
+                className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
+                placeholder="Edit fund type (e.g., Equity Fund)"
                 disabled={isUpdating}
-                // aria-label="Edit Fund Type"
-             
-                aria-describedby={createError ? "edit-fund-error" : undefined}
+                aria-label="Edit Fund Type"
+                aria-describedby={updateError ? "edit-fund-error" : undefined}
               />
               <button
                 type="submit"
@@ -283,7 +284,7 @@ const AddFundsType = () => {
                           <FaEdit className="w-5 h-5" />
                         </button>
                         <button
-                          onClick={() => handleDelete(fund?.id)}
+                          onClick={() => handleDelete(fund.id)} // Use id for deletion
                           title="Delete fund type"
                           className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
                         >

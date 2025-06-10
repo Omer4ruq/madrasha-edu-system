@@ -26,6 +26,8 @@ import TeacherPerformance from "./components/performance/TeacherPerformance";
 import StaffRegistrationForm from "./components/users/staff-register/StaffRegistrationForm";
 import StudentRegistrationForm from "./components/users/student-register/StudentRegistrationForm";
 import AddFundsType from "./components/funds/AddFundsType";
+import IncomeHead from "./components/income/IncomeHead";
+
 
 function Root() {
   const router = createBrowserRouter([
@@ -195,7 +197,7 @@ function Root() {
                 },
                 {
                   path: "income-heads",
-                  element: <AddLeaveType />,
+                  element:<IncomeHead></IncomeHead>
                 },
                   {
                   path: "expense-heads",
