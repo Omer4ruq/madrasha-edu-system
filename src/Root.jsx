@@ -26,6 +26,9 @@ import TeacherPerformance from "./components/performance/TeacherPerformance";
 import StaffRegistrationForm from "./components/users/staff-register/StaffRegistrationForm";
 import StudentRegistrationForm from "./components/users/student-register/StudentRegistrationForm";
 import AddFundsType from "./components/funds/AddFundsType";
+import IncomeHead from "./components/income/IncomeHead";
+import AddWaivers from "./components/waivers/AddWaivers";
+
 
 function Root() {
   const router = createBrowserRouter([
@@ -68,7 +71,7 @@ function Root() {
                   path: "meal-type",
                   element: <AddMealsType />,
                 },
-                  {
+                {
                   path: "performance-type",
                   element: <PerformanceType />,
                 },
@@ -94,7 +97,7 @@ function Root() {
               path: "leave-request",
               element: <AddLeaveRequest />,
             },
-                        {
+            {
               path: "teacher-performance",
               element: <TeacherPerformance></TeacherPerformance>,
             },
@@ -149,11 +152,11 @@ function Root() {
           children: [
             {
               path: "student-registration",
-              element : <StudentRegistrationForm></StudentRegistrationForm>,
+              element: <StudentRegistrationForm></StudentRegistrationForm>,
             },
             {
               path: "staff-registration",
-              element : <StaffRegistrationForm></StaffRegistrationForm>,
+              element: <StaffRegistrationForm></StaffRegistrationForm>,
             },
             // {
             //   path: "class-management",
@@ -183,9 +186,9 @@ function Root() {
             // },
           ],
         },
-         {
+        {
           path: "accounts",
-     children: [
+          children: [
             {
               path: "settings",
               children: [
@@ -195,9 +198,9 @@ function Root() {
                 },
                 {
                   path: "income-heads",
-                  element: <AddLeaveType />,
+                  element: <IncomeHead></IncomeHead>,
                 },
-                  {
+                {
                   path: "expense-heads",
                   element: <AddLeaveType />,
                 },
@@ -207,9 +210,12 @@ function Root() {
                 // },
               ],
             },
-            
+            {
+              path: "waivers",
+              element: <AddWaivers></AddWaivers>
+            },
           ],
-          }
+        },
       ],
     },
   ]);

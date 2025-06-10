@@ -140,17 +140,22 @@ const mainMenu = [
             title: "ফান্ডের ধরন",
             link: "/accounts/settings",
           },
-             {
+          {
             id: "07/01/02",
             title: "আয়ের খাতসমূহ",
             link: "/accounts/income-heads",
           },
-             {
+          {
             id: "07/01/03",
             title: "ব্যয়ের ধরন",
             link: "/accounts/expense-heads",
           },
         ],
+      },
+      {
+        id: "07/02/04",
+        title: "Waivers",
+        link: "/accounts/waivers",
       },
     ],
   },
