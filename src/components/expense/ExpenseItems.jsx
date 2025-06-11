@@ -510,7 +510,7 @@ const handleSubmit = async (e) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/20">
-                {expenseItems.map((item, index) => (
+                {expenseItems?.map((item, index) => (
                   <tr key={item.id} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
                       {expenseTypes.find((type) => type.id === item.expensetype_id)?.expensetype || "Unknown"}
