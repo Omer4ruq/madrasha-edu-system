@@ -149,7 +149,7 @@ const StaffRegistrationForm = () => {
   };
 
   return (
-    <div className="pb-12 w-full min-h-screen">
+    <div className="py-10 w-full min-h-screen">
       <style>
         {`
           @keyframes fadeIn {

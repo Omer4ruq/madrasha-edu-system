@@ -246,7 +246,7 @@ const StudentRegistrationForm = () => {
   };
 
   return (
-    <div className="pb-8 w-full min-h-screen">
+    <div className="py-10 w-full min-h-screen">
       <style>
         {`
           @keyframes fadeIn {
