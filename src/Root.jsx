@@ -33,7 +33,6 @@ import IncomeItems from "./components/income/IncomeItems";
 import ExpenseHead from "./components/expense/ExpenseHead";
 import ExpenseItems from "./components/expense/ExpenseItems";
 
-
 function Root() {
   const router = createBrowserRouter([
     {
@@ -162,7 +161,6 @@ function Root() {
               path: "staff-registration",
               element: <StaffRegistrationForm></StaffRegistrationForm>,
             },
-         
           ],
         },
         {
@@ -183,24 +181,21 @@ function Root() {
                   path: "expense-heads",
                   element: <ExpenseHead />,
                 },
-                    {
+                {
                   path: "fee-heads",
                   element: <AddFeeHead />,
                 },
-                // {
-                //   path: "*",
-                //   element: <Navigate to="/talimat/settings" replace />,
-                // },
               ],
             },
             {
               path: "waivers",
-              element: <AddWaivers></AddWaivers>
+              element: <AddWaivers></AddWaivers>,
             },
-               {
-                  path: "income-list",
-                  element: <IncomeItems />,
-                },
+            {
+              path: "income-list",
+              element: <IncomeItems />,
+            },
+             
                 {
                   path: "expense-list",
                   element: <ExpenseItems />,

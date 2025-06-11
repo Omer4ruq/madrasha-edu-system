@@ -10,11 +10,15 @@ import {
 } from "../../redux/features/api/class/classConfigApi";
 import { FaChalkboard, FaSpinner, FaTrash } from "react-icons/fa";
 import { IoAdd, IoBookmark, IoSettings, IoTime } from "react-icons/io5";
+import { Toaster, toast } from "react-hot-toast";
 
 const AddClassConfig = () => {
   const [classId, setClassId] = useState("");
   const [sectionId, setSectionId] = useState("");
   const [shiftId, setShiftId] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalAction, setModalAction] = useState(null);
+  const [modalData, setModalData] = useState(null);
 
   // Fetch data from APIs
   const {
@@ -56,57 +60,63 @@ const AddClassConfig = () => {
     e.preventDefault();
 
     if (classLoading || sectionLoading || shiftLoading || isListLoading) {
-      alert("Please wait, data is still loading");
+      toast.error("অনুগ্রহ করে অপেক্ষা করুন, ডেটা এখনও লোড হচ্ছে");
       return;
     }
 
     if (classError || sectionError || shiftError || listError) {
-      alert("Error loading data. Please try again later.");
+      toast.error("ডেটা লোড করতে ত্রুটি। অনুগ্রহ করে পরে আবার চেষ্টা করুন।");
       return;
     }
 
     if (!classId || !sectionId || !shiftId) {
-      alert("Please select a class, section, and shift");
+      toast.error("অনুগ্রহ করে একটি ক্লাস, সেকশন এবং শিফট নির্বাচন করুন");
       return;
     }
 
-    try {
-      await createClassConfig({
-        is_active: true,
-        class_id: parseInt(classId),
-        section_id: parseInt(sectionId),
-        shift_id: parseInt(shiftId),
-      }).unwrap();
-
-      setClassId("");
-      setSectionId("");
-      setShiftId("");
-      alert("Configuration created successfully!");
-    } catch (error) {
-      console.error("Error creating configuration:", error);
-      alert(
-        `Failed to create configuration: ${error.status || "Unknown"} - ${JSON.stringify(error.data || {})}`
-      );
-    }
+    setModalAction('create');
+    setModalData({
+      is_active: true,
+      class_id: parseInt(classId),
+      section_id: parseInt(sectionId),
+      shift_id: parseInt(shiftId),
+    });
+    setIsModalOpen(true);
   };
 
   // Handle delete configuration
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this configuration?")) {
-      try {
-        await deleteClassConfig(id).unwrap();
-        alert("Configuration deleted successfully!");
-      } catch (error) {
-        console.error("Error deleting configuration:", error);
-        alert(
-          `Failed to delete configuration: ${error.status || "Unknown"} - ${JSON.stringify(error.data || {})}`
-        );
+  const handleDelete = (id) => {
+    setModalAction('delete');
+    setModalData({ id });
+    setIsModalOpen(true);
+  };
+
+  // Confirm action for modal
+  const confirmAction = async () => {
+    try {
+      if (modalAction === 'create') {
+        await createClassConfig(modalData).unwrap();
+        toast.success("কনফিগারেশন সফলভাবে তৈরি করা হয়েছে!");
+        setClassId("");
+        setSectionId("");
+        setShiftId("");
+      } else if (modalAction === 'delete') {
+        await deleteClassConfig(modalData.id).unwrap();
+        toast.success("কনফিগারেশন সফলভাবে মুছে ফেলা হয়েছে!");
       }
+    } catch (error) {
+      console.error(`ত্রুটি ${modalAction === 'create' ? 'তৈরি' : 'মুছে ফেলা'}:`, error);
+      toast.error(`কনফিগারেশন ${modalAction === 'create' ? 'তৈরি' : 'মুছে ফেলা'} ব্যর্থ: ${error.status || "অজানা"} - ${JSON.stringify(error.data || {})}`);
+    } finally {
+      setIsModalOpen(false);
+      setModalAction(null);
+      setModalData(null);
     }
   };
 
   return (
     <div className="py-8 w-full relative">
+      <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
           @keyframes fadeIn {
@@ -117,11 +127,25 @@ const AddClassConfig = () => {
             from { transform: scale(0.95); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
           }
+          @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+          }
+          @keyframes slideDown {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(100%); opacity: 0; }
+          }
           .animate-fadeIn {
             animation: fadeIn 0.6s ease-out forwards;
           }
           .animate-scaleIn {
             animation: scaleIn 0.4s ease-out forwards;
+          }
+          .animate-slideUp {
+            animation: slideUp 0.4s ease-out forwards;
+          }
+          .animate-slideDown {
+            animation: slideDown 0.4s ease-out forwards;
           }
           .btn-glow:hover {
             box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
@@ -150,19 +174,12 @@ const AddClassConfig = () => {
       </style>
 
       <div className="mx-auto">
-        {/* <div className="flex items-center space-x-4 mb-10 animate-fadeIn">
-          <IoSettings className="text-4xl text-[#441a05]" />
-          <h2 className="text-3xl font-bold text-[#441a05] tracking-tight">
-            Class Configuration
-          </h2>
-        </div> */}
-
         {/* Form to Create Configuration */}
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
           <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
             <IoSettings className="text-4xl text-[#441a05]" />
             <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
-              Create New Configuration
+              নতুন কনফিগারেশন তৈরি করুন
             </h3>
           </div>
 
@@ -174,7 +191,7 @@ const AddClassConfig = () => {
             <div className="relative">
               <FaChalkboard
                 className="absolute left-3 top-[10px] transform -translate-y-1/2 text-[#441a05] w-5 h-5 animate-scaleIn"
-                title="Select class"
+                title="ক্লাস নির্বাচন করুন"
               />
               <select
                 id="classSelect"
@@ -182,11 +199,11 @@ const AddClassConfig = () => {
                 onChange={(e) => setClassId(e.target.value)}
                 className="w-full bg-transparent text-[#441a05] pl-10 pr-8 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
                 disabled={classLoading || isListLoading}
-                aria-label="Select Class"
+                aria-label="ক্লাস নির্বাচন করুন"
                 aria-describedby={classError ? "class-error" : undefined}
               >
                 <option value="" disabled className="bg-black/10 backdrop-blur-sm">
-                  Select a class
+                  একটি ক্লাস নির্বাচন করুন
                 </option>
                 {classList?.map((cls) => (
                   <option key={cls.id} value={cls.id} className="bg-black/10 backdrop-blur-sm">
@@ -200,7 +217,7 @@ const AddClassConfig = () => {
             <div className="relative">
               <IoBookmark
                 className="absolute left-3 top-[10px] transform -translate-y-1/2 text-[#441a05] w-5 h-5 animate-scaleIn"
-                title="Select section"
+                title="সেকশন নির্বাচন করুন"
               />
               <select
                 id="sectionSelect"
@@ -208,11 +225,11 @@ const AddClassConfig = () => {
                 onChange={(e) => setSectionId(e.target.value)}
                 className="w-full bg-transparent text-[#441a05] pl-10 pr-8 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
                 disabled={sectionLoading || activeSections.length === 0}
-                aria-label="Select Section"
+                aria-label="সেকশন নির্বাচন করুন"
                 aria-describedby={sectionError ? "section-error" : undefined}
               >
                 <option value="" disabled className="backdrop-blur-sm bg-black/10">
-                  Select a section
+                  একটি সেকশন নির্বাচন করুন
                 </option>
                 {activeSections.map((sec) => (
                   <option key={sec.id} value={sec.id} className="backdrop-blur-sm bg-black/10">
@@ -226,7 +243,7 @@ const AddClassConfig = () => {
             <div className="relative">
               <IoTime
                 className="absolute left-3 top-[10px] transform -translate-y-1/2 text-[#441a05] w-5 h-5 animate-scaleIn"
-                title="Select shift"
+                title="শিফট নির্বাচন করুন"
               />
               <select
                 id="shiftSelect"
@@ -234,11 +251,11 @@ const AddClassConfig = () => {
                 onChange={(e) => setShiftId(e.target.value)}
                 className="w-full bg-transparent text-[#441a05] pl-10 pr-8 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
                 disabled={shiftLoading || activeShifts.length === 0}
-                aria-label="Select Shift"
+                aria-label="শিফট নির্বাচন করুন"
                 aria-describedby={shiftError ? "shift-error" : undefined}
               >
                 <option value="" disabled className="backdrop-blur-sm bg-black/10">
-                  Select a shift
+                  একটি শিফট নির্বাচন করুন
                 </option>
                 {activeShifts.map((shf) => (
                   <option key={shf.id} value={shf.id} className="backdrop-blur-sm bg-black/10">
@@ -252,7 +269,7 @@ const AddClassConfig = () => {
             <button
               type="submit"
               disabled={configLoading}
-              title="Add new configuration"
+              title="নতুন কনফিগারেশন যোগ করুন"
               className={`relative inline-flex items-center px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
                 configLoading ? "cursor-not-allowed opacity-60" : "hover:text-white btn-glow"
               }`}
@@ -260,12 +277,12 @@ const AddClassConfig = () => {
               {configLoading ? (
                 <span className="flex items-center space-x-3">
                   <FaSpinner className="animate-spin text-lg" />
-                  <span>Adding...</span>
+                  <span>যোগ করা হচ্ছে...</span>
                 </span>
               ) : (
                 <span className="flex items-center space-x-2">
                   <IoAdd className="w-5 h-5" />
-                  <span>Add Configuration</span>
+                  <span>কনফিগারেশন যোগ করুন</span>
                 </span>
               )}
             </button>
@@ -279,27 +296,27 @@ const AddClassConfig = () => {
             >
               {classError && (
                 <p id="class-error">
-                  Error loading classes: {JSON.stringify(classError)}
+                  ক্লাস লোড করতে ত্রুটি: {JSON.stringify(classError)}
                 </p>
               )}
               {sectionError && (
                 <p id="section-error">
-                  Error loading sections: {JSON.stringify(sectionError)}
+                  সেকশন লোড করতে ত্রুটি: {JSON.stringify(sectionError)}
                 </p>
               )}
               {shiftError && (
                 <p id="shift-error">
-                  Error loading shifts: {JSON.stringify(shiftError)}
+                  শিফট লোড করতে ত্রুটি: {JSON.stringify(shiftError)}
                 </p>
               )}
               {listError && (
                 <p id="list-error">
-                  Error loading class list: {JSON.stringify(listError)}
+                  ক্লাস তালিকা লোড করতে ত্রুটি: {JSON.stringify(listError)}
                 </p>
               )}
               {configError && (
                 <p id="config-error">
-                  Error loading configurations: {JSON.stringify(configError)}
+                  কনফিগারেশন লোড করতে ত্রুটি: {JSON.stringify(configError)}
                 </p>
               )}
             </div>
@@ -309,28 +326,28 @@ const AddClassConfig = () => {
         {/* Configurations Table */}
         <div className="bg-black/10 px-5 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] border border-white/20">
           <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">
-            Configurations List
+            কনফিগারেশন তালিকা
           </h3>
           {classLoading || sectionLoading || shiftLoading || isListLoading || configLoading ? (
-            <p className="p-4 text-[#441a05]/70">Loading data...</p>
+            <p className="p-4 text-[#441a05]/70">ডেটা লোড হচ্ছে...</p>
           ) : !configurations || configurations.length === 0 ? (
-            <p className="p-4 text-[#441a05]/70">No configurations available.</p>
+            <p className="p-4 text-[#441a05]/70">কোনো কনফিগারেশন উপলব্ধ নেই।</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-white/20">
                 <thead className="bg-white/5">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Class
+                      ক্লাস
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Section
+                      সেকশন
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Shift
+                      শিফট
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Actions
+                      ক্রিয়াকলাপ
                     </th>
                   </tr>
                 </thead>
@@ -353,7 +370,7 @@ const AddClassConfig = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           onClick={() => handleDelete(config.id)}
-                          title="Delete configuration"
+                          title="কনফিগারেশন মুছুন"
                           className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
                         >
                           <FaTrash className="w-5 h-5" />
@@ -366,6 +383,38 @@ const AddClassConfig = () => {
             </div>
           )}
         </div>
+
+        {/* Confirmation Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
+            <div
+              className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"
+            >
+              <h3 className="text-lg font-semibold text-[#441a05] mb-4">
+                {modalAction === 'create' && 'নতুন কনফিগারেশন নিশ্চিত করুন'}
+                {modalAction === 'delete' && 'কনফিগারেশন মুছে ফেলা নিশ্চিত করুন'}
+              </h3>
+              <p className="text-[#441a05] mb-6">
+                {modalAction === 'create' && 'আপনি কি নিশ্চিত যে নতুন কনফিগারেশন তৈরি করতে চান?'}
+                {modalAction === 'delete' && 'আপনি কি নিশ্চিত যে এই কনফিগারেশনটি মুছে ফেলতে চান?'}
+              </p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
+                >
+                  বাতিল
+                </button>
+                <button
+                  onClick={confirmAction}
+                  className="px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white transition-colors duration-300 btn-glow"
+                >
+                  নিশ্চিত করুন
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -7,11 +7,15 @@ import {
 } from '../../redux/features/api/student/studentShiftApi';
 import { FaEdit, FaSpinner, FaTrash } from 'react-icons/fa';
 import { IoAdd, IoTime } from 'react-icons/io5';
+import { Toaster, toast } from 'react-hot-toast';
 
 const AddShift = () => {
   const [shiftName, setShiftName] = useState('');
   const [editShiftId, setEditShiftId] = useState(null);
   const [editShiftName, setEditShiftName] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalAction, setModalAction] = useState(null);
+  const [modalData, setModalData] = useState(null);
 
   // API hooks
   const { data: shiftData, isLoading: isShiftLoading, error: shiftDataError } = useGetStudentShiftApiQuery();
@@ -23,22 +27,12 @@ const AddShift = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!shiftName.trim()) {
-      alert('Please enter a shift name');
+      toast.error('অনুগ্রহ করে একটি শিফটের নাম লিখুন');
       return;
     }
-
-    try {
-      const payload = {
-        name: shiftName.trim(),
-        is_active: true,
-      };
-      await createShift(payload).unwrap();
-      alert('Shift created successfully!');
-      setShiftName('');
-    } catch (err) {
-      console.error('Error creating shift:', err);
-      alert(`Failed to create shift: ${err.status || 'Unknown error'} - ${JSON.stringify(err.data || {})}`);
-    }
+    setModalAction('create');
+    setModalData({ name: shiftName.trim(), is_active: true });
+    setIsModalOpen(true);
   };
 
   // Handle edit button click
@@ -51,71 +45,73 @@ const AddShift = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (!editShiftName.trim()) {
-      alert('Please enter a shift name');
+      toast.error('অনুগ্রহ করে একটি শিফটের নাম লিখুন');
       return;
     }
-
     const selectedShift = shiftData?.find((shift) => shift.id === editShiftId);
     if (!selectedShift) {
-      alert('Selected shift not found. Please try again.');
+      toast.error('নির্বাচিত শিফট পাওয়া যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।');
       return;
     }
-
-    try {
-      const payload = {
-        name: editShiftName.trim(),
-        is_active: selectedShift.is_active || true,
-      };
-      await updateShift({ id: editShiftId, ...payload }).unwrap();
-      alert('Shift updated successfully!');
-      setEditShiftId(null);
-      setEditShiftName('');
-    } catch (err) {
-      console.error('Error updating shift:', err);
-      alert(`Failed to update shift: ${err.status || 'Unknown error'} - ${JSON.stringify(err.data || {})}`);
-    }
+    setModalAction('update');
+    setModalData({ id: editShiftId, name: editShiftName.trim(), is_active: selectedShift.is_active || true });
+    setIsModalOpen(true);
   };
 
   // Handle toggle active status
-  const handleToggleActive = async (shift) => {
+  const handleToggleActive = (shift) => {
     if (!shift?.id) {
-      alert('Invalid shift ID. Please try again.');
+      toast.error('অবৈধ শিফট আইডি। অনুগ্রহ করে আবার চেষ্টা করুন।');
       return;
     }
-
-    try {
-      const payload = {
-        name: shift.name,
-        is_active: !shift.is_active,
-      };
-      await updateShift({ id: shift.id, ...payload }).unwrap();
-      alert(`Shift ${shift.name} is now ${!shift.is_active ? 'active' : 'inactive'}!`);
-    } catch (err) {
-      console.error('Error toggling shift active status:', err);
-      alert(`Failed to toggle active status: ${err.status || 'Unknown error'} - ${JSON.stringify(err.data || {})}`);
-    }
+    setModalAction('toggle');
+    setModalData({ id: shift.id, name: shift.name, is_active: !shift.is_active });
+    setIsModalOpen(true);
   };
 
   // Handle delete shift
-  const handleDelete = async (id) => {
+  const handleDelete = (id) => {
     if (!id) {
-      alert('Invalid shift ID. Please try again.');
+      toast.error('অবৈধ শিফট আইডি। অনুগ্রহ করে আবার চেষ্টা করুন।');
       return;
     }
+    setModalAction('delete');
+    setModalData({ id });
+    setIsModalOpen(true);
+  };
 
-    if (window.confirm('Are you sure you want to delete this shift?')) {
-      try {
-        await deleteShift(id).unwrap();
-        alert('Shift deleted successfully!');
-      } catch (err) {
-        console.error('Error deleting shift:', err);
-        alert(`Failed to delete shift: ${err.status || 'Unknown error'} - ${JSON.stringify(err.data || {})}`);
+  // Confirm action for modal
+  const confirmAction = async () => {
+    try {
+      if (modalAction === 'create') {
+        await createShift(modalData).unwrap();
+        toast.success('শিফট সফলভাবে তৈরি করা হয়েছে!');
+        setShiftName('');
+      } else if (modalAction === 'update') {
+        await updateShift({ id: modalData.id, ...modalData }).unwrap();
+        toast.success('শিফট সফলভাবে আপডেট করা হয়েছে!');
+        setEditShiftId(null);
+        setEditShiftName('');
+      } else if (modalAction === 'delete') {
+        await deleteShift(modalData.id).unwrap();
+        toast.success('শিফট সফলভাবে মুছে ফেলা হয়েছে!');
+      } else if (modalAction === 'toggle') {
+        await updateShift({ id: modalData.id, ...modalData }).unwrap();
+        toast.success(`শিফট ${modalData.name} এখন ${modalData.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}!`);
       }
+    } catch (err) {
+      console.error(`ত্রুটি ${modalAction === 'create' ? 'তৈরি' : modalAction === 'update' ? 'আপডেট' : modalAction === 'delete' ? 'মুছে ফেলা' : 'টগল করা'}:`, err);
+      toast.error(`শিফট ${modalAction === 'create' ? 'তৈরি' : modalAction === 'update' ? 'আপডেট' : modalAction === 'delete' ? 'মুছে ফেলা' : 'টগল করা'} ব্যর্থ: ${err.status || 'অজানা ত্রুটি'} - ${JSON.stringify(err.data || {})}`);
+    } finally {
+      setIsModalOpen(false);
+      setModalAction(null);
+      setModalData(null);
     }
   };
 
   return (
     <div className="py-8 w-full relative">
+      <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
           @keyframes fadeIn {
@@ -126,11 +122,25 @@ const AddShift = () => {
             from { transform: scale(0.95); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
           }
+          @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+          }
+          @keyframes slideDown {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(100%); opacity: 0; }
+          }
           .animate-fadeIn {
             animation: fadeIn 0.6s ease-out forwards;
           }
           .animate-scaleIn {
             animation: scaleIn 0.4s ease-out forwards;
+          }
+          .animate-slideUp {
+            animation: slideUp 0.4s ease-out forwards;
+          }
+          .animate-slideDown {
+            animation: slideDown 0.4s ease-out forwards;
           }
           .tick-glow {
             transition: all 0.3s ease;
@@ -158,16 +168,11 @@ const AddShift = () => {
       </style>
 
       <div className="mx-auto">
-        {/* <div className="flex items-center space-x-4 mb-10 animate-fadeIn">
-          <IoTime className="text-4xl text-[#441a05]" />
-          <h2 className="text-3xl font-bold text-[#441a05] tracking-tight">Add Shift</h2>
-        </div> */}
-
         {/* Form to Add Shift */}
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
           <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
             <IoTime className="text-4xl text-[#441a05]" />
-            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">Add New Shift</h3>
+            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">নতুন শিফট যোগ করুন</h3>
           </div>
 
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
@@ -177,15 +182,15 @@ const AddShift = () => {
               value={shiftName}
               onChange={(e) => setShiftName(e.target.value)}
               className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-              placeholder="Enter shift name (e.g., Day Shift)"
+              placeholder="শিফটের নাম লিখুন (যেমন, দিনের শিফট)"
               disabled={isCreating}
-              aria-label="Shift Name"
+              aria-label="শিফটের নাম"
               aria-describedby={createError ? "shift-error" : undefined}
             />
             <button
               type="submit"
               disabled={isCreating}
-              title="Create a new shift"
+              title="নতুন শিফট তৈরি করুন"
               className={`relative inline-flex items-center px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
                 isCreating ? 'cursor-not-allowed opacity-60' : 'hover:text-white'
               }`}
@@ -193,12 +198,12 @@ const AddShift = () => {
               {isCreating ? (
                 <span className="flex items-center space-x-3">
                   <FaSpinner className="animate-spin text-lg" />
-                  <span>Creating...</span>
+                  <span>তৈরি করা হচ্ছে...</span>
                 </span>
               ) : (
                 <span className="flex items-center space-x-2">
                   <IoAdd className="w-5 h-5" />
-                  <span>Create Shift</span>
+                  <span>শিফট তৈরি করুন</span>
                 </span>
               )}
             </button>
@@ -209,7 +214,7 @@ const AddShift = () => {
               className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
               style={{ animationDelay: '0.4s' }}
             >
-              Error: {createError.status || 'Unknown'} - {JSON.stringify(createError.data || {})}
+              ত্রুটি: {createError.status || 'অজানা'} - {JSON.stringify(createError.data || {})}
             </div>
           )}
         </div>
@@ -219,7 +224,7 @@ const AddShift = () => {
           <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
             <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
               <FaEdit className="text-3xl text-[#441a05]" />
-              <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">Edit Shift</h3>
+              <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">শিফট সম্পাদনা করুন</h3>
             </div>
             <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl">
               <input
@@ -228,16 +233,16 @@ const AddShift = () => {
                 value={editShiftName}
                 onChange={(e) => setEditShiftName(e.target.value)}
                 className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
-                placeholder="Edit shift name (e.g., Day Shift)"
-                aria-label="Edit Shift Name"
+                placeholder="শিফটের নাম সম্পাদনা করুন (যেমন, দিনের শিফট)"
+                aria-label="শিফটের নাম সম্পাদনা"
                 aria-describedby="edit-shift-error"
               />
               <button
                 type="submit"
-                title="Update shift"
+                title="শিফট আপডেট করুন"
                 className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
               >
-                Update Shift
+                শিফট আপডেট করুন
               </button>
               <button
                 type="button"
@@ -245,10 +250,10 @@ const AddShift = () => {
                   setEditShiftId(null);
                   setEditShiftName('');
                 }}
-                title="Cancel editing"
+                title="সম্পাদনা বাতিল করুন"
                 className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
               >
-                Cancel
+                বাতিল
               </button>
             </form>
           </div>
@@ -256,35 +261,35 @@ const AddShift = () => {
 
         {/* Shifts Table */}
         <div className="bg-black/10 px-6 py-2 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] border border-white/20">
-          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">Shifts List</h3>
+          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">শিফটের তালিকা</h3>
           {isShiftLoading ? (
-            <p className="p-4 text-[#441a05]/70">Loading shifts...</p>
+            <p className="p-4 text-[#441a05]/70">শিফট লোড হচ্ছে...</p>
           ) : shiftDataError ? (
             <p className="p-4 text-red-400">
-              Error loading shifts: {shiftDataError.status || 'Unknown'} -{' '}
+              শিফট লোড করতে ত্রুটি: {shiftDataError.status || 'অজানা'} -{' '}
               {JSON.stringify(shiftDataError.data || {})}
             </p>
           ) : shiftData?.length === 0 ? (
-            <p className="p-4 text-[#441a05]/70">No shifts available.</p>
+            <p className="p-4 text-[#441a05]/70">কোনো শিফট উপলব্ধ নেই।</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-white/20">
                 <thead className="bg-white/5">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Shift Name
+                      শিফটের নাম
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Active
+                      সক্রিয়
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Created At
+                      তৈরির সময়
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Updated At
+                      আপডেটের সময়
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Actions
+                      ক্রিয়াকলাপ
                     </th>
                   </tr>
                 </thead>
@@ -333,22 +338,22 @@ const AddShift = () => {
                         </label>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
-                        {new Date(shift.created_at).toLocaleString()}
+                        {new Date(shift.created_at).toLocaleString('bn-BD')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
-                        {new Date(shift.updated_at).toLocaleString()}
+                        {new Date(shift.updated_at).toLocaleString('bn-BD')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           onClick={() => handleEditClick(shift)}
-                          title="Edit shift"
+                          title="শিফট সম্পাদনা করুন"
                           className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
                         >
                           <FaEdit className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleDelete(shift.id)}
-                          title="Delete shift"
+                          title="শিফট মুছুন"
                           className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
                         >
                           <FaTrash className="w-5 h-5" />
@@ -361,6 +366,42 @@ const AddShift = () => {
             </div>
           )}
         </div>
+
+        {/* Confirmation Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
+            <div
+              className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"
+            >
+              <h3 className="text-lg font-semibold text-[#441a05] mb-4">
+                {modalAction === 'create' && 'নতুন শিফট নিশ্চিত করুন'}
+                {modalAction === 'update' && 'শিফট আপডেট নিশ্চিত করুন'}
+                {modalAction === 'delete' && 'শিফট মুছে ফেলা নিশ্চিত করুন'}
+                {modalAction === 'toggle' && 'শিফটের স্থিতি পরিবর্তন নিশ্চিত করুন'}
+              </h3>
+              <p className="text-[#441a05] mb-6">
+                {modalAction === 'create' && 'আপনি কি নিশ্চিত যে নতুন শিফট তৈরি করতে চান?'}
+                {modalAction === 'update' && 'আপনি কি নিশ্চিত যে শিফট আপডেট করতে চান?'}
+                {modalAction === 'delete' && 'আপনি কি নিশ্চিত যে এই শিফটটি মুছে ফেলতে চান?'}
+                {modalAction === 'toggle' && `আপনি কি নিশ্চিত যে শিফটটি ${modalData?.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'} করতে চান?`}
+              </p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
+                >
+                  বাতিল
+                </button>
+                <button
+                  onClick={confirmAction}
+                  className="px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white transition-colors duration-300 btn-glow"
+                >
+                  নিশ্চিত করুন
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

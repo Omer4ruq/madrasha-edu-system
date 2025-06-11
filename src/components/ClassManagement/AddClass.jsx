@@ -7,6 +7,7 @@ import {
   useCreateStudentClassApIMutation,
   useGetStudentClassApIQuery,
 } from "../../redux/features/api/student/studentClassApi";
+import { Toaster, toast } from "react-hot-toast";
 
 const AddClass = () => {
   const navigate = useNavigate();
@@ -16,10 +17,10 @@ const AddClass = () => {
     isLoading: isListLoading,
     error: listError,
   } = useGetStudentClassApIQuery();
-  console.log("class list of selected", classList)
-  const [createClass, { isLoading: isCreating }] =
-    useCreateStudentClassApIMutation();
+  console.log("নির্বাচিত ক্লাসের তালিকা", classList);
+  const [createClass, { isLoading: isCreating }] = useCreateStudentClassApIMutation();
   const [selectedClasses, setSelectedClasses] = useState({});
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (classList) {
@@ -39,6 +40,10 @@ const AddClass = () => {
   };
 
   const handleSubmit = async () => {
+    setIsModalOpen(true);
+  };
+
+  const confirmSubmit = async () => {
     try {
       const existingClassIds = classList
         ? classList.map((item) => item.student_class.id)
@@ -58,19 +63,21 @@ const AddClass = () => {
         await Promise.all(
           classesToCreate.map((classData) => createClass(classData).unwrap())
         );
-        alert("Selected classes created successfully!");
+        toast.success("নির্বাচিত ক্লাসগুলো সফলভাবে যোগ করা হয়েছে!");
       } else if (Object.values(selectedClasses).some((v) => v)) {
-        alert("All selected classes are already added!");
+        toast.error("সব নির্বাচিত ক্লাস ইতিমধ্যে যোগ করা হয়েছে!");
       } else {
-        alert("Please select at least one class");
+        toast.error("অন্তত একটি ক্লাস নির্বাচন করুন");
       }
     } catch (err) {
-      console.error("Error creating classes:", err);
-      alert(
-        `Failed to create classes: ${err.status || "Unknown"} - ${JSON.stringify(
+      console.error("ক্লাস যোগ করতে ত্রুটি:", err);
+      toast.error(
+        `ক্লাস যোগ করতে ব্যর্থ: ${err.status || "অজানা"} - ${JSON.stringify(
           err.data || {}
         )}`
       );
+    } finally {
+      setIsModalOpen(false);
     }
   };
 
@@ -84,7 +91,7 @@ const AddClass = () => {
         <div className="flex items-center gap-4 p-6 bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 animate-fadeIn">
           <FaSpinner className="animate-spin text-3xl text-[#DB9E30]" />
           <span className="text-lg font-medium text-[#441a05]">
-            Loading Classes...
+            ক্লাস লোড হচ্ছে...
           </span>
         </div>
       </div>
@@ -95,7 +102,7 @@ const AddClass = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="bg-red-500/10 border-l-4 border-red-600 text-red-400 p-6 rounded-2xl shadow-xl max-w-md animate-fadeIn">
-          <p className="font-semibold text-lg">Error</p>
+          <p className="font-semibold text-lg">ত্রুটি</p>
           <p className="mt-2">
             {error ? JSON.stringify(error) : JSON.stringify(listError)}
           </p>
@@ -106,6 +113,7 @@ const AddClass = () => {
 
   return (
     <div className="py-8 w-full relative">
+      <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
           @keyframes fadeIn {
@@ -116,11 +124,25 @@ const AddClass = () => {
             from { transform: scale(0.95); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
           }
+          @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+          }
+          @keyframes slideDown {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(100%); opacity: 0; }
+          }
           .animate-fadeIn {
             animation: fadeIn 0.6s ease-out forwards;
           }
           .animate-scaleIn {
             animation: scaleIn 0.4s ease-out forwards;
+          }
+          .animate-slideUp {
+            animation: slideUp 0.4s ease-out forwards;
+          }
+          .animate-slideDown {
+            animation: slideDown 0.4s ease-out forwards;
           }
           .tick-glow {
             transition: all 0.3s ease;
@@ -151,14 +173,14 @@ const AddClass = () => {
         {/* <div className="flex items-center space-x-4 mb-4 sm:mb-0">
           <IoSchool className="text-4xl text-[#441a05]" />
           <h2 className="text-3xl font-bold text-[#441a05] tracking-tight">
-            Add Classes
+            ক্লাস যোগ করুন
           </h2>
         </div> */}
         {/* <button
           onClick={handleViewClasses}
-          className="relative inline-flex items-center px-6 py-3 bg-[#DB9E30] text-[#441a05] font-medium rounded-lg hover:text-white  transition-all duration-300 animate-scaleIn"
+          className="relative inline-flex items-center px-6 py-3 bg-[#DB9E30] text-[#441a05] font-medium rounded-lg hover:text-white transition-all duration-300 animate-scaleIn"
         >
-          View Classes
+          ক্লাস দেখুন
         </button> */}
       </div>
 
@@ -166,7 +188,7 @@ const AddClass = () => {
         {/* Left: Select Classes */}
         <div className="lg:col-span-1 bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl p-6 animate-fadeIn h-full border border-white/20">
           <h3 className="text-lg font-semibold text-[#441a05] border-b border-white/20 pb-2 mb-4">
-            Select Classes
+            ক্লাস নির্বাচন করুন
           </h3>
           <div className="space-y-4 max-h-[60vh] overflow-y-auto">
             {classData?.map((classItem, index) => (
@@ -218,11 +240,13 @@ const AddClass = () => {
         {/* Right: Selected Classes */}
         <div className="lg:col-span-3 bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl p-6 animate-fadeIn max-h-[72vh] overflow-y-auto flex flex-col border border-white/20">
           <h3 className="text-lg font-semibold text-[#441a05] border-b border-white/20 pb-2 mb-4">
-            Selected Classes
+            নির্বাচিত ক্লাস
           </h3>
           {Object.keys(selectedClasses).length === 0 ||
           !Object.values(selectedClasses).some((v) => v) ? (
-            <p className="text-[#441a05]/70 italic">No classes selected yet.</p>
+            <p className="text-[#441a05]/70 italic">
+              এখনও কোনো ক্লাস নির্বাচন করা হয়নি।
+            </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 overflow-y-auto">
               {Object.keys(selectedClasses)
@@ -241,7 +265,7 @@ const AddClass = () => {
                       </span>
                       <button
                         onClick={() => handleToggle(id)}
-                        title="Remove class"
+                        title="ক্লাস সরান"
                         className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
                       >
                         <FaTrash className="w-5 h-5" />
@@ -265,15 +289,45 @@ const AddClass = () => {
               {isCreating ? (
                 <span className="flex items-center space-x-3">
                   <FaSpinner className="animate-spin text-lg" />
-                  <span>Submitting...</span>
+                  <span>জমা দেওয়া হচ্ছে...</span>
                 </span>
               ) : (
-                "Submit Selected Classes"
+                "নির্বাচিত ক্লাস জমা দিন"
               )}
             </button>
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
+          <div
+            className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"
+          >
+            <h3 className="text-lg font-semibold text-[#441a05] mb-4">
+              নির্বাচিত ক্লাস নিশ্চিত করুন
+            </h3>
+            <p className="text-[#441a05] mb-6">
+              আপনি কি নিশ্চিত যে নির্বাচিত ক্লাসগুলো জমা দিতে চান?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
+              >
+                বাতিল
+              </button>
+              <button
+                onClick={confirmSubmit}
+                className="px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white transition-colors duration-300 btn-glow"
+              >
+                নিশ্চিত করুন
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
