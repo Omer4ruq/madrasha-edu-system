@@ -8,11 +8,15 @@ import {
 } from '../../redux/features/api/student/studentSectionApi';
 import { FaEdit, FaSpinner, FaTrash } from 'react-icons/fa';
 import { IoAdd, IoAddCircle } from 'react-icons/io5';
+import { Toaster, toast } from 'react-hot-toast';
 
 const AddSection = () => {
   const [sectionName, setSectionName] = useState('');
   const [editSectionId, setEditSectionId] = useState(null);
   const [editSectionName, setEditSectionName] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalAction, setModalAction] = useState(null);
+  const [modalData, setModalData] = useState(null);
 
   // API hooks
   const {
@@ -29,21 +33,39 @@ const AddSection = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!sectionName.trim()) {
-      alert('Please enter a section name');
+      toast.error('অনুগ্রহ করে একটি সেকশনের নাম লিখুন');
       return;
     }
+    setModalAction('create');
+    setModalData({ name: sectionName.trim(), is_active: true });
+    setIsModalOpen(true);
+  };
 
+  const confirmAction = async () => {
     try {
-      const payload = {
-        name: sectionName.trim(),
-        is_active: true,
-      };
-      await createSection(payload).unwrap();
-      alert('Section created successfully!');
-      setSectionName('');
+      if (modalAction === 'create') {
+        await createSection(modalData).unwrap();
+        toast.success('সেকশন সফলভাবে তৈরি করা হয়েছে!');
+        setSectionName('');
+      } else if (modalAction === 'update') {
+        await updateSection(modalData).unwrap();
+        toast.success('সেকশন সফলভাবে আপডেট করা হয়েছে!');
+        setEditSectionId(null);
+        setEditSectionName('');
+      } else if (modalAction === 'delete') {
+        await deleteSection(modalData.id).unwrap();
+        toast.success('সেকশন সফলভাবে মুছে ফেলা হয়েছে!');
+      } else if (modalAction === 'toggle') {
+        await updateSection(modalData).unwrap();
+        toast.success(`সেকশন ${modalData.name} এখন ${modalData.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}!`);
+      }
     } catch (err) {
-      console.error('Error creating section:', err);
-      alert(`Failed to create section: ${err.status || 'Unknown error'} - ${JSON.stringify(err.data || {})}`);
+      console.error(`ত্রুটি ${modalAction === 'create' ? 'তৈরি' : modalAction === 'update' ? 'আপডেট' : modalAction === 'delete' ? 'মুছে ফেলা' : 'টগল করা'}:`, err);
+      toast.error(`সেকশন ${modalAction === 'create' ? 'তৈরি' : modalAction === 'update' ? 'আপডেট' : modalAction === 'delete' ? 'মুছে ফেলা' : 'টগল করা'} ব্যর্থ: ${err.status || 'অজানা ত্রুটি'} - ${JSON.stringify(err.data || {})}`);
+    } finally {
+      setIsModalOpen(false);
+      setModalAction(null);
+      setModalData(null);
     }
   };
 
@@ -57,57 +79,39 @@ const AddSection = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (!editSectionName.trim()) {
-      alert('Please enter a section name');
+      toast.error('অনুগ্রহ করে একটি সেকশনের নাম লিখুন');
       return;
     }
-
-    try {
-      const payload = {
-        id: editSectionId,
-        name: editSectionName.trim(),
-        is_active: sectionByIdData?.is_active || true,
-      };
-      await updateSection(payload).unwrap();
-      alert('Section updated successfully!');
-      setEditSectionId(null);
-      setEditSectionName('');
-    } catch (err) {
-      console.error('Error updating section:', err);
-      alert(`Failed to update section: ${err.status || 'Unknown error'} - ${JSON.stringify(err.data || {})}`);
-    }
+    setModalAction('update');
+    setModalData({
+      id: editSectionId,
+      name: editSectionName.trim(),
+      is_active: sectionByIdData?.is_active || true,
+    });
+    setIsModalOpen(true);
   };
 
   // Handle toggle active status
-  const handleToggleActive = async (section) => {
-    try {
-      const payload = {
-        id: section.id,
-        name: section.name,
-        is_active: !section.is_active,
-      };
-      await updateSection(payload).unwrap();
-      alert(`Section ${section.name} is now ${!section.is_active ? 'active' : 'inactive'}!`);
-    } catch (err) {
-      console.error('Error toggling section active status:', err);
-      alert(`Failed to toggle active status: ${err.status || 'Unknown error'} - ${JSON.stringify(err.data || {})}`);
-    }
+  const handleToggleActive = (section) => {
+    setModalAction('toggle');
+    setModalData({
+      id: section.id,
+      name: section.name,
+      is_active: !section.is_active,
+    });
+    setIsModalOpen(true);
   };
 
   // Handle delete section
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this section?')) {
-      try {
-        await deleteSection(id).unwrap();
-        alert('Section deleted successfully!');
-      } catch (err) {
-        console.error('Error deleting section:', err);
-        alert(`Failed to delete section: ${err.status || 'Unknown error'} - ${JSON.stringify(err.data || {})}`);
-      }
-    }
+  const handleDelete = (id) => {
+    setModalAction('delete');
+    setModalData({ id });
+    setIsModalOpen(true);
   };
 
   return (
     <div className="py-8 w-full relative">
+      <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
           @keyframes fadeIn {
@@ -118,11 +122,25 @@ const AddSection = () => {
             from { transform: scale(0.95); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
           }
+          @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+          }
+          @keyframes slideDown {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(100%); opacity: 0; }
+          }
           .animate-fadeIn {
             animation: fadeIn 0.6s ease-out forwards;
           }
           .animate-scaleIn {
             animation: scaleIn 0.4s ease-out forwards;
+          }
+          .animate-slideUp {
+            animation: slideUp 0.4s ease-out forwards;
+          }
+          .animate-slideDown {
+            animation: slideDown 0.4s ease-out forwards;
           }
           .tick-glow {
             transition: all 0.3s ease;
@@ -150,16 +168,11 @@ const AddSection = () => {
       </style>
 
       <div className="">
-        {/* <div className="flex items-center space-x-4 mb-10 animate-fadeIn">
-          <IoAddCircle className="text-4xl text-[#441a05]" />
-          <h2 className="text-3xl font-bold text-[#441a05] tracking-tight">Add Section</h2>
-        </div> */}
-
         {/* Form to Add Section */}
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
           <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
             <IoAddCircle className="text-4xl text-[#441a05]" />
-            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">Add New Section</h3>
+            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">নতুন সেকশন যোগ করুন</h3>
           </div>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
             <input
@@ -168,14 +181,14 @@ const AddSection = () => {
               value={sectionName}
               onChange={(e) => setSectionName(e.target.value)}
               className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-              placeholder="Enter section name (e.g., Section A)"
+              placeholder="সেকশনের নাম লিখুন (যেমন, সেকশন এ)"
               disabled={isCreating}
               aria-describedby={createError ? 'section-error' : undefined}
             />
             <button
               type="submit"
               disabled={isCreating}
-              title="Create a new section"
+              title="নতুন সেকশন তৈরি করুন"
               className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
                 isCreating ? 'cursor-not-allowed' : 'hover:text-white hover:shadow-md'
               }`}
@@ -183,12 +196,12 @@ const AddSection = () => {
               {isCreating ? (
                 <span className="flex items-center space-x-3">
                   <FaSpinner className="animate-spin text-lg" />
-                  <span>Creating...</span>
+                  <span>তৈরি করা হচ্ছে...</span>
                 </span>
               ) : (
                 <span className="flex items-center space-x-2">
                   <IoAdd className="w-5 h-5" />
-                  <span>Create Section</span>
+                  <span>সেকশন তৈরি করুন</span>
                 </span>
               )}
             </button>
@@ -199,7 +212,7 @@ const AddSection = () => {
               className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
               style={{ animationDelay: '0.4s' }}
             >
-              Error: {createError.status || 'Unknown'} - {JSON.stringify(createError.data || {})}
+              ত্রুটি: {createError.status || 'অজানা'} - {JSON.stringify(createError.data || {})}
             </div>
           )}
         </div>
@@ -209,7 +222,7 @@ const AddSection = () => {
           <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
             <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
               <FaEdit className="text-3xl text-[#441a05]" />
-              <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">Edit Section</h3>
+              <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">সেকশন সম্পাদনা করুন</h3>
             </div>
             <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl">
               <input
@@ -218,15 +231,15 @@ const AddSection = () => {
                 value={editSectionName}
                 onChange={(e) => setEditSectionName(e.target.value)}
                 className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
-                placeholder="Edit section name (e.g., Section A)"
+                placeholder="সেকশনের নাম সম্পাদনা করুন (যেমন, সেকশন এ)"
                 disabled={isUpdating}
-                aria-label="Edit Section Name"
+                aria-label="সেকশনের নাম সম্পাদনা"
                 aria-describedby="edit-section-error"
               />
               <button
                 type="submit"
                 disabled={isUpdating}
-                title="Update section"
+                title="সেকশন আপডেট করুন"
                 className={`relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
                   isUpdating ? 'cursor-not-allowed' : 'hover:text-white hover:shadow-md'
                 }`}
@@ -234,10 +247,10 @@ const AddSection = () => {
                 {isUpdating ? (
                   <span className="flex items-center space-x-2">
                     <FaSpinner className="animate-spin text-lg" />
-                    <span>Updating...</span>
+                    <span>আপডেট করা হচ্ছে...</span>
                   </span>
                 ) : (
-                  <span>Update Section</span>
+                  <span>সেকশন আপডেট করুন</span>
                 )}
               </button>
               <button
@@ -246,10 +259,10 @@ const AddSection = () => {
                   setEditSectionId(null);
                   setEditSectionName('');
                 }}
-                title="Cancel editing"
+                title="সম্পাদনা বাতিল করুন"
                 className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
               >
-                Cancel
+                বাতিল
               </button>
             </form>
           </div>
@@ -257,25 +270,25 @@ const AddSection = () => {
 
         {/* Sections Table */}
         <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
-          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">Sections List</h3>
+          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">সেকশনের তালিকা</h3>
           {isSectionLoading ? (
-            <p className="p-4 text-[#441a05]/70">Loading sections...</p>
+            <p className="p-4 text-[#441a05]/70">সেকশন লোড হচ্ছে...</p>
           ) : sectionDataError ? (
             <p className="p-4 text-red-400">
-              Error loading sections: {sectionDataError.status || 'Unknown'} - {JSON.stringify(sectionDataError.data || {})}
+              সেকশন লোড করতে ত্রুটি: {sectionDataError.status || 'অজানা'} - {JSON.stringify(sectionDataError.data || {})}
             </p>
           ) : sectionData?.length === 0 ? (
-            <p className="p-4 text-[#441a05]/70">No sections available.</p>
+            <p className="p-4 text-[#441a05]/70">কোনো সেকশন উপলব্ধ নেই।</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-white/20">
                 <thead className="bg-white/5">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Section Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Active</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Created At</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Updated At</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">সেকশনের নাম</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">সক্রিয়</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">তৈরির সময়</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">আপডেটের সময়</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ক্রিয়াকলাপ</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/20">
@@ -321,22 +334,22 @@ const AddSection = () => {
                         </label>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
-                        {new Date(section.created_at).toLocaleString()}
+                        {new Date(section.created_at).toLocaleString('bn-BD')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
-                        {new Date(section.updated_at).toLocaleString()}
+                        {new Date(section.updated_at).toLocaleString('bn-BD')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           onClick={() => handleEditClick(section)}
-                          title="Edit section"
+                          title="সেকশন সম্পাদনা করুন"
                           className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
                         >
                           <FaEdit className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleDelete(section.id)}
-                          title="Delete section"
+                          title="সেকশন মুছুন"
                           className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
                         >
                           <FaTrash className="w-5 h-5" />
@@ -349,6 +362,42 @@ const AddSection = () => {
             </div>
           )}
         </div>
+
+        {/* Confirmation Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
+            <div
+              className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"
+            >
+              <h3 className="text-lg font-semibold text-[#441a05] mb-4">
+                {modalAction === 'create' && 'নতুন সেকশন নিশ্চিত করুন'}
+                {modalAction === 'update' && 'সেকশন আপডেট নিশ্চিত করুন'}
+                {modalAction === 'delete' && 'সেকশন মুছে ফেলা নিশ্চিত করুন'}
+                {modalAction === 'toggle' && 'সেকশনের স্থিতি পরিবর্তন নিশ্চিত করুন'}
+              </h3>
+              <p className="text-[#441a05] mb-6">
+                {modalAction === 'create' && 'আপনি কি নিশ্চিত যে নতুন সেকশন তৈরি করতে চান?'}
+                {modalAction === 'update' && 'আপনি কি নিশ্চিত যে সেকশন আপডেট করতে চান?'}
+                {modalAction === 'delete' && 'আপনি কি নিশ্চিত যে এই সেকশনটি মুছে ফেলতে চান?'}
+                {modalAction === 'toggle' && `আপনি কি নিশ্চিত যে সেকশনটি ${modalData?.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'} করতে চান?`}
+              </p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
+                >
+                  বাতিল
+                </button>
+                <button
+                  onClick={confirmAction}
+                  className="px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white transition-colors duration-300 btn-glow"
+                >
+                  নিশ্চিত করুন
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
