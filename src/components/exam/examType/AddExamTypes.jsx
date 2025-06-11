@@ -1,13 +1,21 @@
 import React, { useState } from "react";
-
 import { FaEdit, FaSpinner, FaTrash } from "react-icons/fa";
 import { IoAdd, IoAddCircle } from "react-icons/io5";
-import { useCreateExamApiMutation, useDeleteExamApiMutation, useGetExamApiQuery, useUpdateExamApiMutation } from "../../../redux/features/api/exam/examApi";
+import { Toaster, toast } from "react-hot-toast";
+import {
+  useCreateExamApiMutation,
+  useDeleteExamApiMutation,
+  useGetExamApiQuery,
+  useUpdateExamApiMutation,
+} from "../../../redux/features/api/exam/examApi";
 
 const AddExamType = () => {
   const [examName, setExamName] = useState("");
   const [editExamId, setEditExamId] = useState(null);
   const [editExamName, setEditExamName] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalAction, setModalAction] = useState(null);
+  const [modalData, setModalData] = useState(null);
 
   // API hooks
   const {
@@ -23,26 +31,20 @@ const AddExamType = () => {
   const handleSubmitExam = async (e) => {
     e.preventDefault();
     if (!examName.trim()) {
-      alert("Please enter an exam type name");
+      toast.error("অনুগ্রহ করে একটি পরীক্ষার ধরনের নাম লিখুন");
       return;
     }
     if (examTypes?.some((et) => et.name.toLowerCase() === examName.toLowerCase())) {
-      alert("This exam type already exists!");
+      toast.error("এই পরীক্ষার ধরন ইতিমধ্যে বিদ্যমান!");
       return;
     }
 
-    try {
-      const payload = {
-        name: examName.trim(),
-        is_active: true,
-      };
-      await createExam(payload).unwrap();
-      alert("Exam type created successfully!");
-      setExamName("");
-    } catch (err) {
-      console.error("Error creating exam type:", err);
-      alert(`Failed to create exam type: ${err.status || "Unknown error"} - ${JSON.stringify(err.data || {})}`);
-    }
+    setModalAction("create");
+    setModalData({
+      name: examName.trim(),
+      is_active: true,
+    });
+    setIsModalOpen(true);
   };
 
   // Handle edit button click
@@ -55,57 +57,69 @@ const AddExamType = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (!editExamName.trim()) {
-      alert("Please enter an exam type name");
+      toast.error("অনুগ্রহ করে একটি পরীক্ষার ধরনের নাম লিখুন");
       return;
     }
 
-    try {
-      const payload = {
-        id: editExamId,
-        name: editExamName.trim(),
-        is_active: examTypes.find((et) => et.id === editExamId)?.is_active || true,
-      };
-      await updateExam(payload).unwrap();
-      alert("Exam type updated successfully!");
-      setEditExamId(null);
-      setEditExamName("");
-    } catch (err) {
-      console.error("Error updating exam type:", err);
-      alert(`Failed to update exam type: ${err.status || "Unknown error"} - ${JSON.stringify(err.data || {})}`);
-    }
+    setModalAction("update");
+    setModalData({
+      id: editExamId,
+      name: editExamName.trim(),
+      is_active: examTypes.find((et) => et.id === editExamId)?.is_active || true,
+    });
+    setIsModalOpen(true);
   };
 
   // Handle toggle active status
-  const handleToggleActive = async (exam) => {
-    try {
-      const payload = {
-        id: exam.id,
-        name: exam.name,
-        is_active: !exam.is_active,
-      };
-      await updateExam(payload).unwrap();
-      alert(`Exam type ${exam.name} is now ${!exam.is_active ? "active" : "inactive"}!`);
-    } catch (err) {
-      console.error("Error toggling exam type active status:", err);
-      alert(`Failed to toggle active status: ${err.status || "Unknown error"} - ${JSON.stringify(err.data || {})}`);
-    }
+  const handleToggleActive = (exam) => {
+    setModalAction("toggle");
+    setModalData({
+      id: exam.id,
+      name: exam.name,
+      is_active: !exam.is_active,
+    });
+    setIsModalOpen(true);
   };
 
   // Handle delete exam type
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this exam type?")) {
-      try {
-        await deleteExam(id).unwrap();
-        alert("Exam type deleted successfully!");
-      } catch (err) {
-        console.error("Error deleting exam type:", err);
-        alert(`Failed to delete exam type: ${err.status || "Unknown error"} - ${JSON.stringify(err.data || {})}`);
+  const handleDelete = (id) => {
+    setModalAction("delete");
+    setModalData({ id });
+    setIsModalOpen(true);
+  };
+
+  // Confirm action for modal
+  const confirmAction = async () => {
+    try {
+      if (modalAction === "create") {
+        await createExam(modalData).unwrap();
+        toast.success("পরীক্ষার ধরন সফলভাবে তৈরি করা হয়েছে!");
+        setExamName("");
+      } else if (modalAction === "update") {
+        await updateExam(modalData).unwrap();
+        toast.success("পরীক্ষার ধরন সফলভাবে আপডেট করা হয়েছে!");
+        setEditExamId(null);
+        setEditExamName("");
+      } else if (modalAction === "delete") {
+        await deleteExam(modalData.id).unwrap();
+        toast.success("পরীক্ষার ধরন সফলভাবে মুছে ফেলা হয়েছে!");
+      } else if (modalAction === "toggle") {
+        await updateExam(modalData).unwrap();
+        toast.success(`পরীক্ষার ধরন ${modalData.name} এখন ${modalData.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"}!`);
       }
+    } catch (err) {
+      console.error(`ত্রুটি ${modalAction === "create" ? "তৈরি" : modalAction === "update" ? "আপডেট" : modalAction === "delete" ? "মুছে ফেলা" : "টগল করা"}:`, err);
+      toast.error(`পরীক্ষার ধরন ${modalAction === "create" ? "তৈরি করা" : modalAction === "update" ? "আপডেট করা" : modalAction === "delete" ? "মুছে ফেলা" : "টগল করা"} ব্যর্থ: ${err.status || "অজানা ত্রুটি"} - ${JSON.stringify(err.data || {})}`);
+    } finally {
+      setIsModalOpen(false);
+      setModalAction(null);
+      setModalData(null);
     }
   };
 
   return (
     <div className="py-8 w-full relative">
+      <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
           @keyframes fadeIn {
@@ -116,11 +130,25 @@ const AddExamType = () => {
             from { transform: scale(0.95); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
           }
+          @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+          }
+          @keyframes slideDown {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(100%); opacity: 0; }
+          }
           .animate-fadeIn {
             animation: fadeIn 0.6s ease-out forwards;
           }
           .animate-scaleIn {
             animation: scaleIn 0.4s ease-out forwards;
+          }
+          .animate-slideUp {
+            animation: slideUp 0.3s ease-out forwards;
+          }
+          .animate-slideDown {
+            animation: slideDown 0.3s ease-out forwards;
           }
           .tick-glow {
             transition: all 0.3s ease;
@@ -142,22 +170,17 @@ const AddExamType = () => {
             border-radius: 10px;
           }
           ::-webkit-scrollbar-thumb:hover {
-            background: rgba(10, 13, 21, 0.44);
+            background: rgba(10, 10, 21, 0.44);
           }
         `}
       </style>
 
       <div className="">
-        {/* <div className="flex items-center space-x-4 mb-10 animate-fadeIn">
-          <IoAddCircle className="text-4xl text-[#441a05]" />
-          <h2 className="text-3xl font-bold text-[#441a05] tracking-tight">Add Exam Type</h2>
-        </div> */}
-
         {/* Form to Add Exam Type */}
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
           <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
             <IoAddCircle className="text-4xl text-[#441a05]" />
-            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">Add New Exam Type</h3>
+            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">নতুন পরীক্ষার ধরন যোগ করুন</h3>
           </div>
           <form onSubmit={handleSubmitExam} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
             <input
@@ -166,14 +189,14 @@ const AddExamType = () => {
               value={examName}
               onChange={(e) => setExamName(e.target.value)}
               className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-              placeholder="Enter exam type (e.g., Midterm)"
+              placeholder="পরীক্ষার ধরন লিখুন (যেমন, মধ্যবর্তী)"
               disabled={isCreating}
               aria-describedby={createError ? "exam-error" : undefined}
             />
             <button
               type="submit"
               disabled={isCreating}
-              title="Create a new exam type"
+              title="নতুন পরীক্ষার ধরন তৈরি করুন"
               className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
                 isCreating ? "cursor-not-allowed" : "hover:text-white hover:shadow-md"
               }`}
@@ -181,12 +204,12 @@ const AddExamType = () => {
               {isCreating ? (
                 <span className="flex items-center space-x-3">
                   <FaSpinner className="animate-spin text-lg" />
-                  <span>Creating...</span>
+                  <span>তৈরি করা হচ্ছে...</span>
                 </span>
               ) : (
                 <span className="flex items-center space-x-2">
                   <IoAdd className="w-5 h-5" />
-                  <span>Create Exam Type</span>
+                  <span>পরীক্ষার ধরন তৈরি করুন</span>
                 </span>
               )}
             </button>
@@ -197,7 +220,7 @@ const AddExamType = () => {
               className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
               style={{ animationDelay: "0.4s" }}
             >
-              Error: {createError.status || "Unknown"} - {JSON.stringify(createError.data || {})}
+              ত্রুটি: {createError.status || "অজানা"} - {JSON.stringify(createError.data || {})}
             </div>
           )}
         </div>
@@ -207,7 +230,7 @@ const AddExamType = () => {
           <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
             <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
               <FaEdit className="text-3xl text-[#441a05]" />
-              <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">Edit Exam Type</h3>
+              <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">পরীক্ষার ধরন সম্পাদনা করুন</h3>
             </div>
             <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl">
               <input
@@ -216,15 +239,15 @@ const AddExamType = () => {
                 value={editExamName}
                 onChange={(e) => setEditExamName(e.target.value)}
                 className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
-                placeholder="Edit exam type (e.g., Midterm)"
+                placeholder="পরীক্ষার ধরন সম্পাদনা করুন (যেমন, মধ্যবর্তী)"
                 disabled={isUpdating}
-                aria-label="Edit Exam Type"
+                aria-label="পরীক্ষার ধরন সম্পাদনা"
                 aria-describedby="edit-exam-error"
               />
               <button
                 type="submit"
                 disabled={isUpdating}
-                title="Update exam type"
+                title="পরীক্ষার ধরন আপডেট করুন"
                 className={`relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
                   isUpdating ? "cursor-not-allowed" : "hover:text-white hover:shadow-md"
                 }`}
@@ -232,10 +255,10 @@ const AddExamType = () => {
                 {isUpdating ? (
                   <span className="flex items-center space-x-2">
                     <FaSpinner className="animate-spin text-lg" />
-                    <span>Updating...</span>
+                    <span>আপডেট করা হচ্ছে...</span>
                   </span>
                 ) : (
-                  <span>Update Exam Type</span>
+                  <span>পরীক্ষার ধরন আপডেট করুন</span>
                 )}
               </button>
               <button
@@ -244,10 +267,10 @@ const AddExamType = () => {
                   setEditExamId(null);
                   setEditExamName("");
                 }}
-                title="Cancel editing"
+                title="সম্পাদনা বাতিল করুন"
                 className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
               >
-                Cancel
+                বাতিল
               </button>
             </form>
             {updateError && (
@@ -256,7 +279,7 @@ const AddExamType = () => {
                 className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
                 style={{ animationDelay: "0.4s" }}
               >
-                Error: {updateError.status || "Unknown"} - {JSON.stringify(updateError.data || {})}
+                ত্রুটি: {updateError.status || "অজানা"} - {JSON.stringify(updateError.data || {})}
               </div>
             )}
           </div>
@@ -264,35 +287,35 @@ const AddExamType = () => {
 
         {/* Exam Types Table */}
         <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
-          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">Exam Types List</h3>
+          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">পরীক্ষার ধরনের তালিকা</h3>
           {isExamLoading ? (
-            <p className="p-4 text-[#441a05]/70">Loading exam types...</p>
+            <p className="p-4 text-[#441a05]/70">পরীক্ষার ধরন লোড হচ্ছে...</p>
           ) : examError ? (
             <p className="p-4 text-red-400">
-              Error loading exam types: {examError.status || "Unknown"} -{" "}
+              পরীক্ষার ধরন লোড করতে ত্রুটি: {examError.status || "অজানা"} -{" "}
               {JSON.stringify(examError.data || {})}
             </p>
           ) : examTypes?.length === 0 ? (
-            <p className="p-4 text-[#441a05]/70">No exam types available.</p>
+            <p className="p-4 text-[#441a05]/70">কোনো পরীক্ষার ধরন উপলব্ধ নেই।</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-white/20">
                 <thead className="bg-white/5">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Exam Type
+                      পরীক্ষার ধরন
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Active
+                      সক্রিয়
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Created At
+                      তৈরির সময়
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Updated At
+                      আপডেটের সময়
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Actions
+                      ক্রিয়াকলাপ
                     </th>
                   </tr>
                 </thead>
@@ -341,22 +364,22 @@ const AddExamType = () => {
                         </label>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
-                        {new Date(exam.created_at).toLocaleString()}
+                        {new Date(exam.created_at).toLocaleString("bn-BD")}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
-                        {new Date(exam.updated_at).toLocaleString()}
+                        {new Date(exam.updated_at).toLocaleString("bn-BD")}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           onClick={() => handleEditClick(exam)}
-                          title="Edit exam type"
+                          title="পরীক্ষার ধরন সম্পাদনা করুন"
                           className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
                         >
                           <FaEdit className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleDelete(exam.id)}
-                          title="Delete exam type"
+                          title="পরীক্ষার ধরন মুছুন"
                           className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
                         >
                           <FaTrash className="w-5 h-5" />
@@ -374,13 +397,49 @@ const AddExamType = () => {
               style={{ animationDelay: "0.4s" }}
             >
               {isDeleting
-                ? "Deleting exam type..."
-                : `Error deleting exam type: ${deleteError?.status || "Unknown"} - ${JSON.stringify(
+                ? "পরীক্ষার ধরন মুছে ফেলা হচ্ছে..."
+                : `পরীক্ষার ধরন মুছে ফেলতে ত্রুটি: ${deleteError?.status || "অজানা"} - ${JSON.stringify(
                     deleteError?.data || {}
                   )}`}
             </div>
           )}
         </div>
+
+        {/* Confirmation Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
+            <div
+              className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"
+            >
+              <h3 className="text-lg font-semibold text-[#441a05] mb-4">
+                {modalAction === "create" && "নতুন পরীক্ষার ধরন নিশ্চিত করুন"}
+                {modalAction === "update" && "পরীক্ষার ধরন আপডেট নিশ্চিত করুন"}
+                {modalAction === "delete" && "পরীক্ষার ধরন মুছে ফেলা নিশ্চিত করুন"}
+                {modalAction === "toggle" && "পরীক্ষার ধরনের স্থিতি পরিবর্তন নিশ্চিত করুন"}
+              </h3>
+              <p className="text-[#441a05] mb-6">
+                {modalAction === "create" && "আপনি কি নিশ্চিত যে নতুন পরীক্ষার ধরন তৈরি করতে চান?"}
+                {modalAction === "update" && "আপনি কি নিশ্চিত যে পরীক্ষার ধরন আপডেট করতে চান?"}
+                {modalAction === "delete" && "আপনি কি নিশ্চিত যে এই পরীক্ষার ধরনটি মুছে ফেলতে চান?"}
+                {modalAction === "toggle" && `আপনি কি নিশ্চিত যে পরীক্ষার ধরনটি ${modalData?.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"} করতে চান?`}
+              </p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
+                >
+                  বাতিল
+                </button>
+                <button
+                  onClick={confirmAction}
+                  className="px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white transition-colors duration-300 btn-glow"
+                >
+                  নিশ্চিত করুন
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

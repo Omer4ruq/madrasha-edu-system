@@ -7,112 +7,115 @@ import {
 } from "../../redux/features/api/leave/leaveApi";
 import { FaEdit, FaSpinner, FaTrash } from "react-icons/fa";
 import { IoAdd, IoAddCircle } from "react-icons/io5";
+import { Toaster, toast } from "react-hot-toast";
 
 const AddLeaveType = () => {
-  const [isAdd, setIsAdd] = useState(true); // Added state for toggle
   const [leaveName, setLeaveName] = useState("");
   const [editLeaveId, setEditLeaveId] = useState(null);
-  const [editLeaveName, setEditLeaveName] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalAction, setModalAction] = useState(null);
+  const [modalData, setModalData] = useState(null);
 
   // API hooks
   const {
     data: leaveTypes,
     isLoading: isLeaveLoading,
     error: leaveError,
+    refetch,
   } = useGetLeaveApiQuery();
   const [createLeave, { isLoading: isCreating, error: createError }] = useCreateLeaveApiMutation();
   const [updateLeave, { isLoading: isUpdating, error: updateError }] = useUpdateLeaveApiMutation();
   const [deleteLeave, { isLoading: isDeleting, error: deleteError }] = useDeleteLeaveApiMutation();
 
-  // Handle form submission for adding new leave type
-  const handleSubmitLeave = async (e) => {
+  // Validate leave name
+  const validateLeaveName = (name) => {
+    const regex = /^[a-zA-Z0-9\s\-_,()]{1,50}$/;
+    return regex.test(name);
+  };
+
+  // Handle form submission for adding or updating leave type
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!leaveName.trim()) {
-      alert("Please enter a leave type name");
+    const name = editLeaveId ? leaveName.trim() : leaveName.trim();
+    if (!name) {
+      toast.error("অনুগ্রহ করে ছুটির ধরনের নাম লিখুন");
       return;
     }
-    if (leaveTypes?.some((lt) => lt.name.toLowerCase() === leaveName.toLowerCase())) {
-      alert("This leave type already exists!");
+    if (!validateLeaveName(name)) {
+      toast.error("নাম ৫০ অক্ষরের মধ্যে এবং বৈধ অক্ষর ধারণ করবে");
+      return;
+    }
+    if (leaveTypes?.some((lt) => lt.name.toLowerCase() === name.toLowerCase() && lt.id !== editLeaveId)) {
+      toast.error("এই ছুটির ধরন ইতিমধ্যে বিদ্যমান!");
       return;
     }
 
-    try {
-      const payload = {
-        name: leaveName.trim(),
-        is_active: true,
-      };
-      await createLeave(payload).unwrap();
-      alert("Leave type created successfully!");
-      setLeaveName("");
-    } catch (err) {
-      console.error("Error creating leave type:", err);
-      alert(`Failed to create leave type: ${err.status || "Unknown error"} - ${JSON.stringify(err.data || {})}`);
-    }
+    setModalAction(editLeaveId ? "update" : "create");
+    setModalData({
+      id: editLeaveId,
+      name: name,
+      is_active: editLeaveId ? leaveTypes.find((lt) => lt.id === editLeaveId)?.is_active || true : true,
+    });
+    setIsModalOpen(true);
   };
 
   // Handle edit button click
   const handleEditClick = (leave) => {
     setEditLeaveId(leave.id);
-    setEditLeaveName(leave.name);
-    setIsAdd(false); // Switch to edit mode
-  };
-
-  // Handle update leave type
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    if (!editLeaveName.trim()) {
-      alert("Please enter a leave type name");
-      return;
-    }
-
-    try {
-      const payload = {
-        id: editLeaveId,
-        name: editLeaveName.trim(),
-        is_active: leaveTypes.find((lt) => lt.id === editLeaveId)?.is_active || true,
-      };
-      await updateLeave(payload).unwrap();
-      alert("Leave type updated successfully!");
-      setEditLeaveId(null);
-      setEditLeaveName("");
-      setIsAdd(true); // Switch back to add mode
-    } catch (err) {
-      console.error("Error updating leave type:", err);
-      alert(`Failed to update leave type: ${err.status || "Unknown error"} - ${JSON.stringify(err.data || {})}`);
-    }
+    setLeaveName(leave.name);
   };
 
   // Handle toggle active status
-  const handleToggleActive = async (leave) => {
-    try {
-      const payload = {
-        id: leave.id,
-        name: leave.name,
-        is_active: !leave.is_active,
-      };
-      await updateLeave(payload).unwrap();
-      alert(`Leave type ${leave.name} is now ${!leave.is_active ? "active" : "inactive"}!`);
-    } catch (err) {
-      console.error("Error toggling leave type active status:", err);
-      alert(`Failed to toggle active status: ${err.status || "Unknown error"} - ${JSON.stringify(err.data || {})}`);
-    }
+  const handleToggleActive = (leave) => {
+    setModalAction("toggle");
+    setModalData({
+      id: leave.id,
+      name: leave.name,
+      is_active: !leave.is_active,
+    });
+    setIsModalOpen(true);
   };
 
   // Handle delete leave type
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this leave type?")) {
-      try {
-        await deleteLeave(id).unwrap();
-        alert("Leave type deleted successfully!");
-      } catch (err) {
-        console.error("Error deleting leave type:", err);
-        alert(`Failed to delete leave type: ${err.status || "Unknown error"} - ${JSON.stringify(err.data || {})}`);
+  const handleDelete = (id) => {
+    setModalAction("delete");
+    setModalData({ id });
+    setIsModalOpen(true);
+  };
+
+  // Confirm action for modal
+  const confirmAction = async () => {
+    try {
+      if (modalAction === "create") {
+        await createLeave({ name: modalData.name, is_active: modalData.is_active }).unwrap();
+        toast.success("ছুটির ধরন সফলভাবে তৈরি করা হয়েছে!");
+        setLeaveName("");
+      } else if (modalAction === "update") {
+        await updateLeave(modalData).unwrap();
+        toast.success("ছুটির ধরন সফলভাবে আপডেট করা হয়েছে!");
+        setEditLeaveId(null);
+        setLeaveName("");
+      } else if (modalAction === "delete") {
+        await deleteLeave(modalData.id).unwrap();
+        toast.success("ছুটির ধরন সফলভাবে মুছে ফেলা হয়েছে!");
+      } else if (modalAction === "toggle") {
+        await updateLeave(modalData).unwrap();
+        toast.success(`ছুটির ধরন ${modalData.name} এখন ${modalData.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"}!`);
       }
+      refetch();
+    } catch (err) {
+      console.error(`ত্রুটি ${modalAction === "create" ? "তৈরি করা" : modalAction === "update" ? "আপডেট" : modalAction === "delete" ? "মুছে ফেলা" : "টগল করা"}:`, err);
+      toast.error(`ছুটির ধরন ${modalAction === "create" ? "তৈরি" : modalAction === "update" ? "আপডেট" : modalAction === "delete" ? "মুছে ফেলা" : "টগল করা"} ব্যর্থ: ${err.status || "অজানা"} - ${JSON.stringify(err.data || {})}`);
+    } finally {
+      setIsModalOpen(false);
+      setModalAction(null);
+      setModalData(null);
     }
   };
 
   return (
     <div className="py-8 w-full relative">
+      <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
           @keyframes fadeIn {
@@ -123,11 +126,25 @@ const AddLeaveType = () => {
             from { transform: scale(0.95); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
           }
+          @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+          }
+          @keyframes slideDown {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(100%); opacity: 0; }
+          }
           .animate-fadeIn {
             animation: fadeIn 0.6s ease-out forwards;
           }
           .animate-scaleIn {
             animation: scaleIn 0.4s ease-out forwards;
+          }
+          .animate-slideUp {
+            animation: slideUp 0.4s ease-out forwards;
+          }
+          .animate-slideDown {
+            animation: slideDown 0.4s ease-out forwards;
           }
           .tick-glow {
             transition: all 0.3s ease;
@@ -154,150 +171,107 @@ const AddLeaveType = () => {
         `}
       </style>
 
-      <div className="">
-
-        {isAdd && (
-          <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-            <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-              <IoAddCircle className="text-4xl text-[#441a05]" />
-              <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">Add New Leave Type</h3>
-            </div>
-            <form onSubmit={handleSubmitLeave} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
-              <input
-                type="text"
-                id="leaveName"
-                value={leaveName}
-                onChange={(e) => setLeaveName(e.target.value)}
-                className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-                placeholder="Enter leave type (e.g., Sick Leave)"
-                disabled={isCreating}
-                aria-describedby={createError ? "leave-error" : undefined}
-              />
-              <button
-                type="submit"
-                disabled={isCreating}
-                title="Create a new leave type"
-                className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                  isCreating ? "cursor-not-allowed" : "hover:text-white hover:shadow-md"
-                }`}
-              >
-                {isCreating ? (
-                  <span className="flex items-center space-x-3">
-                    <FaSpinner className="animate-spin text-lg" />
-                    <span>Creating...</span>
-                  </span>
-                ) : (
-                  <span className="flex items-center space-x-2">
-                    <IoAdd className="w-5 h-5" />
-                    <span>Create Leave Type</span>
-                  </span>
-                )}
-              </button>
-            </form>
-            {createError && (
-              <div
-                id="leave-error"
-                className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
-                style={{ animationDelay: "0.4s" }}
-              >
-                Error: {createError.status || "Unknown"} - {JSON.stringify(createError.data || {})}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Edit Leave Form */}
-        {!isAdd && (
-          <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-            <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
+      <div>
+        {/* Add/Edit Leave Form */}
+        <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+          <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
+            {editLeaveId ? (
               <FaEdit className="text-3xl text-[#441a05]" />
-              <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">Edit Leave Type</h3>
-            </div>
-            <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl">
-              <input
-                type="text"
-                id="editLeaveName"
-                value={editLeaveName}
-                onChange={(e) => setEditLeaveName(e.target.value)}
-                className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
-                placeholder="Edit leave type (e.g., Sick Leave)"
-                disabled={isUpdating}
-                aria-label="Edit Leave Type"
-                aria-describedby="edit-leave-error"
-              />
-              <button
-                type="submit"
-                disabled={isUpdating}
-                title="Update leave type"
-                className={`relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                  isUpdating ? "cursor-not-allowed" : "hover:text-white hover:shadow-md"
-                }`}
-              >
-                {isUpdating ? (
-                  <span className="flex items-center space-x-2">
-                    <FaSpinner className="animate-spin text-lg" />
-                    <span>Updating...</span>
-                  </span>
-                ) : (
-                  <span>Update Leave Type</span>
-                )}
-              </button>
+            ) : (
+              <IoAddCircle className="text-4xl text-[#441a05]" />
+            )}
+            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
+              {editLeaveId ? "ছুটির ধরন সম্পাদনা করুন" : "নতুন ছুটির ধরন যোগ করুন"}
+            </h3>
+          </div>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl">
+            <input
+              type="text"
+              id="leaveName"
+              value={leaveName}
+              onChange={(e) => setLeaveName(e.target.value)}
+              className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
+              placeholder="ছুটির ধরন লিখুন (যেমন, অসুস্থতার ছুটি)"
+              disabled={isCreating || isUpdating}
+              aria-label="ছুটির ধরন"
+              title="ছুটির ধরন লিখুন (উদাহরণ: অসুস্থতার ছুটি) / Enter leave type (e.g., Sick Leave)"
+              aria-describedby={createError || updateError ? "leave-error" : undefined}
+            />
+            <button
+              type="submit"
+              disabled={isCreating || isUpdating}
+              title={editLeaveId ? "ছুটির ধরন আপডেট করুন / Update leave type" : "নতুন ছুটির ধরন তৈরি করুন / Create a new leave type"}
+              className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
+                isCreating || isUpdating ? "cursor-not-allowed" : "hover:text-white hover:shadow-md"
+              }`}
+            >
+              {(isCreating || isUpdating) ? (
+                <span className="flex items-center space-x-3">
+                  <FaSpinner className="animate-spin text-lg" />
+                  <span>{editLeaveId ? "আপডেট করা হচ্ছে..." : "তৈরি করা হচ্ছে..."}</span>
+                </span>
+              ) : (
+                <span className="flex items-center space-x-2">
+                  <IoAdd className="w-5 h-5" />
+                  <span>{editLeaveId ? "ছুটি আপডেট করুন" : "ছুটি তৈরি করুন"}</span>
+                </span>
+              )}
+            </button>
+            {editLeaveId && (
               <button
                 type="button"
                 onClick={() => {
                   setEditLeaveId(null);
-                  setEditLeaveName("");
-                  setIsAdd(true);
+                  setLeaveName("");
                 }}
-                title="Cancel editing"
+                title="সম্পাদনা বাতিল করুন / Cancel editing"
                 className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
               >
-                Cancel
+                বাতিল
               </button>
-            </form>
-            {updateError && (
-              <div
-                id="edit-leave-error"
-                className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
-                style={{ animationDelay: "0.4s" }}
-              >
-                Error: {updateError.status || "Unknown"} - {JSON.stringify(updateError.data || {})}
-              </div>
             )}
-          </div>
-        )}
+          </form>
+          {(createError || updateError) && (
+            <div
+              id="leave-error"
+              className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
+              style={{ animationDelay: "0.4s" }}
+            >
+              ত্রুটি: {(createError || updateError).status || "অজানা"} - {JSON.stringify((createError || updateError).data || {})}
+            </div>
+          )}
+        </div>
 
         {/* Leave Types Table */}
         <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
-          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">Leave Types List</h3>
+          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">ছুটির ধরনের তালিকা</h3>
           {isLeaveLoading ? (
-            <p className="p-4 text-[#441a05]/70">Loading leave types...</p>
+            <p className="p-4 text-[#441a05]/70">ছুটির ধরন লোড হচ্ছে...</p>
           ) : leaveError ? (
             <p className="p-4 text-red-400">
-              Error loading leave types: {leaveError.status || "Unknown"} -{" "}
-              {JSON.stringify(leaveError.data || {})}
+              ছুটির ধরন লোড করতে ত্রুটি: {leaveError.status || "অজানা"} - {JSON.stringify(leaveError.data || {})}
             </p>
           ) : leaveTypes?.length === 0 ? (
-            <p className="p-4 text-[#441a05]/70">No leave types available.</p>
+            <p className="p-4 text-[#441a05]/70">কোনো ছুটির ধরন উপলব্ধ নেই।</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-white/20">
                 <thead className="bg-white/5">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Leave Type
+                      ছুটির ধরন
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Active
+                      সক্রিয়
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Created At
+                      তৈরির সময়
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Updated At
+                      আপডেটের সময়
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Actions
+                      ক্রিয়াকলাপ
                     </th>
                   </tr>
                 </thead>
@@ -346,22 +320,22 @@ const AddLeaveType = () => {
                         </label>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
-                        {new Date(leave.created_at).toLocaleString()}
+                        {new Date(leave.created_at).toLocaleString("bn-BD")}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
-                        {new Date(leave.updated_at).toLocaleString()}
+                        {new Date(leave.updated_at).toLocaleString("bn-BD")}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           onClick={() => handleEditClick(leave)}
-                          title="Edit leave type"
+                          title="ছুটির ধরন সম্পাদনা করুন / Edit leave type"
                           className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
                         >
                           <FaEdit className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleDelete(leave.id)}
-                          title="Delete leave type"
+                          title="ছুটির ধরন মুছুন / Delete leave type"
                           className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
                         >
                           <FaTrash className="w-5 h-5" />
@@ -375,17 +349,53 @@ const AddLeaveType = () => {
           )}
           {(isDeleting || deleteError) && (
             <div
-              className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
-              style={{ animationDelay: "0.4s" }}
+              className="mt-4 text-red-500 bg-red-400/10 p-3 rounded-lg animate-fadeIn"
+              style={{}}
             >
               {isDeleting
-                ? "Deleting leave type..."
-                : `Error deleting leave type: ${deleteError?.status || "Unknown"} - ${JSON.stringify(
-                    deleteError?.data || {}
-                  )}`}
+                ? "ছুটির ধরন মুছে ফেলা হচ্ছে..."
+                : `ছুটির ধরন মুছে ফেলতে ত্রুটি: ${errorStatus || "Unknown"} - ${JSON.stringify(errorData || {})}`}
             </div>
           )}
         </div>
+
+        {/* Confirmation Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
+            <div
+              className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border-t border-white/20 animate-slideUp"
+            >
+              <h3 className="text-lg font-semibold text-[#441a05] mb-4">
+                {modalAction === "create" && "নতুন ছুটির ধরন নিশ্চিত করুন"}
+                {modalAction === "update" && "ছুটির ধরন আপডেট নিশ্চিত করুন"}
+                {modalAction === "delete" && "ছুটির ধরন মুছে ফেলা নিশ্চিত করুন"}
+                {modalAction === "toggle" && "ছুটির ধরনের স্থিতি পরিবর্তন নিশ্চিত করুন"}
+              </h3>
+              <p className="text-[#441a05] mb-6">
+                {modalAction === "create" && "আপনি কি নিশ্চিত যে নতুন ছুটির ধরন তৈরি করতে চান?"}
+                {modalAction === "update" && "আপনি কি নিশ্চিত যে ছুটির ধরন আপডেট করতে চান?"}
+                {modalAction === "delete" && "আপনি কি নিশ্চিত যে এই ছুটির ধরনটি মুছে ফেলতে চান?"}
+                {modalAction === "toggle" && `আপনি কি নিশ্চিত যে ছুটির ধরনটি ${modalData?.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"} করতে চান?`}
+              </p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
+                  title="বাতিল করুন / Cancel"
+                >
+                  বাতিল
+                </button>
+                <button
+                  onClick={confirmAction}
+                  className="px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white transition-colors duration-300 btn-glow"
+                  title="নিশ্চিত করুন / Confirm"
+                >
+                  নিশ্চিত করুন
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
