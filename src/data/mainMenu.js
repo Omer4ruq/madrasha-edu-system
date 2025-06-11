@@ -167,6 +167,11 @@ const mainMenu = [
         title: "আয়ের লিস্ট",
         link: "/accounts/income-list",
        },
+          {
+        id: "07/04",
+        title: "ব্যয়ের লিস্ট",
+        link: "/accounts/expense-list",
+       },
     ],
   },
   {

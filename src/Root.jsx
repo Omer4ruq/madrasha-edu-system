@@ -31,6 +31,7 @@ import AddWaivers from "./components/waivers/AddWaivers";
 import AddFeeHead from "./components/fees/AddFeeHead";
 import IncomeItems from "./components/income/IncomeItems";
 import ExpenseHead from "./components/expense/ExpenseHead";
+import ExpenseItems from "./components/expense/ExpenseItems";
 
 
 function Root() {
@@ -199,6 +200,10 @@ function Root() {
                {
                   path: "income-list",
                   element: <IncomeItems />,
+                },
+                {
+                  path: "expense-list",
+                  element: <ExpenseItems />,
                 },
             
           ],
