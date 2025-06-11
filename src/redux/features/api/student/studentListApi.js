@@ -1,11 +1,9 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-// Assuming your Django backend API is hosted at this base URL
 const BASE_URL = 'https://demo.easydr.xyz/api';
 
-// Helper function to get JWT token from localStorage or your preferred storage
 const getToken = () => {
-  return localStorage.getItem('token'); // Adjust based on your token storage method
+  return localStorage.getItem('token');
 };
 
 export const studentListApi = createApi({
@@ -21,56 +19,65 @@ export const studentListApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ['StudentListApI'],
+  tagTypes: ['StudentList'],
   endpoints: (builder) => ({
-    // GET: Fetch all StudentListApIs
-    getStudentListApI: builder.query({
-      query: () => '/student-list/',
-      providesTags: ['StudentListApI'],
+    getStudentList: builder.query({
+      query: ({ page = 1, page_size = 3, ...filters }) => {
+        const queryParams = new URLSearchParams({
+          page,
+          page_size,
+          ...Object.fromEntries(
+            Object.entries(filters).filter(([_, v]) => v !== '' && v !== null)
+          ),
+        });
+        return `/student-list/?${queryParams.toString()}`;
+      },
+      transformResponse: (response) => ({
+        students: response.results,
+        total: response.count,
+        next: response.next,
+        previous: response.previous,
+      }),
+      providesTags: ['StudentList'],
     }),
 
-    // GET: Fetch single StudentListApI by ID
-    getStudentListApIById: builder.query({
+    getStudentListById: builder.query({
       query: (id) => `/student-list/${id}/`,
-      providesTags: ['StudentListApI'],
+      providesTags: ['StudentList'],
     }),
 
-    // POST: Create a new StudentListApI
-    createStudentListApI: builder.mutation({
-      query: (StudentListApIData) => ({
+    createStudentList: builder.mutation({
+      query: (studentData) => ({
         url: '/student-list/',
         method: 'POST',
-        body: StudentListApIData,
+        body: studentData,
       }),
-      invalidatesTags: ['StudentListApI'],
+      invalidatesTags: ['StudentList'],
     }),
 
-    // PUT: Update an existing StudentListApI
-    updateStudentListApI: builder.mutation({
-      query: ({ id, ...StudentListApIData }) => ({
+    updateStudentList: builder.mutation({
+      query: ({ id, ...studentData }) => ({
         url: `/student-list/${id}/`,
         method: 'PUT',
-        body: StudentListApIData,
+        body: studentData,
       }),
-      invalidatesTags: ['StudentListApI'],
+      invalidatesTags: ['StudentList'],
     }),
 
-    // DELETE: Delete an StudentListApI
-    deleteStudentListApI: builder.mutation({
+    deleteStudentList: builder.mutation({
       query: (id) => ({
         url: `/student-list/${id}/`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['StudentListApI'],
+      invalidatesTags: ['StudentList'],
     }),
   }),
 });
 
-// Export hooks for usage in components
 export const {
-  useGetStudentListApIQuery,
-  useGetStudentListApIByIdQuery,
-  useCreateStudentListApIMutation,
-  useUpdateStudentListApIMutation,
-  useDeleteStudentListApIMutation,
+  useGetStudentListQuery,
+  useGetStudentListByIdQuery,
+  useCreateStudentListMutation,
+  useUpdateStudentListMutation,
+  useDeleteStudentListMutation,
 } = studentListApi;
