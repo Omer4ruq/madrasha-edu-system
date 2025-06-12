@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 // Base URL for the Django backend API
-const BASE_URL = 'https://easydr.xyz/api'; 
+const BASE_URL = 'https://demo.easydr.xyz/api'; 
 
 // Helper function to get JWT token from localStorage
 const getToken = () => {
@@ -26,7 +26,7 @@ export const classListApi = createApi({
    
     // GET: Fetch all Class types
     getClassListApi: builder.query({
-      query: () => '/gstudentclass/',
+      query: () => '/student-class/',
       providesTags: ['ClassListApi'],
     }),
   }),

@@ -2,20 +2,30 @@ import React, { useState, useCallback } from 'react';
 import { FaEdit, FaSpinner, FaTrash } from 'react-icons/fa';
 import toast, { Toaster } from 'react-hot-toast';
 import debounce from 'lodash.debounce';
+import Select from 'react-select';
 import {
   useDeleteStudentListMutation,
   useGetStudentListQuery,
   useUpdateStudentListMutation,
 } from '../../../redux/features/api/student/studentListApi';
+import { useGetClassListApiQuery } from '../../../redux/features/api/class/classListApi';
+import { useGetStudentSectionApiQuery } from '../../../redux/features/api/student/studentSectionApi';
+import { useGetStudentShiftApiQuery } from '../../../redux/features/api/student/studentShiftApi';
+import { useGetAcademicYearApiQuery } from '../../../redux/features/api/academic-year/academicYearApi';
+
 
 const StudentList = () => {
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
     name: '',
     user_id: '',
-    class_name: '',
-    section_name: '',
-    shift_name: '',
+    roll: '',
+    phone: '',
+    class: '', // Changed to match backend parameter
+    section: '', // Changed to match backend parameter
+    shift: '', // Changed to match backend parameter
+    admission_year: '',
+    status: '',
   });
   const [editStudentId, setEditStudentId] = useState(null);
   const [editStudentData, setEditStudentData] = useState({
@@ -42,6 +52,15 @@ const StudentList = () => {
     ...filters,
   });
 
+  // Fetch dropdown data
+  const { data: classes, isLoading: isClassesLoading } = useGetClassListApiQuery();
+  const { data: sections, isLoading: isSectionsLoading } = useGetStudentSectionApiQuery();
+  const { data: shifts, isLoading: isShiftsLoading } = useGetStudentShiftApiQuery();
+  const { data: academicYears, isLoading: isAcademicYearsLoading } = useGetAcademicYearApiQuery();
+
+
+  console.log(classes)
+
   const [updateStudent, { isLoading: isUpdating, error: updateError }] =
     useUpdateStudentListMutation();
   const [deleteStudent, { isLoading: isDeleting, error: deleteError }] =
@@ -52,6 +71,28 @@ const StudentList = () => {
   const totalPages = Math.ceil(totalItems / pageSize);
   const hasNextPage = !!studentData?.next;
   const hasPreviousPage = !!studentData?.previous;
+
+  // Format dropdown options
+  const classOptions = classes?.map((cls) => ({
+    value: cls.student_class.name,
+    label: cls.student_class.name,
+  })) || [];
+  const sectionOptions = sections?.map((sec) => ({
+    value: sec.name,
+    label: sec.name,
+  })) || [];
+  const shiftOptions = shifts?.map((shift) => ({
+    value: shift.name,
+    label: shift.name,
+  })) || [];
+  const academicYearOptions = academicYears?.map((year) => ({
+    value: year.name, // Assuming the API returns { id, year }
+    label: year.name,
+  })) || [];
+  const statusOptions = [
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+  ];
 
   // Debounced filter update
   const debouncedSetFilters = useCallback(
@@ -66,6 +107,14 @@ const StudentList = () => {
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     debouncedSetFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle select changes
+  const handleSelectChange = (selectedOption, { name }) => {
+    debouncedSetFilters((prev) => ({
+      ...prev,
+      [name]: selectedOption ? selectedOption.value : '',
+    }));
   };
 
   // Handle pagination
@@ -152,6 +201,46 @@ const StudentList = () => {
     }
   };
 
+  // Custom styles for react-select
+  const customSelectStyles = {
+    control: (provided) => ({
+      ...provided,
+      background: 'transparent',
+      borderColor: '#9d9087',
+      borderRadius: '0.5rem',
+      padding: '0.2rem',
+      color: '#441a05',
+      boxShadow: 'none',
+      '&:hover': {
+        borderColor: '#DB9E30',
+      },
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#DB9E30' : state.isFocused ? '#DB9E30' : 'transparent',
+      color: state.isSelected || state.isFocused ? '#fff' : '#441a05',
+      '&:hover': {
+        backgroundColor: '#94640f',
+        color: '#fff',
+      },
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: '#441a05',
+    }),
+    menu: (provided) => ({
+      ...provided,
+      background: '#fff',
+      borderRadius: '0.5rem',
+      border: '1px solid #9d9087',
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: '#441a05',
+      opacity: 0.7,
+    }),
+  };
+
   return (
     <div className="py-8 w-full">
       <Toaster position="top-right" reverseOrder={false} />
@@ -195,32 +284,73 @@ const StudentList = () => {
               name="user_id"
               value={filters.user_id}
               onChange={handleFilterChange}
-              className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
+              className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
               placeholder="ইউজার আইডি"
             />
             <input
               type="text"
-              name="class_name"
-              value={filters.class_name}
+              name="roll"
+              value={filters.roll}
               onChange={handleFilterChange}
-              className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
+              className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+              placeholder="রোল"
+            />
+            <input
+              type="text"
+              name="phone"
+              value={filters.phone}
+              onChange={handleFilterChange}
+              className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+              placeholder="ফোন নম্বর"
+            />
+            <Select
+              name="class"
+              options={classOptions}
+              onChange={handleSelectChange}
               placeholder="ক্লাস"
+              isClearable
+              isLoading={isClassesLoading}
+              styles={customSelectStyles}
+              className="w-full"
             />
-            <input
-              type="text"
-              name="section_name"
-              value={filters.section_name}
-              onChange={handleFilterChange}
-              className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
+            <Select
+              name="section"
+              options={sectionOptions}
+              onChange={handleSelectChange}
               placeholder="সেকশন"
+              isClearable
+              isLoading={isSectionsLoading}
+              styles={customSelectStyles}
+              className="w-full"
             />
-            <input
-              type="text"
-              name="shift_name"
-              value={filters.shift_name}
-              onChange={handleFilterChange}
-              className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
+            <Select
+              name="shift"
+              options={shiftOptions}
+              onChange={handleSelectChange}
               placeholder="শিফট"
+              isClearable
+              isLoading={isShiftsLoading}
+              styles={customSelectStyles}
+              className="w-full"
+            />
+            <Select
+              name="admission_year"
+              options={academicYearOptions}
+              onChange={handleSelectChange}
+              placeholder="ভর্তির বছর"
+              isClearable
+              isLoading={isAcademicYearsLoading}
+              styles={customSelectStyles}
+              className="w-full"
+            />
+            <Select
+              name="status"
+              options={statusOptions}
+              onChange={handleSelectChange}
+              placeholder="স্ট্যাটাস"
+              isClearable
+              styles={customSelectStyles}
+              className="w-full"
             />
           </div>
         </div>
@@ -348,7 +478,6 @@ const StudentList = () => {
             )}
           </div>
         )}
-
 
         {/* Student Table */}
         <div className="overflow-x-auto max-h-[60vh]">
@@ -489,44 +618,44 @@ const StudentList = () => {
           </div>
         )}
       </div>
-      
-        {/* Confirmation Modal */}
-        {isModalOpen && (
-          <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
-            <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
-              <h3 className="text-lg font-semibold text-[#441a05] mb-4">
-                ছাত্র মুছে ফেলা নিশ্চিত করুন
-              </h3>
-              <p className="text-[#441a05] mb-6">
-                আপনি কি নিশ্চিত যে এই ছাত্রটিকে মুছে ফেলতে চান?
-              </p>
-              <div className="flex justify-end space-x-4">
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
-                >
-                  বাতিল
-                </button>
-                <button
-                  onClick={confirmAction}
-                  disabled={isDeleting}
-                  className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg transition-colors duration-300 btn-glow ${
-                    isDeleting ? 'cursor-not-allowed opacity-60' : 'hover:text-white'
-                  }`}
-                >
-                  {isDeleting ? (
-                    <span className="flex items-center space-x-2">
-                      <FaSpinner className="animate-spin text-lg" />
-                      <span>মুছছে...</span>
-                    </span>
-                  ) : (
-                    'নিশ্চিত করুন'
-                  )}
-                </button>
-              </div>
+
+      {/* Confirmation Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
+          <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
+            <h3 className="text-lg font-semibold text-[#441a05] mb-4">
+              ছাত্র মুছে ফেলা নিশ্চিত করুন
+            </h3>
+            <p className="text-[#441a05] mb-6">
+              আপনি কি নিশ্চিত যে এই ছাত্রটিকে মুছে ফেলতে চান?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
+              >
+                বাতিল
+              </button>
+              <button
+                onClick={confirmAction}
+                disabled={isDeleting}
+                className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg transition-colors duration-300 btn-glow ${
+                  isDeleting ? 'cursor-not-allowed opacity-60' : 'hover:text-white'
+                }`}
+              >
+                {isDeleting ? (
+                  <span className="flex items-center space-x-2">
+                    <FaSpinner className="animate-spin text-lg" />
+                    <span>মুছছে...</span>
+                  </span>
+                ) : (
+                  'নিশ্চিত করুন'
+                )}
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 };

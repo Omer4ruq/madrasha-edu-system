@@ -22,10 +22,17 @@ export const studentListApi = createApi({
   tagTypes: ['StudentList'],
   endpoints: (builder) => ({
     getStudentList: builder.query({
-      query: ({ page = 1, page_size = 3, ...filters }) => {
+      query: ({ page = 1, 
+        // page_size = 3,
+         user_id, phone, class: className, section, shift, ...filters }) => {
         const queryParams = new URLSearchParams({
           page,
-          page_size,
+          // page_size,
+          userid: user_id || '',
+          phoneno: phone || '',
+          class: className || '',
+          section: section || '',
+          shift: shift || '',
           ...Object.fromEntries(
             Object.entries(filters).filter(([_, v]) => v !== '' && v !== null)
           ),
