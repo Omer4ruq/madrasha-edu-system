@@ -6,7 +6,7 @@ export default {
     extend: {
       colors: {
         // #DB9E30: "#DB9E30",
-        // #57A68F: "#DB9E30",
+        // #DB9E30: "#DB9E30",
         // tertiary: "#DB9E30",
         // buttonHover: "#131a42",
         // textBlack: "#212529",

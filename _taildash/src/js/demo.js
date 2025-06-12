@@ -11,7 +11,7 @@
   // Copy color value from CSS :root
   const style              =   getComputedStyle(document.body);
   const text_#DB9E30_500   =   style.getPropertyValue('--#DB9E30');
-  const text_#57A68F_500 =   style.getPropertyValue('--#57A68F');
+  const text_#DB9E30_500 =   style.getPropertyValue('--#DB9E30');
   const text_yellow_500    =   style.getPropertyValue('--yellow');
   const text_green_500     =   style.getPropertyValue('--green');
   const text_gray_500      =   style.getPropertyValue('--gray');
@@ -39,10 +39,10 @@
             label: 'Previous Week',
             data: [70, 121, 135, 234, 183, 104, 175, 13],
             fill: false,
-            borderColor: text_#57A68F_500,
+            borderColor: text_#DB9E30_500,
             borderDash: [5, 5],
             tension: 0.1,
-            pointBackgroundColor: text_#57A68F_500
+            pointBackgroundColor: text_#DB9E30_500
           },
           {
             label: 'Current Week',
@@ -100,10 +100,10 @@
             label: 'Previous Week',
             data: [6, 12, 8, 18, 11, 5, 16, 8],
             fill: false,
-            borderColor: text_#57A68F_500,
+            borderColor: text_#DB9E30_500,
             borderDash: [5, 5],
             tension: 0.1,
-            pointBackgroundColor: text_#57A68F_500,
+            pointBackgroundColor: text_#DB9E30_500,
           },
           {
             label: 'Current Week',
@@ -168,10 +168,10 @@
             label: 'Previous Week',
             data: [70, 21, 35, 34, 83, 14, 75, 13],
             fill: false,
-            borderColor: text_#57A68F_500,
+            borderColor: text_#DB9E30_500,
             borderDash: [5, 5],
             tension: 0.1,
-            pointBackgroundColor: text_#57A68F_500
+            pointBackgroundColor: text_#DB9E30_500
           },
           {
             label: 'Current Week',
@@ -231,7 +231,7 @@
 
       let #DB9E30_gradient = ctl_country.createLinearGradient(100, 200, 400, 600);
       #DB9E30_gradient.addColorStop(0, text_#DB9E30_500);
-      #DB9E30_gradient.addColorStop(1, text_#57A68F_500);
+      #DB9E30_gradient.addColorStop(1, text_#DB9E30_500);
 
       const CountryLine = new Chart(ctl_country, {
         type: 'bar',
@@ -300,7 +300,7 @@
             data: [925, 30, 252],
             backgroundColor: [
               text_#DB9E30_500,
-              text_#57A68F_500,
+              text_#DB9E30_500,
               text_green_500
             ],
             hoverOffset: 4
@@ -331,7 +331,7 @@
             data: [300, 150, 26, 18],
             backgroundColor: [
               text_#DB9E30_500,
-              text_#57A68F_500,
+              text_#DB9E30_500,
               text_yellow_500,
               text_green_500
             ],
@@ -362,7 +362,7 @@
             label: 'Daily',
             data: [70, 121, 135, 105, 76, 150, 195],
             fill: false,
-            borderColor: text_#57A68F_500,
+            borderColor: text_#DB9E30_500,
             borderWidth: 1,
             radius: 0,
             tension: 0.1
@@ -594,7 +594,7 @@
               hexToRGBA( text_#DB9E30_500, 0.6),
               text_yellow_500,
               hexToRGBA( text_yellow_500, 0.6),
-              text_#57A68F_500,
+              text_#DB9E30_500,
             ],
             hoverOffset: 4
           }]
@@ -754,11 +754,11 @@
             label: 'Previous Week',
             data: [12, 21, 18, 19, 17, 21, 25, 28],
             fill: false,
-            borderColor: text_#57A68F_500,
+            borderColor: text_#DB9E30_500,
             borderDash: [5, 5],
             tension: 0.1,
             cubicInterpolationMode: 'monotone',
-            pointBackgroundColor: text_#57A68F_500
+            pointBackgroundColor: text_#DB9E30_500
           },
           {
             label: 'Current Week',
@@ -827,7 +827,7 @@
             backgroundColor: [
               text_green_500,
               text_#DB9E30_500,
-              text_#57A68F_500,
+              text_#DB9E30_500,
             ],
             hoverOffset: 4
           }]
@@ -987,9 +987,9 @@
             label: 'Preview Data',
             data: [180, 110, 155, 80, 98],
             backgroundColor: [
-              text_#57A68F_500,
+              text_#DB9E30_500,
             ],
-            borderColor: text_#57A68F_500,
+            borderColor: text_#DB9E30_500,
             borderDash: [4, 4],
           }, 
           {
@@ -1102,7 +1102,7 @@
             data: [925, 30, 252],
             backgroundColor: [
               text_#DB9E30_500,
-              text_#57A68F_500,
+              text_#DB9E30_500,
               text_yellow_500
             ],
             hoverOffset: 4
@@ -1163,7 +1163,7 @@
       const gradientIndigo = ctla.createLinearGradient(0, 70, 0, 0);
 
       gradientIndigo.addColorStop(1, hexToRGBA( text_#DB9E30_500, 0.5));
-      gradientIndigo.addColorStop(0.2, hexToRGBA( text_#57A68F_500, 0.02));
+      gradientIndigo.addColorStop(0.2, hexToRGBA( text_#DB9E30_500, 0.02));
       gradientIndigo.addColorStop(0, hexToRGBA( text_#DB9E30_500, 0.01));
 
       const LineAreaSm = new Chart(ctla, {
@@ -1217,7 +1217,7 @@
       const gradientIndigo = ctb.createLinearGradient(0, 200, 0, 20);
 
       gradientIndigo.addColorStop(1, hexToRGBA( text_#DB9E30_500 ));
-      gradientIndigo.addColorStop(0.2, hexToRGBA( text_#57A68F_500 ));
+      gradientIndigo.addColorStop(0.2, hexToRGBA( text_#DB9E30_500 ));
 
       const BarChartSm = new Chart(ctb, {
         type: 'bar',
@@ -1313,7 +1313,7 @@
       const ctb = chart_share.getContext('2d');
       const gradientIndigo = ctb.createLinearGradient(0, 200, 0, 20);
 
-      gradientIndigo.addColorStop(1, hexToRGBA( text_#57A68F_500, 0.9));
+      gradientIndigo.addColorStop(1, hexToRGBA( text_#DB9E30_500, 0.9));
       gradientIndigo.addColorStop(0.2, hexToRGBA( text_#DB9E30_500, 0.2));
 
       const BarShare = new Chart(ctb, {
@@ -1370,13 +1370,13 @@
             fill: {
               target: 'origin'
             },
-            borderColor: text_#57A68F_500,
-            backgroundColor: hexToRGBA( text_#57A68F_500, 0.1),
+            borderColor: text_#DB9E30_500,
+            backgroundColor: hexToRGBA( text_#DB9E30_500, 0.1),
             tension: 0.3,
-            pointBackgroundColor: text_#57A68F_500,
+            pointBackgroundColor: text_#DB9E30_500,
             pointBorderWidth: 0,
             pointHitRadius: 30,
-            pointHoverBackgroundColor: text_#57A68F_500,
+            pointHoverBackgroundColor: text_#DB9E30_500,
             pointHoverRadius: 5,
             pointRadius: 0
           },
@@ -1443,11 +1443,11 @@
               data: [320, 80],
               backgroundColor: [
                 text_#DB9E30_500,
-                text_#57A68F_500
+                text_#DB9E30_500
               ],
               borderColor: [
                 text_#DB9E30_500,
-                text_#57A68F_500
+                text_#DB9E30_500
               ],
               borderWidth: 1
           }]

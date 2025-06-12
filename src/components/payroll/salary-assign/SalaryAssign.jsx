@@ -62,7 +62,7 @@ const SalaryAssign = () => {
         <h3 className="text-2xl font-medium">{t("module.payroll.createFee")}</h3>
         <button
           type="submit"
-          className="rounded w-20 p-2 bg-#57A68F hover:bg-buttonHover text-white shadow-md hover:-translate-y-[2px] duration-200 flex items-center justify-center gap-2"
+          className="rounded w-20 p-2 bg-#DB9E30 hover:bg-buttonHover text-white shadow-md hover:-translate-y-[2px] duration-200 flex items-center justify-center gap-2"
         >
           {t("module.payroll.listFee")}
         </button>

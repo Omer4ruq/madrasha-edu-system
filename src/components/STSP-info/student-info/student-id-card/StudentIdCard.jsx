@@ -30,7 +30,7 @@ const StudentIdCard = () => {
               </div>
               <div className="idd_image text-center">
                 <img
-                  className="w-[75px] h-[75px] inline-block mt-6 mb-2 rounded-md border-#57A68F border-2"
+                  className="w-[75px] h-[75px] inline-block mt-6 mb-2 rounded-md border-#DB9E30 border-2"
                   src="/images/profile.jpg"
                   alt="student image"
                 />
