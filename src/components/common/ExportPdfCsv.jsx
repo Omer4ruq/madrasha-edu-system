@@ -45,8 +45,8 @@ export default function ExportPdfCsv({handleOutsideClick}) {
 
     return (
         <div ref={exportRef} className="absolute bg-white top-10 right-0 shadow-md rounded">
-            <button className="text-#DB9E30 px-3 py-2  hover:bg-#57A68F hover:text-white duration-200 rounded-t w-28 block text-start" onClick={downloadCSV}>CSV</button>
-            <button className="text-#DB9E30 px-3 py-2  hover:bg-#57A68F hover:text-white duration-200 hover:rounded-b-sm w-28  block text-start" onClick={downloadPDF}>PDF</button>
+            <button className="text-#DB9E30 px-3 py-2  hover:bg-#DB9E30 hover:text-white duration-200 rounded-t w-28 block text-start" onClick={downloadCSV}>CSV</button>
+            <button className="text-#DB9E30 px-3 py-2  hover:bg-#DB9E30 hover:text-white duration-200 hover:rounded-b-sm w-28  block text-start" onClick={downloadPDF}>PDF</button>
         </div>
     );
 }

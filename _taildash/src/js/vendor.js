@@ -11,7 +11,7 @@
   // Copy color value from CSS :root
   const style              =   getComputedStyle(document.body);
   const text_#DB9E30_500   =   style.getPropertyValue('--#DB9E30');
-  const text_#57A68F_500 =   style.getPropertyValue('--#57A68F');
+  const text_#DB9E30_500 =   style.getPropertyValue('--#DB9E30');
   const text_yellow_500    =   style.getPropertyValue('--yellow');
   const text_green_500     =   style.getPropertyValue('--green');
   const text_gray_500      =   style.getPropertyValue('--gray');
@@ -89,8 +89,8 @@
             {
               title: 'All Day Event',
               start: yearmonth + '01',
-              backgroundColor: text_#57A68F_500,
-              borderColor: text_#57A68F_500
+              backgroundColor: text_#DB9E30_500,
+              borderColor: text_#DB9E30_500
             },
             {
               title: 'Long Event',
@@ -120,8 +120,8 @@
               title: 'Meeting',
               start: yearmonth + '12T10:30:00',
               end: yearmonth + '12T12:30:00',
-              backgroundColor: text_#57A68F_500,
-              borderColor: text_#57A68F_500
+              backgroundColor: text_#DB9E30_500,
+              borderColor: text_#DB9E30_500
             },
             {
               title: 'Lunch',
@@ -130,8 +130,8 @@
             {
               title: 'Meeting',
               start: yearmonth + '12T14:30:00',
-              backgroundColor: text_#57A68F_500,
-              borderColor: text_#57A68F_500
+              backgroundColor: text_#DB9E30_500,
+              borderColor: text_#DB9E30_500
             },
             {
               title: 'Birthday Party',

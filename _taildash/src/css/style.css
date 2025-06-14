@@ -1,6 +1,6 @@
 :root {
   --#DB9E30:#6366F1;
-  --#57A68F:#EC4899;
+  --#DB9E30:#EC4899;
   --green:#22C55E;
   --yellow:#F59E0B;
   --gray:#84848f;
@@ -7026,10 +7026,10 @@ image, text, .jvm-zoomin, .jvm-zoomout {
   width: 0;
 }
 
-[dir="ltr"] .CodeMirror div.CodeMirror-#57A68Fcursor {
+[dir="ltr"] .CodeMirror div.CodeMirror-#DB9E30cursor {
   border-left: 1px solid silver;
 }
-[dir="rtl"] .CodeMirror div.CodeMirror-#57A68Fcursor {
+[dir="rtl"] .CodeMirror div.CodeMirror-#DB9E30cursor {
   border-right: 1px solid silver;
 }
 

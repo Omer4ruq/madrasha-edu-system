@@ -22,7 +22,7 @@ export default function InfoAction({ addLink, amountToShow, handleAmountToShow }
                     </button>
                 </Link>
                 <div
-                    className="flex items-center gap-1 bg-#57A68F px-4 md:px-5 py-2 rounded-r text-white relative"
+                    className="flex items-center gap-1 bg-#DB9E30 px-4 md:px-5 py-2 rounded-r text-white relative"
                     onClick={() => setIsExport(state => !state)}
                 >
                     <button>{t("module.income.export")}</button>

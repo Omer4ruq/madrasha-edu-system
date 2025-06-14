@@ -21,11 +21,11 @@ export default function InstituteProfileHeader({data}) {
                <div className="space-y-2 md:space-y-4">
                   <h4 className="text-xl md:text-2xl text-#DB9E30 font-medium">{data?.institute_name}</h4>
                   <div className="flex gap-4">
-                     <div className="text-#57A68F flex items-center gap-1">
+                     <div className="text-#DB9E30 flex items-center gap-1">
                      <IoPersonCircleOutline/>
                      <h6 className="pt-[2px]">{data?.institute_gender_type} {t("general.school")}</h6>
                      </div>
-                     <div className="text-#57A68F flex items-center gap-1">
+                     <div className="text-#DB9E30 flex items-center gap-1">
                      <MdOutlineLocationOn /> 
                      <h6 className="pt-[2px]">{data?.institute_address}</h6>
                      </div>

@@ -18,7 +18,7 @@ export default function SearchPayslip() {
             type="text"
             name="ID"
             placeholder="Type Student ID"
-            className="w-9/12 bg-bgGray rounded p-2 text-textBlack font-medium outline-none border-2 border-transparent focus:border-#57A68F"
+            className="w-9/12 bg-bgGray rounded p-2 text-textBlack font-medium outline-none border-2 border-transparent focus:border-#DB9E30"
           />
           <button className="w-3/12 bg-red text-white p-2 tracking-wide rounded">
             {t("module.dashboard.search")}

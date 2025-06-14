@@ -17,7 +17,7 @@ export default function Footer() {
       </style>
       <div className="flex flex-col gap-2 sm:flex-row items-center justify-between leading-6">
         <p className="text-center font-medium text-[#441a05] text-xs">
-          © 2025 All Rights Reserved by FreelanceHub (BD) Limited
+          © 2025 All Rights Reserved by EduHub(BD) Limited
         </p>
         <div className="flex gap-4 text-center font-medium">
           <a
