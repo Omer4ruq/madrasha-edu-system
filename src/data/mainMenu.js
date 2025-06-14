@@ -173,17 +173,17 @@ const mainMenu = [
         link: "/accounts/expense-list",
       },
        {
-        id: "07/04",
+        id: "07/05",
         title: "ফি প্যাকেজ",
         link: "/accounts/fee-packages",
       },
          {
-        id: "07/05",
+        id: "07/06",
         title: "ফি নাম",
         link: "/accounts/fee-name",
       },
        {
-        id: "07/05",
+        id: "07/07",
         title: "current- ফি",
         link: "/accounts/current-fee",
       },
