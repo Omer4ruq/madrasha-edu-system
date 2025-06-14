@@ -1,111 +1,121 @@
 import React, { useState } from "react";
-
 import { FaEdit, FaSpinner, FaTrash } from "react-icons/fa";
 import { IoAdd, IoAddCircle } from "react-icons/io5";
-import { useCreateMealsNameApiMutation, useDeleteMealsNameApiMutation, useGetMealsNameApiQuery, useUpdateMealsNameApiMutation } from "../../redux/features/api/meal/mealsNameApi";
+import {
+  useCreateMealsNameApiMutation,
+  useDeleteMealsNameApiMutation,
+  useGetMealsNameApiQuery,
+  useUpdateMealsNameApiMutation,
+} from "../../redux/features/api/meal/mealsNameApi";
+import { Toaster, toast } from "react-hot-toast";
 
-const AddMealsType = () => {
+const AddMealType = () => {
   const [mealName, setMealName] = useState("");
   const [editMealId, setEditMealId] = useState(null);
-  const [editMealName, setEditMealName] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalAction, setModalAction] = useState(null);
+  const [modalData, setModalData] = useState(null);
 
   // API hooks
   const {
     data: mealTypes,
     isLoading: isMealsLoading,
     error: mealsError,
+    refetch,
   } = useGetMealsNameApiQuery();
   const [createMeal, { isLoading: isCreating, error: createError }] = useCreateMealsNameApiMutation();
   const [updateMeal, { isLoading: isUpdating, error: updateError }] = useUpdateMealsNameApiMutation();
   const [deleteMeal, { isLoading: isDeleting, error: deleteError }] = useDeleteMealsNameApiMutation();
 
-  // Handle form submission for adding new meal type
-  const handleSubmitMeal = async (e) => {
+  // Validate meal name
+  const validateMealName = (name) => {
+    const regex = /^[a-zA-Z0-9\s\-_,()]{1,50}$/;
+    return regex.test(name);
+  };
+
+  // Handle form submission for adding or updating meal type
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!mealName.trim()) {
-      alert("Please enter a meal type name");
+    const name = mealName.trim();
+    if (!name) {
+      toast.error("অনুগ্রহ করে খাবারের ধরনের নাম লিখুন");
       return;
     }
-    if (mealTypes?.some((mt) => mt.name.toLowerCase() === mealName.toLowerCase())) {
-      alert("This meal type already exists!");
+    if (!validateMealName(name)) {
+      toast.error("নাম ৫০ অক্ষরের মধ্যে এবং বৈধ অক্ষর ধারণ করবে");
+      return;
+    }
+    if (mealTypes?.some((mt) => mt.name.toLowerCase() === name.toLowerCase() && mt.id !== editMealId)) {
+      toast.error("এই খাবারের ধরন ইতিমধ্যে বিদ্যমান!");
       return;
     }
 
-    try {
-      const payload = {
-        name: mealName.trim(),
-        is_active: true,
-      };
-      await createMeal(payload).unwrap();
-      alert("Meal type created successfully!");
-      setMealName("");
-    } catch (err) {
-      console.error("Error creating meal type:", err);
-      alert(`Failed to create meal type: ${err.status || "Unknown error"} - ${JSON.stringify(err.data || {})}`);
-    }
+    setModalAction(editMealId ? "update" : "create");
+    setModalData({
+      id: editMealId,
+      name: name,
+      is_active: editMealId ? mealTypes.find((mt) => mt.id === editMealId)?.is_active || true : true,
+    });
+    setIsModalOpen(true);
   };
 
   // Handle edit button click
   const handleEditClick = (meal) => {
     setEditMealId(meal.id);
-    setEditMealName(meal.name);
-  };
-
-  // Handle update meal type
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    if (!editMealName.trim()) {
-      alert("Please enter a meal type name");
-      return;
-    }
-
-    try {
-      const payload = {
-        id: editMealId,
-        name: editMealName.trim(),
-        is_active: mealTypes.find((mt) => mt.id === editMealId)?.is_active || true,
-      };
-      await updateMeal(payload).unwrap();
-      alert("Meal type updated successfully!");
-      setEditMealId(null);
-      setEditMealName("");
-    } catch (err) {
-      console.error("Error updating meal type:", err);
-      alert(`Failed to update meal type: ${err.status || "Unknown error"} - ${JSON.stringify(err.data || {})}`);
-    }
+    setMealName(meal.name);
   };
 
   // Handle toggle active status
-  const handleToggleActive = async (meal) => {
-    try {
-      const payload = {
-        id: meal.id,
-        name: meal.name,
-        is_active: !meal.is_active,
-      };
-      await updateMeal(payload).unwrap();
-      alert(`Meal type ${meal.name} is now ${!meal.is_active ? "active" : "inactive"}!`);
-    } catch (err) {
-      console.error("Error toggling meal type active status:", err);
-      alert(`Failed to toggle active status: ${err.status || "Unknown error"} - ${JSON.stringify(err.data || {})}`);
-    }
+  const handleToggleActive = (meal) => {
+    setModalAction("toggle");
+    setModalData({
+      id: meal.id,
+      name: meal.name,
+      is_active: !meal.is_active,
+    });
+    setIsModalOpen(true);
   };
 
   // Handle delete meal type
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this meal type?")) {
-      try {
-        await deleteMeal(id).unwrap();
-        alert("Meal type deleted successfully!");
-      } catch (err) {
-        console.error("Error deleting meal type:", err);
-        alert(`Failed to delete meal type: ${err.status || "Unknown error"} - ${JSON.stringify(err.data || {})}`);
+  const handleDelete = (id) => {
+    setModalAction("delete");
+    setModalData({ id });
+    setIsModalOpen(true);
+  };
+
+  // Confirm action for modal
+  const confirmAction = async () => {
+    try {
+      if (modalAction === "create") {
+        await createMeal({ name: modalData.name, is_active: modalData.is_active }).unwrap();
+        toast.success("খাবারের ধরন সফলভাবে তৈরি করা হয়েছে!");
+        setMealName("");
+      } else if (modalAction === "update") {
+        await updateMeal(modalData).unwrap();
+        toast.success("খাবারের ধরন সফলভাবে আপডেট করা হয়েছে!");
+        setEditMealId(null);
+        setMealName("");
+      } else if (modalAction === "delete") {
+        await deleteMeal(modalData.id).unwrap();
+        toast.success("খাবারের ধরন সফলভাবে মুছে ফেলা হয়েছে!");
+      } else if (modalAction === "toggle") {
+        await updateMeal(modalData).unwrap();
+        toast.success(`খাবারের ধরন ${modalData.name} এখন ${modalData.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"}!`);
       }
+      refetch();
+    } catch (err) {
+      console.error(`ত্রুটি ${modalAction === "create" ? "তৈরি করা" : modalAction === "update" ? "আপডেট" : modalAction === "delete" ? "মুছে ফেলা" : "টগল করা"}:`, err);
+      toast.error(`খাবারের ধরন ${modalAction === "create" ? "তৈরি" : modalAction === "update" ? "আপডেট" : modalAction === "delete" ? "মুছে ফেলা" : "টগল করা"} ব্যর্থ: ${err.status || "অজানা"} - ${JSON.stringify(err.data || {})}`);
+    } finally {
+      setIsModalOpen(false);
+      setModalAction(null);
+      setModalData(null);
     }
   };
 
   return (
     <div className="py-8 w-full relative">
+      <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
           @keyframes fadeIn {
@@ -116,11 +126,25 @@ const AddMealsType = () => {
             from { transform: scale(0.95); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
           }
+          @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+          }
+          @keyframes slideDown {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(100%); opacity: 0; }
+          }
           .animate-fadeIn {
             animation: fadeIn 0.6s ease-out forwards;
           }
           .animate-scaleIn {
             animation: scaleIn 0.4s ease-out forwards;
+          }
+          .animate-slideUp {
+            animation: slideUp 0.4s ease-out forwards;
+          }
+          .animate-slideDown {
+            animation: slideDown 0.4s ease-out forwards;
           }
           .tick-glow {
             transition: all 0.3s ease;
@@ -147,152 +171,107 @@ const AddMealsType = () => {
         `}
       </style>
 
-      <div className="">
-        {/* <div className="flex items-center space-x-4 mb-10 animate-fadeIn">
-          <IoAddCircle className="text-4xl text-[#441a05]" />
-          <h2 className="text-3xl font-bold text-[#441a05] tracking-tight">Add Meal Type</h2>
-        </div> */}
-
-        {/* Form to Add Meal Type */}
+      <div>
+        {/* Add/Edit Meal Form */}
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
           <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-            <IoAddCircle className="text-4xl text-[#441a05]" />
-            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">Add New Meal Type</h3>
+            {editMealId ? (
+              <FaEdit className="text-3xl text-[#441a05]" />
+            ) : (
+              <IoAddCircle className="text-4xl text-[#441a05]" />
+            )}
+            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
+              {editMealId ? "খাবারের ধরন সম্পাদনা করুন" : "নতুন খাবারের ধরন যোগ করুন"}
+            </h3>
           </div>
-          <form onSubmit={handleSubmitMeal} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl">
             <input
               type="text"
               id="mealName"
               value={mealName}
               onChange={(e) => setMealName(e.target.value)}
               className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-              placeholder="Enter meal type (e.g., Breakfast)"
-              disabled={isCreating}
-              aria-describedby={createError ? "meal-error" : undefined}
+              placeholder="খাবারের ধরন লিখুন (যেমন, সকালের নাস্তা)"
+              disabled={isCreating || isUpdating}
+              aria-label="খাবারের ধরন"
+              title="খাবারের ধরন লিখুন (উদাহরণ: সকালের নাস্তা) / Enter meal type (e.g., Breakfast)"
+              aria-describedby={createError || updateError ? "meal-error" : undefined}
             />
             <button
               type="submit"
-              disabled={isCreating}
-              title="Create a new meal type"
+              disabled={isCreating || isUpdating}
+              title={editMealId ? "খাবারের ধরন আপডেট করুন / Update meal type" : "নতুন খাবারের ধরন তৈরি করুন / Create a new meal type"}
               className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                isCreating ? "cursor-not-allowed" : "hover:text-white hover:shadow-md"
+                isCreating || isUpdating ? "cursor-not-allowed" : "hover:text-white hover:shadow-md"
               }`}
             >
-              {isCreating ? (
+              {(isCreating || isUpdating) ? (
                 <span className="flex items-center space-x-3">
                   <FaSpinner className="animate-spin text-lg" />
-                  <span>Creating...</span>
+                  <span>{editMealId ? "আপডেট করা হচ্ছে..." : "তৈরি করা হচ্ছে..."}</span>
                 </span>
               ) : (
                 <span className="flex items-center space-x-2">
                   <IoAdd className="w-5 h-5" />
-                  <span>Create Meal Type</span>
+                  <span>{editMealId ? "খাবার আপডেট করুন" : "খাবার তৈরি করুন"}</span>
                 </span>
               )}
             </button>
+            {editMealId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditMealId(null);
+                  setMealName("");
+                }}
+                title="সম্পাদনা বাতিল করুন / Cancel editing"
+                className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
+              >
+                বাতিল
+              </button>
+            )}
           </form>
-          {createError && (
+          {(createError || updateError) && (
             <div
               id="meal-error"
               className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
               style={{ animationDelay: "0.4s" }}
             >
-              Error: {createError.status || "Unknown"} - {JSON.stringify(createError.data || {})}
+              ত্রুটি: {(createError || updateError).status || "অজানা"} - {JSON.stringify((createError || updateError).data || {})}
             </div>
           )}
         </div>
 
-        {/* Edit Meal Form */}
-        {editMealId && (
-          <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-            <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-              <FaEdit className="text-3xl text-[#441a05]" />
-              <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">Edit Meal Type</h3>
-            </div>
-            <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl">
-              <input
-                type="text"
-                id="editMealName"
-                value={editMealName}
-                onChange={(e) => setEditMealName(e.target.value)}
-                className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
-                placeholder="Edit meal type (e.g., Breakfast)"
-                disabled={isUpdating}
-                aria-label="Edit Meal Type"
-                aria-describedby="edit-meal-error"
-              />
-              <button
-                type="submit"
-                disabled={isUpdating}
-                title="Update meal type"
-                className={`relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                  isUpdating ? "cursor-not-allowed" : "hover:text-white hover:shadow-md"
-                }`}
-              >
-                {isUpdating ? (
-                  <span className="flex items-center space-x-2">
-                    <FaSpinner className="animate-spin text-lg" />
-                    <span>Updating...</span>
-                  </span>
-                ) : (
-                  <span>Update Meal Type</span>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEditMealId(null);
-                  setEditMealName("");
-                }}
-                title="Cancel editing"
-                className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
-              >
-                Cancel
-              </button>
-            </form>
-            {updateError && (
-              <div
-                id="edit-meal-error"
-                className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
-                style={{ animationDelay: "0.4s" }}
-              >
-                Error: {updateError.status || "Unknown"} - {JSON.stringify(updateError.data || {})}
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Meal Types Table */}
         <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
-          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">Meal Types List</h3>
+          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">খাবারের ধরনের তালিকা</h3>
           {isMealsLoading ? (
-            <p className="p-4 text-[#441a05]/70">Loading meal types...</p>
+            <p className="p-4 text-[#441a05]/70">খাবারের ধরন লোড হচ্ছে...</p>
           ) : mealsError ? (
             <p className="p-4 text-red-400">
-              Error loading meal types: {mealsError.status || "Unknown"} -{" "}
-              {JSON.stringify(mealsError.data || {})}
+              খাবারের ধরন লোড করতে ত্রুটি: {mealsError.status || "অজানা"} - {JSON.stringify(mealsError.data || {})}
             </p>
           ) : mealTypes?.length === 0 ? (
-            <p className="p-4 text-[#441a05]/70">No meal types available.</p>
+            <p className="p-4 text-[#441a05]/70">কোনো খাবারের ধরন উপলব্ধ নেই।</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-white/20">
                 <thead className="bg-white/5">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Meal Type
+                      খাবারের ধরন
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Active
+                      সক্রিয়
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Created At
+                      তৈরির সময়
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Updated At
+                      আপডেটের সময়
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      Actions
+                      ক্রিয়াকলাপ
                     </th>
                   </tr>
                 </thead>
@@ -341,22 +320,22 @@ const AddMealsType = () => {
                         </label>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
-                        {new Date(meal.created_at).toLocaleString()}
+                        {new Date(meal.created_at).toLocaleString("bn-BD")}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
-                        {new Date(meal.updated_at).toLocaleString()}
+                        {new Date(meal.updated_at).toLocaleString("bn-BD")}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           onClick={() => handleEditClick(meal)}
-                          title="Edit meal type"
+                          title="খাবারের ধরন সম্পাদনা করুন / Edit meal type"
                           className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
                         >
                           <FaEdit className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleDelete(meal.id)}
-                          title="Delete meal type"
+                          title="খাবারের ধরন মুছুন / Delete meal type"
                           className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
                         >
                           <FaTrash className="w-5 h-5" />
@@ -374,16 +353,54 @@ const AddMealsType = () => {
               style={{ animationDelay: "0.4s" }}
             >
               {isDeleting
-                ? "Deleting meal type..."
-                : `Error deleting meal type: ${deleteError?.status || "Unknown"} - ${JSON.stringify(
+                ? "খাবারের ধরন মুছে ফেলা হচ্ছে..."
+                : `খাবারের ধরন মুছে ফেলতে ত্রুটি: ${deleteError?.status || "অজানা"} - ${JSON.stringify(
                     deleteError?.data || {}
                   )}`}
             </div>
           )}
         </div>
+
+        {/* Confirmation Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
+            <div
+              className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"
+            >
+              <h3 className="text-lg font-semibold text-[#441a05] mb-4">
+                {modalAction === "create" && "নতুন খাবারের ধরন নিশ্চিত করুন"}
+                {modalAction === "update" && "খাবারের ধরন আপডেট নিশ্চিত করুন"}
+                {modalAction === "delete" && "খাবারের ধরন মুছে ফেলা নিশ্চিত করুন"}
+                {modalAction === "toggle" && "খাবারের ধরনের স্থিতি পরিবর্তন নিশ্চিত করুন"}
+              </h3>
+              <p className="text-[#441a05] mb-6">
+                {modalAction === "create" && "আপনি কি নিশ্চিত যে নতুন খাবারের ধরন তৈরি করতে চান?"}
+                {modalAction === "update" && "আপনি কি নিশ্চিত যে খাবারের ধরন আপডেট করতে চান?"}
+                {modalAction === "delete" && "আপনি কি নিশ্চিত যে এই খাবারের ধরনটি মুছে ফেলতে চান?"}
+                {modalAction === "toggle" && `আপনি কি নিশ্চিত যে খাবারের ধরনটি ${modalData?.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"} করতে চান?`}
+              </p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
+                  title="বাতিল করুন / Cancel"
+                >
+                  বাতিল
+                </button>
+                <button
+                  onClick={confirmAction}
+                  className="px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white transition-colors duration-300 btn-glow"
+                  title="নিশ্চিত করুন / Confirm"
+                >
+                  নিশ্চিত করুন
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default AddMealsType;
+export default AddMealType;

@@ -15,7 +15,6 @@ export const expenseItemsApi = createApi({
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
-      // Explicitly avoid setting Content-Type for file-upload endpoints
       if (endpoint !== 'createExpenseItem' && endpoint !== 'updateExpenseItem') {
         headers.set('Content-Type', 'application/json');
       }
@@ -25,9 +24,16 @@ export const expenseItemsApi = createApi({
   tagTypes: ['ExpenseItems'],
   endpoints: (builder) => ({
     getExpenseItems: builder.query({
-      query: () => '/expense-items/',
+      query: (page = 1) => `/expense-items/?page=${page}`,
       providesTags: ['ExpenseItems'],
-      transformResponse: (response) => Array.isArray(response) ? response : response.items || [],
+      transformResponse: (response) => {
+        return {
+          items: Array.isArray(response.results) ? response.results : [],
+          count: response.count || 0,
+          next: response.next || null,
+          previous: response.previous || null,
+        };
+      },
     }),
     getExpenseItemById: builder.query({
       query: (id) => `/expense-items/${id}/`,
@@ -40,7 +46,6 @@ export const expenseItemsApi = createApi({
           if (key === 'attach_doc' && value instanceof File) {
             formData.append(key, value);
           } else if (value !== null && value !== undefined) {
-            // Ensure numeric fields are sent as numbers
             if (['expensetype_id', 'fund_id', 'transaction_book_id', 'transaction_number', 'academic_year', 'created_by', 'updated_by'].includes(key)) {
               formData.append(key, parseInt(value));
             } else if (key === 'amount') {
@@ -65,7 +70,6 @@ export const expenseItemsApi = createApi({
           if (key === 'attach_doc' && value instanceof File) {
             formData.append(key, value);
           } else if (value !== null && value !== undefined) {
-            // Ensure numeric fields are sent as numbers
             if (['expensetype_id', 'fund_id', 'transaction_book_id', 'transaction_number', 'academic_year', 'created_by', 'updated_by'].includes(key)) {
               formData.append(key, parseInt(value));
             } else if (key === 'amount') {

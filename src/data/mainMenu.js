@@ -150,7 +150,7 @@ const mainMenu = [
             title: "ব্যয়ের ধরন",
             link: "/accounts/settings/expense-heads",
           },
-            {
+          {
             id: "07/01/04",
             title: "ফিসের ধরন",
             link: "/accounts/settings/fee-heads",
@@ -162,16 +162,31 @@ const mainMenu = [
         title: "ফি ছাড়",
         link: "/accounts/waivers",
       },
-       {
+      {
         id: "07/03",
         title: "আয়ের লিস্ট",
         link: "/accounts/income-list",
-       },
-          {
+      },
+      {
         id: "07/04",
         title: "ব্যয়ের লিস্ট",
         link: "/accounts/expense-list",
-       },
+      },
+       {
+        id: "07/04",
+        title: "ফি প্যাকেজ",
+        link: "/accounts/fee-packages",
+      },
+         {
+        id: "07/05",
+        title: "ফি নাম",
+        link: "/accounts/fee-name",
+      },
+       {
+        id: "07/05",
+        title: "current- ফি",
+        link: "/accounts/current-fee",
+      },
     ],
   },
   {
@@ -182,13 +197,37 @@ const mainMenu = [
     children: [
       {
         id: "08/01",
-        title: "ছাত্র নিবন্ধন",
-        link: "/users/student-registration",
+        title: "ছাত্র",
+        link: "/users/student",
+        children: [
+          {
+            id: "08/01/01",
+            title: "ছাত্র নিবন্ধন",
+            link: "/users/student",
+          },
+          {
+            id: "08/01/02",
+            title: "ছাত্রদের তালিকা",
+            link: "/users/student/student-list",
+          },
+        ],
       },
       {
         id: "08/02",
-        title: "কর্মকর্তা নিবন্ধন",
-        link: "/users/staff-registration",
+        title: "কর্মকর্তা",
+        link: "/users/staff",
+        children: [
+          {
+            id: "08/02/01",
+            title: "কর্মকর্তা নিবন্ধন",
+            link: "/users/staff",
+          },
+          {
+            id: "08/02/02",
+            title: "কর্মকর্তাদের তালিকা",
+            link: "/users/staff/staff-list",
+          },
+        ],
       },
     ],
   },

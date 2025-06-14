@@ -32,6 +32,11 @@ import AddFeeHead from "./components/fees/AddFeeHead";
 import IncomeItems from "./components/income/IncomeItems";
 import ExpenseHead from "./components/expense/ExpenseHead";
 import ExpenseItems from "./components/expense/ExpenseItems";
+import StudentList from "./components/users/student-list/StudentList";
+import StaffList from "./components/users/staff-list/StaffList";
+import AddFeePackages from "./components/fees/AddFeePackages";
+import AddFeesName from "./components/fees/AddFeesName";
+import CurrentFees from "./components/fees/CurrentFees";
 
 function Root() {
   const router = createBrowserRouter([
@@ -116,10 +121,6 @@ function Root() {
                   index: true,
                   element: <AddExamTypes />,
                 },
-                {
-                  path: "*",
-                  element: <Navigate to="/talimat/settings" replace />,
-                },
               ],
             },
             {
@@ -147,19 +148,6 @@ function Root() {
                   element: <Navigate to="/talimat/class-management" replace />,
                 },
               ],
-            },
-          ],
-        },
-        {
-          path: "users",
-          children: [
-            {
-              path: "student-registration",
-              element: <StudentRegistrationForm></StudentRegistrationForm>,
-            },
-            {
-              path: "staff-registration",
-              element: <StaffRegistrationForm></StaffRegistrationForm>,
             },
           ],
         },
@@ -195,12 +183,54 @@ function Root() {
               path: "income-list",
               element: <IncomeItems />,
             },
-             
+
+            {
+              path: "expense-list",
+              element: <ExpenseItems />,
+            },
+              {
+              path: "fee-packages",
+              element: <AddFeePackages />,
+            },
+              {
+              path: "fee-name",
+              element: <AddFeesName />,
+            },
+             {
+              path: "current-fee",
+              element: <CurrentFees />,
+            },
+          ],
+        },
+        {
+          path: "users",
+          children: [
+            {
+              path: "student",
+              children: [
                 {
-                  path: "expense-list",
-                  element: <ExpenseItems />,
+                  index: true,
+                  element: <StudentRegistrationForm />,
                 },
-            
+                {
+                  path: "student-list",
+                  element: <StudentList />,
+                },
+              ],
+            },
+            {
+              path: "staff",
+              children: [
+                {
+                  index: true,
+                  element: <StaffRegistrationForm />,
+                },
+                {
+                  path: "staff-list",
+                  element: <StaffList />,
+                },
+              ],
+            },
           ],
         },
       ],

@@ -38,6 +38,11 @@ import { expenseItemsApi } from './features/api/expense-items/expenseItemsApi';
 import { waiversApi } from './features/api/waivers/waiversApi';
 import { academicYearApi } from './features/api/academic-year/academicYearApi';
 import { transactionBooksApi } from './features/api/transaction-books/transactionBooksApi';
+import { feesNameApi } from './features/api/fees-name/feesName';
+import { gfeeSubheadsApi } from './features/api/gfee-subheads/gfeeSubheadsApi';
+import { feesApi } from './features/api/fees/feesApi';
+import { studentFeesCurrentApi } from './features/api/studentFeesCurrentApi/studentFeesCurrentApi';
+import { studentFeesPreviousApi } from './features/api/studentFeesPreviousApi/studentFeesPreviousApi';
 
 
 
@@ -84,6 +89,11 @@ export const store = configureStore({
     [waiversApi.reducerPath]: waiversApi.reducer,
     [academicYearApi.reducerPath]: academicYearApi.reducer,
     [transactionBooksApi.reducerPath]: transactionBooksApi.reducer,
+    [feesNameApi.reducerPath]: feesNameApi.reducer,
+    [gfeeSubheadsApi.reducerPath]: gfeeSubheadsApi.reducer,
+    [feesApi.reducerPath]: feesApi.reducer,
+    [studentFeesCurrentApi.reducerPath]: studentFeesCurrentApi.reducer,
+    [studentFeesPreviousApi.reducerPath]: studentFeesPreviousApi.reducer,
 
 
   
@@ -133,6 +143,11 @@ export const store = configureStore({
     .concat(waiversApi.middleware)
     .concat(academicYearApi.middleware)
     .concat(transactionBooksApi.middleware)
+    .concat(feesNameApi.middleware)
+    .concat(gfeeSubheadsApi.middleware)
+    .concat(feesApi.middleware)
+    .concat(studentFeesCurrentApi.middleware)
+    .concat(studentFeesPreviousApi.middleware)
 
   
     

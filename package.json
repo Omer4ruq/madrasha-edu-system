@@ -12,8 +12,10 @@
   "dependencies": {
     "@infinite-table/infinite-react": "^4.2.0",
     "@reduxjs/toolkit": "^2.8.2",
+    "antd": "^5.26.0",
     "axios": "^1.7.9",
     "chart.js": "^4.4.3",
+    "date-fns": "^4.1.0",
     "html2canvas": "^1.4.1",
     "i18next": "^23.15.2",
     "i18next-browser-languagedetector": "^8.0.0",

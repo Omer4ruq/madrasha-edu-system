@@ -28,21 +28,32 @@ const ExpenseItems = () => {
   });
   const [editId, setEditId] = useState(null);
   const [errors, setErrors] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Adjust based on API default or desired items per page
 
   const { data: expenseTypes = [], isLoading: isTypesLoading } = useGetExpenseHeadsQuery();
   const { data: fundTypes = [], isLoading: isFundLoading, error: fundError } = useGetFundsQuery();
   const { data: academicYears = [], isLoading: isYearsLoading } = useGetAcademicYearApiQuery();
   const { data: transactionBooks = [], isLoading: isBooksLoading } = useGetTransactionBooksQuery();
-  const { data: expenseItems = [], isLoading: isItemsLoading, error: itemsError } = useGetExpenseItemsQuery();
+  const { 
+    data: expenseData, 
+    isLoading: isItemsLoading, 
+    error: itemsError 
+  } = useGetExpenseItemsQuery(currentPage);
+  
+  const expenseItems = expenseData?.items || [];
+  const totalItems = expenseData?.count || 0;
+  const hasNext = !!expenseData?.next;
+  const hasPrevious = !!expenseData?.previous;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
   const [createExpenseItem, { isLoading: isCreating, error: createError }] = useCreateExpenseItemMutation();
   const [updateExpenseItem, { isLoading: isUpdating, error: updateError }] = useUpdateExpenseItemMutation();
   const [deleteExpenseItem, { isLoading: isDeleting, error: deleteError }] = useDeleteExpenseItemMutation();
 
+  console.log("expenseData:", expenseData);
   console.log("expenseItems:", expenseItems);
-  console.log("expenseTypes:", expenseTypes);
-  console.log("fundTypes:", fundTypes);
-  console.log("academicYears:", academicYears);
-  console.log("transactionBooks:", transactionBooks);
+  console.log("totalItems:", totalItems, "currentPage:", currentPage);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -60,20 +71,17 @@ const ExpenseItems = () => {
     if (!fund_id) errors.fund_id = "Fund is required";
     if (!expense_date) errors.expense_date = "Expense date is required";
     if (!amount) errors.amount = "Amount is required";
-    else if (parseFloat(amount) <= 0) errors.amount = "Amount must be greater than 0";
+    else if (isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) errors.amount = "Amount must be a valid positive number";
     if (!academic_year) errors.academic_year = "Academic year is required";
     
-    // Validate transaction_book_id if provided
     if (transaction_book_id && (isNaN(parseInt(transaction_book_id)) || parseInt(transaction_book_id) <= 0)) {
       errors.transaction_book_id = "Transaction book ID must be a valid positive integer";
     }
     
-    // Validate transaction_number if provided
     if (transaction_number && (isNaN(parseInt(transaction_number)) || parseInt(transaction_number) <= 0)) {
       errors.transaction_number = "Transaction number must be a valid positive integer";
     }
-
-    // Validate employee_id if provided
+    
     if (employee_id && !employee_id.trim()) {
       errors.employee_id = "Employee ID cannot be empty if provided";
     }
@@ -81,68 +89,65 @@ const ExpenseItems = () => {
     return Object.keys(errors).length ? errors : null;
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  const validationErrors = validateForm(formData);
-  if (validationErrors) {
-    setErrors(validationErrors);
-    return;
-  }
-  try {
-    const payload = {
-      expensetype_id: parseInt(formData.expensetype_id),
-      name: formData.name.trim(),
-      fund_id: parseInt(formData.fund_id),
-      expense_date: formData.expense_date,
-      amount: parseFloat(formData.amount),
-      description: formData.description.trim() || "",
-      academic_year: parseInt(formData.academic_year),
-      created_by: parseInt(localStorage.getItem("userId")) || 1,
-    };
-
-    // Only include transaction_book_id if valid
-    if (formData.transaction_book_id && !isNaN(parseInt(formData.transaction_book_id))) {
-      payload.transaction_book_id = parseInt(formData.transaction_book_id);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const validationErrors = validateForm(formData);
+    if (validationErrors) {
+      setErrors(validationErrors);
+      return;
     }
+    try {
+      const payload = {
+        expensetype_id: parseInt(formData.expensetype_id),
+        name: formData.name.trim(),
+        fund_id: parseInt(formData.fund_id),
+        expense_date: formData.expense_date,
+        amount: parseFloat(formData.amount),
+        description: formData.description.trim() || "",
+        academic_year: parseInt(formData.academic_year),
+        created_by: parseInt(localStorage.getItem("userId")) || 1,
+      };
 
-    // Only include transaction_number if valid
-    if (formData.transaction_number && !isNaN(parseInt(formData.transaction_number))) {
-      payload.transaction_number = parseInt(formData.transaction_number);
+      if (formData.transaction_book_id && !isNaN(parseInt(formData.transaction_book_id))) {
+        payload.transaction_book_id = parseInt(formData.transaction_book_id);
+      }
+
+      if (formData.transaction_number && !isNaN(parseInt(formData.transaction_number))) {
+        payload.transaction_number = parseInt(formData.transaction_number);
+      }
+
+      if (formData.employee_id.trim()) {
+        payload.employee_id = formData.employee_id.trim();
+      }
+
+      if (formData.attach_doc) {
+        payload.attach_doc = formData.attach_doc;
+      }
+
+      console.log("Create payload:", payload);
+      await createExpenseItem(payload).unwrap();
+      alert("Expense item created successfully!");
+      setFormData({
+        expensetype_id: "",
+        name: "",
+        fund_id: "",
+        transaction_book_id: "",
+        transaction_number: "",
+        expense_date: "",
+        amount: "",
+        employee_id: "",
+        attach_doc: null,
+        description: "",
+        academic_year: "",
+      });
+      setErrors({});
+      setCurrentPage(1); // Reset to first page after creating new item
+    } catch (err) {
+      console.error("Create error:", err);
+      setErrors(err.data || {});
+      alert(`Failed to create expense item: ${err.status || "Unknown"} - ${JSON.stringify(err.data || {})}`);
     }
-
-    // Only include employee_id if provided
-    if (formData.employee_id.trim()) {
-      payload.employee_id = formData.employee_id.trim();
-    }
-
-    // Only include attach_doc if provided
-    if (formData.attach_doc) {
-      payload.attach_doc = formData.attach_doc;
-    }
-
-    console.log("Create payload:", payload);
-    await createExpenseItem(payload).unwrap();
-    alert("Expense item created successfully!");
-    setFormData({
-      expensetype_id: "",
-      name: "",
-      fund_id: "",
-      transaction_book_id: "",
-      transaction_number: "",
-      expense_date: "",
-      amount: "",
-      employee_id: "",
-      attach_doc: null,
-      description: "",
-      academic_year: "",
-    });
-    setErrors({});
-  } catch (err) {
-    console.error("Create error:", err);
-    setErrors(err.data || {});
-    alert(`Failed to create expense item: ${err.status || "Unknown"} - ${JSON.stringify(err.data || {})}`);
-  }
-};
+  };
 
   const handleEditClick = (item) => {
     setEditId(item.id);
@@ -155,7 +160,7 @@ const handleSubmit = async (e) => {
       expense_date: item.expense_date || "",
       amount: item.amount || "",
       employee_id: item.employee_id || "",
-      attach_doc: null, // File input cannot prefill
+      attach_doc: null,
       description: item.description || "",
       academic_year: item.academic_year?.toString() || "",
     });
@@ -182,22 +187,18 @@ const handleSubmit = async (e) => {
         updated_by: parseInt(localStorage.getItem("userId")) || 1,
       };
 
-      // Only include transaction_book_id if valid
       if (formData.transaction_book_id && !isNaN(parseInt(formData.transaction_book_id))) {
         payload.transaction_book_id = parseInt(formData.transaction_book_id);
       }
 
-      // Only include transaction_number if valid
       if (formData.transaction_number && !isNaN(parseInt(formData.transaction_number))) {
         payload.transaction_number = parseInt(formData.transaction_number);
       }
 
-      // Only include employee_id if provided
       if (formData.employee_id.trim()) {
         payload.employee_id = formData.employee_id.trim();
       }
 
-      // Only include attach_doc if provided
       if (formData.attach_doc) {
         payload.attach_doc = formData.attach_doc;
       }
@@ -236,6 +237,12 @@ const handleSubmit = async (e) => {
         console.error("Delete error:", err);
         alert(`Failed to delete expense item: ${err.status || "Unknown"} - ${JSON.stringify(err.data || {})}`);
       }
+    }
+  };
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
     }
   };
 
@@ -494,59 +501,98 @@ const handleSubmit = async (e) => {
         ) : expenseItems.length === 0 ? (
           <p className="p-4 text-[#441a05]/70">No expense items available.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-white/20">
-              <thead className="bg-white/5">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Expense Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Fund</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Transaction #</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Employee ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Academic Year</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/20">
-                {expenseItems?.map((item, index) => (
-                  <tr key={item.id} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {expenseTypes.find((type) => type.id === item.expensetype_id)?.expensetype || "Unknown"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{item.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {fundTypes.find((fund) => fund.id === item.fund_id)?.name || item.fund_id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{item.transaction_number || "-"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{item.employee_id || "-"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{item.expense_date}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{item.amount}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {academicYears.find((year) => year.id === item.academic_year)?.name || item.academic_year}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button
-                        onClick={() => handleEditClick(item)}
-                        className="text-[#441a05] hover:text-blue-500 mr-4 transition-all duration-300"
-                        aria-label={`Edit ${item.name}`}
-                      >
-                        <FaEdit className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="text-[#441a05] hover:text-red-500 transition-all duration-300"
-                        aria-label={`Delete ${item.name}`}
-                      >
-                        <FaTrash className="w-5 h-5" />
-                      </button>
-                    </td>
+          <>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-white/20">
+                <thead className="bg-white/5">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Expense Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Fund</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Transaction #</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Employee ID</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Academic Year</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">Actions</th>
                   </tr>
+                </thead>
+                <tbody className="divide-y divide-white/20">
+                  {expenseItems.map((item, index) => (
+                    <tr key={item.id} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {expenseTypes.find((type) => type.id === item.expensetype_id)?.expensetype || "Unknown"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{item.name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {fundTypes.find((fund) => fund.id === item.fund_id)?.name || item.fund_id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{item.transaction_number || "-"}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{item.employee_id || "-"}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{item.expense_date}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{item.amount}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {academicYears.find((year) => year.id === item.academic_year)?.name || item.academic_year}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <button
+                          onClick={() => handleEditClick(item)}
+                          className="text-[#441a05] hover:text-blue-500 mr-4 transition-all duration-300"
+                          aria-label={`Edit ${item.name}`}
+                        >
+                          <FaEdit className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="text-[#441a05] hover:text-red-500 transition-all duration-300"
+                          aria-label={`Delete ${item.name}`}
+                        >
+                          <FaTrash className="w-5 h-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Pagination Controls */}
+            <div className="flex justify-between items-center mt-4">
+              <div className="text-sm text-[#441a05]/70">
+                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} items
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={!hasPrevious}
+                  className={`px-4 py-2 rounded-lg text-[#441a05] transition-all duration-300 ${
+                    hasPrevious ? "bg-[#DB9E30] hover:text-white" : "bg-gray-500 cursor-not-allowed opacity-50"
+                  }`}
+                >
+                  Previous
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+                      currentPage === page ? "bg-[#DB9E30] text-white" : "bg-gray-500 text-[#441a05] hover:text-white"
+                    }`}
+                  >
+                    {page}
+                  </button>
                 ))}
-              </tbody>
-            </table>
-          </div>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={!hasNext}
+                  className={`px-4 py-2 rounded-lg text-[#441a05] transition-all duration-300 ${
+                    hasNext ? "bg-[#DB9E30] hover:text-white" : "bg-gray-500 cursor-not-allowed opacity-50"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </>
         )}
         {(isDeleting || deleteError) && (
           <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">

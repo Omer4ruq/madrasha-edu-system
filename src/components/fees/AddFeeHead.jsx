@@ -2,77 +2,108 @@ import React, { useState } from "react";
 import { FaEdit, FaSpinner, FaTrash } from "react-icons/fa";
 import { IoAdd, IoAddCircle } from "react-icons/io5";
 import { useCreateFeeHeadMutation, useDeleteFeeHeadMutation, useGetFeeHeadsQuery, useUpdateFeeHeadMutation } from "../../redux/features/api/fee-heads/feeHeadsApi";
-
+import toast, { Toaster } from "react-hot-toast";
 
 const AddFeeHead = () => {
   const [feeHeadName, setFeeHeadName] = useState("");
   const [editFeeHeadId, setEditFeeHeadId] = useState(null);
   const [editFeeHeadName, setEditFeeHeadName] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalAction, setModalAction] = useState(null);
+  const [modalData, setModalData] = useState(null);
 
+  // API hooks
   const { data: feeHeads = [], isLoading: isFeeHeadLoading, error: feeHeadError } = useGetFeeHeadsQuery();
   const [createFeeHead, { isLoading: isCreating, error: createError }] = useCreateFeeHeadMutation();
   const [updateFeeHead, { isLoading: isUpdating, error: updateError }] = useUpdateFeeHeadMutation();
   const [deleteFeeHead, { isLoading: isDeleting, error: deleteError }] = useDeleteFeeHeadMutation();
 
+  // Handle form submission for adding new fee head
   const handleSubmitFeeHead = async (e) => {
     e.preventDefault();
     if (!feeHeadName.trim()) {
-      alert("Please enter a fee head name");
+      toast.error("অনুগ্রহ করে ফি হেডের নাম লিখুন");
       return;
     }
     if (feeHeads.some((fh) => fh.name.toLowerCase() === feeHeadName.toLowerCase())) {
-      alert("This fee head already exists!");
+      toast.error("এই ফি হেড ইতিমধ্যে বিদ্যমান!");
       return;
     }
-    try {
-      await createFeeHead({ sl: Math.floor(Math.random() * 2147483647), name: feeHeadName.trim() }).unwrap();
-      alert("Fee head created successfully!");
-      setFeeHeadName("");
-    } catch (err) {
-      alert(`Failed to create fee head: ${err.status || "Unknown error"}`);
-    }
+    setModalAction("create");
+    setModalData({
+      sl: Math.floor(Math.random() * 2147483647), // Generate random sl number
+      name: feeHeadName.trim(),
+    });
+    setIsModalOpen(true);
   };
 
+  // Handle edit button click
   const handleEditClick = (feeHead) => {
     setEditFeeHeadId(feeHead.id);
     setEditFeeHeadName(feeHead.name);
   };
 
+  // Handle update fee head
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (!editFeeHeadName.trim()) {
-      alert("Please enter a fee head name");
+      toast.error("অনুগ্রহ করে ফি হেডের নাম লিখুন");
       return;
     }
-    try {
-      await updateFeeHead({ id: editFeeHeadId, name: editFeeHeadName.trim() }).unwrap();
-      alert("Fee head updated successfully!");
-      setEditFeeHeadId(null);
-      setEditFeeHeadName("");
-    } catch (err) {
-      alert(`Failed to update fee head: ${err.status || "Unknown error"}`);
-    }
+    setModalAction("update");
+    setModalData({
+      id: editFeeHeadId,
+      name: editFeeHeadName.trim(),
+    });
+    setIsModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this fee head?")) {
-      try {
-        await deleteFeeHead(id).unwrap();
-        alert("Fee head deleted successfully!");
-      } catch (err) {
-        alert(`Failed to delete fee head: ${err.status || "Unknown error"}`);
+  // Handle delete fee head
+  const handleDelete = (id) => {
+    setModalAction("delete");
+    setModalData({ id });
+    setIsModalOpen(true);
+  };
+
+  // Confirm action for modal
+  const confirmAction = async () => {
+    try {
+      if (modalAction === "create") {
+        await createFeeHead(modalData).unwrap();
+        toast.success("ফি হেড সফলভাবে তৈরি হয়েছে!");
+        setFeeHeadName("");
+      } else if (modalAction === "update") {
+        await updateFeeHead(modalData).unwrap();
+        toast.success("ফি হেড সফলভাবে আপডেট হয়েছে!");
+        setEditFeeHeadId(null);
+        setEditFeeHeadName("");
+      } else if (modalAction === "delete") {
+        await deleteFeeHead(modalData.id).unwrap();
+        toast.success("ফি হেড সফলভাবে মুছে ফেলা হয়েছে!");
       }
+    } catch (err) {
+      console.error(`Error ${modalAction === "create" ? "creating" : modalAction === "update" ? "updating" : "deleting"} fee head:`, err);
+      toast.error(`ফি হেড ${modalAction === "create" ? "তৈরি" : modalAction === "update" ? "আপডেট" : "মুছে ফেলা"} ব্যর্থ: ${err.status || "অজানা ত্রুটি"}`);
+    } finally {
+      setIsModalOpen(false);
+      setModalAction(null);
+      setModalData(null);
     }
   };
 
   return (
     <div className="py-8 w-full">
+      <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
           @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
           @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+          @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+          @keyframes slideDown { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100%); opacity: 0; } }
           .animate-fadeIn { animation: fadeIn 0.6s ease-out forwards; }
           .animate-scaleIn { animation: scaleIn 0.4s ease-out forwards; }
+          .animate-slideUp { animation: slideUp 0.4s ease-out forwards; }
+          .animate-slideDown { animation: slideDown 0.4s ease-out forwards; }
           .btn-glow:hover { box-shadow: 0 0 15px rgba(37, 99, 235, 0.3); }
           ::-webkit-scrollbar { width: 8px; }
           ::-webkit-scrollbar-track { background: transparent; }
@@ -85,7 +116,7 @@ const AddFeeHead = () => {
       <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
         <div className="flex items-center space-x-4 mb-6">
           <IoAddCircle className="text-4xl text-[#441a05]" />
-          <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">Add New Fee Head</h3>
+          <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">নতুন ফি হেড যোগ করুন</h3>
         </div>
         <form onSubmit={handleSubmitFeeHead} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
           <input
@@ -94,7 +125,7 @@ const AddFeeHead = () => {
             value={feeHeadName}
             onChange={(e) => setFeeHeadName(e.target.value)}
             className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-            placeholder="Enter fee head (e.g., Tuition Fee)"
+            placeholder="ফি হেড লিখুন (যেমন: টিউশন ফি)"
             disabled={isCreating}
             aria-describedby={createError ? "fee-head-error" : undefined}
           />
@@ -106,21 +137,21 @@ const AddFeeHead = () => {
             }`}
           >
             {isCreating ? (
-              <>
-                <FaSpinner className="animate-spin text-lg mr-2" />
-                Creating...
-              </>
+              <span className="flex items-center space-x-3">
+                <FaSpinner className=" Tactics New Roman animate-spin text-lg" />
+                <span>তৈরি হচ্ছে...</span>
+              </span>
             ) : (
-              <>
-                <IoAdd className="w-5 h-5 mr-2" />
-                Create Fee Head
-              </>
+              <span className="flex items-center space-x-2">
+                <IoAdd className="w-5 h-5" />
+                <span>ফি হেড তৈরি করুন</span>
+              </span>
             )}
           </button>
         </form>
         {createError && (
           <div id="fee-head-error" className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
-            Error: {createError.status || "Unknown"}
+            ত্রুটি: {createError.status || "অজানা"} - {JSON.stringify(createError.data || {})}
           </div>
         )}
       </div>
@@ -130,7 +161,7 @@ const AddFeeHead = () => {
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
           <div className="flex items-center space-x-4 mb-6">
             <FaEdit className="text-3xl text-[#441a05]" />
-            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">Edit Fee Head</h3>
+            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">ফি হেড সম্পাদনা করুন</h3>
           </div>
           <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl">
             <input
@@ -139,9 +170,9 @@ const AddFeeHead = () => {
               value={editFeeHeadName}
               onChange={(e) => setEditFeeHeadName(e.target.value)}
               className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
-              placeholder="Edit fee head (e.g., Tuition Fee)"
+              placeholder="ফি হেড সম্পাদনা করুন (যেমন: টিউশন ফি)"
               disabled={isUpdating}
-              aria-label="Edit Fee Head"
+              aria-label="ফি হেড সম্পাদনা"
               aria-describedby={updateError ? "edit-fee-head-error" : undefined}
             />
             <button
@@ -152,12 +183,12 @@ const AddFeeHead = () => {
               }`}
             >
               {isUpdating ? (
-                <>
-                  <FaSpinner className="animate-spin text-lg mr-2" />
-                  Updating...
-                </>
+                <span className="flex items-center space-x-2">
+                  <FaSpinner className="animate-spin text-lg" />
+                  <span>আপডেট হচ্ছে...</span>
+                </span>
               ) : (
-                "Update Fee Head"
+                <span>ফি হেড আপডেট করুন</span>
               )}
             </button>
             <button
@@ -168,39 +199,89 @@ const AddFeeHead = () => {
               }}
               className="flex items-center justify-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
             >
-              Cancel
+              বাতিল
             </button>
           </form>
           {updateError && (
             <div id="edit-fee-head-error" className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
-              Error: {updateError.status || "Unknown"}
+              ত্রুটি: {updateError.status || "অজানা"} - {JSON.stringify(updateError.data || {})}
             </div>
           )}
         </div>
       )}
 
+      {/* Confirmation Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
+          <div
+            className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"
+          >
+            <h3 className="text-lg font-semibold text-[#441a05] mb-4">
+              {modalAction === "create" && "নতুন ফি হেড নিশ্চিত করুন"}
+              {modalAction === "update" && "ফি হেড আপডেট নিশ্চিত করুন"}
+              {modalAction === "delete" && "ফি হেড মুছে ফেলা নিশ্চিত করুন"}
+            </h3>
+            <p className="text-[#441a05] mb-6">
+              {modalAction === "create" && "আপনি কি নিশ্চিত যে নতুন ফি হেড তৈরি করতে চান?"}
+              {modalAction === "update" && "আপনি কি নিশ্চিত যে ফি হেড আপডেট করতে চান?"}
+              {modalAction === "delete" && "আপনি কি নিশ্চিত যে এই ফি হেডটি মুছে ফেলতে চান?"}
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
+              >
+                বাতিল
+              </button>
+              <button
+                onClick={confirmAction}
+                disabled={isCreating || isUpdating || isDeleting}
+                className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg transition-colors duration-300 btn-glow ${
+                  (isCreating || isUpdating || isDeleting) ? "cursor-not-allowed opacity-60" : "hover:text-white"
+                }`}
+              >
+                {isCreating || isUpdating || isDeleting ? (
+                  <span className="flex items-center space-x-2">
+                    <FaSpinner className="animate-spin text-lg" />
+                    <span>
+                      {modalAction === "create" && "তৈরি হচ্ছে..."}
+                      {modalAction === "update" && "আপডেট হচ্ছে..."}
+                      {modalAction === "delete" && "মুছছে..."}
+                    </span>
+                  </span>
+                ) : (
+                  "নিশ্চিত করুন"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Fee Heads Table */}
       <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] p-6">
-        <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">Fee Heads List</h3>
+        <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">ফি হেড তালিকা</h3>
         {isFeeHeadLoading ? (
-          <p className="p-4 text-[#441a05]/70">Loading...</p>
+          <p className="p-4 text-[#441a05]/70">লোড হচ্ছে...</p>
         ) : feeHeadError ? (
-          <p className="p-4 text-red-400">Error: {feeHeadError.status || "Unknown"}</p>
+          <p className="p-4 text-red-400">
+            ফি হেড লোড করতে ত্রুটি: {feeHeadError.status || "অজানা"} - {JSON.stringify(feeHeadError.data || {})}
+          </p>
         ) : feeHeads.length === 0 ? (
-          <p className="p-4 text-[#441a05]/70">No fee heads available.</p>
+          <p className="p-4 text-[#441a05]/70">কোনো ফি হেড উপলব্ধ নেই।</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-white/20">
               <thead className="bg-white/5">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    Serial
+                    ক্রমিক
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    Fee Head
+                    ফি হেড
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    Actions
+                    কার্যক্রম
                   </th>
                 </tr>
               </thead>
@@ -213,14 +294,14 @@ const AddFeeHead = () => {
                       <button
                         onClick={() => handleEditClick(feeHead)}
                         className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
-                        aria-label={`Edit ${feeHead.name}`}
+                        aria-label={`সম্পাদনা ${feeHead.name}`}
                       >
                         <FaEdit className="w-5 h-5" />
                       </button>
                       <button
                         onClick={() => handleDelete(feeHead.id)}
                         className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
-                        aria-label={`Delete ${feeHead.name}`}
+                        aria-label={`মুছুন ${feeHead.name}`}
                       >
                         <FaTrash className="w-5 h-5" />
                       </button>
@@ -233,7 +314,7 @@ const AddFeeHead = () => {
         )}
         {(isDeleting || deleteError) && (
           <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
-            {isDeleting ? "Deleting..." : `Error: ${deleteError?.status || "Unknown"}`}
+            {isDeleting ? "মুছছে..." : `ফি হেড মুছতে ত্রুটি: ${deleteError?.status || "অজানা"} - ${JSON.stringify(deleteError?.data || {})}`}
           </div>
         )}
       </div>
