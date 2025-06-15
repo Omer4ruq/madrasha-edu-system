@@ -162,7 +162,7 @@ console.log(feeHeads)
           <IoAddCircle className="text-4xl text-[#441a05]" />
           <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">{editId ? "Edit Fee Package" : "Add New Fee Package"}</h3>
         </div>
-        <form onSubmit={editId ? handleUpdate : handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
+        <form onSubmit={editId ? handleUpdate : handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div>
             <select
               name="fees_head_id"

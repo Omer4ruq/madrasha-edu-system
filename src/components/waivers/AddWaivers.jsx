@@ -582,7 +582,7 @@ const AddWaivers = () => {
                                     e.target.value
                                   )
                                 }
-                                className={`w-full max-w-xs bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 ${disabledClass}`}
+                                className={`w-[120px]  bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 ${disabledClass}`}
                                 placeholder="পরিমাণ (%)"
                                 disabled={isDisabled}
                                 min="0"
@@ -654,7 +654,7 @@ const AddWaivers = () => {
                                     e.target.value
                                   )
                                 }
-                                className={`w-full max-w-xs bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 ${disabledClass}`}
+                                className={`w-[200px] bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 ${disabledClass}`}
                                 placeholder="বর্ণনা"
                                 disabled={isDisabled}
                               />
@@ -1003,10 +1003,10 @@ const AddWaivers = () => {
                         `ছাত্র ${waiver.student_id}`}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {waiver.waiver_amount}
+                      {waiver.waiver_amount}%
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {academicYears?.find((y) => y.id === waiver.academic_year)?.year ||
+                      {academicYears?.find((y) => y.id == waiver.academic_year)?.name ||
                         `বছর ${waiver.academic_year}`}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
