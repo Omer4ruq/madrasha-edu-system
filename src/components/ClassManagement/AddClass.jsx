@@ -198,7 +198,7 @@ const AddClass = () => {
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <span className="text-[#441a05] font-medium">
-                  {classItem.name}
+                  {classItem.student_class.name}
                 </span>
                 <label className="flex items-center cursor-pointer">
                   <input
@@ -261,7 +261,7 @@ const AddClass = () => {
                       className="p-3 border border-white/30 rounded-lg flex items-center justify-between animate-scaleIn"
                     >
                       <span className="text-[#441a05] font-medium">
-                        {classItem.name}
+                        {classItem.student_class.name}
                       </span>
                       <button
                         onClick={() => handleToggle(id)}
