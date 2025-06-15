@@ -34,14 +34,10 @@ const AddWaivers = () => {
   const [deleteWaiverId, setDeleteWaiverId] = useState(null);
 
   // API হুক
-  const { data: classes, isLoading: isClassLoading } =
-    useGetclassConfigApiQuery();
-  const { data: students, isLoading: isStudentLoading } =
-    useGetStudentActiveApiQuery();
-  const { data: feeHeads, isLoading: isFeeHeadsLoading } =
-    useGetFeeHeadsQuery();
-  const { data: academicYears, isLoading: isAcademicYearLoading } =
-    useGetAcademicYearApiQuery();
+  const { data: classes, isLoading: isClassLoading } = useGetclassConfigApiQuery();
+  const { data: students, isLoading: isStudentLoading } = useGetStudentActiveApiQuery();
+  const { data: feeHeads, isLoading: isFeeHeadsLoading } = useGetFeeHeadsQuery();
+  const { data: academicYears, isLoading: isAcademicYearLoading } = useGetAcademicYearApiQuery();
   const { data: waivers, isLoading: isWaiverLoading } = useGetWaiversQuery();
   const { data: funds, isLoading: isFundsLoading } = useGetFundsQuery();
   const [createWaiver, { isLoading: isCreating }] = useCreateWaiverMutation();
@@ -121,6 +117,10 @@ const AddWaivers = () => {
 
   // ওয়েভার ডেটা পরিবর্তন
   const handleWaiverChange = (studentId, field, value) => {
+    if (field === "waiver_amount" && value > 100) {
+      toast.error("ওয়েভার পরিমাণ ১০০% এর বেশি হতে পারবে না।");
+      return;
+    }
     setStudentWaivers((prev) => ({
       ...prev,
       [studentId]: {
@@ -149,6 +149,12 @@ const AddWaivers = () => {
       ) {
         errors.push(
           `ছাত্র আইডি ${studentId} এর জন্য প্রয়োজনীয় ক্ষেত্রগুলি পূরণ করুন (ফি প্রকার, ওয়েভার পরিমাণ, শিক্ষাবর্ষ, ফান্ড)।`
+        );
+        return null;
+      }
+      if (parseFloat(waiver.waiver_amount) > 100) {
+        errors.push(
+          `ছাত্র আইডি ${studentId} এর জন্য ওয়েভার পরিমাণ ১০০% এর বেশি হতে পারবে না।`
         );
         return null;
       }
@@ -212,6 +218,10 @@ const AddWaivers = () => {
       toast.error(
         "ছাত্র, ফি প্রকার, ওয়েভার পরিমাণ, শিক্ষাবর্ষ এবং ফান্ড পূরণ করুন।"
       );
+      return;
+    }
+    if (parseFloat(editWaiverData.waiver_amount) > 100) {
+      toast.error("ওয়েভার পরিমাণ ১০০% এর বেশি হতে পারবে না।");
       return;
     }
 
@@ -290,7 +300,7 @@ const AddWaivers = () => {
       ...provided,
       background: "#fff",
       color: "#441a05",
-      zIndex: 9999, // Ensure it's on top
+      zIndex: 9999,
     }),
     menuPortal: (base) => ({ ...base, zIndex: 9999 }),
     option: (provided, state) => ({
@@ -416,11 +426,7 @@ const AddWaivers = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <Select
               options={classOptions}
-              value={
-                classOptions.find(
-                  (option) => option.value === selectedClassId
-                ) || null
-              }
+              value={classOptions.find((option) => option.value === selectedClassId) || null}
               onChange={(selected) => {
                 setSelectedClassId(selected?.value || null);
                 setSelectedStudents([]);
@@ -472,7 +478,7 @@ const AddWaivers = () => {
                           ফি প্রকার
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                          ওয়েভার পরিমাণ
+                          ওয়েভার পরিমাণ (%)
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                           শিক্ষাবর্ষ
@@ -488,11 +494,8 @@ const AddWaivers = () => {
                     <tbody className="divide-y divide-white/20">
                       {filteredStudents.map((student, index) => {
                         const waiver = studentWaivers[student.id] || {};
-                        const isDisabled =
-                          isCreating || !selectedStudents.includes(student.id);
-                        const disabledClass = isDisabled
-                          ? "opacity-40 cursor-not-allowed"
-                          : "";
+                        const isDisabled = isCreating || !selectedStudents.includes(student.id);
+                        const disabledClass = isDisabled ? "opacity-40 cursor-not-allowed" : "";
 
                         return (
                           <tr
@@ -504,12 +507,8 @@ const AddWaivers = () => {
                               <label className="inline-flex items-center cursor-pointer">
                                 <input
                                   type="checkbox"
-                                  checked={selectedStudents.includes(
-                                    student.id
-                                  )}
-                                  onChange={() =>
-                                    handleStudentToggle(student.id)
-                                  }
+                                  checked={selectedStudents.includes(student.id)}
+                                  onChange={() => handleStudentToggle(student.id)}
                                   className="hidden"
                                 />
                                 <span
@@ -584,9 +583,10 @@ const AddWaivers = () => {
                                   )
                                 }
                                 className={`w-full max-w-xs bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 ${disabledClass}`}
-                                placeholder="ওয়েভার পরিমাণ"
+                                placeholder="পরিমাণ (%)"
                                 disabled={isDisabled}
                                 min="0"
+                                max="100"
                                 step="0.01"
                               />
                             </td>
@@ -597,8 +597,7 @@ const AddWaivers = () => {
                                 options={academicYearOptions}
                                 value={
                                   academicYearOptions.find(
-                                    (option) =>
-                                      option.value === waiver.academic_year
+                                    (option) => option.value === waiver.academic_year
                                   ) || null
                                 }
                                 onChange={(selected) =>
@@ -623,9 +622,8 @@ const AddWaivers = () => {
                               <Select
                                 options={fundOptions}
                                 value={
-                                  fundOptions.find(
-                                    (option) => option.value === waiver.fund_id
-                                  ) || null
+                                  fundOptions.find((option) => option.value === waiver.fund_id) ||
+                                  null
                                 }
                                 onChange={(selected) =>
                                   handleWaiverChange(
@@ -691,7 +689,7 @@ const AddWaivers = () => {
                         ফি প্রকার
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                        ওয়েভার পরিমাণ
+                        ওয়েভার পরিমাণ (%)
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                         শিক্ষাবর্ষ
@@ -724,8 +722,8 @@ const AddWaivers = () => {
                             {waiver.fee_types
                               ?.map(
                                 (id) =>
-                                  feeTypeOptions.find((opt) => opt.value === id)
-                                    ?.label || `ফি ${id}`
+                                  feeTypeOptions.find((opt) => opt.value === id)?.label ||
+                                  `ফি ${id}`
                               )
                               .join(", ") || "-"}
                           </td>
@@ -738,9 +736,8 @@ const AddWaivers = () => {
                             )?.label || "-"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                            {fundOptions.find(
-                              (opt) => opt.value === waiver.fund_id
-                            )?.label || "-"}
+                            {fundOptions.find((opt) => opt.value === waiver.fund_id)?.label ||
+                              "-"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
                             {waiver.description || "-"}
@@ -761,9 +758,7 @@ const AddWaivers = () => {
               disabled={isCreating}
               title="ওয়েভার তৈরি করুন"
               className={`relative inline-flex items-center px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                isCreating
-                  ? "cursor-not-allowed"
-                  : "hover:text-white hover:shadow-md"
+                isCreating ? "cursor-not-allowed" : "hover:text-white hover:shadow-md"
               }`}
             >
               {isCreating ? (
@@ -807,11 +802,9 @@ const AddWaivers = () => {
                   ? {
                       value: editWaiverData.student_id,
                       label: `${
-                        students.find((s) => s.id === editWaiverData.student_id)
-                          .name
+                        students.find((s) => s.id === editWaiverData.student_id).name
                       } - ${
-                        students.find((s) => s.id === editWaiverData.student_id)
-                          .user_id
+                        students.find((s) => s.id === editWaiverData.student_id).user_id
                       }`,
                     }
                   : null
@@ -849,16 +842,21 @@ const AddWaivers = () => {
             <input
               type="number"
               value={editWaiverData.waiver_amount}
-              onChange={(e) =>
+              onChange={(e) => {
+                if (e.target.value > 100) {
+                  toast.error("ওয়েভার পরিমাণ ১০০% এর বেশি হতে পারবে না।");
+                  return;
+                }
                 setEditWaiverData({
                   ...editWaiverData,
                   waiver_amount: e.target.value,
-                })
-              }
+                });
+              }}
               className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
-              placeholder="ওয়েভার পরিমাণ (যেমন, ৫০০)"
+              placeholder="ওয়েভার পরিমাণ (%)"
               disabled={isUpdating}
               min="0"
+              max="100"
               step="0.01"
             />
             <Select
@@ -883,9 +881,7 @@ const AddWaivers = () => {
             <Select
               options={fundOptions}
               value={
-                fundOptions.find(
-                  (option) => option.value === editWaiverData.fund_id
-                ) || null
+                fundOptions.find((option) => option.value === editWaiverData.fund_id) || null
               }
               onChange={(selected) =>
                 setEditWaiverData({
@@ -917,9 +913,7 @@ const AddWaivers = () => {
               disabled={isUpdating}
               title="ওয়েভার আপডেট করুন"
               className={`relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                isUpdating
-                  ? "cursor-not-allowed"
-                  : "hover:text-white hover:shadow-md"
+                isUpdating ? "cursor-not-allowed" : "hover:text-white hover:shadow-md"
               }`}
             >
               {isUpdating ? (
@@ -972,7 +966,7 @@ const AddWaivers = () => {
                     ছাত্র
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    ওয়েভার পরিমাণ
+                    ওয়েভার পরিমাণ (%)
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                     শিক্ষাবর্ষ
@@ -1005,28 +999,27 @@ const AddWaivers = () => {
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                      {students?.find((s) => s.id === waiver.student_id)
-                        ?.name || `ছাত্র ${waiver.student_id}`}
+                      {students?.find((s) => s.id === waiver.student_id)?.name ||
+                        `ছাত্র ${waiver.student_id}`}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
                       {waiver.waiver_amount}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {academicYears?.find((y) => y.id === waiver.academic_year)
-                        ?.year || `বছর ${waiver.academic_year}`}
+                      {academicYears?.find((y) => y.id === waiver.academic_year)?.year ||
+                        `বছর ${waiver.academic_year}`}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
                       {waiver.fee_types
                         .map(
                           (id) =>
-                            feeTypeOptions.find((opt) => opt.value === id)
-                              ?.label || `ফি ${id}`
+                            feeTypeOptions.find((opt) => opt.value === id)?.label || `ফি ${id}`
                         )
                         .join(", ")}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {fundOptions.find((opt) => opt.value === waiver.fund_id)
-                        ?.label || `ফান্ড ${waiver.fund_id}`}
+                      {fundOptions.find((opt) => opt.value === waiver.fund_id)?.label ||
+                        `ফান্ড ${waiver.fund_id}`}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
                       {waiver.description || "-"}

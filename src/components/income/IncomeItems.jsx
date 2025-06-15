@@ -496,7 +496,7 @@ const handleUpdate = async (e) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/20">
-                {incomeItems.map((item, index) => (
+                {incomeItems?.map((item, index) => (
                   <tr key={item.id} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
                       {incomeHeads.find((head) => head.id === item.incometype_id)?.incometype || "Unknown"}
