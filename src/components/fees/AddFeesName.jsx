@@ -73,7 +73,7 @@ const AddFeesName = () => {
 
     const newConfigs = selectedFeePackages.map((pkgId) => {
       const pkg = feePackages?.find((p) => p.id === pkgId);
-      const className = classes?.find((c) => c.id === pkg?.student_class)?.name || 'অজানা';
+      const className = classes?.find((c) => c.id === pkg?.student_class)?.student_class.name || 'অজানা';
       const feeHeadName = feeHeads?.find((h) => h.id === pkg?.fees_head_id)?.name || 'অজানা';
       return selectedFeeSubheads.map((subId) => {
         const sub = feeSubheads?.find((s) => s.id === subId);
@@ -83,7 +83,7 @@ const AddFeesName = () => {
           subheadId: subId,
           subheadName: sub?.name || 'অজানা',
           classId: selectedClass,
-          className: classes?.find((c) => c.id === selectedClass)?.name || 'অজানা',
+          className: classes?.find((c) => c.id === selectedClass)?.student_class.name || 'অজানা',
           academicYear: selectedAcademicYear,
           startDate,
           endDate,
@@ -157,7 +157,7 @@ const AddFeesName = () => {
   };
 
   // Filter fee packages by selected class
-  const filteredFeePackages = feePackages?.filter((pkg) => 
+  const filteredFeePackages = feePackages?.filter((pkg) =>
     pkg.student_class === selectedClass || !selectedClass
   ) || [];
 
@@ -200,9 +200,8 @@ const AddFeesName = () => {
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg transition-colors duration-300 btn-glow ${
-                  isSubmitting ? 'cursor-not-allowed opacity-60' : 'hover:text-white'
-                }`}
+                className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg transition-colors duration-300 btn-glow ${isSubmitting ? 'cursor-not-allowed opacity-60' : 'hover:text-white'
+                  }`}
               >
                 {isSubmitting ? (
                   <span className="flex items-center space-x-2">
@@ -230,16 +229,15 @@ const AddFeesName = () => {
           {classes?.map((cls) => (
             <button
               key={cls.id}
-              className={`px-4 py-2 rounded-lg transition-all duration-300 ${
-                selectedClass === cls.id ? 'bg-[#DB9E30] text-white' : 'bg-gray-500/20 text-[#441a05] hover:bg-gray-500/30'
-              }`}
+              className={`px-4 py-2 rounded-lg transition-all duration-300 ${selectedClass === cls.id ? 'bg-[#DB9E30] text-white' : 'bg-gray-500/20 text-[#441a05] hover:bg-gray-500/30'
+                }`}
               onClick={() => {
                 setSelectedClass(cls.id);
                 setErrors((prev) => ({ ...prev, class: null }));
               }}
               aria-label={`শ্রেণি নির্বাচন করুন ${cls.name}`}
             >
-              {cls.name}
+              {cls.student_class?.name}
             </button>
           ))}
           {errors.class && <p className="text-red-400 text-sm mt-2">{errors.class}</p>}
@@ -253,7 +251,7 @@ const AddFeesName = () => {
               setSelectedAcademicYear(e.target.value);
               setErrors((prev) => ({ ...prev, academicYear: null }));
             }}
-            className="w-full max-w-xs bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
+            className="w-full max-w-xs bg-transparent text-[#441a05] pl-3 py-2 border outline-none border-[#9d9087] rounded-lg transition-all duration-300"
             aria-describedby={errors.academicYear ? 'academicYear-error' : undefined}
           >
             <option value="" disabled>শিক্ষাবর্ষ নির্বাচন করুন</option>
@@ -283,17 +281,43 @@ const AddFeesName = () => {
                       <p className="text-[#441a05]/70">কোনো ফি প্যাকেজ পাওয়া যায়নি।</p>
                     ) : (
                       filteredFeePackages.map((pkg) => {
-                        const className = classes?.find((c) => c.id === pkg.student_class)?.name || 'অজানা';
+                        const className = classes?.find((c) => c.id === pkg.student_class)?.student_class.name || 'অজানা';
                         const feeHeadName = feeHeads?.find((h) => h.id === pkg.fees_head_id)?.name || 'অজানা';
                         return (
-                          <div key={pkg.id} className="flex items-center mb-3">
-                            <input
-                              type="checkbox"
-                              checked={selectedFeePackages.includes(pkg.id)}
-                              onChange={() => handleFeePackageChange(pkg.id)}
-                              className="mr-2 h-4 w-4 text-[#DB9E30] border-[#9d9087] rounded"
-                              aria-label={`ফি প্যাকেজ নির্বাচন করুন ${className} - ${feeHeadName}`}
-                            />
+                          <div key={pkg.id} className="flex items-center mb-3 gap-2">
+                            <label className="flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={selectedFeePackages.includes(pkg.id)}
+                                onChange={() => handleFeePackageChange(pkg.id)}
+                                className="hidden"
+                                aria-label={`ফি প্যাকেজ নির্বাচন করুন ${className} - ${feeHeadName}`}
+                              />
+                              <span
+                                className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 ${selectedFeePackages.includes(pkg.id)
+                                  ? "bg-[#DB9E30] border-[#DB9E30]"
+                                  : "bg-white/10 border-[#9d9087] hover:border-[#441a05]"
+                                  }`}
+                              >
+                                {selectedFeePackages.includes(pkg.id) && (
+                                  <svg
+                                    className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M5 13l4 4L19 7"
+                                    />
+                                  </svg>
+                                )}
+                              </span>
+                            </label>
+
                             <span className="text-[#441a05]">{`${className} - ${feeHeadName}`}</span>
                           </div>
                         );
@@ -303,19 +327,45 @@ const AddFeesName = () => {
                       <p className="text-red-400 text-sm mt-2">{errors.feePackages}</p>
                     )}
                   </td>
-                  <td className="border border-white/20 p-3 align-top">
+                  <td className="border border-white/20 p-3 align-top grid grid-cols-3">
                     {feeSubheads?.length === 0 ? (
                       <p className="text-[#441a05]/70">কোনো ফি সাবহেড পাওয়া যায়নি।</p>
                     ) : (
                       feeSubheads.map((sub) => (
-                        <div key={sub.id} className="flex items-center mb-3">
-                          <input
-                            type="checkbox"
-                            checked={selectedFeeSubheads.includes(sub.id)}
-                            onChange={() => handleFeeSubheadChange(sub.id)}
-                            className="mr-2 h-4 w-4 text-[#DB9E30] border-[#9d9087] rounded"
-                            aria-label={`ফি সাবহেড নির্বাচন করুন ${sub.name}`}
-                          />
+                        <div key={sub.id} className="flex items-center mb-3 gap-2">
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={selectedFeeSubheads.includes(sub.id)}
+                              onChange={() => handleFeeSubheadChange(sub.id)}
+                              className="hidden"
+                              aria-label={`ফি সাবহেড নির্বাচন করুন ${sub.name}`}
+                            />
+                            <span
+                              className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 ${selectedFeeSubheads.includes(sub.id)
+                                ? "bg-[#DB9E30] border-[#DB9E30]"
+                                : "bg-white/10 border-[#9d9087] hover:border-[#441a05]"
+                                }`}
+                            >
+                              {selectedFeeSubheads.includes(sub.id) && (
+                                <svg
+                                  className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              )}
+                            </span>
+                          </label>
+
                           <span className="text-[#441a05]">{sub.name}</span>
                         </div>
                       ))
@@ -331,8 +381,8 @@ const AddFeesName = () => {
         </div>
 
         {/* Date Pickers */}
-        <div className="mb-6 flex flex-col md:flex-row gap-4">
-          <div>
+        <div className="mb-6 flex flex-col md:flex-row justify-center gap-4">
+          <div className='w-full'>
             <label className="block mb-1 text-[#441a05] font-medium">শুরুর তারিখ:</label>
             <input
               type="date"
@@ -341,14 +391,14 @@ const AddFeesName = () => {
                 setStartDate(e.target.value);
                 setErrors((prev) => ({ ...prev, startDate: null }));
               }}
-              className="w-full max-w-xs bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
+              className="w-full bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
               aria-describedby={errors.startDate ? 'startDate-error' : undefined}
             />
             {errors.startDate && (
               <p id="startDate-error" className="text-red-400 text-sm mt-2">{errors.startDate}</p>
             )}
           </div>
-          <div>
+          <div className='w-full'>
             <label className="block mb-1 text-[#441a05] font-medium">শেষের তারিখ:</label>
             <input
               type="date"
@@ -357,28 +407,29 @@ const AddFeesName = () => {
                 setEndDate(e.target.value);
                 setErrors((prev) => ({ ...prev, endDate: null }));
               }}
-              className="w-full max-w-xs bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
+              className="w-full bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
               aria-describedby={errors.endDate ? 'endDate-error' : undefined}
             />
             {errors.endDate && (
               <p id="endDate-error" className="text-red-400 text-sm mt-2">{errors.endDate}</p>
             )}
           </div>
+          <div className='w-full'>
+            <button
+              onClick={addConfiguration}
+              className={`flex items-center w-full px-6 py-3 mb-6 md:mt-6 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${!selectedClass || !selectedAcademicYear || selectedFeePackages.length === 0 || selectedFeeSubheads.length === 0 || !startDate || !endDate
+                ? 'cursor-not-allowed opacity-70'
+                : 'hover:text-white btn-glow'
+                }`}
+              disabled={!selectedClass || !selectedAcademicYear || selectedFeePackages.length === 0 || selectedFeeSubheads.length === 0 || !startDate || !endDate}
+            >
+              <FaCheckCircle className="w-5 h-5 mr-2" />
+              কনফিগারেশন যোগ করুন
+            </button>
+          </div>
         </div>
 
-        {/* Add Configuration Button */}
-        <button
-          onClick={addConfiguration}
-          className={`flex items-center px-6 py-3 mb-6 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-            !selectedClass || !selectedAcademicYear || selectedFeePackages.length === 0 || selectedFeeSubheads.length === 0 || !startDate || !endDate
-              ? 'cursor-not-allowed opacity-70'
-              : 'hover:text-white btn-glow'
-          }`}
-          disabled={!selectedClass || !selectedAcademicYear || selectedFeePackages.length === 0 || selectedFeeSubheads.length === 0 || !startDate || !endDate}
-        >
-          <FaCheckCircle className="w-5 h-5 mr-2" />
-          কনফিগারেশন যোগ করুন
-        </button>
+
 
         {/* Configurations Table */}
         {configurations.length > 0 && (
@@ -416,9 +467,8 @@ const AddFeesName = () => {
         {/* Submit Button */}
         <button
           onClick={handleOpenModal}
-          className={`flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-            configurations.length === 0 || isSubmitting ? 'cursor-not-allowed opacity-70' : 'hover:text-white btn-glow'
-          }`}
+          className={`${configurations.length === 0 ? "hidden" : ""} flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${configurations.length === 0 || isSubmitting ? 'cursor-not-allowed opacity-70' : 'hover:text-white btn-glow'
+            }`}
           disabled={configurations.length === 0 || isSubmitting}
         >
           {isSubmitting ? (

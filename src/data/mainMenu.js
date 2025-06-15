@@ -184,7 +184,7 @@ const mainMenu = [
       },
        {
         id: "07/07",
-        title: "current- ফি",
+        title: "বর্তমান- ফি",
         link: "/accounts/current-fee",
       },
     ],
