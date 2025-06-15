@@ -23,7 +23,7 @@ const AddFeesName = () => {
   const { data: feeSubheads, isLoading: subheadsLoading } = useGetGfeeSubheadsQuery();
   const { data: feeHeads, isLoading: headsLoading } = useGetFeeHeadsQuery();
   const [createFeesName, { isLoading: isSubmitting }] = useCreateFeesNameMutation();
-
+console.log(classes)
   // Handle fee package checkbox
   const handleFeePackageChange = (packageId) => {
     setSelectedFeePackages((prev) =>
@@ -135,7 +135,7 @@ const AddFeesName = () => {
             className={`px-4 py-2 rounded ${selectedClass === cls.id ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
             onClick={() => setSelectedClass(cls.id)}
           >
-            {cls.name}
+            {cls?.student_class?.name}
           </button>
         ))}
       </div>
@@ -167,7 +167,7 @@ const AddFeesName = () => {
             <tr>
               <td className="border p-2 align-top">
                 {filteredFeePackages.map((pkg) => {
-                  const className = classes?.find((c) => c.id === pkg.student_class)?.name || 'Unknown';
+                  const className = classes?.find((c) => c.id === pkg.student_class)?.student_class?.name || 'Unknown';
                   const feeHeadName = feeHeads?.find((h) => h.id === pkg.fees_head_id)?.name || 'Unknown';
                   return (
                     <div key={pkg.id} className="flex items-center mb-2">
