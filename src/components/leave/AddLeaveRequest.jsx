@@ -26,9 +26,11 @@ const AddLeaveRequest = () => {
   // ইউজার নির্বাচন হ্যান্ডলার
   const handleUserSelect = (user) => {
     setSelectedUser(user);
-    setSearchTerm(`${user.name} (${user.email})`);
+    setSearchTerm(`${user.name} (${user?.student_profile?.class_name})`);
     setShowDropdown(false);
   };
+
+  console.log(users);
 
   // ফর্ম সাবমিশন হ্যান্ডলার
   const handleSubmit = async (e) => {
@@ -133,7 +135,7 @@ const AddLeaveRequest = () => {
                       onClick={() => handleUserSelect(user)}
                       className="p-2 text-[#441a05] bg-white hover:bg-[#DB9E30] cursor-pointer"
                     >
-                      {user.name} ({user.email})
+                      {user.name} ({user?.student_profile?.class_name})
                     </div>
                   ))
                 ) : (
@@ -143,7 +145,7 @@ const AddLeaveRequest = () => {
             )}
             {selectedUser && (
               <div className="mt-2 text-sm text-[#441a05]/70">
-                নির্বাচিত: {selectedUser.name} ({selectedUser.email})
+                নির্বাচিত: {selectedUser.name} ({selectedUser?.student_profile?.class_name})
               </div>
             )}
           </div>

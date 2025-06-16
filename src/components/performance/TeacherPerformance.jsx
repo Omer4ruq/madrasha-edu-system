@@ -6,7 +6,7 @@ import Select from 'react-select';
 import { FaSpinner } from 'react-icons/fa';
 import toast, { Toaster } from 'react-hot-toast';
 import { useGetRoleStaffProfileApiQuery } from '../../redux/features/api/roleStaffProfile/roleStaffProfileApi';
-import { useCreateTeacherPerformanceApiMutation, useGetTeacherPerformanceApiQuery, useUpdateTeacherPerformanceApiMutation,  } from '../../redux/features/api/performance/teacherPerformanceApi';
+import { useCreateTeacherPerformanceApiMutation, useGetTeacherPerformanceApiQuery, useUpdateTeacherPerformanceApiMutation, } from '../../redux/features/api/performance/teacherPerformanceApi';
 
 const TeacherPerformance = () => {
   const [selectedTeacher, setSelectedTeacher] = useState(null);
@@ -83,35 +83,40 @@ const TeacherPerformance = () => {
     }
   };
 
-  // রিঅ্যাক্ট সিলেক্টের জন্য কাস্টম স্টাইল
   const customStyles = {
-    control: (provided, state) => ({
+    control: (provided) => ({
       ...provided,
-      backgroundColor: 'transparent',
-      borderColor: state.isFocused ? '#DB9E30' : '#9d9087',
-      borderRadius: '0.5rem',
-      padding: '0.25rem',
-      color: '#441a05',
-      boxShadow: state.isFocused ? '0 0 10px rgba(219, 158, 48, 0.3)' : 'none',
-      '&:hover': { borderColor: '#441a05' },
+      background: "transparent",
+      borderColor: "#9d9087",
+      color: "#fff",
+      padding: "1px",
+      borderRadius: "0.5rem",
+      "&:hover": { borderColor: "#DB9E30" },
     }),
-    input: (provided) => ({ ...provided, color: '#441a05' }),
-    placeholder: (provided) => ({ ...provided, color: '#441a05', opacity: 0.7 }),
-    singleValue: (provided) => ({ ...provided, color: '#441a05' }),
+    singleValue: (provided) => ({ ...provided, color: "#441a05" }),
+    multiValue: (provided) => ({
+      ...provided,
+      background: "#DB9E30",
+      color: "#fff",
+    }),
+    multiValueLabel: (provided) => ({ ...provided, color: "#441a05" }),
+    multiValueRemove: (provided) => ({
+      ...provided,
+      color: "#441a05",
+      "&:hover": { background: "#441a05", color: "#DB9E30" },
+    }),
     menu: (provided) => ({
       ...provided,
-      backgroundColor: '#fff',
-      borderRadius: '0.5rem',
-      border: '1px solid #9d9087',
-      zIndex: 10,
+      background: "#fff",
+      color: "#441a05",
+      zIndex: 9999,
     }),
+    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
     option: (provided, state) => ({
       ...provided,
-      backgroundColor: state.isSelected ? '#DB9E30' : state.isFocused ? 'rgba(219, 158, 48, 0.1)' : '#fff',
-      color: state.isSelected ? '#441a05' : '#441a05',
-      padding: '0.5rem 1rem',
-      cursor: 'pointer',
-      '&:hover': { backgroundColor: 'rgba(219, 158, 48, 0.1)' },
+      background: state.isSelected ? "#DB9E30" : "#fff",
+      color: "#441a05",
+      "&:hover": { background: "#DB9E30", color: "#441a05" },
     }),
   };
 
@@ -160,11 +165,10 @@ const TeacherPerformance = () => {
                           disabled={isCreating || isUpdating}
                         />
                         <span
-                          className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${
-                            performanceData[metric.name]
+                          className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${performanceData[metric.name]
                               ? 'bg-[#DB9E30] border-[#DB9E30]'
                               : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
-                          }`}
+                            }`}
                         >
                           {performanceData[metric.name] && (
                             <svg
@@ -270,6 +274,8 @@ const TeacherPerformance = () => {
                 isDisabled={isTeachersLoading}
                 styles={customStyles}
                 className="animate-scaleIn"
+                menuPortalTarget={document.body}
+                menuPosition="fixed"
                 isClearable
                 isSearchable
               />

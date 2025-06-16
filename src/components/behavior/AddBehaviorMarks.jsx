@@ -509,7 +509,7 @@ const AddBehaviorMarks = () => {
                 <option value="">শ্রেণি নির্বাচন করুন</option>
                 {classes.map((cls) => (
                   <option key={cls.id} value={cls.class_name}>
-                    {cls.class_name}
+                    {cls.class_name} {cls.shift_name} {cls.section_name}
                   </option>
                 ))}
               </select>
