@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-
-import { FaSpinner, FaUser, FaLock, FaEnvelope, FaPhone, FaHome, FaBriefcase, FaIdCard, FaCalendarAlt, FaVenusMars, FaHeart, FaMap, FaMapMarkerAlt, FaWheelchair, FaUserTag, FaChild, FaFileAlt, FaBuilding, FaBusinessTime, FaRing } from 'react-icons/fa';
+import { FaSpinner, FaUser, FaEnvelope, FaPhone, FaHome, FaBriefcase, FaIdCard, FaCalendarAlt, FaVenusMars, FaHeart, FaMap, FaMapMarkerAlt, FaWheelchair, FaUserTag, FaChild, FaFileAlt, FaBuilding, FaBusinessTime, FaRing } from 'react-icons/fa';
 import { IoAddCircleOutline } from 'react-icons/io5';
+import toast, { Toaster } from 'react-hot-toast';
 import { useCreateStaffRegistrationApiMutation } from '../../../redux/features/api/staff/staffRegistration';
 
 const StaffRegistrationForm = () => {
@@ -50,39 +50,14 @@ const StaffRegistrationForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // const requiredFields = [
-    //   'username', 'password', 'name', 'user_id', 'phone_number', 'email',
-    //   'gender', 'dob', 'blood_group', 'present_address', 'permanent_address',
-    //   'fathers_name', 'mothers_name', 'marital_status', 'short_name',
-    //   'staff_id_no', 'employee_type', 'job_nature', 'designation', 'role_id',
-    // ];
-
-    // const missingFields = requiredFields.filter((field) => !formData[field]);
-
-    // if (missingFields.length > 0) {
-    //   alert(`Please fill in all required fields: ${missingFields.join(', ')}`);
-    //   return;
-    // }
-
-    // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    // if (!emailRegex.test(formData.email)) {
-    //   alert('Please enter a valid email address');
-    //   return;
-    // }
-
-    // const phoneRegex = /^\+?\d{10,15}$/;
-    // if (!phoneRegex.test(formData.phone_number) || (formData.spouse_phone_number && !phoneRegex.test(formData.spouse_phone_number))) {
-    //   alert('Please enter valid phone numbers (10-15 digits, optional + prefix)');
-    //   return;
-    // }
-
+    // Validate numeric fields
     if (
       isNaN(parseInt(formData.user_id)) ||
       (formData.children_no && isNaN(parseInt(formData.children_no))) ||
       isNaN(parseInt(formData.role_id)) ||
       (formData.department_id && isNaN(parseInt(formData.department_id)))
     ) {
-      alert('Please enter valid numeric values for User ID, Children No., Role ID, and Department ID.');
+      toast.error('অনুগ্রহ করে ইউজার আইডি, সন্তানের সংখ্যা, রোল আইডি এবং বিভাগ আইডি-তে বৈধ সংখ্যা লিখুন।');
       return;
     }
 
@@ -106,7 +81,7 @@ const StaffRegistrationForm = () => {
 
       console.log('Submitting Payload:', JSON.stringify(payload, null, 2));
       await createStaff(payload).unwrap();
-      alert('Staff registered successfully!');
+      toast.success('স্টাফ সফলভাবে নিবন্ধিত হয়েছে!');
       setFormData({
         username: '',
         password: '',
@@ -143,13 +118,14 @@ const StaffRegistrationForm = () => {
       });
     } catch (err) {
       console.error('Full Error:', JSON.stringify(err, null, 2));
-      const errorMessage = err.data?.message || err.data?.error || err.data?.detail || err.status || 'An unknown error occurred';
-      alert(`Failed to register staff: ${errorMessage}`);
+      const errorMessage = err.data?.message || err.data?.error || err.data?.detail || err.status || 'অজানা ত্রুটি';
+      toast.error(`স্টাফ নিবন্ধন ব্যর্থ: ${errorMessage}`);
     }
   };
 
   return (
     <div className="py-10 w-full min-h-screen">
+      <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
           @keyframes fadeIn {
@@ -225,58 +201,24 @@ const StaffRegistrationForm = () => {
       </style>
 
       <div className="mx-auto">
-        <div className="sticky top-0 z-10 mb-8 animate-fadeIn backdrop-blur-sm ">
+        <div className="sticky top-0 z-10 mb-8 animate-fadeIn backdrop-blur-sm">
           <div className="flex items-center justify-center space-x-3">
             <IoAddCircleOutline className="text-4xl text-[#DB9E30] mb-3" />
-            <h2 className="text-3xl font-bold text-[#441a05] title-underline">Staff Registration</h2>
+            <h2 className="text-3xl font-bold text-[#441a05] title-underline">স্টাফ নিবন্ধন</h2>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="rounded-2xl animate-fadeIn space-y-10">
-          {/* Personal Information */}
-          <div className=" bg-black/10 backdrop-blur-sm border animate-fadeIn border-white/20 p-6 rounded-xl shadow-md">
+          {/* ব্যক্তিগত তথ্য */}
+          <div className="bg-black/10 backdrop-blur-sm border animate-fadeIn border-white/20 p-6 rounded-xl shadow-md">
             <div className="flex items-center justify-center mb-4">
               <FaUser className="text-3xl text-[#DB9E30]" />
             </div>
-            <h3 className="text-2xl font-semibold text-[#441a05] text-center">Personal Information</h3>
+            <h3 className="text-2xl font-semibold text-[#441a05] text-center">ব্যক্তিগত তথ্য</h3>
             <div className="border-t border-[#9d9087]/50 mt-4 pt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
-              {/* <div className="relative input-icon">
-                <label htmlFor="username" className="block text-lg font-medium text-[#441a05]">
-                  Username <span className="text-[#DB9E30]">*</span>
-                </label>
-                <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter username"
-                  required
-                  aria-label="Username"
-                />
-              </div> */}
-              {/* <div className="relative input-icon">
-                <label htmlFor="password" className="block text-lg font-medium text-[#441a05]">
-                  Password <span className="text-[#DB9E30]">*</span>
-                </label>
-                <FaLock className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter password"
-                  required
-                  aria-label="Password"
-                />
-              </div> */}
               <div className="relative input-icon">
                 <label htmlFor="name" className="block text-lg font-medium text-[#441a05]">
-                  Full Name <span className="text-[#DB9E30]">*</span>
+                  পূর্ণ নাম <span className="text-[#DB9E30]">*</span>
                 </label>
                 <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -286,14 +228,14 @@ const StaffRegistrationForm = () => {
                   value={formData.name}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter full name"
+                  placeholder="পূর্ণ নাম লিখুন"
                   required
-                  aria-label="Full Name"
+                  aria-label="পূর্ণ নাম"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="name_in_bangla" className="block text-lg font-medium text-[#441a05]">
-                  Name in Bangla
+                  বাংলায় নাম
                 </label>
                 <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -303,13 +245,13 @@ const StaffRegistrationForm = () => {
                   value={formData.name_in_bangla}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter name in Bangla"
-                  aria-label="Name in Bangla"
+                  placeholder="বাংলায় নাম লিখুন"
+                  aria-label="বাংলায় নাম"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="user_id" className="block text-lg font-medium text-[#441a05]">
-                  User ID <span className="text-[#DB9E30]">*</span>
+                  ইউজার আইডি <span className="text-[#DB9E30]">*</span>
                 </label>
                 <FaIdCard className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -319,14 +261,14 @@ const StaffRegistrationForm = () => {
                   value={formData.user_id}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter user ID"
+                  placeholder="ইউজার আইডি লিখুন"
                   required
-                  aria-label="User ID"
+                  aria-label="ইউজার আইডি"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="gender" className="block text-lg font-medium text-[#441a05]">
-                  Gender 
+                  লিঙ্গ
                 </label>
                 <FaVenusMars className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
@@ -335,18 +277,17 @@ const StaffRegistrationForm = () => {
                   value={formData.gender}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  
-                  aria-label="Gender"
+                  aria-label="লিঙ্গ"
                 >
-                  <option value="">Select gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
+                  <option value="">লিঙ্গ নির্বাচন করুন</option>
+                  <option value="Male">পুরুষ</option>
+                  <option value="Female">নারী</option>
+                  <option value="Other">অন্যান্য</option>
                 </select>
               </div>
               <div className="relative input-icon">
                 <label htmlFor="dob" className="block text-lg font-medium text-[#441a05]">
-                  Date of Birth 
+                  জন্ম তারিখ
                 </label>
                 <FaCalendarAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -356,13 +297,12 @@ const StaffRegistrationForm = () => {
                   value={formData.dob}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  
-                  aria-label="Date of Birth"
+                  aria-label="জন্ম তারিখ"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="blood_group" className="block text-lg font-medium text-[#441a05]">
-                  Blood Group 
+                  রক্তের গ্রুপ
                 </label>
                 <FaHeart className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
@@ -371,10 +311,9 @@ const StaffRegistrationForm = () => {
                   value={formData.blood_group}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  
-                  aria-label="Blood Group"
+                  aria-label="রক্তের গ্রুপ"
                 >
-                  <option value="">Select blood group</option>
+                  <option value="">রক্তের গ্রুপ নির্বাচন করুন</option>
                   <option value="A+">A+</option>
                   <option value="A-">A-</option>
                   <option value="B+">B+</option>
@@ -387,7 +326,7 @@ const StaffRegistrationForm = () => {
               </div>
               <div className="relative input-icon">
                 <label htmlFor="nid" className="block text-lg font-medium text-[#441a05]">
-                  NID
+                  জাতীয় পরিচয়পত্র
                 </label>
                 <FaIdCard className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -397,13 +336,13 @@ const StaffRegistrationForm = () => {
                   value={formData.nid}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter NID"
-                  aria-label="NID"
+                  placeholder="জাতীয় পরিচয়পত্র নম্বর লিখুন"
+                  aria-label="জাতীয় পরিচয়পত্র"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="fathers_name" className="block text-lg font-medium text-[#441a05]">
-                  Father's Name 
+                  পিতার নাম
                 </label>
                 <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -413,14 +352,13 @@ const StaffRegistrationForm = () => {
                   value={formData.fathers_name}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter father's name"
-                  
-                  aria-label="Father's Name"
+                  placeholder="পিতার নাম লিখুন"
+                  aria-label="পিতার নাম"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="mothers_name" className="block text-lg font-medium text-[#441a05]">
-                  Mother's Name
+                  মাতার নাম
                 </label>
                 <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -430,14 +368,13 @@ const StaffRegistrationForm = () => {
                   value={formData.mothers_name}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter mother's name"
-                  
-                  aria-label="Mother's Name"
+                  placeholder="মাতার নাম লিখুন"
+                  aria-label="মাতার নাম"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="marital_status" className="block text-lg font-medium text-[#441a05]">
-                  Marital Status 
+                  বৈবাহিক অবস্থা
                 </label>
                 <FaRing className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
@@ -446,29 +383,28 @@ const StaffRegistrationForm = () => {
                   value={formData.marital_status}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  
-                  aria-label="Marital Status"
+                  aria-label="বৈবাহিক অবস্থা"
                 >
-                  <option value="">Select marital status</option>
-                  <option value="MARRIED">Married</option>
-                  <option value="SINGLE">Single</option>
-                  <option value="DIVORCED">Divorced</option>
-                  <option value="WIDOWED">Widowed</option>
+                  <option value="">বৈবাহিক অবস্থা নির্বাচন করুন</option>
+                  <option value="MARRIED">বিবাহিত</option>
+                  <option value="SINGLE">অবিবাহিত</option>
+                  <option value="DIVORCED">তালাকপ্রাপ্ত</option>
+                  <option value="WIDOWED">বিধবা/বিপত্নীক</option>
                 </select>
               </div>
             </div>
           </div>
 
-          {/* Contact Details */}
-          <div className=" bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-xl shadow-md">
+          {/* যোগাযোগের তথ্য */}
+          <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-xl shadow-md">
             <div className="flex items-center justify-center mb-4">
               <FaPhone className="text-3xl text-[#DB9E30]" />
             </div>
-            <h3 className="text-2xl font-semibold text-[#441a05] text-center">Contact Details</h3>
+            <h3 className="text-2xl font-semibold text-[#441a05] text-center">যোগাযোগের তথ্য</h3>
             <div className="border-t border-[#9d9087]/50 mt-4 pt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="relative input-icon">
                 <label htmlFor="phone_number" className="block text-lg font-medium text-[#441a05]">
-                  Phone Number <span className="text-[#DB9E30]">*</span>
+                  ফোন নম্বর <span className="text-[#DB9E30]">*</span>
                 </label>
                 <FaPhone className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -478,14 +414,14 @@ const StaffRegistrationForm = () => {
                   value={formData.phone_number}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter phone number"
+                  placeholder="ফোন নম্বর লিখুন"
                   required
-                  aria-label="Phone Number"
+                  aria-label="ফোন নম্বর"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="email" className="block text-lg font-medium text-[#441a05]">
-                  Email
+                  ইমেইল
                 </label>
                 <FaEnvelope className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -495,14 +431,13 @@ const StaffRegistrationForm = () => {
                   value={formData.email}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter email address"
-                  
-                  aria-label="Email"
+                  placeholder="ইমেইল ঠিকানা লিখুন"
+                  aria-label="ইমেইল"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="rfid" className="block text-lg font-medium text-[#441a05]">
-                  RFID
+                  আরএফআইডি
                 </label>
                 <FaIdCard className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -512,13 +447,13 @@ const StaffRegistrationForm = () => {
                   value={formData.rfid}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter RFID"
-                  aria-label="RFID"
+                  placeholder="আরএফআইডি লিখুন"
+                  aria-label="আরএফআইডি"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="present_address" className="block text-lg font-medium text-[#441a05]">
-                  Present Address 
+                  বর্তমান ঠিকানা
                 </label>
                 <FaMapMarkerAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -528,14 +463,13 @@ const StaffRegistrationForm = () => {
                   value={formData.present_address}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter present address"
-                  
-                  aria-label="Present Address"
+                  placeholder="বর্তমান ঠিকানা লিখুন"
+                  aria-label="বর্তমান ঠিকানা"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="permanent_address" className="block text-lg font-medium text-[#441a05]">
-                  Permanent Address
+                  স্থায়ী ঠিকানা
                 </label>
                 <FaMap className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -545,14 +479,13 @@ const StaffRegistrationForm = () => {
                   value={formData.permanent_address}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter permanent address"
-                  
-                  aria-label="Permanent Address"
+                  placeholder="স্থায়ী ঠিকানা লিখুন"
+                  aria-label="স্থায়ী ঠিকানা"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="disability_info" className="block text-lg font-medium text-[#441a05]">
-                  Disability Information
+                  প্রতিবন্ধকতার তথ্য
                 </label>
                 <FaWheelchair className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <textarea
@@ -561,24 +494,24 @@ const StaffRegistrationForm = () => {
                   value={formData.disability_info}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter any disability information"
+                  placeholder="প্রতিবন্ধকতার তথ্য লিখুন"
                   rows="3"
-                  aria-label="Disability Information"
+                  aria-label="প্রতিবন্ধকতার তথ্য"
                 />
               </div>
             </div>
           </div>
 
-          {/* Family Details */}
-          <div className=" bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-xl shadow-md">
+          {/* পারিবারিক তথ্য */}
+          <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-xl shadow-md">
             <div className="flex items-center justify-center mb-4">
               <FaHome className="text-3xl text-[#DB9E30]" />
             </div>
-            <h3 className="text-2xl font-semibold text-[#441a05] text-center">Family Details</h3>
+            <h3 className="text-2xl font-semibold text-[#441a05] text-center">পারিবারিক তথ্য</h3>
             <div className="border-t border-[#9d9087]/50 mt-4 pt-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div className="relative input-icon">
                 <label htmlFor="spouse_name" className="block text-lg font-medium text-[#441a05]">
-                  Spouse Name
+                  স্ত্রী/স্বামীর নাম
                 </label>
                 <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -588,13 +521,13 @@ const StaffRegistrationForm = () => {
                   value={formData.spouse_name}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter spouse name"
-                  aria-label="Spouse Name"
+                  placeholder="স্ত্রী/স্বামীর নাম লিখুন"
+                  aria-label="স্ত্রী/স্বামীর নাম"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="spouse_phone_number" className="block text-lg font-medium text-[#441a05]">
-                  Spouse Phone Number
+                  স্ত্রী/স্বামীর ফোন নম্বর
                 </label>
                 <FaPhone className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -604,13 +537,13 @@ const StaffRegistrationForm = () => {
                   value={formData.spouse_phone_number}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter spouse phone number"
-                  aria-label="Spouse Phone Number"
+                  placeholder="স্ত্রী/স্বামীর ফোন নম্বর লিখুন"
+                  aria-label="স্ত্রী/স্বামীর ফোন নম্বর"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="children_no" className="block text-lg font-medium text-[#441a05]">
-                  Number of Children
+                  সন্তানের সংখ্যা
                 </label>
                 <FaChild className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -620,23 +553,23 @@ const StaffRegistrationForm = () => {
                   value={formData.children_no}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter number of children"
-                  aria-label="Number of Children"
+                  placeholder="সন্তানের সংখ্যা লিখুন"
+                  aria-label="সন্তানের সংখ্যা"
                 />
               </div>
             </div>
           </div>
 
-          {/* Employment Details */}
-          <div className=" bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-xl shadow-md">
+          {/* কর্মসংস্থানের তথ্য */}
+          <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-xl shadow-md">
             <div className="flex items-center justify-center mb-4">
               <FaBriefcase className="text-3xl text-[#DB9E30]" />
             </div>
-            <h3 className="text-2xl font-semibold text-[#441a05] text-center">Employment Details</h3>
+            <h3 className="text-2xl font-semibold text-[#441a05] text-center">কর্মসংস্থানের তথ্য</h3>
             <div className="border-t border-[#9d9087]/50 mt-4 pt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="relative input-icon">
                 <label htmlFor="short_name" className="block text-lg font-medium text-[#441a05]">
-                  Short Name 
+                  সংক্ষিপ্ত নাম
                 </label>
                 <FaUserTag className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -646,14 +579,13 @@ const StaffRegistrationForm = () => {
                   value={formData.short_name}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter short name"
-                  
-                  aria-label="Short Name"
+                  placeholder="সংক্ষিপ্ত নাম লিখুন"
+                  aria-label="সংক্ষিপ্ত নাম"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="name_tag" className="block text-lg font-medium text-[#441a05]">
-                  Name Tag
+                  নাম ট্যাগ
                 </label>
                 <FaUserTag className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -663,13 +595,13 @@ const StaffRegistrationForm = () => {
                   value={formData.name_tag}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter name tag (e.g., Senior Teacher)"
-                  aria-label="Name Tag"
+                  placeholder="নাম ট্যাগ লিখুন (যেমন: সিনিয়র শিক্ষক)"
+                  aria-label="নাম ট্যাগ"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="tin" className="block text-lg font-medium text-[#441a05]">
-                  TIN
+                  টিআইএন
                 </label>
                 <FaFileAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -679,13 +611,13 @@ const StaffRegistrationForm = () => {
                   value={formData.tin}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter TIN"
-                  aria-label="TIN"
+                  placeholder="টিআইএন লিখুন"
+                  aria-label="টিআইএন"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="qualification" className="block text-lg font-medium text-[#441a05]">
-                  Qualification
+                  যোগ্যতা
                 </label>
                 <FaFileAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -695,13 +627,13 @@ const StaffRegistrationForm = () => {
                   value={formData.qualification}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter qualification"
-                  aria-label="Qualification"
+                  placeholder="যোগ্যতা লিখুন"
+                  aria-label="যোগ্যতা"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="staff_id_no" className="block text-lg font-medium text-[#441a05]">
-                  Staff ID No. 
+                  স্টাফ আইডি নম্বর
                 </label>
                 <FaIdCard className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -711,14 +643,13 @@ const StaffRegistrationForm = () => {
                   value={formData.staff_id_no}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter staff ID number"
-                  
-                  aria-label="Staff ID No."
+                  placeholder="স্টাফ আইডি নম্বর লিখুন"
+                  aria-label="স্টাফ আইডি নম্বর"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="employee_type" className="block text-lg font-medium text-[#441a05]">
-                  Employee Type 
+                  কর্মচারীর ধরন
                 </label>
                 <FaBuilding className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
@@ -727,18 +658,17 @@ const StaffRegistrationForm = () => {
                   value={formData.employee_type}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  
-                  aria-label="Employee Type"
+                  aria-label="কর্মচারীর ধরন"
                 >
-                  <option value="">Select employee type</option>
-                  <option value="Permanent">Permanent</option>
-                  <option value="Contract">Contract</option>
-                  <option value="PartTime">Part-Time</option>
+                  <option value="">কর্মচারীর ধরন নির্বাচন করুন</option>
+                  <option value="Permanent">স্থায়ী</option>
+                  <option value="Contract">চুক্তিভিত্তিক</option>
+                  <option value="PartTime">খণ্ডকালীন</option>
                 </select>
               </div>
               <div className="relative input-icon">
                 <label htmlFor="job_nature" className="block text-lg font-medium text-[#441a05]">
-                  Job Nature 
+                  চাকরির প্রকৃতি
                 </label>
                 <FaBusinessTime className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
@@ -747,17 +677,16 @@ const StaffRegistrationForm = () => {
                   value={formData.job_nature}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  
-                  aria-label="Job Nature"
+                  aria-label="চাকরির প্রকৃতি"
                 >
-                  <option value="">Select job nature</option>
-                  <option value="Fulltime">Full-Time</option>
-                  <option value="Parttime">Part-Time</option>
+                  <option value="">চাকরির প্রকৃতি নির্বাচন করুন</option>
+                  <option value="Fulltime">পূর্ণকালীন</option>
+                  <option value="Parttime">খণ্ডকালীন</option>
                 </select>
               </div>
               <div className="relative input-icon">
                 <label htmlFor="designation" className="block text-lg font-medium text-[#441a05]">
-                  Designation 
+                  পদবী
                 </label>
                 <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -767,14 +696,13 @@ const StaffRegistrationForm = () => {
                   value={formData.designation}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="Enter designation"
-                  
-                  aria-label="Designation"
+                  placeholder="পদবী লিখুন"
+                  aria-label="পদবী"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="joining_date" className="block text-lg font-medium text-[#441a05]">
-                  Joining Date
+                  যোগদানের তারিখ
                 </label>
                 <FaCalendarAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input
@@ -784,12 +712,12 @@ const StaffRegistrationForm = () => {
                   value={formData.joining_date}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  aria-label="Joining Date"
+                  aria-label="যোগদানের তারিখ"
                 />
               </div>
               <div className="relative input-icon">
                 <label htmlFor="role_id" className="block text-lg font-medium text-[#441a05]">
-                  Role <span className="text-[#DB9E30]">*</span>
+                  ভূমিকা <span className="text-[#DB9E30]">*</span>
                 </label>
                 <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
@@ -799,17 +727,17 @@ const StaffRegistrationForm = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   required
-                  aria-label="Role ID"
+                  aria-label="ভূমিকা"
                 >
-                  <option value="">Select role</option>
-                  <option value="1">Teacher</option>
-                  <option value="2">Administrator</option>
-                  <option value="3">Support Staff</option>
+                  <option value="">ভূমিকা নির্বাচন করুন</option>
+                  <option value="1">শিক্ষক</option>
+                  <option value="2">প্রশাসক</option>
+                  <option value="3">সহায়ক কর্মী</option>
                 </select>
               </div>
               <div className="relative input-icon">
                 <label htmlFor="department_id" className="block text-lg font-medium text-[#441a05]">
-                  Department ID
+                  বিভাগ আইডি
                 </label>
                 <FaBuilding className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <select
@@ -818,44 +746,44 @@ const StaffRegistrationForm = () => {
                   value={formData.department_id}
                   onChange={handleChange}
                   className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  aria-label="Department ID"
+                  aria-label="বিভাগ আইডি"
                 >
-                  <option value="">Select department</option>
-                  <option value="1">Mathematics</option>
-                  <option value="2">Science</option>
-                  <option value="3">Administration</option>
+                  <option value="">বিভাগ নির্বাচন করুন</option>
+                  <option value="1">গণিত</option>
+                  <option value="2">বিজ্ঞান</option>
+                  <option value="3">প্রশাসন</option>
                 </select>
               </div>
             </div>
-        </div>
+          </div>
 
-          {/* Submit Button */}
+          {/* জমা দিন বাটন */}
           <div className="text-center">
             <button
               type="submit"
               disabled={isLoading}
-              className="btn btn-ripple inline-flex items-center gap-2 px-10 py-3.5 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-200 animate-scale-in ${isLoading ? 'opacity-50 cursor-not-allowed' : 'btn-glow'}"
-              title="Register staff"
+              className={`btn btn-ripple inline-flex items-center gap-2 px-10 py-3.5 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-200 animate-scaleIn ${isLoading ? 'opacity-50 cursor-not-allowed' : 'btn-glow'}`}
+              title="স্টাফ নিবন্ধন করুন"
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">
                   <FaSpinner className="animate-spin text-lg" />
-                  <span>Submitting...</span>
+                  <span>জমা হচ্ছে...</span>
                 </span>
               ) : (
-                <span>Register Staff</span>
+                <span>স্টাফ নিবন্ধন করুন</span>
               )}
             </button>
           </div>
 
-          {/* Error Message */}
+          {/* ত্রুটি বার্তা */}
           {error && (
             <div
               id="error-message"
               className="text-red-600 bg-red-50 p-4 rounded-lg shadow-inner animate-fadeIn text-center"
               aria-describedby="error-message"
             >
-              Error: {error.data?.message || error.data?.error || error.data?.detail || error.status || 'Unknown error'}
+              ত্রুটি: {error.data?.message || error.data?.error || error.data?.detail || error.status || 'অজানা ত্রুটি'}
             </div>
           )}
         </form>
