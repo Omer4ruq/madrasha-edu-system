@@ -8,8 +8,8 @@ export default function i18n() {}
 
 
 i18next.use(I18nextBrowserLanguageDetector).use(initReactI18next).init({
-   debug: true,
-   lng: localStorage.getItem("school-dashboard-language") || "en", //language used
+   debug: false,
+   lng: localStorage.getItem("school-dashboard-language") || "en", 
    resources: {
       en: {
         translation: englishWords
