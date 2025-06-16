@@ -32,6 +32,7 @@ const AddFeesName = () => {
 
   // Handle fee package checkbox
   const handleFeePackageChange = (packageId) => {
+    console.log("id", packageId)
     setSelectedFeePackages((prev) =>
       prev.includes(packageId)
         ? prev.filter((id) => id !== packageId)
@@ -42,6 +43,7 @@ const AddFeesName = () => {
 
   // Handle fee subhead checkbox
   const handleFeeSubheadChange = (subheadId) => {
+    console.log("subheadid", subheadId)
     setSelectedFeeSubheads((prev) =>
       prev.includes(subheadId)
         ? prev.filter((id) => id !== subheadId)
@@ -113,6 +115,7 @@ const AddFeesName = () => {
     try {
       for (const config of configurations) {
         const feesTitle = `${config.packageName}_${config.subheadName}_${config.academicYear}`.replace(/[^a-zA-Z0-9-_]/g, '_');
+        console.log("config", config)
         const payload = {
           id: 0,
           fees_title: feesTitle,
@@ -125,17 +128,18 @@ const AddFeesName = () => {
           academic_year: parseInt(config.academicYear),
           created_by: 1,
           updated_by: null,
-          fee_amount_details: [{
-            id: 0,
-            amount: config.amount,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            student_class: config.classId,
-            fees_head_id: config.packageId,
-            academic_year: parseInt(config.academicYear),
-            created_by: 1,
-            updated_by: null,
-          }],
+          fee_amount_id: config.packageId
+          // fee_amount_details: [{
+          //   id: 0,
+          //   amount: config.amount,
+          //   created_at: new Date().toISOString(),
+          //   updated_at: new Date().toISOString(),
+          //   student_class: config.classId,
+          //   fees_head_id: config.packageId,
+          //   academic_year: parseInt(config.academicYear),
+          //   created_by: 1,
+          //   updated_by: null,
+          // }],
         };
 
         await createFeesName(payload).unwrap();

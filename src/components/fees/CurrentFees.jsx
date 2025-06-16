@@ -30,7 +30,7 @@ const CurrentFees = () => {
   const [createFee] = useCreateFeeMutation();
   const [updateFee] = useUpdateFeeMutation();
   const [deleteFee] = useDeleteFeeMutation();
-
+console.log(feesData)
   // Handle student search
   useEffect(() => {
     if (studentData && studentData.length > 0) {
