@@ -185,7 +185,7 @@ const StaffList = () => {
         {/* Filter Form */}
         <div className="mb-6">
           <h4 className="text-lg font-semibold text-[#441a05] mb-4">ফিল্টার</h4>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <input
               type="text"
               name="name"
@@ -210,7 +210,7 @@ const StaffList = () => {
               className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
               placeholder="ফোন নম্বর"
             />
-            <input
+            {/* <input
               type="text"
               name="email"
               value={filters.email}
@@ -225,7 +225,7 @@ const StaffList = () => {
               onChange={handleFilterChange}
               className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
               placeholder="পদবী"
-            />
+            /> */}
           </div>
         </div>
 
