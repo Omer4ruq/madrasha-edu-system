@@ -37,7 +37,7 @@ import StaffList from "./components/users/staff-list/StaffList";
 import AddFeePackages from "./components/fees/AddFeePackages";
 import AddFeesName from "./components/fees/AddFeesName";
 import CurrentFees from "./components/fees/CurrentFees";
-import DeleteStudentFees from "./components/fees/DeleteStudentFees";
+import DeleteStudentFees from "./components/fees/DeleteStudentFees"
 
 function Root() {
   const router = createBrowserRouter([
