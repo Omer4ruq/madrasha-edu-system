@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { FaEdit, FaSpinner, FaTrash } from "react-icons/fa";
 import { IoAdd, IoAddCircle } from "react-icons/io5";
 import { useCreateIncomeItemMutation, useDeleteIncomeItemMutation, useGetIncomeItemsQuery, useUpdateIncomeItemMutation } from "../../redux/features/api/income-items/incomeItemsApi";

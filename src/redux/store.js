@@ -43,6 +43,7 @@ import { gfeeSubheadsApi } from './features/api/gfee-subheads/gfeeSubheadsApi';
 import { feesApi } from './features/api/fees/feesApi';
 import { studentFeesCurrentApi } from './features/api/studentFeesCurrentApi/studentFeesCurrentApi';
 import { studentFeesPreviousApi } from './features/api/studentFeesPreviousApi/studentFeesPreviousApi';
+import { deleteFeesApi } from './features/api/deleteFees/deleteFeesApi';
 
 
 
@@ -94,6 +95,7 @@ export const store = configureStore({
     [feesApi.reducerPath]: feesApi.reducer,
     [studentFeesCurrentApi.reducerPath]: studentFeesCurrentApi.reducer,
     [studentFeesPreviousApi.reducerPath]: studentFeesPreviousApi.reducer,
+    [deleteFeesApi.reducerPath]: deleteFeesApi.reducer,
 
 
   
@@ -148,6 +150,7 @@ export const store = configureStore({
     .concat(feesApi.middleware)
     .concat(studentFeesCurrentApi.middleware)
     .concat(studentFeesPreviousApi.middleware)
+    .concat(deleteFeesApi.middleware)
 
   
     
