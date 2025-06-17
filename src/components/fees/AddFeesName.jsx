@@ -16,8 +16,6 @@ const AddFeesName = () => {
   const [selectedFeePackages, setSelectedFeePackages] = useState([]);
   const [selectedFeeSubheads, setSelectedFeeSubheads] = useState([]);
   const [configurations, setConfigurations] = useState([]);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
   const [errors, setErrors] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,7 +30,6 @@ const AddFeesName = () => {
 
   // Handle fee package checkbox
   const handleFeePackageChange = (packageId) => {
-    console.log("id", packageId)
     setSelectedFeePackages((prev) =>
       prev.includes(packageId)
         ? prev.filter((id) => id !== packageId)
@@ -43,7 +40,6 @@ const AddFeesName = () => {
 
   // Handle fee subhead checkbox
   const handleFeeSubheadChange = (subheadId) => {
-    console.log("subheadid", subheadId)
     setSelectedFeeSubheads((prev) =>
       prev.includes(subheadId)
         ? prev.filter((id) => id !== subheadId)
@@ -52,16 +48,26 @@ const AddFeesName = () => {
     setErrors((prev) => ({ ...prev, feeSubheads: null }));
   };
 
-  // Validate form inputs
+  // Validate form inputs for adding configuration
   const validateForm = () => {
     const newErrors = {};
     if (!selectedClass) newErrors.class = 'শ্রেণি নির্বাচন করুন';
     if (!selectedAcademicYear) newErrors.academicYear = 'শিক্ষাবর্ষ নির্বাচন করুন';
     if (selectedFeePackages.length === 0) newErrors.feePackages = 'অন্তত একটি ফি প্যাকেজ নির্বাচন করুন';
     if (selectedFeeSubheads.length === 0) newErrors.feeSubheads = 'অন্তত একটি ফি সাবহেড নির্বাচন করুন';
-    if (!startDate) newErrors.startDate = 'শুরুর তারিখ নির্বাচন করুন';
-    if (!endDate) newErrors.endDate = 'শেষের তারিখ নির্বাচন করুন';
     return Object.keys(newErrors).length ? newErrors : null;
+  };
+
+  // Validate dates before submission
+  const validateDates = () => {
+    const invalidConfigs = configurations.filter(
+      (config) => !config.startDate || !config.endDate
+    );
+    if (invalidConfigs.length > 0) {
+      toast.error('সকল কনফিগারেশনের জন্য শুরুর এবং শেষের তারিখ নির্বাচন করুন।');
+      return false;
+    }
+    return true;
   };
 
   // Add selected configuration
@@ -87,8 +93,8 @@ const AddFeesName = () => {
           classId: selectedClass,
           className: classes?.find((c) => c.id === selectedClass)?.student_class.name || 'অজানা',
           academicYear: selectedAcademicYear,
-          startDate,
-          endDate,
+          startDate: '',
+          endDate: '',
           amount: pkg?.amount || '0.00',
         };
       });
@@ -100,10 +106,22 @@ const AddFeesName = () => {
     toast.success('কনফিগারেশন সফলভাবে যোগ করা হয়েছে!');
   };
 
+  // Update date for a specific configuration
+  const updateConfigDate = (index, field, value) => {
+    setConfigurations((prev) =>
+      prev.map((config, i) =>
+        i === index ? { ...config, [field]: value } : config
+      )
+    );
+  };
+
   // Open confirmation modal
   const handleOpenModal = () => {
     if (configurations.length === 0) {
       toast.error('জমা দেওয়ার জন্য কোনো কনফিগারেশন নেই।');
+      return;
+    }
+    if (!validateDates()) {
       return;
     }
     setIsModalOpen(true);
@@ -114,8 +132,8 @@ const AddFeesName = () => {
     setIsSubmitting(true);
     try {
       for (const config of configurations) {
-        const feesTitle = `${config.packageName}_${config.subheadName}_${config.academicYear}`.replace(/[^a-zA-Z0-9-_]/g, '_');
-        console.log("config", config)
+        const academicYearName = academicYears?.find((y) => y.id === parseInt(config.academicYear))?.name || 'Unknown';
+        const feesTitle = `${config.packageName}_${config.subheadName}_${academicYearName}`.replace(/[^a-zA-Z0-9-_]/g, '_');
         const payload = {
           id: 0,
           fees_title: feesTitle,
@@ -129,25 +147,12 @@ const AddFeesName = () => {
           created_by: 1,
           updated_by: null,
           fee_amount_id: config.packageId
-          // fee_amount_details: [{
-          //   id: 0,
-          //   amount: config.amount,
-          //   created_at: new Date().toISOString(),
-          //   updated_at: new Date().toISOString(),
-          //   student_class: config.classId,
-          //   fees_head_id: config.packageId,
-          //   academic_year: parseInt(config.academicYear),
-          //   created_by: 1,
-          //   updated_by: null,
-          // }],
         };
 
         await createFeesName(payload).unwrap();
       }
       toast.success('ফি কনফিগারেশন সফলভাবে সংরক্ষিত হয়েছে!');
       setConfigurations([]);
-      setStartDate('');
-      setEndDate('');
       setSelectedClass(null);
       setSelectedAcademicYear('');
       setErrors({});
@@ -321,7 +326,6 @@ const AddFeesName = () => {
                                 )}
                               </span>
                             </label>
-
                             <span className="text-[#441a05]">{`${className} - ${feeHeadName}`}</span>
                           </div>
                         );
@@ -369,7 +373,6 @@ const AddFeesName = () => {
                               )}
                             </span>
                           </label>
-
                           <span className="text-[#441a05]">{sub.name}</span>
                         </div>
                       ))
@@ -384,56 +387,20 @@ const AddFeesName = () => {
           </div>
         </div>
 
-        {/* Date Pickers */}
-        <div className="mb-6 flex flex-col md:flex-row justify-center gap-4">
-          <div className='w-full'>
-            <label className="block mb-1 text-[#441a05] font-medium">শুরুর তারিখ:</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => {
-                setStartDate(e.target.value);
-                setErrors((prev) => ({ ...prev, startDate: null }));
-              }}
-              className="w-full bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
-              aria-describedby={errors.startDate ? 'startDate-error' : undefined}
-            />
-            {errors.startDate && (
-              <p id="startDate-error" className="text-red-400 text-sm mt-2">{errors.startDate}</p>
-            )}
-          </div>
-          <div className='w-full'>
-            <label className="block mb-1 text-[#441a05] font-medium">শেষের তারিখ:</label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => {
-                setEndDate(e.target.value);
-                setErrors((prev) => ({ ...prev, endDate: null }));
-              }}
-              className="w-full bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
-              aria-describedby={errors.endDate ? 'endDate-error' : undefined}
-            />
-            {errors.endDate && (
-              <p id="endDate-error" className="text-red-400 text-sm mt-2">{errors.endDate}</p>
-            )}
-          </div>
-          <div className='w-full'>
-            <button
-              onClick={addConfiguration}
-              className={`flex items-center w-full px-6 py-3 mb-6 md:mt-6 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${!selectedClass || !selectedAcademicYear || selectedFeePackages.length === 0 || selectedFeeSubheads.length === 0 || !startDate || !endDate
-                ? 'cursor-not-allowed opacity-70'
-                : 'hover:text-white btn-glow'
-                }`}
-              disabled={!selectedClass || !selectedAcademicYear || selectedFeePackages.length === 0 || selectedFeeSubheads.length === 0 || !startDate || !endDate}
-            >
-              <FaCheckCircle className="w-5 h-5 mr-2" />
-              কনফিগারেশন যোগ করুন
-            </button>
-          </div>
+        {/* Configuration Add Button */}
+        <div className="mb-6">
+          <button
+            onClick={addConfiguration}
+            className={`flex items-center w-full max-w-xs px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${!selectedClass || !selectedAcademicYear || selectedFeePackages.length === 0 || selectedFeeSubheads.length === 0
+              ? 'cursor-not-allowed opacity-70'
+              : 'hover:text-white btn-glow'
+              }`}
+            disabled={!selectedClass || !selectedAcademicYear || selectedFeePackages.length === 0 || selectedFeeSubheads.length === 0}
+          >
+            <FaCheckCircle className="w-5 h-5 mr-2" />
+            কনফিগারেশন যোগ করুন
+          </button>
         </div>
-
-
 
         {/* Configurations Table */}
         {configurations.length > 0 && (
@@ -459,8 +426,22 @@ const AddFeesName = () => {
                     <td className="border border-white/20 p-3 text-sm text-[#441a05]">
                       {academicYears?.find((y) => y.id === parseInt(config.academicYear))?.name || config.academicYear}
                     </td>
-                    <td className="border border-white/20 p-3 text-sm text-[#441a05]">{config.startDate}</td>
-                    <td className="border border-white/20 p-3 text-sm text-[#441a05]">{config.endDate}</td>
+                    <td className="border border-white/20 p-3 text-sm text-[#441a05]">
+                      <input
+                        type="date"
+                        value={config.startDate}
+                        onChange={(e) => updateConfigDate(index, 'startDate', e.target.value)}
+                        className="w-full bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg"
+                      />
+                    </td>
+                    <td className="border border-white/20 p-3 text-sm text-[#441a05]">
+                      <input
+                        type="date"
+                        value={config.endDate}
+                        onChange={(e) => updateConfigDate(index, 'endDate', e.target.value)}
+                        className="w-full bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg"
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
