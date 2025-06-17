@@ -4,8 +4,6 @@ import { IoAdd, IoAddCircle } from "react-icons/io5";
 import { useCreateIncomeItemMutation, useDeleteIncomeItemMutation, useGetIncomeItemsQuery, useUpdateIncomeItemMutation } from "../../redux/features/api/income-items/incomeItemsApi";
 import { useGetIncomeHeadsQuery } from "../../redux/features/api/income-heads/incomeHeadsApi";
 import { useGetFundsQuery } from "../../redux/features/api/funds/fundsApi";
-
-
 import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
 import { useGetTransactionBooksQuery } from "../../redux/features/api/transaction-books/transactionBooksApi";
 
@@ -35,6 +33,8 @@ const IncomeItems = () => {
   const [updateIncomeItem, { isLoading: isUpdating, error: updateError }] = useUpdateIncomeItemMutation();
   const [deleteIncomeItem, { isLoading: isDeleting, error: deleteError }] = useDeleteIncomeItemMutation();
 
+  // Debug API response
+  console.log("incomeItems:", incomeItems);
   console.log("fundTypes:", fundTypes);
   console.log("academicYears:", academicYears);
   console.log("transactionBooks:", transactionBooks);
@@ -48,87 +48,87 @@ const IncomeItems = () => {
     setErrors((prev) => ({ ...prev, [name]: null }));
   };
 
- const validateForm = ({ incometype_id, name, fund_id, income_date, amount, academic_year, transaction_book_id, transaction_number }) => {
-  const errors = {};
-  if (!incometype_id) errors.incometype_id = "Income type is required";
-  if (!name) errors.name = "Name is required";
-  if (!fund_id) errors.fund_id = "Fund is required";
-  if (!income_date) errors.income_date = "Income date is required";
-  if (!amount) errors.amount = "Amount is required";
-  else if (parseFloat(amount) <= 0) errors.amount = "Amount must be greater than 0";
-  if (!academic_year) errors.academic_year = "Academic year is required";
-  
-  // Validate transaction_book_id if provided
-  if (transaction_book_id && (isNaN(parseInt(transaction_book_id)) || parseInt(transaction_book_id) <= 0)) {
-    errors.transaction_book_id = "Transaction book ID must be a valid positive integer";
-  }
-  
-  // Validate transaction_number if provided
-  if (transaction_number && (isNaN(parseInt(transaction_number)) || parseInt(transaction_number) <= 0)) {
-    errors.transaction_number = "Transaction number must be a valid positive integer";
-  }
-
-  return Object.keys(errors).length ? errors : null;
-};
-
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  const validationErrors = validateForm(formData);
-  if (validationErrors) {
-    setErrors(validationErrors);
-    return;
-  }
-  try {
-    const payload = {
-      incometype_id: parseInt(formData.incometype_id),
-      name: formData.name.trim(),
-      fund_id: parseInt(formData.fund_id),
-      income_date: formData.income_date,
-      amount: parseFloat(formData.amount),
-      attach_doc: formData.attach_doc,
-      description: formData.description.trim() || "",
-      academic_year: parseInt(formData.academic_year),
-      created_by: parseInt(localStorage.getItem("userId")) || 1,
-    };
-
-    // Only include transaction_book_id if valid
-    if (formData.transaction_book_id && !isNaN(parseInt(formData.transaction_book_id))) {
-      payload.transaction_book_id = parseInt(formData.transaction_book_id);
+  const validateForm = ({ incometype_id, name, fund_id, income_date, amount, academic_year, transaction_book_id, transaction_number }) => {
+    const errors = {};
+    if (!incometype_id) errors.incometype_id = "Income type is required";
+    if (!name) errors.name = "Name is required";
+    if (!fund_id) errors.fund_id = "Fund is required";
+    if (!income_date) errors.income_date = "Income date is required";
+    if (!amount) errors.amount = "Amount is required";
+    else if (parseFloat(amount) <= 0) errors.amount = "Amount must be greater than 0";
+    if (!academic_year) errors.academic_year = "Academic year is required";
+    
+    // Validate transaction_book_id if provided
+    if (transaction_book_id && (isNaN(parseInt(transaction_book_id)) || parseInt(transaction_book_id) <= 0)) {
+      errors.transaction_book_id = "Transaction book ID must be a valid positive integer";
+    }
+    
+    // Validate transaction_number if provided
+    if (transaction_number && (isNaN(parseInt(transaction_number)) || parseInt(transaction_number) <= 0)) {
+      errors.transaction_number = "Transaction number must be a valid positive integer";
     }
 
-    // Only include transaction_number if valid
-    if (formData.transaction_number && !isNaN(parseInt(formData.transaction_number))) {
-      payload.transaction_number = parseInt(formData.transaction_number);
-    }
+    return Object.keys(errors).length ? errors : null;
+  };
 
-    // Only include invoice_number if provided
-    if (formData.invoice_number) {
-      payload.invoice_number = formData.invoice_number.trim();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const validationErrors = validateForm(formData);
+    if (validationErrors) {
+      setErrors(validationErrors);
+      return;
     }
+    try {
+      const payload = {
+        incometype_id: parseInt(formData.incometype_id),
+        name: formData.name.trim(),
+        fund_id: parseInt(formData.fund_id),
+        income_date: formData.income_date,
+        amount: parseFloat(formData.amount),
+        attach_doc: formData.attach_doc,
+        description: formData.description.trim() || "",
+        academic_year: parseInt(formData.academic_year),
+        created_by: parseInt(localStorage.getItem("userId")) || 1,
+      };
 
-    console.log("Create payload:", payload);
-    await createIncomeItem(payload).unwrap();
-    alert("Income item created successfully!");
-    setFormData({
-      incometype_id: "",
-      name: "",
-      fund_id: "",
-      transaction_book_id: "",
-      transaction_number: "",
-      invoice_number: "",
-      income_date: "",
-      amount: "",
-      attach_doc: null,
-      description: "",
-      academic_year: "",
-    });
-    setErrors({});
-  } catch (err) {
-    console.error("Create error:", err);
-    setErrors(err.data || {});
-    alert(`Failed to create income item: ${err.status || "Unknown"} - ${JSON.stringify(err.data || {})}`);
-  }
-};
+      // Only include transaction_book_id if valid
+      if (formData.transaction_book_id && !isNaN(parseInt(formData.transaction_book_id))) {
+        payload.transaction_book_id = parseInt(formData.transaction_book_id);
+      }
+
+      // Only include transaction_number if valid
+      if (formData.transaction_number && !isNaN(parseInt(formData.transaction_number))) {
+        payload.transaction_number = parseInt(formData.transaction_number);
+      }
+
+      // Only include invoice_number if provided
+      if (formData.invoice_number) {
+        payload.invoice_number = formData.invoice_number.trim();
+      }
+
+      console.log("Create payload:", payload);
+      await createIncomeItem(payload).unwrap();
+      alert("Income item created successfully!");
+      setFormData({
+        incometype_id: "",
+        name: "",
+        fund_id: "",
+        transaction_book_id: "",
+        transaction_number: "",
+        invoice_number: "",
+        income_date: "",
+        amount: "",
+        attach_doc: null,
+        description: "",
+        academic_year: "",
+      });
+      setErrors({});
+    } catch (err) {
+      console.error("Create error:", err);
+      setErrors(err.data || {});
+      alert(`Failed to create income item: ${err.status || "Unknown"} - ${JSON.stringify(err.data || {})}`);
+    }
+  };
 
   const handleEditClick = (item) => {
     setEditId(item.id);
@@ -136,9 +136,9 @@ const handleSubmit = async (e) => {
       incometype_id: item.incometype_id.toString(),
       name: item.name,
       fund_id: item.fund_id.toString(),
-      transaction_book_id: item.transaction_book_id.toString(),
-      transaction_number: item.transaction_number.toString(),
-      invoice_number: item.invoice_number,
+      transaction_book_id: item.transaction_book_id ? item.transaction_book_id.toString() : "",
+      transaction_number: item.transaction_number ? item.transaction_number.toString() : "",
+      invoice_number: item.invoice_number || "",
       income_date: item.income_date,
       amount: item.amount,
       attach_doc: null, // File input cannot prefill
@@ -148,66 +148,67 @@ const handleSubmit = async (e) => {
     setErrors({});
   };
 
-const handleUpdate = async (e) => {
-  e.preventDefault();
-  const validationErrors = validateForm(formData);
-  if (validationErrors) {
-    setErrors(validationErrors);
-    return;
-  }
-  try {
-    const payload = {
-      id: editId,
-      incometype_id: parseInt(formData.incometype_id),
-      name: formData.name.trim(),
-      fund_id: parseInt(formData.fund_id),
-      income_date: formData.income_date,
-      amount: parseFloat(formData.amount),
-      attach_doc: formData.attach_doc,
-      description: formData.description.trim() || "",
-      academic_year: parseInt(formData.academic_year),
-      updated_by: parseInt(localStorage.getItem("userId")) || 1,
-    };
-
-    // Only include transaction_book_id if valid
-    if (formData.transaction_book_id && !isNaN(parseInt(formData.transaction_book_id))) {
-      payload.transaction_book_id = parseInt(formData.transaction_book_id);
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    const validationErrors = validateForm(formData);
+    if (validationErrors) {
+      setErrors(validationErrors);
+      return;
     }
+    try {
+      const payload = {
+        id: editId,
+        incometype_id: parseInt(formData.incometype_id),
+        name: formData.name.trim(),
+        fund_id: parseInt(formData.fund_id),
+        income_date: formData.income_date,
+        amount: parseFloat(formData.amount),
+        attach_doc: formData.attach_doc,
+        description: formData.description.trim() || "",
+        academic_year: parseInt(formData.academic_year),
+        updated_by: parseInt(localStorage.getItem("userId")) || 1,
+      };
 
-    // Only include transaction_number if valid
-    if (formData.transaction_number && !isNaN(parseInt(formData.transaction_number))) {
-      payload.transaction_number = parseInt(formData.transaction_number);
+      // Only include transaction_book_id if valid
+      if (formData.transaction_book_id && !isNaN(parseInt(formData.transaction_book_id))) {
+        payload.transaction_book_id = parseInt(formData.transaction_book_id);
+      }
+
+      // Only include transaction_number if valid
+      if (formData.transaction_number && !isNaN(parseInt(formData.transaction_number))) {
+        payload.transaction_number = parseInt(formData.transaction_number);
+      }
+
+      // Only include invoice_number if provided
+      if (formData.invoice_number) {
+        payload.invoice_number = formData.invoice_number.trim();
+      }
+
+      console.log("Update payload:", payload);
+      await updateIncomeItem(payload).unwrap();
+      alert("Income item updated successfully!");
+      setEditId(null);
+      setFormData({
+        incometype_id: "",
+        name: "",
+        fund_id: "",
+        transaction_book_id: "",
+        transaction_number: "",
+        invoice_number: "",
+        income_date: "",
+        amount: "",
+        attach_doc: null,
+        description: "",
+        academic_year: "",
+      });
+      setErrors({});
+    } catch (err) {
+      console.error("Update error:", err);
+      setErrors(err.data || {});
+      alert(`Failed to update income item: ${err.status || "Unknown"} - ${JSON.stringify(err.data || {})}`);
     }
+  };
 
-    // Only include invoice_number if provided
-    if (formData.invoice_number) {
-      payload.invoice_number = formData.invoice_number.trim();
-    }
-
-    console.log("Update payload:", payload);
-    await updateIncomeItem(payload).unwrap();
-    alert("Income item updated successfully!");
-    setEditId(null);
-    setFormData({
-      incometype_id: "",
-      name: "",
-      fund_id: "",
-      transaction_book_id: "",
-      transaction_number: "",
-      invoice_number: "",
-      income_date: "",
-      amount: "",
-      attach_doc: null,
-      description: "",
-      academic_year: "",
-    });
-    setErrors({});
-  } catch (err) {
-    console.error("Update error:", err);
-    setErrors(err.data || {});
-    alert(`Failed to update income item: ${err.status || "Unknown"} - ${JSON.stringify(err.data || {})}`);
-  }
-};
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this income item?")) {
       try {
@@ -219,6 +220,9 @@ const handleUpdate = async (e) => {
       }
     }
   };
+
+  // Ensure incomeItems is an array before mapping
+  const safeIncomeItems = Array.isArray(incomeItems) ? incomeItems : [];
 
   return (
     <div className="py-8 w-full">
@@ -300,7 +304,6 @@ const handleUpdate = async (e) => {
               onChange={handleChange}
               className="w-full bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
               disabled={isCreating || isUpdating || isBooksLoading}
-         
               aria-describedby={errors.transaction_book_id ? "transaction_book_id-error" : undefined}
             >
               <option value="" disabled>Select Transaction Book</option>
@@ -321,7 +324,6 @@ const handleUpdate = async (e) => {
               className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
               placeholder="Enter transaction number"
               disabled={isCreating || isUpdating}
-
               aria-describedby={errors.transaction_number ? "transaction_number-error" : undefined}
             />
             {errors.transaction_number && (
@@ -337,7 +339,6 @@ const handleUpdate = async (e) => {
               className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
               placeholder="Enter invoice number"
               disabled={isCreating || isUpdating}
-     
               aria-describedby={errors.invoice_number ? "invoice_number-error" : undefined}
             />
             {errors.invoice_number && (
@@ -477,7 +478,7 @@ const handleUpdate = async (e) => {
           <p className="p-4 text-[#441a05]/70">Loading...</p>
         ) : itemsError ? (
           <p className="p-4 text-red-400">Error: {itemsError.status || "Unknown"} - {JSON.stringify(itemsError.data || {})}</p>
-        ) : incomeItems.length === 0 ? (
+        ) : safeIncomeItems.length === 0 ? (
           <p className="p-4 text-[#441a05]/70">No income items available.</p>
         ) : (
           <div className="overflow-x-auto">
@@ -496,7 +497,7 @@ const handleUpdate = async (e) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/20">
-                {incomeItems?.map((item, index) => (
+                {safeIncomeItems.map((item, index) => (
                   <tr key={item.id} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
                       {incomeHeads.find((head) => head.id === item.incometype_id)?.incometype || "Unknown"}
