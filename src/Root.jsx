@@ -121,7 +121,7 @@ function Root() {
               children: [
                 {
                   index: true,
-                  element: <AddExamTypes />,
+                  element: <AddExamTypes />
                 },
               ],
             },
