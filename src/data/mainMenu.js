@@ -18,7 +18,7 @@ const mainMenu = [
   },
   {
     id: "04",
-    title: "দারুল ইকাম",
+    title: "দারুল ইকামা",
     icon: "HiOutlineHomeModern",
     link: "/darul-iqam",
     children: [
