@@ -37,13 +37,9 @@ const mainMenu = [
             title: "ছুটির ধরন",
             link: "/darul-iqam/settings/leave-type",
           },
+         
           {
             id: "04/01/03",
-            title: "খাবারের ধরন",
-            link: "/darul-iqam/settings/meal-type",
-          },
-          {
-            id: "04/01/04",
             title: "পার্ফরমেন্স ধরন",
             link: "/darul-iqam/settings/performance-type",
           },
@@ -239,6 +235,42 @@ const mainMenu = [
           },
         ],
       },
+    ],
+  },
+  {
+    id: "08",
+    title: "বোর্ডিং",
+    icon: "HiOutlineCalculator",
+    link: "/boarding",
+    children: [
+      {
+        id: "08/01",
+        title: "সেটিং",
+        link: "/boarding/settings",
+        children: [
+          {
+            id: "08/01/01",
+            title: "খাবারের ধরন",
+            link: "/boarding/settings/meal-type",
+          },
+             {
+            id: "08/01/02",
+            title: "খাবারের আইটেম",
+            link: "/boarding/settings/meal-items",
+          },
+        {
+            id: "08/01/03",
+            title: "খাবারের সেটাপ",
+            link: "/boarding/settings/meal-setup",
+          },
+             {
+            id: "08/01/04",
+            title: "খাবারের স্ট্যাটাস",
+            link: "/boarding/settings/meal-status",
+          },
+        ],
+      },
+ 
     ],
   },
 ];

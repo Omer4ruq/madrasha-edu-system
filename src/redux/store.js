@@ -44,6 +44,7 @@ import { feesApi } from './features/api/fees/feesApi';
 import { studentFeesCurrentApi } from './features/api/studentFeesCurrentApi/studentFeesCurrentApi';
 import { studentFeesPreviousApi } from './features/api/studentFeesPreviousApi/studentFeesPreviousApi';
 import { deleteFeesApi } from './features/api/deleteFees/deleteFeesApi';
+import { mealStatusApi } from './features/api/meal/mealStatusApi';
 
 
 
@@ -69,6 +70,7 @@ export const store = configureStore({
     [mealsNameApi.reducerPath]: mealsNameApi.reducer,
     [mealItemApi.reducerPath]: mealItemApi.reducer,
     [mealSetupApi.reducerPath]: mealSetupApi.reducer,
+    [mealStatusApi.reducerPath]: mealStatusApi.reducer,
     [examApi.reducerPath]: examApi.reducer,
     [leaveApi.reducerPath]: leaveApi.reducer,
     [leaveQuotasApi.reducerPath]: leaveQuotasApi.reducer,
@@ -151,6 +153,7 @@ export const store = configureStore({
     .concat(studentFeesCurrentApi.middleware)
     .concat(studentFeesPreviousApi.middleware)
     .concat(deleteFeesApi.middleware)
+    .concat(mealStatusApi.middleware)
 
   
     

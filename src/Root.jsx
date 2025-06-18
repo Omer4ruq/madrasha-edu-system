@@ -39,6 +39,9 @@ import AddFeesName from "./components/fees/AddFeesName";
 import CurrentFees from "./components/fees/CurrentFees";
 import DeleteStudentFees from "./components/fees/DeleteStudentFees";
 import PreviousFees from "./components/fees/PreviousFees";
+import MealItems from "./components/meals/MealItems";
+import MealSetup from "./components/meals/MealSetup";
+import MealStatus from "./components/meals/MealStatus";
 
 function Root() {
   const router = createBrowserRouter([
@@ -77,10 +80,7 @@ function Root() {
                   path: "leave-type",
                   element: <AddLeaveType />,
                 },
-                {
-                  path: "meal-type",
-                  element: <AddMealsType />,
-                },
+              
                 {
                   path: "performance-type",
                   element: <PerformanceType />,
@@ -210,6 +210,37 @@ function Root() {
               path: "delete-fee",
               element: <DeleteStudentFees />,
             },
+          ],
+        },
+         {
+          path: "boarding",
+          children: [
+            {
+              path: "settings",
+              children: [
+                {
+                  index: true,
+                  element: <AddMealsType />,
+                },
+                  {
+                  path: "meal-type",
+                  element: <AddMealsType />,
+                },
+                 {
+                  path: "meal-items",
+                  element: <MealItems />,
+                },
+                  {
+                  path: "meal-setup",
+                  element: <MealSetup />,
+                },
+                  {
+                  path: "meal-status",
+                  element: <MealStatus />,
+                },
+              ],
+            },
+         
           ],
         },
         {
