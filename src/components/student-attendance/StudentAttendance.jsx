@@ -127,6 +127,9 @@ const StudentAttendance = () => {
     { skip: !selectedClass }
   );
 
+
+  console.log('subjectData',subjectData)
+
   // Fetch attendance using studentSubAttendanceApi
   const { data: attendanceData, isLoading: isAttendanceLoading, error: attendanceError } = useGetStudentSubAttendanceQuery(
     {
@@ -211,7 +214,7 @@ const StudentAttendance = () => {
             <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">ছাত্র উপস্থিতি দেখুন</h3>
           </div>
 
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Class Selection */}
             <div className="relative">
               <label className="block text-lg font-medium text-[#441a05]" htmlFor="classSelect">
@@ -289,7 +292,7 @@ const StudentAttendance = () => {
               <FaCalendarAlt className="absolute left-3 top-[42px] text-[#DB9E30]" />
             </div>
 
-            <button
+            {/* <button
               type="submit"
               disabled={isLoading}
               title="উপস্থিতি দেখুন"
@@ -308,7 +311,7 @@ const StudentAttendance = () => {
                   <span>উপস্থিতি দেখুন</span>
                 </span>
               )}
-            </button>
+            </button> */}
           </form>
         </div>
 
@@ -327,18 +330,18 @@ const StudentAttendance = () => {
           ) : (
             <>
               {/* Search Bar (Visible only if data exists) */}
-              <div className="relative input-icon p-4 animate-fadeIn">
+              <div className="relative input-icon p-4 animate-fadeIn ">
                 <label className="block text-lg font-medium text-[#441a05]" htmlFor="searchStudent">
                   ছাত্র অনুসন্ধান
                 </label>
-                <FaSearch className="absolute left-7 top-[60px] text-[#DB9E30]" />
+                <FaSearch className="absolute left-7 top-[64px] text-[#DB9E30]" />
                 <input
                   id="searchStudent"
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="ছাত্রের নাম বা আইডি লিখুন"
-                  className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+                  className="mt-2 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
                   aria-label="ছাত্র অনুসন্ধান"
                 />
               </div>
