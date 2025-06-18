@@ -38,11 +38,8 @@ import AddFeePackages from "./components/fees/AddFeePackages";
 import AddFeesName from "./components/fees/AddFeesName";
 import CurrentFees from "./components/fees/CurrentFees";
 import DeleteStudentFees from "./components/fees/DeleteStudentFees";
-<<<<<<< HEAD
 import StudentAttendance from "./components/student-attendance/StudentAttendance";
-=======
 import PreviousFees from "./components/fees/PreviousFees";
->>>>>>> 316ee294ac7cb07851bdf2819b6f6fe24d4d9a40
 
 function Root() {
   const router = createBrowserRouter([
