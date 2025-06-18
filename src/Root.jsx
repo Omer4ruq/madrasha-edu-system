@@ -38,6 +38,7 @@ import AddFeePackages from "./components/fees/AddFeePackages";
 import AddFeesName from "./components/fees/AddFeesName";
 import CurrentFees from "./components/fees/CurrentFees";
 import DeleteStudentFees from "./components/fees/DeleteStudentFees";
+import PreviousFees from "./components/fees/PreviousFees";
 
 function Root() {
   const router = createBrowserRouter([
@@ -200,6 +201,10 @@ function Root() {
              {
               path: "current-fee",
               element: <CurrentFees />,
+            },
+              {
+              path: "previous-fee",
+              element: <PreviousFees />,
             },
              {
               path: "delete-fee",

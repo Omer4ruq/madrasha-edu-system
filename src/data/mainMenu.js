@@ -189,6 +189,11 @@ const mainMenu = [
       },
         {
         id: "07/08",
+        title: "previous- ফি",
+        link: "/accounts/previous-fee",
+      },
+        {
+        id: "07/09",
         title: "Delete- ফি",
         link: "/accounts/delete-fee",
       },

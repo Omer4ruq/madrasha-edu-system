@@ -15,6 +15,7 @@ const AddLeaveType = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0); // Added for forced re-rendering
 
   // API hooks
   const {
@@ -26,7 +27,7 @@ const AddLeaveType = () => {
   const [createLeave, { isLoading: isCreating, error: createError }] = useCreateLeaveApiMutation();
   const [updateLeave, { isLoading: isUpdating, error: updateError }] = useUpdateLeaveApiMutation();
   const [deleteLeave, { isLoading: isDeleting, error: deleteError }] = useDeleteLeaveApiMutation();
-
+console.log("leave", leaveTypes)
   // Validate leave name
   const validateLeaveName = (name) => {
     const regex = /^[a-zA-Z0-9\s\-_,()]{1,50}$/;
@@ -99,10 +100,13 @@ const AddLeaveType = () => {
         await deleteLeave(modalData.id).unwrap();
         toast.success("ছুটির ধরন সফলভাবে মুছে ফেলা হয়েছে!");
       } else if (modalAction === "toggle") {
+        console.log("Toggling leave:", modalData); // Debug log
         await updateLeave(modalData).unwrap();
         toast.success(`ছুটির ধরন ${modalData.name} এখন ${modalData.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"}!`);
       }
       refetch();
+      console.log("Refetched leave types"); // Debug log
+      setRefreshKey((prev) => prev + 1); // Force table re-render
     } catch (err) {
       console.error(`ত্রুটি ${modalAction === "create" ? "তৈরি করা" : modalAction === "update" ? "আপডেট" : modalAction === "delete" ? "মুছে ফেলা" : "টগল করা"}:`, err);
       toast.error(`ছুটির ধরন ${modalAction === "create" ? "তৈরি" : modalAction === "update" ? "আপডেট" : modalAction === "delete" ? "মুছে ফেলা" : "টগল করা"} ব্যর্থ: ${err.status || "অজানা"} - ${JSON.stringify(err.data || {})}`);
@@ -148,9 +152,7 @@ const AddLeaveType = () => {
           }
           .tick-glow {
             transition: all 0.3s ease;
-          }
-          .tick-glow:checked + span {
-            box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+            box-shadow: 0 0 10px rgba(219, 158, 48, 0.4); /* Match #DB9E30 */
           }
           .btn-glow:hover {
             box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
@@ -212,7 +214,7 @@ const AddLeaveType = () => {
                 </span>
               ) : (
                 <span className="flex items-center space-x-2">
-                  <IoAdd className="w-5 h-5" />
+                  <IoAdd class Ponta = "w-5 h-5" />
                   <span>{editLeaveId ? "ছুটি আপডেট করুন" : "ছুটি তৈরি করুন"}</span>
                 </span>
               )}
@@ -254,7 +256,7 @@ const AddLeaveType = () => {
           ) : leaveTypes?.length === 0 ? (
             <p className="p-4 text-[#441a05]/70">কোনো ছুটির ধরন উপলব্ধ নেই।</p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" key={refreshKey}>
               <table className="min-w-full divide-y divide-white/20">
                 <thead className="bg-white/5">
                   <tr>
@@ -294,15 +296,15 @@ const AddLeaveType = () => {
                             className="hidden"
                           />
                           <span
-                            className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn ${
+                            className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 ${
                               leave.is_active
-                                ? "bg-[#DB9E30] border-[#DB9E30]"
+                                ? "bg-[#DB9E30] border-[#DB9E30] tick-glow"
                                 : "bg-white/10 border-[#9d9087] hover:border-[#441a05]"
                             }`}
                           >
                             {leave.is_active && (
                               <svg
-                                className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                                className="w-4 h-4 text-[#441a05]"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -350,11 +352,10 @@ const AddLeaveType = () => {
           {(isDeleting || deleteError) && (
             <div
               className="mt-4 text-red-500 bg-red-400/10 p-3 rounded-lg animate-fadeIn"
-              style={{}}
             >
               {isDeleting
                 ? "ছুটির ধরন মুছে ফেলা হচ্ছে..."
-                : `ছুটির ধরন মুছে ফেলতে ত্রুটি: ${errorStatus || "Unknown"} - ${JSON.stringify(errorData || {})}`}
+                : `ছুটির ধরন মুছে ফেলতে ত্রুটি: ${deleteError?.status || "অজানা"} - ${JSON.stringify(deleteError?.data || {})}`}
             </div>
           )}
         </div>

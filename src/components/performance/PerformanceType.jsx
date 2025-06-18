@@ -17,7 +17,7 @@ const PerformanceType = () => {
       const [createPerformance, { isLoading: isCreating, error: createError }] = useCreatePerformanceApiMutation();
       const [updatePerformance, { isLoading: isUpdating, error: updateError }] = useUpdatePerformanceApiMutation();
       const [deletePerformance, { isLoading: isDeleting, error: deleteError }] = useDeletePerformanceApiMutation();
-    
+    console.log("permormance type", performanceTypes)
       // Handle form submission for adding new Performance type
       const handleSubmitPerformance = async (e) => {
         e.preventDefault();
