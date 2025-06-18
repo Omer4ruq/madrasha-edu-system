@@ -212,7 +212,7 @@ const MealStatus = () => {
               required
             >
               <option value="ACTIVE">Active</option>
-              <option value="INACTIVE">Inactive</option>
+              <option value="DEACTIVATE">DEACTIVATE</option>
             </select>
           </div>
           <div>

@@ -186,7 +186,7 @@ console.log("leave", leaveTypes)
               {editLeaveId ? "ছুটির ধরন সম্পাদনা করুন" : "নতুন ছুটির ধরন যোগ করুন"}
             </h3>
           </div>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <input
               type="text"
               id="leaveName"
@@ -263,9 +263,9 @@ console.log("leave", leaveTypes)
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       ছুটির ধরন
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                    {/* <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       সক্রিয়
-                    </th>
+                    </th> */}
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       তৈরির সময়
                     </th>
@@ -287,7 +287,7 @@ console.log("leave", leaveTypes)
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
                         {leave.name}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
+                      {/* <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
                         <label className="inline-flex items-center cursor-pointer">
                           <input
                             type="checkbox"
@@ -320,7 +320,7 @@ console.log("leave", leaveTypes)
                             )}
                           </span>
                         </label>
-                      </td>
+                      </td> */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
                         {new Date(leave.created_at).toLocaleString("bn-BD")}
                       </td>
