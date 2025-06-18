@@ -38,6 +38,7 @@ import AddFeePackages from "./components/fees/AddFeePackages";
 import AddFeesName from "./components/fees/AddFeesName";
 import CurrentFees from "./components/fees/CurrentFees";
 import DeleteStudentFees from "./components/fees/DeleteStudentFees";
+import StudentAttendance from "./components/student-attendance/StudentAttendance";
 
 function Root() {
   const router = createBrowserRouter([
@@ -109,6 +110,10 @@ function Root() {
             {
               path: "teacher-performance",
               element: <TeacherPerformance></TeacherPerformance>,
+            },
+            {
+              path: "student-attendance",
+              element: <StudentAttendance></StudentAttendance>,
             },
           ],
         },

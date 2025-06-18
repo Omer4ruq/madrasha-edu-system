@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { FaBuilding, FaGlobe, FaUser, FaInfoCircle, FaGraduationCap, FaEdit } from 'react-icons/fa';
 
@@ -82,7 +81,7 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
     <div className="mx-auto py-8">
       <style>{customStyles}</style>
       <h1 className="text-3xl md:text-4xl font-extrabold mb-8 text-center text-[#441a05] title-underline animate-fadeIn">
-        Institute Profiles
+        প্রতিষ্ঠানের প্রোফাইল
       </h1>
       {institutes.map((institute) => {
         const activeTab = activeTabs[institute.id] || 'basic';
@@ -101,7 +100,7 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
                 <div>
                   <h2 className="text-2xl md:text-3xl font-bold text-[#441a05]">{institute.institute_name}</h2>
                   <p className="text-sm text-[#9d9087]">
-                    {institute.institute_type?.name || 'N/A'} • {institute.institute_address || 'N/A'}
+                    {institute.institute_type?.name || 'অজানা'} • {institute.institute_address || 'অজানা'}
                   </p>
                 </div>
               </div>
@@ -109,7 +108,7 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
               <button
                 onClick={() => handleEditInstitute(institute)}
                 className="edit-icon text-[#9d9087] p-2 rounded-full transition-all duration-300 btn-ripple"
-                title="Edit Profile"
+                title="প্রোফাইল সম্পাদনা করুন"
               >
                 <FaEdit className="text-xl" />
               </button>
@@ -119,10 +118,10 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
             <div className="px-6 py-4 bg-[#441a05]/5 border-b border-[#9d9087]/50">
               <div className="flex flex-wrap gap-3">
                 {[
-                  { id: 'basic', label: 'Basic Info' },
-                  { id: 'online', label: 'Online Presence' },
-                  { id: 'manager', label: 'Incharge Manager' },
-                  { id: 'additional', label: 'Additional Info' },
+                  { id: 'basic', label: 'মৌলিক তথ্য' },
+                  { id: 'online', label: 'অনলাইন উপস্থিতি' },
+                  { id: 'manager', label: 'ইনচার্জ ম্যানেজার' },
+                  { id: 'additional', label: 'অতিরিক্ত তথ্য' },
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -145,20 +144,20 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fadeIn">
                   <div className="space-y-4 text-[#441a05]">
                     <h3 className="text-lg font-semibold flex items-center">
-                      <FaBuilding className="mr-2 text-[#DB9E30]" /> Basic Info
+                      <FaBuilding className="mr-2 text-[#DB9E30]" /> মৌলিক তথ্য
                     </h3>
-                    <p><span className="font-medium">Headmaster:</span> {institute.headmaster_name}</p>
-                    <p><span className="font-medium">Mobile:</span> {institute.headmaster_mobile}</p>
-                    <p><span className="font-medium">Address:</span> {institute.institute_address || 'N/A'}</p>
+                    <p><span className="font-medium">প্রধান শিক্ষক:</span> {institute.headmaster_name}</p>
+                    <p><span className="font-medium">মোবাইল:</span> {institute.headmaster_mobile}</p>
+                    <p><span className="font-medium">ঠিকানা:</span> {institute.institute_address || 'অজানা'}</p>
                   </div>
                   <div className="space-y-4 text-[#441a05]">
                     <h3 className="text-lg font-semibold flex items-center">
-                      <FaInfoCircle className="mr-2 text-[#DB9E30]" /> Institute Details
+                      <FaInfoCircle className="mr-2 text-[#DB9E30]" /> প্রতিষ্ঠানের বিবরণ
                     </h3>
-                    <p><span className="font-medium">Email:</span> {institute.institute_email_address || 'N/A'}</p>
-                    <p><span className="font-medium">EIIN Number:</span> {institute.institute_eiin_no || 'N/A'}</p>
-                    <p><span className="font-medium">Gender Type:</span> {institute.institute_gender_type}</p>
-                    <p><span className="font-medium">Type:</span> {institute.institute_type?.name || 'N/A'}</p>
+                    <p><span className="font-medium">ইমেইল:</span> {institute.institute_email_address || 'অজানা'}</p>
+                    <p><span className="font-medium">ইআইআইএন নম্বর:</span> {institute.institute_eiin_no || 'অজানা'}</p>
+                    <p><span className="font-medium">লিঙ্গের ধরন:</span> {institute.institute_gender_type === 'Combined' ? 'মিশ্র' : institute.institute_gender_type === 'Male' ? 'পুরুষ' : 'নারী'}</p>
+                    <p><span className="font-medium">ধরন:</span> {institute.institute_type?.name || 'অজানা'}</p>
                   </div>
                 </div>
               )}
@@ -166,10 +165,10 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
               {activeTab === 'online' && (
                 <div className="space-y-4 text-[#441a05] animate-fadeIn">
                   <h3 className="text-lg font-semibold flex items-center">
-                    <FaGlobe className="mr-2 text-[#DB9E30]" /> Online Presence
+                    <FaGlobe className="mr-2 text-[#DB9E30]" /> অনলাইন উপস্থিতি
                   </h3>
                   <p>
-                    <span className="font-medium">Website:</span>{' '}
+                    <span className="font-medium">ওয়েবসাইট:</span>{' '}
                     {institute.institute_web ? (
                       <a
                         href={institute.institute_web}
@@ -180,11 +179,11 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
                         {institute.institute_web}
                       </a>
                     ) : (
-                      'N/A'
+                      'অজানা'
                     )}
                   </p>
                   <p>
-                    <span className="font-medium">Management Website:</span>{' '}
+                    <span className="font-medium">ব্যবস্থাপনা ওয়েবসাইট:</span>{' '}
                     {institute.institute_management_web ? (
                       <a
                         href={institute.institute_management_web}
@@ -195,11 +194,11 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
                         {institute.institute_management_web}
                       </a>
                     ) : (
-                      'N/A'
+                      'অজানা'
                     )}
                   </p>
                   <p>
-                    <span className="font-medium">Facebook:</span>{' '}
+                    <span className="font-medium">ফেসবুক:</span>{' '}
                     {institute.institute_fb ? (
                       <a
                         href={institute.institute_fb}
@@ -210,11 +209,11 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
                         {institute.institute_fb}
                       </a>
                     ) : (
-                      'N/A'
+                      'অজানা'
                     )}
                   </p>
                   <p>
-                    <span className="font-medium">YouTube:</span>{' '}
+                    <span className="font-medium">ইউটিউব:</span>{' '}
                     {institute.institute_youtube ? (
                       <a
                         href={institute.institute_youtube}
@@ -225,7 +224,7 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
                         {institute.institute_youtube}
                       </a>
                     ) : (
-                      'N/A'
+                      'অজানা'
                     )}
                   </p>
                 </div>
@@ -234,11 +233,11 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
               {activeTab === 'manager' && (
                 <div className="space-y-4 text-[#441a05] animate-fadeIn">
                   <h3 className="text-lg font-semibold flex items-center">
-                    <FaUser className="mr-2 text-[#DB9E30]" /> Incharge Manager
+                    <FaUser className="mr-2 text-[#DB9E30]" /> ইনচার্জ ম্যানেজার
                   </h3>
-                  <p><span className="font-medium">Name:</span> {institute.incharge_manager || 'N/A'}</p>
-                  <p><span className="font-medium">Email:</span> {institute.incharge_manager_email || 'N/A'}</p>
-                  <p><span className="font-medium">Mobile:</span> {institute.incharge_manager_mobile || 'N/A'}</p>
+                  <p><span className="font-medium">নাম:</span> {institute.incharge_manager || 'অজানা'}</p>
+                  <p><span className="font-medium">ইমেইল:</span> {institute.incharge_manager_email || 'অজানা'}</p>
+                  <p><span className="font-medium">মোবাইল:</span> {institute.incharge_manager_mobile || 'অজানা'}</p>
                 </div>
               )}
 
@@ -246,20 +245,20 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fadeIn">
                   <div className="space-y-4 text-[#441a05]">
                     <h3 className="text-lg font-semibold flex items-center">
-                      <FaInfoCircle className="mr-2 text-[#DB9E30]" /> Additional Info
+                      <FaInfoCircle className="mr-2 text-[#DB9E30]" /> অতিরিক্ত তথ্য
                     </h3>
-                    <p><span className="font-medium">Vision Heading:</span> {institute.institute_v_heading || 'N/A'}</p>
-                    <p><span className="font-medium">Signature:</span> {institute.signature || 'N/A'}</p>
-                    <p><span className="font-medium">Status:</span> {institute.status}</p>
+                    <p><span className="font-medium">দৃষ্টিভঙ্গি শিরোনাম:</span> {institute.institute_v_heading || 'অজানা'}</p>
+                    <p><span className="font-medium">স্বাক্ষর:</span> {institute.signature || 'অজানা'}</p>
+                    <p><span className="font-medium">স্থিতি:</span> {institute.status === 'Active' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</p>
                   </div>
                   <div className="space-y-4 text-[#441a05]">
                     <h3 className="text-lg font-semibold flex items-center">
-                      <FaGraduationCap className="mr-2 text-[#DB9E30]" /> Education Details
+                      <FaGraduationCap className="mr-2 text-[#DB9E30]" /> শিক্ষা বিবরণ
                     </h3>
-                    <p><span className="font-medium">Board ID:</span> {institute.education_board_id || 'N/A'}</p>
-                    <p><span className="font-medium">District ID:</span> {institute.education_district_id || 'N/A'}</p>
-                    <p><span className="font-medium">Division ID:</span> {institute.education_division_id || 'N/A'}</p>
-                    <p><span className="font-medium">Thana ID:</span> {institute.education_thana_id || 'N/A'}</p>
+                    <p><span className="font-medium">বোর্ড আইডি:</span> {institute.education_board_id || 'অজানা'}</p>
+                    <p><span className="font-medium">জেলা আইডি:</span> {institute.education_district_id || 'অজানা'}</p>
+                    <p><span className="font-medium">বিভাগ আইডি:</span> {institute.education_division_id || 'অজানা'}</p>
+                    <p><span className="font-medium">থানা আইডি:</span> {institute.education_thana_id || 'অজানা'}</p>
                   </div>
                 </div>
               )}

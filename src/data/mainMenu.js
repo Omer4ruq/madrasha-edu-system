@@ -69,6 +69,11 @@ const mainMenu = [
         title: "শিক্ষকের পারফরমেন্স",
         link: "/darul-iqam/teacher-performance",
       },
+      {
+        id: "04/06",
+        title: "ছাত্রের উপস্থিতি",
+        link: "/darul-iqam/student-attendance",
+      },
     ],
   },
   {
