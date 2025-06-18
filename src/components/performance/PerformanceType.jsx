@@ -155,7 +155,7 @@ const PerformanceType = () => {
                    <IoAddCircle className="text-4xl text-[#441a05]" />
                    <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">নতুন পারফরম্যান্স টাইপ যোগ করুন</h3>
                  </div>
-                 <form onSubmit={handleSubmitPerformance} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
+                 <form onSubmit={handleSubmitPerformance} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    <input
                      type="text"
                      id="performanceName"

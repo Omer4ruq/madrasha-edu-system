@@ -206,7 +206,7 @@ const AddBehaviorType = () => {
             <IoAddCircle className="text-4xl text-[#441a05]" />
             <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">নতুন আচরণের ধরন যোগ করুন</h3>
           </div>
-          <form onSubmit={handleSubmitBehavior} className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl">
+          <form onSubmit={handleSubmitBehavior} className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <input
               type="text"
               id="behaviorName"
