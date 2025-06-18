@@ -280,15 +280,15 @@ const PerformanceType = () => {
                          <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                            কর্মক্ষমতা প্রকার
                          </th>
-                         <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                         {/* <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                            সক্রিয়
-                         </th>
-                         <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                         </th> */}
+                         {/* <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                            তৈরি করা হয়েছে
                          </th>
                          <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                            আপডেট করা হয়েছে
-                         </th>
+                         </th> */}
                          <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                            কর্ম
                          </th>
@@ -304,7 +304,7 @@ const PerformanceType = () => {
                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
                              {Performance.name}
                            </td>
-                           <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
+                           {/* <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
                              <label className="inline-flex items-center cursor-pointer">
                                <input
                                  type="checkbox"
@@ -337,13 +337,13 @@ const PerformanceType = () => {
                                  )}
                                </span>
                              </label>
-                           </td>
-                           <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
+                           </td> */}
+                           {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
                              {new Date(Performance.created_at).toLocaleString()}
                            </td>
                            <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
                              {new Date(Performance.updated_at).toLocaleString()}
-                           </td>
+                           </td> */}
                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                              <button
                                onClick={() => handleEditClick(Performance)}
