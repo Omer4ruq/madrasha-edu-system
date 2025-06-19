@@ -88,6 +88,7 @@ const mainMenu = [
             title: "পরীক্ষার ধরন",
             link: "/talimat/settings",
           },
+          
         ],
       },
 
@@ -116,6 +117,19 @@ const mainMenu = [
             title: "ক্লাস কনফিগারেশন",
             link: "/talimat/class-management/add-config",
           },
+        ],
+      },
+            {
+        id: "05/01",
+        title: "সাবজেক্ট",
+        link: "/talimat/class-subject",
+        children: [
+          {
+            id: "05/01/01",
+            title: "সাবজেক্ট নির্বাচন",
+            link: "/talimat/class-subject",
+          },
+          
         ],
       },
     ],
@@ -243,33 +257,33 @@ const mainMenu = [
     ],
   },
   {
-    id: "08",
+    id: "09",
     title: "বোর্ডিং",
     icon: "HiOutlineCalculator",
     link: "/boarding",
     children: [
       {
-        id: "08/01",
+        id: "09/01",
         title: "সেটিং",
         link: "/boarding/settings",
         children: [
           {
-            id: "08/01/01",
+            id: "09/01/01",
             title: "খাবারের ধরন",
             link: "/boarding/settings/meal-type",
           },
              {
-            id: "08/01/02",
+            id: "09/01/02",
             title: "খাবারের আইটেম",
             link: "/boarding/settings/meal-items",
           },
         {
-            id: "08/01/03",
+            id: "09/01/03",
             title: "খাবারের সেটাপ",
             link: "/boarding/settings/meal-setup",
           },
              {
-            id: "08/01/04",
+            id: "09/01/04",
             title: "খাবারের স্ট্যাটাস",
             link: "/boarding/settings/meal-status",
           },

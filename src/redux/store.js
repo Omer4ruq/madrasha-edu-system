@@ -44,13 +44,12 @@ import { feesApi } from './features/api/fees/feesApi';
 import { studentFeesCurrentApi } from './features/api/studentFeesCurrentApi/studentFeesCurrentApi';
 import { studentFeesPreviousApi } from './features/api/studentFeesPreviousApi/studentFeesPreviousApi';
 import { deleteFeesApi } from './features/api/deleteFees/deleteFeesApi';
-<<<<<<< HEAD
 import { mealStatusApi } from './features/api/meal/mealStatusApi';
-=======
 import { studentSubAttendanceApi } from './features/api/student-sub-attendance/studentSubAttendanceApi';
 import { subjectAssignApi } from './features/api/subject-assign/subjectAssignApi';
+import { gsubjectApi } from './features/api/class-subjects/gsubjectApi';
+import { classSubjectsApi } from './features/api/class-subjects/classSubjectsApi';
 
->>>>>>> 712a13eb7902e07939992578dc87c2b7a9267655
 
 
 
@@ -106,6 +105,8 @@ export const store = configureStore({
     [deleteFeesApi.reducerPath]: deleteFeesApi.reducer,
     [studentSubAttendanceApi.reducerPath]: studentSubAttendanceApi.reducer,
     [subjectAssignApi.reducerPath]: subjectAssignApi.reducer,
+    [gsubjectApi.reducerPath]: gsubjectApi.reducer,
+    [classSubjectsApi.reducerPath]: classSubjectsApi.reducer,
 
   },
   middleware: (getDefaultMiddleware) =>
@@ -154,14 +155,13 @@ export const store = configureStore({
     .concat(studentFeesCurrentApi.middleware)
     .concat(studentFeesPreviousApi.middleware)
     .concat(deleteFeesApi.middleware)
-<<<<<<< HEAD
     .concat(mealStatusApi.middleware)
 
   
-=======
     .concat(studentSubAttendanceApi.middleware)
     .concat(subjectAssignApi.middleware)
->>>>>>> 712a13eb7902e07939992578dc87c2b7a9267655
+    .concat(gsubjectApi.middleware)
+    .concat(classSubjectsApi.middleware)
     
 });
 
