@@ -97,47 +97,62 @@ const customStyles = `
     max-height: 60vh;
     overflow-y: auto;
   }
+  .tab-active {
+    background-color: #DB9E30;
+    color: #441a05;
+  }
+  .tab-inactive {
+    background-color: transparent;
+    color: #441a05;
+  }
+  .tab-inactive:hover {
+    background-color: rgba(219, 158, 48, 0.1);
+  }
 `;
 
 const StudentAttendance = () => {
+  const [activeTab, setActiveTab] = useState('class');
   const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [filterType, setFilterType] = useState('dateRange');
 
-  // Fetch classes using classConfigApi
+  // Fetch classes
   const { data: classData, isLoading: isClassesLoading, error: classesError } = useGetclassConfigApiQuery();
   const classOptions = classData?.map((cls) => ({
     value: cls.id,
     label: `${cls.class_name}-${cls.section_name}-${cls.shift_name}`,
   })) || [];
 
-  // Fetch active students using studentActiveApi
+  // Fetch active students
   const { data: studentData, isLoading: isStudentsLoading, error: studentsError } = useGetStudentActiveApiQuery(
     undefined,
     { skip: !selectedClass }
   );
   const students = studentData?.filter((student) => student.class_id === selectedClass?.value) || [];
+  const studentOptions = students.map((student) => ({
+    value: student.id,
+    label: `${student.name} (ID: ${student.id})`,
+  }));
 
-  // Fetch subjects using subjectAssignApi
+  // Fetch subjects
   const { data: subjectData, isLoading: isSubjectsLoading, error: subjectsError } = useGetSubjectAssignQuery(
     { class_id: selectedClass?.value },
     { skip: !selectedClass }
   );
+  const subjects = subjectData?.subjects?.[0]?.subject_details || [];
 
-
-  console.log('subjectData',subjectData)
-
-  // Fetch attendance using studentSubAttendanceApi
+  // Fetch attendance
   const { data: attendanceData, isLoading: isAttendanceLoading, error: attendanceError } = useGetStudentSubAttendanceQuery(
     {
       class_subject_id: '',
       start_date: startDate ? startDate.toISOString().split('T')[0] : '',
       end_date: endDate ? endDate.toISOString().split('T')[0] : '',
     },
-    { skip: !selectedClass || (!startDate && !endDate && !selectedMonth) }
+    { skip: !selectedClass || (!startDate && !endDate && !selectedMonth && activeTab === 'date') }
   );
 
   // Handle month selection
@@ -157,49 +172,64 @@ const StudentAttendance = () => {
     if (attendanceError) toast.error('উপস্থিতি তথ্য লোড করতে ব্যর্থ হয়েছে!');
   }, [classesError, studentsError, subjectsError, attendanceError]);
 
-  // Filter students based on search query
-  const filteredStudents = students.filter(
-    (student) =>
-      student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.id?.toString().includes(searchQuery)
-  );
+  // Filter students
+  const filteredStudents = selectedStudent
+    ? students.filter((student) => student.id === selectedStudent.value)
+    : students.filter(
+        (student) =>
+          student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          student.id?.toString().includes(searchQuery)
+      );
 
   // Prepare attendance sheet data
-  const subjects = subjectData?.subjects?.[0]?.subject_details || [];
-  const attendanceSheet = subjects.map((subject) => {
-    const row = { subject: subject.name, subjectId: subject.class_subject, attendance: {} };
-    filteredStudents.forEach((student) => {
-      const attendance = attendanceData?.attendance.find(
-        (att) => att.student === student.id && att.class_subject === subject.class_subject
-      );
-      row.attendance[student.id] = attendance
-        ? {
-            status: attendance.status === 'PRESENT' ? '✅' : '❌',
-            date: new Date(attendance.created_at).toLocaleDateString('bn-BD'),
-          }
-        : { status: '-', date: '-' };
+  const prepareAttendanceSheet = () => {
+    const sheet = [];
+    subjects.forEach((subject) => {
+      filteredStudents.forEach((student) => {
+        const attendanceRecords = attendanceData?.attendance.filter(
+          (att) => att.student === student.id && att.class_subject === subject.class_subject
+        ) || [];
+        attendanceRecords.forEach((att) => {
+          sheet.push({
+            subject: subject.name,
+            studentName: student.name,
+            studentId: student.id,
+            date: new Date(att.created_at).toLocaleDateString('bn-BD'),
+            status: att.status === 'PRESENT' ? '✅ উপস্থিত' : '❌ অনুপস্থিত',
+          });
+        });
+        if (attendanceRecords.length === 0) {
+          sheet.push({
+            subject: subject.name,
+            studentName: student.name,
+            studentId: student.id,
+            date: '-',
+            status: '-',
+          });
+        }
+      });
     });
-    return row;
-  });
+    return sheet;
+  };
 
+  const attendanceSheet = prepareAttendanceSheet();
   const isLoading = isClassesLoading || isStudentsLoading || isSubjectsLoading || isAttendanceLoading;
 
-  // Handle form submission to fetch attendance
+  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!selectedClass) {
       toast.error('অনুগ্রহ করে একটি ক্লাস নির্বাচন করুন!');
       return;
     }
-    if (filterType === 'dateRange' && (!startDate || !endDate)) {
+    if (activeTab === 'date' && filterType === 'dateRange' && (!startDate || !endDate)) {
       toast.error('অনুগ্রহ করে তারিখের পরিসীমা নির্বাচন করুন!');
       return;
     }
-    if (filterType === 'month' && !selectedMonth) {
+    if (activeTab === 'date' && filterType === 'month' && !selectedMonth) {
       toast.error('অনুগ্রহ করে একটি মাস নির্বাচন করুন!');
       return;
     }
-    // Data fetching is handled by the query hooks
   };
 
   return (
@@ -207,11 +237,43 @@ const StudentAttendance = () => {
       <Toaster position="top-right" reverseOrder={false} />
       <style>{customStyles}</style>
       <div className="mx-auto">
-        {/* Form to Select Class and Date */}
+        {/* Tabs */}
+        <div className="flex border-b border-white/20 mb-6 animate-fadeIn">
+          <button
+            className={`flex-1 py-3 px-6 text-lg font-medium rounded-t-lg transition-all duration-300 ${
+              activeTab === 'class' ? 'tab-active' : 'tab-inactive'
+            }`}
+            onClick={() => {
+              setActiveTab('class');
+              setDateRange([null, null]);
+              setSelectedMonth(null);
+              setSelectedStudent(null);
+              setSearchQuery('');
+            }}
+          >
+            ক্লাস অনুযায়ী উপস্থিতি
+          </button>
+          <button
+            className={`flex-1 py-3 px-6 text-lg font-medium rounded-t-lg transition-all duration-300 ${
+              activeTab === 'date' ? 'tab-active' : 'tab-inactive'
+            }`}
+            onClick={() => {
+              setActiveTab('date');
+              setSelectedStudent(null);
+              setSearchQuery('');
+            }}
+          >
+            তারিখ/মাস অনুযায়ী উপস্থিতি
+          </button>
+        </div>
+
+        {/* Form */}
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-          <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
+          <div className="flex items-center space-x-4 mb-6">
             <FaCalendarAlt className="text-4xl text-[#441a05]" />
-            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">ছাত্র উপস্থিতি দেখুন</h3>
+            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
+              {activeTab === 'class' ? 'ক্লাস অনুযায়ী উপস্থিতি দেখুন' : 'তারিখ/মাস অনুযায়ী উপস্থিতি দেখুন'}
+            </h3>
           </div>
 
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -234,157 +296,167 @@ const StudentAttendance = () => {
               />
             </div>
 
-            {/* Filter Type Selection */}
-            <div className="relative input-icon">
-              <label className="block text-lg font-medium text-[#441a05]" htmlFor="filterType">
-                ফিল্টার প্রকার
-              </label>
-              <select
-                id="filterType"
-                value={filterType}
-                onChange={(e) => {
-                  setFilterType(e.target.value);
-                  setDateRange([null, null]);
-                  setSelectedMonth(null);
-                }}
-                className="mt-1 block w-full bg-transparent text-[#441a05] pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
-                disabled={isLoading}
-                aria-label="ফিল্টার প্রকার"
-              >
-                <option value="dateRange">তারিখের পরিসীমা</option>
-                <option value="month">মাস</option>
-              </select>
-              <FaCalendarAlt className="absolute left-3 top-[42px] text-[#DB9E30]" />
-            </div>
+            {activeTab === 'date' && (
+              <>
+                {/* Filter Type Selection */}
+                <div className="relative input-icon">
+                  <label className="block text-lg font-medium text-[#441a05]" htmlFor="filterType">
+                    ফিল্টার প্রকার
+                  </label>
+                  <select
+                    id="filterType"
+                    value={filterType}
+                    onChange={(e) => {
+                      setFilterType(e.target.value);
+                      setDateRange([null, null]);
+                      setSelectedMonth(null);
+                    }}
+                    className="mt-1 block w-full bg-transparent text-[#441a05] pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+                    disabled={isLoading}
+                    aria-label="ফিল্টার প্রকার"
+                  >
+                    <option value="dateRange">তারিখের পরিসীমা</option>
+                    <option value="month">মাস</option>
+                  </select>
+                  <FaCalendarAlt className="absolute left-3 top-[42px] text-[#DB9E30]" />
+                </div>
 
-            {/* Date Range or Month Picker */}
-            <div className="relative input-icon">
-              <label className="block text-lg font-medium text-[#441a05]" htmlFor="datePicker">
-                {filterType === 'dateRange' ? 'তারিখের পরিসীমা' : 'মাস নির্বাচন করুন'}
-              </label>
-              {filterType === 'dateRange' ? (
-                <DatePicker
-                  id="datePicker"
-                  selectsRange
-                  startDate={startDate}
-                  endDate={endDate}
-                  onChange={(update) => setDateRange(update)}
-                  isClearable
-                  className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
-                  placeholderText="তারিখের পরিসীমা নির্বাচন করুন"
-                  disabled={isLoading}
-                  aria-label="তারিখের পরিসীমা"
-                />
-              ) : (
-                <DatePicker
-                  id="datePicker"
-                  selected={selectedMonth}
-                  onChange={(date) => setSelectedMonth(date)}
-                  showMonthYearPicker
-                  dateFormat="MMMM yyyy"
-                  isClearable
-                  className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
-                  placeholderText="মাস নির্বাচন করুন"
-                  disabled={isLoading}
-                  aria-label="মাস নির্বাচন"
-                />
-              )}
-              <FaCalendarAlt className="absolute left-3 top-[42px] text-[#DB9E30]" />
-            </div>
-
-            {/* <button
-              type="submit"
-              disabled={isLoading}
-              title="উপস্থিতি দেখুন"
-              className={`relative inline-flex items-center px-8 py-2 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                isLoading ? 'cursor-not-allowed opacity-60' : 'hover:text-white btn-glow'
-              }`}
-            >
-              {isLoading ? (
-                <span className="flex items-center space-x-3">
-                  <FaSpinner className="animate-spin text-lg" />
-                  <span>লোড হচ্ছে...</span>
-                </span>
-              ) : (
-                <span className="flex items-center space-x-2">
-                  <IoAdd className="w-5 h-5" />
-                  <span>উপস্থিতি দেখুন</span>
-                </span>
-              )}
-            </button> */}
+                {/* Date Range or Month Picker */}
+                <div className="relative input-icon">
+                  <label className="block text-lg font-medium text-[#441a05]" htmlFor="datePicker">
+                    {filterType === 'dateRange' ? 'তারিখের পরিসীমা' : 'মাস নির্বাচন করুন'}
+                  </label>
+                  {filterType === 'dateRange' ? (
+                    <DatePicker
+                      id="datePicker"
+                      selectsRange
+                      startDate={startDate}
+                      endDate={endDate}
+                      onChange={(update) => setDateRange(update)}
+                      isClearable
+                      className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+                      placeholderText="তারিখের পরিসীমা নির্বাচন করুন"
+                      disabled={isLoading}
+                      aria-label="তারিখের পরিসীমা"
+                    />
+                  ) : (
+                    <DatePicker
+                      id="datePicker"
+                      selected={selectedMonth}
+                      onChange={(date) => setSelectedMonth(date)}
+                      showMonthYearPicker
+                      dateFormat="MMMM yyyy"
+                      isClearable
+                      className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+                      placeholderText="মাস নির্বাচন করুন"
+                      disabled={isLoading}
+                      aria-label="মাস নির্বাচন"
+                    />
+                  )}
+                  <FaCalendarAlt className="absolute left-3 top-[42px] text-[#DB9E30]" />
+                </div>
+              </>
+            )}
           </form>
         </div>
 
         {/* Attendance Table */}
-        <div className="bg-black/10 px-6 py-2 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] border border-white/20">
+        <div className="bg-black/10 px-6 py-2 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn table-container border border-white/20">
           <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">উপস্থিতি তালিকা</h3>
           {isLoading ? (
             <p className="p-4 text-[#441a05]/70 animate-scaleIn">
               <FaSpinner className="animate-spin text-lg mr-2" />
               উপস্থিতি লোড হচ্ছে...
             </p>
+          ) : !selectedClass ? (
+            <p className="p-4 text-[#441a05]/70 animate-scaleIn">
+              অনুগ্রহ করে একটি ক্লাস নির্বাচন করুন।
+            </p>
           ) : attendanceSheet.length === 0 ? (
             <p className="p-4 text-[#441a05]/70 animate-scaleIn">
-              কোনো উপস্থিতি তথ্য উপলব্ধ নেই। ক্লাস এবং তারিখ/মাস নির্বাচন করুন।
+              কোনো উপস্থিতি তথ্য উপলব্ধ নেই। {activeTab === 'date' ? 'তারিখ/মাস নির্বাচন করুন।' : 'ছাত্র তালিকা খালি।'}
             </p>
           ) : (
             <>
-              {/* Search Bar (Visible only if data exists) */}
-              <div className="relative input-icon p-4 animate-fadeIn ">
-                <label className="block text-lg font-medium text-[#441a05]" htmlFor="searchStudent">
-                  ছাত্র অনুসন্ধান
-                </label>
-                <FaSearch className="absolute left-7 top-[64px] text-[#DB9E30]" />
-                <input
-                  id="searchStudent"
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="ছাত্রের নাম বা আইডি লিখুন"
-                  className="mt-2 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
-                  aria-label="ছাত্র অনুসন্ধান"
-                />
+              {/* Search and Student Filter */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 animate-fadeIn">
+                <div className="relative input-icon">
+                  <label className="block text-lg font-medium text-[#441a05]" htmlFor="searchStudent">
+                    ছাত্র অনুসন্ধান
+                  </label>
+                  <FaSearch className="absolute left-3 top-[42px] text-[#DB9E30]" />
+                  <input
+                    id="searchStudent"
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setSelectedStudent(null);
+                    }}
+                    placeholder="ছাত্রের নাম বা আইডি লিখুন"
+                    className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 pr-3 py-2.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+                    aria-label="ছাত্র অনুসন্ধান"
+                  />
+                </div>
+                <div className="relative">
+                  <label className="block text-lg font-medium text-[#441a05]" htmlFor="studentSelect">
+                    নির্দিষ্ট ছাত্র নির্বাচন
+                  </label>
+                  <Select
+                    id="studentSelect"
+                    options={studentOptions}
+                    value={selectedStudent}
+                    onChange={(selected) => {
+                      setSelectedStudent(selected);
+                      setSearchQuery('');
+                    }}
+                    placeholder="ছাত্র নির্বাচন করুন"
+                    classNamePrefix="react-select"
+                    className="mt-1"
+                    isClearable
+                    isDisabled={isLoading}
+                    aria-label="নির্দিষ্ট ছাত্র"
+                  />
+                </div>
               </div>
 
-              <div className="overflow-x-auto table-container">
+              <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-white/20">
                   <thead className="bg-white/5">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-sm font-medium text-[#441a05]/70 uppercase tracking-wider">
                         বিষয়
                       </th>
-                      {filteredStudents.map((student) => (
-                        <th
-                          key={student.id}
-                          className="px-6 py-3 text-center text-xs font-medium text-[#441a05]/70 uppercase tracking-wider"
-                        >
-                          {student.name} (ID: {student.id})
-                        </th>
-                      ))}
+                      <th className="px-6 py-3 text-left text-sm font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        ছাত্রের নাম
+                      </th>
+                      <th className="px-6 py-3 text-left text-sm font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        তারিখ
+                      </th>
+                      <th className="px-6 py-3 text-right text-sm font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        উপস্থিতি
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/20">
                     {attendanceSheet.map((row, index) => (
                       <tr
-                        key={row.subjectId}
-                        className="bg-white/5 animate-fadeIn"
-                        style={{ animationDelay: `${index * 0.1}s` }}
+                        key={`${row.subject}-${row.studentId}-${row.date}-${index}`}
+                        className="bg-white/5 hover:bg-white/10 transition-colors duration-200 animate-fadeIn"
+                        style={{ animationDelay: `${index * 0.05}s` }}
                       >
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
                           {row.subject}
                         </td>
-                        {filteredStudents.map((student) => (
-                          <td
-                            key={student.id}
-                            className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05] text-center"
-                          >
-                            {row.attendance[student.id].status}
-                            <br />
-                            <span className="text-[#441a05]/70 text-xs">
-                              {row.attendance[student.id].date}
-                            </span>
-                          </td>
-                        ))}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                          {row.studentName} (ID: {row.studentId})
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                          {row.date}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-[#441a05]">
+                          {row.status}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
