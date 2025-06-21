@@ -156,7 +156,7 @@ const mainMenu = [
       },
       {
         id: "07/02",
-        title: "ফি ছাড়",
+        title: "বৃত্তি প্রদান",
         link: "/accounts/waivers",
       },
       {

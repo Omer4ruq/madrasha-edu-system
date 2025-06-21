@@ -560,7 +560,7 @@ const AddWaivers = () => {
                                     selected.map((opt) => opt.value)
                                   )
                                 }
-                                placeholder="ফি প্রকার নির্বাচন করুন"
+                                placeholder="ফি প্রকার নির্বাচন"
                                 isLoading={isFeeHeadsLoading}
                                 styles={selectStyles}
                                 menuPortalTarget={document.body}
@@ -607,7 +607,7 @@ const AddWaivers = () => {
                                     selected?.value || null
                                   )
                                 }
-                                placeholder="শিক্ষাবর্ষ নির্বাচন করুন"
+                                placeholder="শিক্ষাবর্ষ নির্বাচন "
                                 isLoading={isAcademicYearLoading}
                                 styles={selectStyles}
                                 className={`w-full max-w-xs ${disabledClass}`}
@@ -632,7 +632,7 @@ const AddWaivers = () => {
                                     selected?.value || null
                                   )
                                 }
-                                placeholder="ফান্ড নির্বাচন করুন"
+                                placeholder="ফান্ড নির্বাচন"
                                 isLoading={isFundsLoading}
                                 styles={selectStyles}
                                 className={`w-full max-w-xs ${disabledClass}`}
@@ -833,7 +833,7 @@ const AddWaivers = () => {
                   fee_types: selected.map((opt) => opt.value),
                 })
               }
-              placeholder="ফি প্রকার নির্বাচন করুন"
+              placeholder="ফি প্রকার নির্বাচন"
               isLoading={isFeeHeadsLoading}
               styles={selectStyles}
               className="w-full"
@@ -872,7 +872,7 @@ const AddWaivers = () => {
                   academic_year: selected?.value || null,
                 })
               }
-              placeholder="শিক্ষাবর্ষ নির্বাচন করুন"
+              placeholder="শিক্ষাবর্ষ নির্বাচন"
               isLoading={isAcademicYearLoading}
               styles={selectStyles}
               className="w-full"
@@ -889,7 +889,7 @@ const AddWaivers = () => {
                   fund_id: selected?.value || null,
                 })
               }
-              placeholder="ফান্ড নির্বাচন করুন"
+              placeholder="ফান্ড নির্বাচন"
               isLoading={isFundsLoading}
               styles={selectStyles}
               className="w-full"
@@ -966,7 +966,7 @@ const AddWaivers = () => {
                     ছাত্র
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    ওয়েভার পরিমাণ (%)
+                    বৃত্তির পরিমাণ (%)
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                     শিক্ষাবর্ষ
@@ -980,7 +980,7 @@ const AddWaivers = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                     বর্ণনা
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                  {/* <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                     তৈরির সময়
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
@@ -988,7 +988,7 @@ const AddWaivers = () => {
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                     অ্যাকশন
-                  </th>
+                  </th> */}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/20">
@@ -1024,12 +1024,12 @@ const AddWaivers = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
                       {waiver.description || "-"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
+                    {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
                       {formatDate(waiver.created_at)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
                       {formatDate(waiver.updated_at)}
-                    </td>
+                    </td> */}
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
                         onClick={() => handleEditClick(waiver)}
