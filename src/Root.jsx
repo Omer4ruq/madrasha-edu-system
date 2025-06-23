@@ -1,4 +1,8 @@
-import {createBrowserRouter, Navigate, RouterProvider} from "react-router-dom";
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+} from "react-router-dom";
 import App from "./App";
 import LeaveType from "./components/attendance/leave-type/LeaveType";
 import Home from "./components/homePage/Home";
@@ -46,6 +50,7 @@ import SmsTemplate from "./components/Communication2/General-SMS/SmsTemplate";
 import SentNotificationSMS from "./components/Communication2/Notification-SMS/SentNotificationSMS";
 import SmsNotificationTemplate from "./components/Communication2/Notification-SMS/SmsNotificationTemplate";
 import SubjectMarkConfigs from "./components/marks/SubjectMarkConfigs";
+import AttendanceSheet from "./components/layout/AttendanceSheet";
 
 function Root() {
   const router = createBrowserRouter([
@@ -84,7 +89,7 @@ function Root() {
                   path: "leave-type",
                   element: <AddLeaveType />,
                 },
-              
+
                 {
                   path: "performance-type",
                   element: <PerformanceType />,
@@ -150,21 +155,21 @@ function Root() {
                 },
               ],
             },
-               {
+            {
               path: "class-subject",
               children: [
                 {
                   index: true,
-                  element: <ClassSubject />
+                  element: <ClassSubject />,
                 },
               ],
             },
-                  {
+            {
               path: "marks-config",
               children: [
                 {
                   index: true,
-                  element: <SubjectMarkConfigs />
+                  element: <SubjectMarkConfigs />,
                 },
               ],
             },
@@ -229,7 +234,7 @@ function Root() {
             },
           ],
         },
-         {
+        {
           path: "boarding",
           children: [
             {
@@ -239,25 +244,24 @@ function Root() {
                   index: true,
                   element: <AddMealsType />,
                 },
-                  {
+                {
                   path: "meal-type",
                   element: <AddMealsType />,
                 },
-                 {
+                {
                   path: "meal-items",
                   element: <MealItems />,
                 },
-                  {
+                {
                   path: "meal-setup",
                   element: <MealSetup />,
                 },
-                  {
+                {
                   path: "meal-status",
                   element: <MealStatus />,
                 },
               ],
             },
-         
           ],
         },
         {
@@ -319,6 +323,15 @@ function Root() {
                   element: <SmsNotificationTemplate />,
                 },
               ],
+            },
+          ],
+        },
+        {
+          path: "layout",
+          children: [
+            {
+              path: "attendance-sheet",
+              element: <AttendanceSheet />,
             },
           ],
         },

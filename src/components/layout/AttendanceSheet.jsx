@@ -1,0 +1,429 @@
+import React, { useState, useRef } from 'react';
+import Select from 'react-select';
+import { useReactToPrint } from 'react-to-print';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+import moment from 'moment';
+import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
+import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
+import { useGetStudentActiveApiQuery } from '../../redux/features/api/student/studentActiveApi';
+import { IoPrint, IoDownload } from 'react-icons/io5';
+
+// Month options for selection (in Bangla)
+const monthOptions = [
+  { value: 0, label: 'জানুয়ারি' },
+  { value: 1, label: 'ফেব্রুয়ারি' },
+  { value: 2, label: 'মার্চ' },
+  { value: 3, label: 'এপ্রিল' },
+  { value: 4, label: 'মে' },
+  { value: 5, label: 'জুন' },
+  { value: 6, label: 'জুলাই' },
+  { value: 7, label: 'আগস্ট' },
+  { value: 8, label: 'সেপ্টেম্বর' },
+  { value: 9, label: 'অক্টোবর' },
+  { value: 10, label: 'নভেম্বর' },
+  { value: 11, label: 'ডিসেম্বর' },
+];
+
+// Bangla day names (shortened)
+const banglaDays = ['র', 'স', 'ম', 'ব', 'বৃ', 'শু', 'শ'];
+
+const AttendanceSheet = () => {
+  // State for selections
+  const [selectedClassConfig, setSelectedClassConfig] = useState(null);
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState(null);
+
+  // Fetch data from APIs
+  const { data: classConfigs, isLoading: classLoading } = useGetclassConfigApiQuery();
+  const { data: academicYears, isLoading: yearLoading } = useGetAcademicYearApiQuery();
+  const { data: students, isLoading: studentLoading } = useGetStudentActiveApiQuery();
+
+  // Refs for print and PDF
+  const componentRef = useRef();
+  const pdfRef = useRef();
+
+  // Handle print
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+    pageStyle: `
+      @page {
+        size: A4 landscape;
+      }
+      @media print {
+        body {
+          -webkit-print-color-adjust: exact;
+        }
+        .no-print {
+          display: none !important;
+        }
+        .print-table {
+          width: 100%;
+          font-size: 10pt;
+        }
+        .print-table th, .print-table td {
+          border: 1px solid #9d9087;
+          padding: 4px;
+        }
+        .print-container {
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+      }
+    `,
+  });
+
+  // Handle PDF download
+  const handleDownloadPDF = async () => {
+    const element = pdfRef.current;
+    // Temporarily adjust styles for PDF rendering
+    element.style.width = '277mm'; // Reduced to fit within A4 with margins
+    element.style.padding = '1mm';
+    element.style.borderRadius = '0';
+    element.style.boxShadow = 'none';
+
+    const canvas = await html2canvas(element, {
+      scale: 2, // Balanced scale for clarity and performance
+      useCORS: true,
+      windowWidth: 277 * 3.78, // Adjusted for reduced width
+      scrollY: -window.scrollY,
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4',
+    });
+
+    const imgWidth = 277; // Adjusted to fit within A4 with 10mm margins
+    const pageHeight = 190; // A4 height minus margins
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 5; // Top margin
+
+    // Add first page
+    pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    // Add additional pages if content overflows
+    while (heightLeft > 0) {
+      pdf.addPage();
+      position = 10 - pageHeight * Math.floor(heightLeft / pageHeight + 1);
+      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    // Reset styles
+    element.style.width = '';
+    element.style.padding = '';
+    element.style.borderRadius = '';
+    element.style.boxShadow = '';
+
+    pdf.save(`হাজিরা_শীট_${selectedClassConfig.label}_${selectedMonth.label}_${academicYears?.find(y => y.id === selectedAcademicYear.value)?.name}.pdf`);
+  };
+
+  // Format class config options
+  const classConfigOptions = classConfigs?.map(config => ({
+    value: config.id,
+    label: `${config.class_name} - ${config.section_name} (${config.shift_name})`,
+  })) || [];
+
+  // Format academic year options
+  const academicYearOptions = academicYears?.map(year => ({
+    value: year.id,
+    label: year.name,
+  })) || [];
+
+  // Get days in selected month with Bangla day names
+  const getDaysInMonth = () => {
+    if (!selectedMonth || !selectedAcademicYear) return [];
+    const year = academicYears?.find(y => y.id === selectedAcademicYear.value)?.name || moment().year();
+    const daysInMonth = moment(`${year}-${selectedMonth.value + 1}`, 'YYYY-MM').daysInMonth();
+    return Array.from({ length: daysInMonth }, (_, i) => {
+      const date = moment(`${year}-${selectedMonth.value + 1}-${i + 1}`, 'YYYY-MM-DD');
+      return {
+        day: i + 1,
+        dayName: banglaDays[date.day()],
+      };
+    });
+  };
+
+  // Filter students based on selections
+  const filteredStudents = students?.filter(student => 
+    selectedClassConfig?.value === student.class_id &&
+    selectedAcademicYear?.value === student.admission_year_id
+  ) || [];
+
+  // Custom styles for React Select
+  const selectStyles = {
+    control: (provided) => ({
+      ...provided,
+      background: 'transparent',
+      borderColor: '#9d9087',
+      color: '#441a05',
+      padding: '2px',
+      borderRadius: '0.5rem',
+      transition: 'all 0.3s ease',
+      '&:hover': {
+        borderColor: '#441a05',
+      },
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: '#441a05',
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: '#441a05',
+      opacity: 0.7,
+    }),
+    menu: (provided) => ({
+      ...provided,
+      background: 'rgba(0, 0, 0, 0.1)',
+      backdropFilter: 'blur(10px)',
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+      borderRadius: '0.5rem',
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      background: state.isSelected ? '#DB9E30' : 'transparent',
+      color: '#441a05',
+      '&:hover': {
+        background: 'rgba(219, 158, 48, 0.2)',
+      },
+    }),
+  };
+
+  // Loading state
+  if (classLoading || yearLoading || studentLoading) {
+    return (
+      <div className="p-8 text-[#441a05]/70 animate-fadeIn">
+        লোড হচ্ছে...
+      </div>
+    );
+  }
+
+  return (
+    <div className="py-8 w-full relative">
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes scaleIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 0.6s ease-out forwards;
+          }
+          .animate-scaleIn {
+            animation: scaleIn 0.4s ease-out forwards;
+          }
+          .btn-glow:hover {
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
+          }
+          ::-webkit-scrollbar {
+            width: 8px;
+          }
+          ::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          ::-webkit-scrollbar-thumb {
+            background: rgba(22, 31, 48, 0.26);
+            border-radius: 10px;
+          }
+          ::-webkit-scrollbar-thumb:hover {
+            background: rgba(10, 13, 21, 0.44);
+          }
+          .pdf-hidden {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            width: 277mm;
+            background: white;
+            overflow: visible;
+            font-size: 8pt;
+          }
+          .pdf-hidden table {
+            table-layout: fixed;
+            width: 100%;
+          }
+          .pdf-hidden th, .pdf-hidden td {
+            word-wrap: break-word;
+            overflow: hidden;
+          }
+          .pdf-hidden .roll-col {
+            width: 30mm;
+          }
+          .pdf-hidden .name-col {
+            width: 60mm;
+          }
+          .pdf-hidden .day-col {
+            width: 5mm;
+          }
+        `}
+      </style>
+
+      <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+        <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
+          <IoPrint className="text-4xl text-[#441a05]" />
+          <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">হাজিরা শীট</h3>
+        </div>
+
+        {/* Selection Controls */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 no-print">
+          <div>
+            <label className="block text-sm font-medium text-[#441a05] mb-1">ক্লাস কনফিগারেশন</label>
+            <Select
+              options={classConfigOptions}
+              value={selectedClassConfig}
+              onChange={setSelectedClassConfig}
+              placeholder="ক্লাস নির্বাচন করুন..."
+              isClearable
+              styles={selectStyles}
+              className="animate-scaleIn"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-[#441a05] mb-1">শিক্ষাবর্ষ</label>
+            <Select
+              options={academicYearOptions}
+              value={selectedAcademicYear}
+              onChange={setSelectedAcademicYear}
+              placeholder="বছর নির্বাচন করুন..."
+              isClearable
+              styles={selectStyles}
+              className="animate-scaleIn"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-[#441a05] mb-1">মাস</label>
+            <Select
+              options={monthOptions}
+              value={selectedMonth}
+              onChange={setSelectedMonth}
+              placeholder="মাস নির্বাচন করুন..."
+              isClearable
+              styles={selectStyles}
+              className="animate-scaleIn"
+            />
+          </div>
+        </div>
+
+        {/* Print and Download Buttons */}
+        {selectedClassConfig && selectedAcademicYear && selectedMonth && (
+          <div className="mt-6 flex gap-4 no-print">
+            <button
+              onClick={handlePrint}
+              className="px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn hover:text-white btn-glow"
+            >
+              <span className="flex items-center space-x-2">
+                <IoPrint className="w-5 h-5" />
+                <span>হাজিরা শীট প্রিন্ট করুন</span>
+              </span>
+            </button>
+            <button
+              onClick={handleDownloadPDF}
+              className="px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn hover:text-white btn-glow"
+            >
+              <span className="flex items-center space-x-2">
+                <IoDownload className="w-5 h-5" />
+                <span>পিডিএফ ডাউনলোড করুন</span>
+              </span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Visible Printable Area */}
+      <div ref={componentRef} className="bg-white p-8 rounded-2xl shadow-xl print-container">
+        {selectedClassConfig && selectedAcademicYear && selectedMonth && (
+          <>
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-[#441a05]">
+                {selectedClassConfig.label} এর জন্য হাজিরা শীট - {selectedMonth.label} {academicYears?.find(y => y.id === selectedAcademicYear.value)?.name}
+              </h2>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-white/20 print-table">
+                <thead className="bg-white/5">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider border">রোল</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider border">ছাত্র</th>
+                    {getDaysInMonth().map(({ day, dayName }) => (
+                      <th key={day} className="px-2 py-2 text-center text-xs font-medium text-[#441a05]/70 uppercase tracking-wider border">
+                        {day}<br />{dayName}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/20">
+                  {filteredStudents.map((student, index) => (
+                    <tr key={student.id} className="bg-white/5 animate-fadeIn border" style={{ animationDelay: `${index * 0.1}s` }}>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-[#441a05] border">{student.roll_no || ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-[#441a05] border">{student.name}</td>
+                      {getDaysInMonth().map(({ day }) => (
+                        <td key={day} className="px-2 py-2 whitespace-nowrap text-sm text-[#441a05] text-center border w-10"></td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Hidden PDF Rendering Area */}
+      <div ref={pdfRef} className="pdf-hidden">
+        {selectedClassConfig && selectedAcademicYear && selectedMonth && (
+          <>
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold text-[#441a05]">
+                {selectedClassConfig.label} এর জন্য হাজিরা শীট - {selectedMonth.label} {academicYears?.find(y => y.id === selectedAcademicYear.value)?.name}
+              </h2>
+            </div>
+
+            <table className="min-w-full">
+              <thead className="bg-white/5">
+                <tr>
+                  <th className="px-2 py-1 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider border roll-col">রোল</th>
+                  <th className="px-2 py-1 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider border name-col">ছাত্র</th>
+                  {getDaysInMonth().map(({ day, dayName }) => (
+                    <th key={day} className="px-1 py-1 text-center text-xs font-medium text-[#441a05]/70 uppercase tracking-wider border day-col">
+                      {day}<br />{dayName}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/20">
+                {filteredStudents.map((student) => (
+                  <tr key={student.id} className="bg-white/5 border">
+                    <td className="px-2 py-1 whitespace-nowrap text-xs text-[#441a05] border roll-col">{student.roll_no || ''}</td>
+                    <td className="px-2 py-1 whitespace-nowrap text-xs text-[#441a05] border name-col">{student.name}</td>
+                    {getDaysInMonth().map(({ day }) => (
+                      <td key={day} className="px-1 py-1 whitespace-nowrap text-xs text-[#441a05] text-center border day-col"></td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default AttendanceSheet;
+
+
+
+
