@@ -37,7 +37,7 @@ const mainMenu = [
             title: "ছুটির ধরন",
             link: "/darul-iqam/settings/leave-type",
           },
-         
+
           {
             id: "04/01/03",
             title: "পার্ফরমেন্স ধরন",
@@ -103,28 +103,27 @@ const mainMenu = [
             title: "ক্লাস কনফিগারেশন",
             link: "/talimat/settings/add-config",
           },
-           {
+          {
             id: "05/01/05",
             title: "পরীক্ষার ধরন",
             link: "/talimat/settings/exam-type",
           },
         ],
       },
-            {
-        id: "05/01",
+      {
+        id: "05/02",
         title: "সাবজেক্ট",
         link: "/talimat/class-subject",
         children: [
           {
-            id: "05/01/01",
+            id: "05/02/01",
             title: "সাবজেক্ট নির্বাচন",
             link: "/talimat/class-subject",
           },
-          
         ],
       },
-          {
-        id: "05/01",
+      {
+        id: "05/03",
         title: "Exam",
         link: "/talimat/marks-config",
         children: [
@@ -133,7 +132,6 @@ const mainMenu = [
             title: "marks-config",
             link: "/talimat/marks-config",
           },
-          
         ],
       },
     ],
@@ -191,27 +189,27 @@ const mainMenu = [
         title: "ব্যয়ের লিস্ট",
         link: "/accounts/expense-list",
       },
-       {
+      {
         id: "07/05",
         title: "ফি প্যাকেজ",
         link: "/accounts/fee-packages",
       },
-         {
+      {
         id: "07/06",
         title: "ফি নাম",
         link: "/accounts/fee-name",
       },
-       {
+      {
         id: "07/07",
         title: "বর্তমান- ফি",
         link: "/accounts/current-fee",
       },
-        {
+      {
         id: "07/08",
         title: "previous- ফি",
         link: "/accounts/previous-fee",
       },
-        {
+      {
         id: "07/09",
         title: "Delete- ফি",
         link: "/accounts/delete-fee",
@@ -318,24 +316,23 @@ const mainMenu = [
             title: "খাবারের ধরন",
             link: "/boarding/settings/meal-type",
           },
-             {
+          {
             id: "09/01/02",
             title: "খাবারের আইটেম",
             link: "/boarding/settings/meal-items",
           },
-        {
+          {
             id: "09/01/03",
             title: "খাবারের সেটাপ",
             link: "/boarding/settings/meal-setup",
           },
-             {
+          {
             id: "09/01/04",
             title: "খাবারের স্ট্যাটাস",
             link: "/boarding/settings/meal-status",
           },
         ],
       },
- 
     ],
   },
 
