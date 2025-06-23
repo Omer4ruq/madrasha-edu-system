@@ -343,7 +343,7 @@ const AddFundsType = () => {
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                        {fund.sl}
+                       {index + 1}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
                         {fund.name}

@@ -1,76 +1,65 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 // Assuming your Django backend API is hosted at this base URL
-const BASE_URL = 'https://demo.easydr.xyz/api';
+const BASE_URL = "https://demo.easydr.xyz/api";
 
 // Helper function to get JWT token from localStorage or your preferred storage
 const getToken = () => {
-  return localStorage.getItem('token'); // Adjust based on your token storage method
+  return localStorage.getItem("token"); // Adjust based on your token storage method
 };
 
 export const leaveRequestApi = createApi({
-  reducerPath: 'leaveRequestApi',
+  reducerPath: "leaveRequestApi",
   baseQuery: fetchBaseQuery({
     baseUrl: BASE_URL,
     prepareHeaders: (headers) => {
       const token = getToken();
       if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
+        headers.set("Authorization", `Bearer ${token}`);
       }
-      // Let FormData set Content-Type automatically
+      headers.set("Content-Type", "application/json");
       return headers;
     },
   }),
-  tagTypes: ['leaveRequestApi'],
+  tagTypes: ["leaveRequestApi"],
   endpoints: (builder) => ({
-    // GET: Fetch all leaveRequestApis
+    // GET: Fetch all leave requests
     getLeaveRequestApi: builder.query({
-      query: () => '/leave-requests/',
-      providesTags: ['leaveRequestApi'],
+      query: () => "/leave-requests/",
+      providesTags: ["leaveRequestApi"],
     }),
 
-    // GET: Fetch single leaveRequestApi by ID
+    // GET: Fetch single leave request by ID
     getLeaveRequestApiById: builder.query({
       query: (id) => `/leave-requests/${id}/`,
-      providesTags: ['leaveRequestApi'],
+      providesTags: ["leaveRequestApi"],
     }),
 
-    // POST: Create a new leaveRequestApi
+    // POST: Create a new leave request
     createLeaveRequestApi: builder.mutation({
-      query: (formData) => ({
-        url: '/leave-requests/',
-        method: 'POST',
-        body: formData,
+      query: (payload) => ({
+        url: "/leave-requests/",
+        method: "POST",
+        body: payload,
       }),
-      invalidatesTags: ['leaveRequestApi'],
+      invalidatesTags: ["leaveRequestApi"],
     }),
 
-    // PUT: Update an existing leaveRequestApi
-    updateLeaveRequestApi: builder.mutation({
-      query: ({ id, ...formData }) => ({
-        url: `/leave-requests/${id}/`,
-        method: 'PUT',
-        body: formData,
-      }),
-      invalidatesTags: ['leaveRequestApi'],
-    }),
-
-    // DELETE: Delete an leaveRequestApi 
+    // DELETE: Delete a leave request
     deleteLeaveRequestApi: builder.mutation({
       query: (id) => ({
         url: `/leave-requests/${id}/`,
-        method: 'DELETE',
+        method: "DELETE",
       }),
-      invalidatesTags: ['leaveRequestApi'],
+      invalidatesTags: ["leaveRequestApi"],
     }),
   }),
 });
 
-// Export hooks for usage in components 
+// Export hooks for usage in components
 export const {
   useGetLeaveRequestApiQuery,
   useGetLeaveRequestApiByIdQuery,
   useCreateLeaveRequestApiMutation,
-  useUpdateLeaveRequestApiMutation,
   useDeleteLeaveRequestApiMutation,
 } = leaveRequestApi;

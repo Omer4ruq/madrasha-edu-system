@@ -126,15 +126,6 @@ function Root() {
           children: [
             {
               path: "settings",
-              children: [
-                {
-                  index: true,
-                  element: <AddExamTypes />,
-                },
-              ],
-            },
-            {
-              path: "class-management",
               element: <ClassManagement />,
               children: [
                 {
@@ -154,8 +145,8 @@ function Root() {
                   element: <AddClassConfig />,
                 },
                 {
-                  path: "*",
-                  element: <Navigate to="/talimat/class-management" replace />,
+                  path: "exam-type",
+                  element: <AddExamTypes />,
                 },
               ],
             },

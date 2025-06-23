@@ -22,16 +22,16 @@ export const teacherPerformanceApi = createApi({
   tagTypes: ['teacherPerformanceApi'],
   endpoints: (builder) => ({
     getTeacherPerformanceApi: builder.query({
-      query: () => '/performance-names/',
+      query: () => '/teacher-performances/',
       providesTags: ['teacherPerformanceApi'],
     }),
     getTeacherPerformanceApiById: builder.query({
-      query: (id) => `/performance-names/${id}/`,
+      query: (id) => `/teacher-performances/${id}/`,
       providesTags: ['teacherPerformanceApi'],
     }),
     createTeacherPerformanceApi: builder.mutation({
       query: (teacherPerformanceApiData) => ({
-        url: '/performance-names/',
+        url: '/teacher-performances/',
         method: 'POST',
         body: teacherPerformanceApiData,
       }),
@@ -39,7 +39,7 @@ export const teacherPerformanceApi = createApi({
     }),
     updateTeacherPerformanceApi: builder.mutation({
       query: ({ id, ...teacherPerformanceApiData }) => ({
-        url: `/performance-names/${id}/`,
+        url: `/teacher-performances/${id}/`,
         method: 'PUT',
         body: teacherPerformanceApiData,
       }),
@@ -47,7 +47,7 @@ export const teacherPerformanceApi = createApi({
     }),
     deleteTeacherPerformanceApi: builder.mutation({
       query: (id) => ({
-        url: `/performance-names/${id}/`,
+        url: `/teacher-performances/${id}/`,
         method: 'DELETE',
       }),
       invalidatesTags: ['teacherPerformanceApi'],

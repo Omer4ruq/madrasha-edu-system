@@ -7,8 +7,9 @@ import {
   useCreateClassConfigApiMutation,
   useDeleteClassConfigApiMutation,
   useGetclassConfigApiQuery,
+  useUpdateClassConfigApiMutation,
 } from "../../redux/features/api/class/classConfigApi";
-import { FaChalkboard, FaSpinner, FaTrash } from "react-icons/fa";
+import { FaChalkboard, FaSpinner, FaTrash, FaEdit } from "react-icons/fa";
 import { IoAdd, IoBookmark, IoSettings, IoTime } from "react-icons/io5";
 import { Toaster, toast } from "react-hot-toast";
 
@@ -19,6 +20,8 @@ const AddClassConfig = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editConfigId, setEditConfigId] = useState(null);
 
   // Fetch data from APIs
   const {
@@ -49,13 +52,32 @@ const AddClassConfig = () => {
 
   // API mutations
   const [createClassConfig] = useCreateClassConfigApiMutation();
+  const [updateClassConfig] = useUpdateClassConfigApiMutation();
   const [deleteClassConfig] = useDeleteClassConfigApiMutation();
 
   // Filter active sections and shifts
   const activeSections = sectionData?.filter((sec) => sec.is_active) || [];
   const activeShifts = shiftData?.filter((shf) => shf.is_active) || [];
 
-  // Handle form submission to create a configuration
+  // Handle edit button click
+  const handleEdit = (config) => {
+    setIsEditMode(true);
+    setEditConfigId(config.id);
+    setClassId(config.class_id?.toString() || "");
+    setSectionId(config.section_id?.toString() || "");
+    setShiftId(config.shift_id?.toString() || "");
+  };
+
+  // Handle cancel edit
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    setEditConfigId(null);
+    setClassId("");
+    setSectionId("");
+    setShiftId("");
+  };
+
+  // Handle form submission for create or update
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -74,13 +96,15 @@ const AddClassConfig = () => {
       return;
     }
 
-    setModalAction('create');
-    setModalData({
+    const payload = {
       is_active: true,
       class_id: parseInt(classId),
       section_id: parseInt(sectionId),
       shift_id: parseInt(shiftId),
-    });
+    };
+
+    setModalAction(isEditMode ? 'update' : 'create');
+    setModalData(isEditMode ? { id: editConfigId, ...payload } : payload);
     setIsModalOpen(true);
   };
 
@@ -100,13 +124,21 @@ const AddClassConfig = () => {
         setClassId("");
         setSectionId("");
         setShiftId("");
+      } else if (modalAction === 'update') {
+        await updateClassConfig(modalData).unwrap();
+        toast.success("কনফিগারেশন সফলভাবে সম্পাদনা করা হয়েছে!");
+        setIsEditMode(false);
+        setEditConfigId(null);
+        setClassId("");
+        setSectionId("");
+        setShiftId("");
       } else if (modalAction === 'delete') {
         await deleteClassConfig(modalData.id).unwrap();
         toast.success("কনফিগারেশন সফলভাবে মুছে ফেলা হয়েছে!");
       }
     } catch (error) {
-      console.error(`ত্রুটি ${modalAction === 'create' ? 'তৈরি' : 'মুছে ফেলা'}:`, error);
-      toast.error(`কনফিগারেশন ${modalAction === 'create' ? 'তৈরি' : 'মুছে ফেলা'} ব্যর্থ: ${error.status || "অজানা"} - ${JSON.stringify(error.data || {})}`);
+      console.error(`ত্রুটি ${modalAction === 'create' ? 'তৈরি' : modalAction === 'update' ? 'সম্পাদনা' : 'মুছে ফেলা'}:`, error);
+      toast.error(`কনফিগারেশন ${modalAction === 'create' ? 'তৈরি' : modalAction === 'update' ? 'সম্পাদনা' : 'মুছে ফেলা'} ব্যর্থ: ${error.status || "অজানা"} - ${JSON.stringify(error.data || {})}`);
     } finally {
       setIsModalOpen(false);
       setModalAction(null);
@@ -174,12 +206,12 @@ const AddClassConfig = () => {
       </style>
 
       <div className="mx-auto">
-        {/* Form to Create Configuration */}
+        {/* Form to Create or Edit Configuration */}
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
           <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
             <IoSettings className="text-4xl text-[#441a05]" />
             <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
-              নতুন কনফিগারেশন তৈরি করুন
+              {isEditMode ? "কনফিগারেশন সম্পাদনা করুন" : "নতুন কনফিগারেশন তৈরি করুন"}
             </h3>
           </div>
 
@@ -265,27 +297,41 @@ const AddClassConfig = () => {
               </select>
             </div>
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={configLoading}
-              title="নতুন কনফিগারেশন যোগ করুন"
-              className={`relative inline-flex items-center px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                configLoading ? "cursor-not-allowed opacity-60" : "hover:text-white btn-glow"
-              }`}
-            >
-              {configLoading ? (
-                <span className="flex items-center space-x-3">
-                  <FaSpinner className="animate-spin text-lg" />
-                  <span>যোগ করা হচ্ছে...</span>
-                </span>
-              ) : (
-                <span className="flex items-center space-x-2">
-                  <IoAdd className="w-5 h-5" />
-                  <span>কনফিগারেশন যোগ করুন</span>
-                </span>
+            {/* Submit and Cancel Buttons */}
+            <div className="flex space-x-4">
+              <button
+                type="submit"
+                disabled={configLoading}
+                title={isEditMode ? "কনফিগারেশন সম্পাদনা করুন" : "নতুন কনফিগারেশন যোগ করুন"}
+                className={`relative inline-flex items-center px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
+                  configLoading ? "cursor-not-allowed opacity-60" : "hover:text-white btn-glow"
+                }`}
+              >
+                {configLoading ? (
+                  <span className="flex items-center space-x-3">
+                    <FaSpinner className="animate-spin text-lg" />
+                    <span>{isEditMode ? "সম্পাদনা হচ্ছে..." : "যোগ করা হচ্ছে..."}</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center space-x-2">
+                    <IoAdd className="w-5 h-5" />
+                    <span>{isEditMode ? "সম্পাদনা করুন" : "যোগ করুন"}</span>
+                  </span>
+                )}
+              </button>
+              {isEditMode && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  title="সম্পাদনা বাতিল করুন"
+                  className="relative inline-flex items-center px-8 py-3 rounded-lg font-medium bg-gray-500/20 text-[#441a05] transition-all duration-300 animate-scaleIn hover:bg-gray-500/30"
+                >
+                  <span className="flex items-center space-x-2">
+                    <span>বাতিল</span>
+                  </span>
+                </button>
               )}
-            </button>
+            </div>
           </form>
 
           {/* Error Messages */}
@@ -368,13 +414,22 @@ const AddClassConfig = () => {
                         {config.shift_name || "N/A"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleDelete(config.id)}
-                          title="কনফিগারেশন মুছুন"
-                          className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
-                        >
-                          <FaTrash className="w-5 h-5" />
-                        </button>
+                        <div className="flex space-x-4">
+                          <button
+                            onClick={() => handleEdit(config)}
+                            title="কনফিগারেশন সম্পাদনা করুন"
+                            className="text-[#441a05] hover:text-blue-500 transition-colors duration-300"
+                          >
+                            <FaEdit className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(config.id)}
+                            title="কনফিগারেশন মুছুন"
+                            className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                          >
+                            <FaTrash className="w-5 h-5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -392,10 +447,12 @@ const AddClassConfig = () => {
             >
               <h3 className="text-lg font-semibold text-[#441a05] mb-4">
                 {modalAction === 'create' && 'নতুন কনফিগারেশন নিশ্চিত করুন'}
+                {modalAction === 'update' && 'কনফিগারেশন সম্পাদনা নিশ্চিত করুন'}
                 {modalAction === 'delete' && 'কনফিগারেশন মুছে ফেলা নিশ্চিত করুন'}
               </h3>
               <p className="text-[#441a05] mb-6">
                 {modalAction === 'create' && 'আপনি কি নিশ্চিত যে নতুন কনফিগারেশন তৈরি করতে চান?'}
+                {modalAction === 'update' && 'আপনি কি নিশ্চিত যে এই কনফিগারেশনটি সম্পাদনা করতে চান?'}
                 {modalAction === 'delete' && 'আপনি কি নিশ্চিত যে এই কনফিগারেশনটি মুছে ফেলতে চান?'}
               </p>
               <div className="flex justify-end space-x-4">

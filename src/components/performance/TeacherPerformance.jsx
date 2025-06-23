@@ -1,30 +1,28 @@
 import React, { useState, useMemo } from 'react';
-
 import { useGetPerformanceApiQuery } from '../../redux/features/api/performance/performanceApi';
-
 import Select from 'react-select';
 import { FaSpinner } from 'react-icons/fa';
 import toast, { Toaster } from 'react-hot-toast';
 import { useGetRoleStaffProfileApiQuery } from '../../redux/features/api/roleStaffProfile/roleStaffProfileApi';
-import { useCreateTeacherPerformanceApiMutation, useGetTeacherPerformanceApiQuery, useUpdateTeacherPerformanceApiMutation, } from '../../redux/features/api/performance/teacherPerformanceApi';
+import { useCreateTeacherPerformanceApiMutation, useGetTeacherPerformanceApiQuery, useUpdateTeacherPerformanceApiMutation } from '../../redux/features/api/performance/teacherPerformanceApi';
 
 const TeacherPerformance = () => {
   const [selectedTeacher, setSelectedTeacher] = useState(null);
 
-  // API হুক
+  // API Hooks
   const { data: teachers = [], isLoading: isTeachersLoading, error: teachersError } = useGetRoleStaffProfileApiQuery();
   const { data: performanceMetrics = [], isLoading: isMetricsLoading, error: metricsError } = useGetPerformanceApiQuery();
   const { data: allPerformances = [], isLoading: isPerformanceLoading, error: performanceError } = useGetTeacherPerformanceApiQuery();
   const [createTeacherPerformance, { isLoading: isCreating }] = useCreateTeacherPerformanceApiMutation();
   const [patchTeacherPerformance, { isLoading: isUpdating }] = useUpdateTeacherPerformanceApiMutation();
 
-  // নির্বাচিত শিক্ষকের জন্য কর্মক্ষমতা ফিল্টার
+  // Filter performances for the selected teacher
   const teacherPerformances = useMemo(() => {
     if (!selectedTeacher) return [];
     return allPerformances.filter((perf) => perf.teacher_id === selectedTeacher.value);
   }, [allPerformances, selectedTeacher]);
 
-  // কর্মক্ষমতা ডেটা গণনা
+  // Calculate performance data
   const performanceData = useMemo(() => {
     const map = {};
     if (performanceMetrics.length === 0 || !selectedTeacher) return map;
@@ -37,18 +35,18 @@ const TeacherPerformance = () => {
     return map;
   }, [teacherPerformances, performanceMetrics, selectedTeacher]);
 
-  // রিঅ্যাক্ট সিলেক্টের জন্য শিক্ষক ডেটা রূপান্তর
+  // Transform teacher data for react-select
   const teacherOptions = useMemo(() => teachers.map((teacher) => ({
     value: teacher.id,
     label: teacher.name,
   })), [teachers]);
 
-  // শিক্ষক নির্বাচন হ্যান্ডলার
+  // Handle teacher selection
   const handleTeacherSelect = (selectedOption) => {
     setSelectedTeacher(selectedOption);
   };
 
-  // চেকবক্স পরিবর্তন হ্যান্ডলার
+  // Handle checkbox change
   const handleCheckboxChange = async (metricName) => {
     const metricId = performanceMetrics.find((m) => m.name === metricName)?.id;
     if (!metricId || !selectedTeacher) {
@@ -70,10 +68,10 @@ const TeacherPerformance = () => {
       };
 
       if (existingPerf) {
-        // বিদ্যমান কর্মক্ষমতা আপডেট (PATCH)
+        // Update existing performance (PATCH)
         await patchTeacherPerformance({ id: existingPerf.id, ...payload }).unwrap();
       } else {
-        // নতুন কর্মক্ষমতা তৈরি (POST)
+        // Create new performance (POST)
         await createTeacherPerformance(payload).unwrap();
       }
 
@@ -120,7 +118,7 @@ const TeacherPerformance = () => {
     }),
   };
 
-  // কর্মক্ষমতা টেবিল রেন্ডার
+  // Render performance table
   const renderPerformanceTable = () => {
     if (!selectedTeacher) return <p className="p-4 text-[#441a05]/70 animate-fadeIn">শিক্ষক নির্বাচন করুন</p>;
     if (isMetricsLoading || isPerformanceLoading) return (
@@ -141,52 +139,50 @@ const TeacherPerformance = () => {
     );
     if (performanceMetrics.length === 0) return <p className="p-4 text-[#441a05]/70 animate-fadeIn">কোনো কর্মক্ষমতা মেট্রিক্স নেই</p>;
 
-    const rows = [];
-    for (let i = 0; i < performanceMetrics.length; i += 10) {
-      rows.push(performanceMetrics.slice(i, i + 10));
-    }
-
     return (
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-white/20">
+          <thead className="bg-white/5">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">চেকবক্স</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">কর্মক্ষমতা মেট্রিক</th>
+            </tr>
+          </thead>
           <tbody className="divide-y divide-white/20">
-            {rows.map((rowMetrics, rowIndex) => (
-              <tr key={rowIndex} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${rowIndex * 0.2}s` }}>
-                {rowMetrics.map((metric) => (
-                  <td key={metric.id} className="px-6 py-4 whitespace-nowrap text-[#441a05]">
-                    <div className="flex flex-col-reverse gap-3 items-center justify-center">
-                      <label htmlFor={`checkbox-${metric.id}`} className="inline-flex items-center cursor-pointer">
-                        <input
-                          id={`checkbox-${metric.id}`}
-                          type="checkbox"
-                          checked={performanceData[metric.name] || false}
-                          onChange={() => handleCheckboxChange(metric.name)}
-                          className="hidden"
-                          disabled={isCreating || isUpdating}
-                        />
-                        <span
-                          className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${performanceData[metric.name]
-                              ? 'bg-[#DB9E30] border-[#DB9E30]'
-                              : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
-                            }`}
+            {performanceMetrics.map((metric, index) => (
+              <tr key={metric.id} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
+                <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
+                  <label htmlFor={`checkbox-${metric.id}`} className="inline-flex items-center cursor-pointer">
+                    <input
+                      id={`checkbox-${metric.id}`}
+                      type="checkbox"
+                      checked={performanceData[metric.name] || false}
+                      onChange={() => handleCheckboxChange(metric.name)}
+                      className="hidden"
+                      disabled={isCreating || isUpdating}
+                    />
+                    <span
+                      className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${
+                        performanceData[metric.name]
+                          ? 'bg-[#DB9E30] border-[#DB9E30]'
+                          : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
+                      }`}
+                    >
+                      {performanceData[metric.name] && (
+                        <svg
+                          className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
                         >
-                          {performanceData[metric.name] && (
-                            <svg
-                              className="w-4 h-4 text-[#441a05] animate-scaleIn"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </span>
-                      </label>
-                      <span className="text-sm font-medium">{metric.name}</span>
-                    </div>
-                  </td>
-                ))}
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </span>
+                  </label>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{metric.name}</td>
               </tr>
             ))}
           </tbody>
@@ -197,7 +193,7 @@ const TeacherPerformance = () => {
 
   return (
     <div className="py-8 w-full relative mx-auto">
-      <Toaster
+      {/* <Toaster
         position="top-right"
         toastOptions={{
           style: {
@@ -210,7 +206,7 @@ const TeacherPerformance = () => {
           success: { style: { background: 'rgba(219, 158, 48, 0.1)', borderColor: '#DB9E30' } },
           error: { style: { background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444' } },
         }}
-      />
+      /> */}
       <style>
         {`
           @keyframes fadeIn {
@@ -299,33 +295,8 @@ const TeacherPerformance = () => {
         <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">কর্মক্ষমতা মেট্রিক্স</h3>
         {renderPerformanceTable()}
       </div>
-
-      {/* ভবিষ্যতের ডিলিট কনফার্ম মডালের টেমপ্লেট */}
-      {/*
-      <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
-        <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-t-2xl w-full max-w-md animate-slideUp">
-          <h3 className="text-lg font-semibold text-[#441a05] mb-4">মুছে ফেলার নিশ্চিতকরণ</h3>
-          <p className="text-[#441a05]/70 mb-6">আপনি কি নিশ্চিতভাবে এই কর্মক্ষমতা মুছে ফেলতে চান?</p>
-          <div className="flex justify-end gap-4">
-            <button
-              className="px-4 py-2 bg-[#9d9087] text-[#441a05] rounded-md hover:bg-[#7d7067] transition-all duration-300"
-              onClick={() => setShowModal(false)}
-            >
-              বাতিল
-            </button>
-            <button
-              className="px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-md hover:bg-[#c48e2a] transition-all duration-300"
-              onClick={handleDeleteConfirm}
-            >
-              মুছে ফেলুন
-            </button>
-          </div>
-        </div>
-      </div>
-      */}
     </div>
   );
 };
 
 export default TeacherPerformance;
-

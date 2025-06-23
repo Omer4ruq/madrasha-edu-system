@@ -85,37 +85,28 @@ const mainMenu = [
         children: [
           {
             id: "05/01/01",
-            title: "পরীক্ষার ধরন",
+            title: "শ্রেনী সংযোজন",
             link: "/talimat/settings",
           },
-          
-        ],
-      },
-
-      {
-        id: "05/02",
-        title: "শ্রেনী পরিচালনা",
-        link: "/talimat/class-management",
-        children: [
           {
-            id: "05/02/01",
-            title: "শ্রেনী সংযোজন",
-            link: "/talimat/class-management",
-          },
-          {
-            id: "05/02/02",
+            id: "05/01/02",
             title: "সেকশন সংযোজন",
-            link: "/talimat/class-management/add-section",
+            link: "/talimat/settings/add-section",
           },
           {
-            id: "05/02/03",
+            id: "05/01/03",
             title: "শিফট সংযোজন",
-            link: "/talimat/class-management/add-shift",
+            link: "/talimat/settings/add-shift",
           },
           {
-            id: "05/02/04",
+            id: "05/01/04",
             title: "ক্লাস কনফিগারেশন",
-            link: "/talimat/class-management/add-config",
+            link: "/talimat/settings/add-config",
+          },
+           {
+            id: "05/01/05",
+            title: "পরীক্ষার ধরন",
+            link: "/talimat/settings/exam-type",
           },
         ],
       },
@@ -187,7 +178,7 @@ const mainMenu = [
       },
       {
         id: "07/02",
-        title: "ফি ছাড়",
+        title: "বৃত্তি প্রদান",
         link: "/accounts/waivers",
       },
       {
