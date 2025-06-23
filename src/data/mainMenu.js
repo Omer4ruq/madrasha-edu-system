@@ -390,6 +390,19 @@ const mainMenu = [
       },
     ],
   },
+  {
+    id: "11",
+    title: "লেআউট",
+    icon: "HiOutlineCalculator",
+    link: "/layout",
+    children: [
+      {
+        id: "11/01",
+        title: "হাজিরা খাতা",
+        link: "/layout/attendance-sheet",
+      },
+    ],
+  },
 ];
 
 export default mainMenu;
