@@ -29,10 +29,10 @@ const AddLeaveType = () => {
   const [deleteLeave, { isLoading: isDeleting, error: deleteError }] = useDeleteLeaveApiMutation();
 console.log("leave", leaveTypes)
   // Validate leave name
-  const validateLeaveName = (name) => {
-    const regex = /^[a-zA-Z0-9\s\-_,()]{1,50}$/;
-    return regex.test(name);
-  };
+  // const validateLeaveName = (name) => {
+  //   const regex = /^[a-zA-Z0-9\s\-_,()]{1,50}$/;
+  //   return regex.test(name);
+  // };
 
   // Handle form submission for adding or updating leave type
   const handleSubmit = async (e) => {
@@ -42,10 +42,10 @@ console.log("leave", leaveTypes)
       toast.error("অনুগ্রহ করে ছুটির ধরনের নাম লিখুন");
       return;
     }
-    if (!validateLeaveName(name)) {
-      toast.error("নাম ৫০ অক্ষরের মধ্যে এবং বৈধ অক্ষর ধারণ করবে");
-      return;
-    }
+    // if (!validateLeaveName(name)) {
+    //   toast.error("নাম ৫০ অক্ষরের মধ্যে এবং বৈধ অক্ষর ধারণ করবে");
+    //   return;
+    // }
     if (leaveTypes?.some((lt) => lt.name.toLowerCase() === name.toLowerCase() && lt.id !== editLeaveId)) {
       toast.error("এই ছুটির ধরন ইতিমধ্যে বিদ্যমান!");
       return;
