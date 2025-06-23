@@ -37,13 +37,9 @@ const mainMenu = [
             title: "ছুটির ধরন",
             link: "/darul-iqam/settings/leave-type",
           },
+         
           {
             id: "04/01/03",
-            title: "খাবারের ধরন",
-            link: "/darul-iqam/settings/meal-type",
-          },
-          {
-            id: "04/01/04",
             title: "পার্ফরমেন্স ধরন",
             link: "/darul-iqam/settings/performance-type",
           },
@@ -112,6 +108,32 @@ const mainMenu = [
             title: "পরীক্ষার ধরন",
             link: "/talimat/settings/exam-type",
           },
+        ],
+      },
+            {
+        id: "05/01",
+        title: "সাবজেক্ট",
+        link: "/talimat/class-subject",
+        children: [
+          {
+            id: "05/01/01",
+            title: "সাবজেক্ট নির্বাচন",
+            link: "/talimat/class-subject",
+          },
+          
+        ],
+      },
+          {
+        id: "05/01",
+        title: "Exam",
+        link: "/talimat/marks-config",
+        children: [
+          {
+            id: "05/01/01",
+            title: "marks-config",
+            link: "/talimat/marks-config",
+          },
+          
         ],
       },
     ],
@@ -280,6 +302,85 @@ const mainMenu = [
   //     },
   //   ],
   // },
+  {
+    id: "09",
+    title: "বোর্ডিং",
+    icon: "HiOutlineCalculator",
+    link: "/boarding",
+    children: [
+      {
+        id: "09/01",
+        title: "সেটিং",
+        link: "/boarding/settings",
+        children: [
+          {
+            id: "09/01/01",
+            title: "খাবারের ধরন",
+            link: "/boarding/settings/meal-type",
+          },
+             {
+            id: "09/01/02",
+            title: "খাবারের আইটেম",
+            link: "/boarding/settings/meal-items",
+          },
+        {
+            id: "09/01/03",
+            title: "খাবারের সেটাপ",
+            link: "/boarding/settings/meal-setup",
+          },
+             {
+            id: "09/01/04",
+            title: "খাবারের স্ট্যাটাস",
+            link: "/boarding/settings/meal-status",
+          },
+        ],
+      },
+ 
+    ],
+  },
+
+  {
+    id: "10",
+    title: "কমিউনিকেশন",
+    icon: "HiOutlineCalculator",
+    link: "/communication",
+    children: [
+      {
+        id: "10/01",
+        title: "জেনারেল এসএমএস",
+        link: "/communication/general-sms",
+        children: [
+          {
+            id: "10/01/01",
+            title: "এসএমএস পাঠান",
+            link: "/communication/general-sms",
+          },
+          {
+            id: "10/01/02",
+            title: "এসএমএস টেমপ্লেট",
+            link: "/communication/general-sms/sms-template",
+          },
+        ],
+      },
+      {
+        id: "10/02",
+        title: "বিজ্ঞপ্তি এসএমএস",
+        link: "/communication/notification-sms",
+        children: [
+          {
+            id: "10/02/01",
+            title: "বিজ্ঞপ্তি এসএমএস পাঠান",
+            link: "/communication/notification-sms",
+          },
+          {
+            id: "10/02/02",
+            title: "এসএমএস বিজ্ঞপ্তি টেমপ্লেট",
+            link: "/communication/notification-sms/sms-notification-template",
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 export default mainMenu;

@@ -36,10 +36,16 @@ import CurrentFees from "./components/fees/CurrentFees";
 import DeleteStudentFees from "./components/fees/DeleteStudentFees";
 import StudentAttendance from "./components/student-attendance/StudentAttendance";
 import PreviousFees from "./components/fees/PreviousFees";
+import MealItems from "./components/meals/MealItems";
+import MealSetup from "./components/meals/MealSetup";
+import MealStatus from "./components/meals/MealStatus";
+import ClassSubject from "./components/SubjectManagement/ClassSubject";
+
 import SentSms from "./components/Communication2/General-SMS/SendSms";
 import SmsTemplate from "./components/Communication2/General-SMS/SmsTemplate";
 import SentNotificationSMS from "./components/Communication2/Notification-SMS/SentNotificationSMS";
 import SmsNotificationTemplate from "./components/Communication2/Notification-SMS/SmsNotificationTemplate";
+import SubjectMarkConfigs from "./components/marks/SubjectMarkConfigs";
 
 function Root() {
   const router = createBrowserRouter([
@@ -78,10 +84,7 @@ function Root() {
                   path: "leave-type",
                   element: <AddLeaveType />,
                 },
-                {
-                  path: "meal-type",
-                  element: <AddMealsType />,
-                },
+              
                 {
                   path: "performance-type",
                   element: <PerformanceType />,
@@ -147,6 +150,24 @@ function Root() {
                 },
               ],
             },
+               {
+              path: "class-subject",
+              children: [
+                {
+                  index: true,
+                  element: <ClassSubject />
+                },
+              ],
+            },
+                  {
+              path: "marks-config",
+              children: [
+                {
+                  index: true,
+                  element: <SubjectMarkConfigs />
+                },
+              ],
+            },
           ],
         },
         {
@@ -206,6 +227,37 @@ function Root() {
               path: "delete-fee",
               element: <DeleteStudentFees />,
             },
+          ],
+        },
+         {
+          path: "boarding",
+          children: [
+            {
+              path: "settings",
+              children: [
+                {
+                  index: true,
+                  element: <AddMealsType />,
+                },
+                  {
+                  path: "meal-type",
+                  element: <AddMealsType />,
+                },
+                 {
+                  path: "meal-items",
+                  element: <MealItems />,
+                },
+                  {
+                  path: "meal-setup",
+                  element: <MealSetup />,
+                },
+                  {
+                  path: "meal-status",
+                  element: <MealStatus />,
+                },
+              ],
+            },
+         
           ],
         },
         {
