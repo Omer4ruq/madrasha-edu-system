@@ -49,6 +49,9 @@ import { studentSubAttendanceApi } from './features/api/student-sub-attendance/s
 import { subjectAssignApi } from './features/api/subject-assign/subjectAssignApi';
 import { gsubjectApi } from './features/api/class-subjects/gsubjectApi';
 import { classSubjectsApi } from './features/api/class-subjects/classSubjectsApi';
+import { subjectMarkConfigsApi } from './features/api/marks/subjectMarkConfigsApi';
+import { gmarkTypeApi } from './features/api/marks/gmarktype';
+import { subjectMarksApi } from './features/api/marks/subjectMarksApi';
 
 
 
@@ -107,6 +110,9 @@ export const store = configureStore({
     [subjectAssignApi.reducerPath]: subjectAssignApi.reducer,
     [gsubjectApi.reducerPath]: gsubjectApi.reducer,
     [classSubjectsApi.reducerPath]: classSubjectsApi.reducer,
+    [subjectMarkConfigsApi.reducerPath]: subjectMarkConfigsApi.reducer,
+    [gmarkTypeApi.reducerPath]: gmarkTypeApi.reducer,
+    [subjectMarksApi.reducerPath]: subjectMarksApi.reducer,
 
   },
   middleware: (getDefaultMiddleware) =>
@@ -162,7 +168,10 @@ export const store = configureStore({
     .concat(subjectAssignApi.middleware)
     .concat(gsubjectApi.middleware)
     .concat(classSubjectsApi.middleware)
-    
+    .concat(subjectMarkConfigsApi.middleware)
+    .concat(gmarkTypeApi.middleware)
+    .concat(subjectMarksApi.middleware)
+  
 });
 
 // Enable refetchOnFocus/refetchOnReconnect behaviors

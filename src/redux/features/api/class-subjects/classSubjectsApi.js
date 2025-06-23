@@ -32,6 +32,9 @@ export const classSubjectsApi = createApi({
       query: (id) => `/class-subjects/${id}/`,
       providesTags: ['ClassSubjects'],
     }),
+  getClassSubjectsByClassId: builder.query({
+      query: (classId) => `class-subjects/?class_subject__class_id=${classId}`,
+    }),
 
     // POST: Create a new class subject
     createClassSubject: builder.mutation({
@@ -82,4 +85,5 @@ export const {
   useUpdateClassSubjectMutation,
   usePatchClassSubjectMutation,
   useDeleteClassSubjectMutation,
+  useGetClassSubjectsByClassIdQuery,
 } = classSubjectsApi;

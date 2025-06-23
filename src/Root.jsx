@@ -1,8 +1,4 @@
-import {
-  createBrowserRouter,
-  Navigate,
-  RouterProvider,
-} from "react-router-dom";
+import {createBrowserRouter, Navigate, RouterProvider} from "react-router-dom";
 import App from "./App";
 import LeaveType from "./components/attendance/leave-type/LeaveType";
 import Home from "./components/homePage/Home";
@@ -45,6 +41,11 @@ import MealSetup from "./components/meals/MealSetup";
 import MealStatus from "./components/meals/MealStatus";
 import ClassSubject from "./components/SubjectManagement/ClassSubject";
 
+import SentSms from "./components/Communication2/General-SMS/SendSms";
+import SmsTemplate from "./components/Communication2/General-SMS/SmsTemplate";
+import SentNotificationSMS from "./components/Communication2/Notification-SMS/SentNotificationSMS";
+import SmsNotificationTemplate from "./components/Communication2/Notification-SMS/SmsNotificationTemplate";
+import SubjectMarkConfigs from "./components/marks/SubjectMarkConfigs";
 
 function Root() {
   const router = createBrowserRouter([
@@ -128,7 +129,7 @@ function Root() {
               children: [
                 {
                   index: true,
-                  element: <AddExamTypes />
+                  element: <AddExamTypes />,
                 },
               ],
             },
@@ -164,6 +165,15 @@ function Root() {
                 {
                   index: true,
                   element: <ClassSubject />
+                },
+              ],
+            },
+                  {
+              path: "marks-config",
+              children: [
+                {
+                  index: true,
+                  element: <SubjectMarkConfigs />
                 },
               ],
             },
@@ -206,23 +216,23 @@ function Root() {
               path: "expense-list",
               element: <ExpenseItems />,
             },
-              {
+            {
               path: "fee-packages",
               element: <AddFeePackages />,
             },
-              {
+            {
               path: "fee-name",
               element: <AddFeesName />,
             },
-             {
+            {
               path: "current-fee",
               element: <CurrentFees />,
             },
-              {
+            {
               path: "previous-fee",
               element: <PreviousFees />,
             },
-             {
+            {
               path: "delete-fee",
               element: <DeleteStudentFees />,
             },
@@ -285,6 +295,37 @@ function Root() {
                 {
                   path: "staff-list",
                   element: <StaffList />,
+                },
+              ],
+            },
+          ],
+        },
+        {
+          path: "communication",
+          children: [
+            {
+              path: "general-sms",
+              children: [
+                {
+                  index: true,
+                  element: <SentSms />,
+                },
+                {
+                  path: "sms-template",
+                  element: <SmsTemplate />,
+                },
+              ],
+            },
+            {
+              path: "notification-sms",
+              children: [
+                {
+                  index: true,
+                  element: <SentNotificationSMS />,
+                },
+                {
+                  path: "sms-notification-template",
+                  element: <SmsNotificationTemplate />,
                 },
               ],
             },
