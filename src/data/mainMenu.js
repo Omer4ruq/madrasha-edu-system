@@ -139,6 +139,11 @@ const mainMenu = [
         title: "প্রবেশপত্র",
         link: "/talimat/admit-card",
       },
+      {
+        id: "05/05",
+        title: "সিট প্ল্যান",
+        link: "/talimat/seat-plan",
+      },
     ],
   },
   {
