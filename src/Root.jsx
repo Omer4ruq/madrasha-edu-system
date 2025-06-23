@@ -51,6 +51,7 @@ import SentNotificationSMS from "./components/Communication2/Notification-SMS/Se
 import SmsNotificationTemplate from "./components/Communication2/Notification-SMS/SmsNotificationTemplate";
 import SubjectMarkConfigs from "./components/marks/SubjectMarkConfigs";
 import AttendanceSheet from "./components/layout/AttendanceSheet";
+import AdmitCard from "./components/admit-card/AdmitCard";
 
 function Root() {
   const router = createBrowserRouter([
@@ -172,6 +173,10 @@ function Root() {
                   element: <SubjectMarkConfigs />,
                 },
               ],
+            },
+            {
+              path: "admit-card",
+              element: <AdmitCard></AdmitCard>,
             },
           ],
         },

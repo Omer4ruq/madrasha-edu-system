@@ -134,6 +134,11 @@ const mainMenu = [
           },
         ],
       },
+      {
+        id: "05/04",
+        title: "প্রবেশপত্র",
+        link: "/talimat/admit-card",
+      },
     ],
   },
   {
