@@ -124,11 +124,11 @@ const mainMenu = [
       },
       {
         id: "05/03",
-        title: "Exam",
+        title: "Marks Cofig",
         link: "/talimat/marks-config",
         children: [
           {
-            id: "05/01/01",
+            id: "05/03/01",
             title: "marks-config",
             link: "/talimat/marks-config",
           },
@@ -143,6 +143,18 @@ const mainMenu = [
         id: "05/05",
         title: "সিট প্ল্যান",
         link: "/talimat/seat-plan",
+      },
+      {
+        id: "05/06",
+        title: "Marks Given",
+        link: "/talimat/marks-given",
+        children: [
+          {
+            id: "05/06/01",
+            title: "marks-config",
+            link: "/talimat/marks-given",
+          },
+        ],
       },
     ],
   },

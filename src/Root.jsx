@@ -50,6 +50,7 @@ import SmsTemplate from "./components/Communication2/General-SMS/SmsTemplate";
 import SentNotificationSMS from "./components/Communication2/Notification-SMS/SentNotificationSMS";
 import SmsNotificationTemplate from "./components/Communication2/Notification-SMS/SmsNotificationTemplate";
 import SubjectMarkConfigs from "./components/marks/SubjectMarkConfigs";
+import SubjectMarks from "./components/marks/SubjectMarks";
 import AttendanceSheet from "./components/layout/AttendanceSheet";
 import AdmitCard from "./components/admit-card/AdmitCard";
 import SeatPlan from "./components/seat-plan/SeatPlan";
@@ -184,6 +185,15 @@ function Root() {
             {
               path: "seat-plan",
               element: <SeatPlan></SeatPlan>,
+            },
+            {
+              path: "marks-given",
+              children: [
+                {
+                  index: true,
+                  element: <SubjectMarks />
+                },
+              ],
             },
           ],
         },
