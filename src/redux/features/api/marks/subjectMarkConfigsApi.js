@@ -27,6 +27,18 @@ export const subjectMarkConfigsApi = createApi({
       providesTags: ['SubjectMarkConfigs'],
     }),
 
+    // GET: Fetch by class ID
+    getSubjectMarkConfigsByClass: builder.query({
+      query: (classId) => `/subject-mark-configs/?class_id=${classId}`,
+      providesTags: ['SubjectMarkConfigs'],
+    }),
+
+    // GET: Fetch by subject ID
+    getSubjectMarkConfigsBySubject: builder.query({
+      query: (subjectId) => `/subject-mark-configs/?subject_id=${subjectId}`,
+      providesTags: ['SubjectMarkConfigs'],
+    }),
+
     // GET: Fetch a single config by ID
     getSubjectMarkConfigById: builder.query({
       query: (id) => `/subject-mark-configs/${id}/`,
@@ -45,7 +57,7 @@ export const subjectMarkConfigsApi = createApi({
 
     // PUT: Update an existing subject mark config
     updateSubjectMarkConfig: builder.mutation({
-      query: ({  ...configData }) => ({
+      query: ({ ...configData }) => ({
         url: `/subject-mark-configs/`,
         method: 'PUT',
         body: configData,
@@ -78,6 +90,8 @@ export const subjectMarkConfigsApi = createApi({
 // Export hooks for usage in components
 export const {
   useGetSubjectMarkConfigsQuery,
+  useGetSubjectMarkConfigsByClassQuery,
+  useGetSubjectMarkConfigsBySubjectQuery,
   useGetSubjectMarkConfigByIdQuery,
   useCreateSubjectMarkConfigMutation,
   useUpdateSubjectMarkConfigMutation,

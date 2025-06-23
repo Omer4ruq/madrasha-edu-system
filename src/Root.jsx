@@ -46,6 +46,7 @@ import SmsTemplate from "./components/Communication2/General-SMS/SmsTemplate";
 import SentNotificationSMS from "./components/Communication2/Notification-SMS/SentNotificationSMS";
 import SmsNotificationTemplate from "./components/Communication2/Notification-SMS/SmsNotificationTemplate";
 import SubjectMarkConfigs from "./components/marks/SubjectMarkConfigs";
+import SubjectMarks from "./components/marks/SubjectMarks";
 
 function Root() {
   const router = createBrowserRouter([
@@ -165,6 +166,15 @@ function Root() {
                 {
                   index: true,
                   element: <SubjectMarkConfigs />
+                },
+              ],
+            },
+                  {
+              path: "marks-given",
+              children: [
+                {
+                  index: true,
+                  element: <SubjectMarks />
                 },
               ],
             },
