@@ -23,27 +23,27 @@ export const teacherSubjectAssignsApi = createApi({
   endpoints: (builder) => ({
     // GET: Fetch all teacher subject assignments
     getTeacherSubjectAssigns: builder.query({
-      query: () => '/teacher-subject-assigns/',
+      query: () => '/teacher-subject-assign/',
       providesTags: ['TeacherSubjectAssigns'],
     }),
 
     // GET: Fetch by class_id and subject_id
     getTeacherSubjectAssignsByClassAndSubject: builder.query({
       query: ({ classId, subjectId }) =>
-        `/teacher-subject-assigns/?class_id=${classId}&subject_id=${subjectId}`,
+        `/teacher-subject-assign/?class_id=${classId}&subject_id=${subjectId}`,
       providesTags: ['TeacherSubjectAssigns'],
     }),
 
     // GET: Fetch a single assignment by ID
     getTeacherSubjectAssignById: builder.query({
-      query: (id) => `/teacher-subject-assigns/${id}/`,
+      query: (id) => `/teacher-subject-assign/${id}/`,
       providesTags: ['TeacherSubjectAssigns'],
     }),
 
     // POST: Create a new assignment
     createTeacherSubjectAssign: builder.mutation({
       query: (assignmentData) => ({
-        url: '/teacher-subject-assigns/',
+        url: '/teacher-subject-assign/',
         method: 'POST',
         body: assignmentData,
       }),
@@ -53,7 +53,7 @@ export const teacherSubjectAssignsApi = createApi({
     // PUT: Update an assignment by ID
     updateTeacherSubjectAssign: builder.mutation({
       query: ({ id, ...assignmentData }) => ({
-        url: `/teacher-subject-assigns/${id}/`,
+        url: `/teacher-subject-assign/${id}/`,
         method: 'PUT',
         body: assignmentData,
       }),
@@ -63,7 +63,7 @@ export const teacherSubjectAssignsApi = createApi({
     // PATCH: Partially update assignment
     patchTeacherSubjectAssign: builder.mutation({
       query: ({ id, ...assignmentData }) => ({
-        url: `/teacher-subject-assigns/${id}/`,
+        url: `/teacher-subject-assign/${id}/`,
         method: 'PATCH',
         body: assignmentData,
       }),
@@ -73,7 +73,7 @@ export const teacherSubjectAssignsApi = createApi({
     // DELETE: Remove an assignment
     deleteTeacherSubjectAssign: builder.mutation({
       query: (id) => ({
-        url: `/teacher-subject-assigns/${id}/`,
+        url: `/teacher-subject-assign/${id}/`,
         method: 'DELETE',
       }),
       invalidatesTags: ['TeacherSubjectAssigns'],
