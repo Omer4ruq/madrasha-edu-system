@@ -70,21 +70,11 @@ const AdmitCard = () => {
   } = useGetClassExamStudentsQuery(
     {
       class_id: selectedClassConfig?.value,
-      examname: selectedExam?.value, // Assumes exam ID (e.g., 1)
+      examname: selectedExam?.value,
       academic_year_id: selectedAcademicYear?.value,
     },
     { skip: !selectedClassConfig || !selectedExam || !selectedAcademicYear }
   );
-
-  // Debug logs
-  console.log('API Data:', { classConfigs, academicYears, exams, institute });
-  console.log('Selected Filters:', { 
-    class_id: selectedClassConfig?.value, 
-    examname: selectedExam?.value, 
-    academic_year_id: selectedAcademicYear?.value 
-  });
-  console.log('Exam Students:', examStudents);
-  console.log('API Errors:', { classError, yearError, examError, instituteError, studentsError });
 
   // Print ref
   const printRef = useRef();
@@ -95,19 +85,24 @@ const AdmitCard = () => {
     pageStyle: `
       @page {
         size: A4 portrait;
+        margin: 10mm;
       }
       @media print {
         body {
           -webkit-print-color-adjust: exact;
         }
         .admit-card {
-          page-break-after: always;
           width: 190mm;
-          height: 420px;
-          margin: 0;
-      
+          height: 120mm; /* Adjusted for two cards per A4 */
+          margin-bottom: 10mm;
           box-sizing: border-box;
           background: white;
+        }
+        .admit-card:last-child {
+          margin-bottom: 0;
+        }
+        .page-break {
+          page-break-after: always;
         }
         .no-print {
           display: none !important;
@@ -121,19 +116,33 @@ const AdmitCard = () => {
     const element = printRef.current;
     const cards = element.querySelectorAll('.admit-card');
     const pdf = new jsPDF('p', 'mm', 'a4');
-    const width = 190; // Adjusted to match admit-card width
-    const pageHeight = 277; // Adjusted to match admit-card height
+    const width = 190; // Card width
+    const cardHeight = 135; // Card height
+    const margin = 10; // Margin between cards
 
-    for (let i = 0; i < cards.length; i++) {
-      const canvas = await html2canvas(cards[i], {
-        scale: 3, // Increased scale for better quality
-        useCORS: true, // Handle external images
+    for (let i = 0; i < cards.length; i += 2) {
+      if (i > 0) pdf.addPage();
+      // First card on the page
+      const canvas1 = await html2canvas(cards[i], {
+        scale: 3,
+        useCORS: true,
         backgroundColor: '#ffffff',
       });
-      const imgData = canvas.toDataURL('image/png');
-      const imgHeight = (canvas.height * width) / canvas.width;
-      if (i > 0) pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 10, 10, width, imgHeight); // Center with 10mm margins
+      const imgData1 = canvas1.toDataURL('image/png');
+      const imgHeight1 = (canvas1.height * width) / canvas1.width;
+      pdf.addImage(imgData1, 'PNG', 10, 10, width, imgHeight1);
+
+      // Second card on the same page, if exists
+      if (i + 1 < cards.length) {
+        const canvas2 = await html2canvas(cards[i + 1], {
+          scale: 3,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+        });
+        const imgData2 = canvas2.toDataURL('image/png');
+        const imgHeight2 = (canvas2.height * width) / canvas2.width;
+        pdf.addImage(imgData2, 'PNG', 10, 10 + imgHeight1 + margin, width, imgHeight2);
+      }
     }
 
     pdf.save(`Admit_Cards_${selectedExam?.label || 'Exam'}_${selectedClassConfig?.label || 'Class'}.pdf`);
@@ -181,8 +190,7 @@ const AdmitCard = () => {
     return (
       <div
         key={student.user_id}
-        className="admit-card relative border border-[#DB9E30] rounded-lg w-[190mm] max-h-[420px] mx-auto overflow-hidden"
-        style={{ pageBreakAfter: 'always', background: 'white' }}
+        className="admit-card relative border border-[#DB9E30] rounded-lg w-[190mm] max-h-[100mm] mx-auto overflow-hidden"
       >
         {/* Background Image Layer */}
         <div
@@ -190,18 +198,18 @@ const AdmitCard = () => {
         ></div>
 
         {/* Header */}
-        <div className="text-center flex justify-between items-center bg-[#DB9E30] rounded-t-lg py-2 px-4">
+        <div className="text-center flex justify-between items-center bg-[#DB9E30] rounded-t-lg py-1 px-4">
           <img
             src={instituteInfo.institute_logo || 'https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg'}
             alt="Institute Logo"
-            className="w-12 h-12 object-contain"
+            className="w-10 h-10 object-contain"
           />
           <div>
-            <h1 className="text-base font-bold text-white uppercase">
+            <h1 className="text-sm font-bold text-white uppercase">
               {instituteInfo.institute_name || 'Institute Name'}
             </h1>
-            <p className="text-xs text-white">{instituteInfo.institute_address || 'Address'}</p>
-            <p className="text-xs mt-1 text-white">
+            <p className="text-[10px] text-white">{instituteInfo.institute_address || 'Address'}</p>
+            <p className="text-[10px] mt-0.5 text-white">
               <strong>পরীক্ষা:</strong> {examInfo.name || 'Exam Name'} |{' '}
               <strong>তারিখ:</strong> {examInfo.start_date || 'Date'}
             </p>
@@ -209,59 +217,59 @@ const AdmitCard = () => {
           <img
             src={instituteInfo.institute_logo || 'https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg'}
             alt="Institute Logo"
-            className="w-12 h-12 object-contain"
+            className="w-10 h-10 object-contain"
           />
         </div>
 
         {/* Title */}
-        <h2 className="text-lg text-center font-extrabold text-[#DB9E30] mt-4 underline">
+        <h2 className="text-base text-center font-extrabold text-[#DB9E30] mt-2 underline">
           প্রবেশপত্র
         </h2>
 
         {/* Student Info */}
-        <div className="text-sm mt-4 text-[#441a05] p-4 flex justify-around items-center">
-          <div className="w-fit space-y-2">
-            <p className="text-base">
+        <div className="text-xs mt-2 text-[#441a05] p-3 flex justify-around items-center">
+          <div className="w-fit space-y-1">
+            <p className="text-sm">
               <strong>নাম:</strong> {student.student_name}
             </p>
-            <p className="text-base">
+            <p className="text-sm">
               <strong>শ্রেণি:</strong> {student.class_name}
             </p>
-            <p className="text-base">
+            <p className="text-sm">
               <strong>সেকশন:</strong> {student.section_name}
             </p>
-            <p className="text-base">
+            <p className="text-sm">
               <strong>সেশন:</strong> {selectedAcademicYear?.label || 'N/A'}
             </p>
           </div>
-          <div className="border p-3 px-5 rounded-lg bg-[#DB9E30] translate-x-1">
-            <p className="mb-2 text-base text-white">
+          <div className="border p-2 px-4 rounded-lg bg-[#DB9E30] translate-x-1">
+            <p className="mb-1 text-sm text-white">
               <strong>রোল:</strong> {student.roll_no || student.user_id}
             </p>
-            <p className="text-base text-white">
+            <p className="text-sm text-white">
               <strong>রেজি:</strong> {student.user_id}
             </p>
           </div>
         </div>
 
         {/* Instructions */}
-        <div className="mt-4 text-sm text-[#440d05] w-[70%] p-4">
+        <div className="mt-2 text-xs text-[#440d05] w-[70%] p-3">
           <p>
             <strong>নির্দেশ:</strong> পরীক্ষার হলে এই প্রবেশপত্র অবশ্যই সঙ্গে আনতে হবে।
           </p>
           <p>
-            <strong>নির্দেশ:</strong> প্রত্যেক শিক্ষার্থীকে পরীক্ষা শুরুর ১৫ মিনিট পূর্বে উপস্থিত থাকতে হবে।
+            <strong>নির্দেশ:</strong> পরীক্ষা শুরুর ১৫ মিনিট পূর্বে উপস্থিত থাকতে হবে।
           </p>
           <p>
-            <strong>নির্দেশ:</strong> প্রত্যেক শিক্ষার্থীকে নিম্নলিখিত প্রয়োজনীয় সামগ্রী আনতে হবে: বোর্ড, শার্পনার, রুলার, পেন্সিল, কলম এবং ইরেজার।
+            <strong>নির্দেশ:</strong> প্রয়োজনীয় সামগ্রী: বোর্ড, শার্পনার, রুলার, পেন্সিল, কলম, ইরেজার।
           </p>
         </div>
 
         {/* Signature */}
-        <div className="flex justify-end mt-[-40px] mb-5 mr-5">
+        <div className="flex justify-end mt-[-30px] mb-3 mr-4">
           <div className="text-center">
-            <div className="border-t border-[#441a05] w-32 mx-auto"></div>
-            <p className="text-xs text-[#441a05] mt-1 font-semibold">
+            <div className="border-t border-[#441a05] w-24 mx-auto"></div>
+            <p className="text-[10px] text-[#441a05] mt-1 font-semibold">
               পরীক্ষা নিয়ন্ত্রকের স্বাক্ষর
             </p>
           </div>
@@ -287,17 +295,15 @@ const AdmitCard = () => {
           }
           .admit-card {
             width: 190mm;
-            height: 277mm;
-            margin: 10mm auto;
-            page-break-after: always;
+            height: 135mm; /* Two cards per A4 page */
+            margin: 5mm auto;
             background: white;
             box-sizing: border-box;
             font-family: 'Noto Sans Bengali', sans-serif;
           }
           @media print {
             .admit-card {
-              margin: 0;
-              padding: 10mm;
+              margin: 5mm 10mm;
             }
           }
           @media screen {
@@ -384,7 +390,14 @@ const AdmitCard = () => {
         {selectedClassConfig && selectedAcademicYear && selectedExam ? (
           examStudents?.students?.length > 0 ? (
             <div className="flex flex-col items-center justify-center gap-0">
-              {examStudents.students.map((student, index) => renderSingleCard(student, index))}
+              {examStudents.students.map((student, index) => (
+                <React.Fragment key={student.user_id}>
+                  {renderSingleCard(student, index)}
+                  {index % 2 === 1 && index < examStudents.students.length - 1 && (
+                    <div className="page-break"></div>
+                  )}
+                </React.Fragment>
+              ))}
             </div>
           ) : (
             <div className="text-center text-[#441a05] p-8">

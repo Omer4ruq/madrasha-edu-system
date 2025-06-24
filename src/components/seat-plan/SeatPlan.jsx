@@ -187,7 +187,7 @@ const SeatPlan = () => {
       <div className="seat-card relative w-[90mm] h-[50mm] bg-white border border-[#DB9E30] rounded-[4mm] overflow-hidden">
         {/* Background Image Layer */}
         <div
-          className="absolute inset-0 w-[40mm] h-[40mm] left-[25%] top-[25%] bg-[url('https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg')] bg-contain bg-center bg-no-repeat opacity-10 z-0"
+          className="absolute inset-0 w-[40mm] h-[40mm] left-[27%] top-[25%] bg-[url('https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg')] bg-contain bg-center bg-no-repeat opacity-10 z-0"
         ></div>
 
         {/* Header */}
@@ -230,7 +230,7 @@ const SeatPlan = () => {
         </div>
 
         {/* Exam Date */}
-        <p className="text-[7pt] text-[#441a05] text-center mt-1">
+        <p className="text-[7pt] text-[#441a05] text-center mt-[-10px]">
           <strong>তারিখ:</strong> {examInfo.start_date || '2025'}
         </p>
       </div>
