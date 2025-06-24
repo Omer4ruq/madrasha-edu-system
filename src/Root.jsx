@@ -55,6 +55,7 @@ import AttendanceSheet from "./components/layout/AttendanceSheet";
 import ClassPeriodSetup from "./components/periods/ClassPeriodSetup";
 import AdmitCard from "./components/admit-card/AdmitCard";
 import SeatPlan from "./components/seat-plan/SeatPlan";
+import TeacherSubjectAssign from "./components/teachers/TeacherSubjectAssign";
 
 
 
@@ -202,6 +203,15 @@ function Root() {
                 {
                   index: true,
                   element: <ClassPeriodSetup />
+                },
+              ],
+            },
+                  {
+              path: "teacher-subject-assign",
+              children: [
+                {
+                  index: true,
+                  element: <TeacherSubjectAssign />
                 },
               ],
             },

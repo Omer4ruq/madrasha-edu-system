@@ -168,6 +168,18 @@ const mainMenu = [
           },
         ],
       },
+          {
+        id: "05/08",
+        title: "teacher",
+        link: "/talimat/teacher-subject-assign",
+        children: [
+          {
+            id: "05/08/01",
+            title: "periods",
+            link: "/talimat/teacher-subject-assign",
+          },
+        ],
+      },
     ],
   },
   {
