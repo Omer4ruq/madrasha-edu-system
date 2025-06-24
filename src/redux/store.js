@@ -52,6 +52,7 @@ import { classSubjectsApi } from './features/api/class-subjects/classSubjectsApi
 import { subjectMarkConfigsApi } from './features/api/marks/subjectMarkConfigsApi';
 import { gmarkTypeApi } from './features/api/marks/gmarktype';
 import { subjectMarksApi } from './features/api/marks/subjectMarksApi';
+import { classPeriodsApi } from './features/api/periods/classPeriodsApi';
 
 
 
@@ -113,6 +114,8 @@ export const store = configureStore({
     [subjectMarkConfigsApi.reducerPath]: subjectMarkConfigsApi.reducer,
     [gmarkTypeApi.reducerPath]: gmarkTypeApi.reducer,
     [subjectMarksApi.reducerPath]: subjectMarksApi.reducer,
+    [classPeriodsApi.reducerPath]: classPeriodsApi.reducer,
+  
 
   },
   middleware: (getDefaultMiddleware) =>
@@ -171,6 +174,8 @@ export const store = configureStore({
     .concat(subjectMarkConfigsApi.middleware)
     .concat(gmarkTypeApi.middleware)
     .concat(subjectMarksApi.middleware)
+    .concat(classPeriodsApi.middleware)
+ 
   
 });
 

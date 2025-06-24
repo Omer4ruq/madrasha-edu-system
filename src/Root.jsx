@@ -52,6 +52,7 @@ import SmsNotificationTemplate from "./components/Communication2/Notification-SM
 import SubjectMarkConfigs from "./components/marks/SubjectMarkConfigs";
 import SubjectMarks from "./components/marks/SubjectMarks";
 import AttendanceSheet from "./components/layout/AttendanceSheet";
+import ClassPeriodSetup from "./components/periods/ClassPeriodSetup";
 
 function Root() {
   const router = createBrowserRouter([
@@ -180,6 +181,15 @@ function Root() {
                 {
                   index: true,
                   element: <SubjectMarks />
+                },
+              ],
+            },
+               {
+              path: "periods",
+              children: [
+                {
+                  index: true,
+                  element: <ClassPeriodSetup />
                 },
               ],
             },

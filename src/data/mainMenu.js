@@ -141,8 +141,20 @@ const mainMenu = [
         children: [
           {
             id: "05/04/01",
-            title: "marks-config",
+            title: "marks-given",
             link: "/talimat/marks-given",
+          },
+        ],
+      },
+         {
+        id: "05/05",
+        title: "Periods",
+        link: "/talimat/periods",
+        children: [
+          {
+            id: "05/04/01",
+            title: "periods",
+            link: "/talimat/periods",
           },
         ],
       },
