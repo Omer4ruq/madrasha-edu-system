@@ -291,10 +291,14 @@ import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classC
 import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
 import { useGetGSubjectsByClassQuery } from '../../redux/features/api/class-subjects/gsubjectApi';
 import { useCreateTeacherSubjectAssignMutation, useGetTeacherSubjectAssignsByClassAndSubjectQuery, useGetTeacherSubjectAssignsQuery, useUpdateTeacherSubjectAssignMutation } from '../../redux/features/api/teacherSubjectAssigns/teacherSubjectAssignsApi';
+import { useGetClassSubjectsByClassIdQuery, useGetClassSubjectsQuery } from '../../redux/features/api/class-subjects/classSubjectsApi';
+
+
 
 const TeacherSubjectAssign = () => {
   const [selectedTeacher, setSelectedTeacher] = useState('');
-  const [selectedClass, setSelectedClass] = useState('');
+  const [selectedClassConfigId, setSelectedClassConfigId] = useState('');
+  const [classId, setClassId] = useState('');
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [viewClass, setViewClass] = useState('');
@@ -303,9 +307,10 @@ const TeacherSubjectAssign = () => {
   // Fetch data from APIs
   const { data: teachers, isLoading: teachersLoading } = useGetTeacherStaffProfilesQuery();
   const { data: classes, isLoading: classesLoading } = useGetclassConfigApiQuery();
+  const { data: testSubjcet, isLoading: testSubjcetLoading } = useGetClassSubjectsQuery();
   const { data: academicYears, isLoading: yearsLoading } = useGetAcademicYearApiQuery();
-  const { data: subjects, isLoading: subjectsLoading } = useGetGSubjectsByClassQuery(selectedClass, {
-    skip: !selectedClass,
+  const { data: subjects, isLoading: subjectsLoading } = useGetGSubjectsByClassQuery(classId, {
+    skip: !classId,
   });
   const { data: assignmentsByClassSubject, isLoading: assignmentsLoading } =
     useGetTeacherSubjectAssignsByClassAndSubjectQuery(
@@ -314,12 +319,40 @@ const TeacherSubjectAssign = () => {
     );
   const { data: teacherAssignments, isLoading: teacherAssignmentsLoading } =
     useGetTeacherSubjectAssignsQuery(undefined, { skip: !selectedTeacher });
-console.log(classes)
+
   const [createAssignment, { isLoading: createLoading }] = useCreateTeacherSubjectAssignMutation();
   const [updateAssignment, { isLoading: updateLoading }] = useUpdateTeacherSubjectAssignMutation();
 
+  // Clear selectedSubjects when classId changes to prevent invalid IDs
+  useEffect(() => {
+    setSelectedSubjects([]);
+  }, [classId]);
+
+  // Log data for debugging
+  useEffect(() => {
+    console.log('Fetched data:', {
+      teachers: teachers?.map(t => ({ id: t.id, name: t.name })),
+      classes: classes?.map(c => ({ id: c.id, class_id: c.class_id, name: c.class_name })),
+      subjects: subjects?.map(s => ({ id: s.id, name: s.name })),
+      testSubjcet: testSubjcet?.map(s => ({ id: s.id, name: s.name })),
+      academicYears: academicYears?.map(y => ({ id: y.id, name: y.name })),
+      classId,
+      selectedClassConfigId,
+      selectedSubjects,
+    });
+  }, [teachers, classes, subjects, testSubjcet, academicYears, classId, selectedClassConfigId, selectedSubjects]);
+
+  // Handle class selection to set both IDs
+  const handleClassChange = (e) => {
+    const selectedId = e.target.value;
+    setSelectedClassConfigId(selectedId);
+    const selectedClass = classes?.find((cls) => cls.id.toString() === selectedId);
+    setClassId(selectedClass ? selectedClass.class_id.toString() : '');
+  };
+
   // Handle subject checkbox changes
   const handleSubjectChange = (subjectId) => {
+    console.log("select subject", subjectId)
     setSelectedSubjects((prev) =>
       prev.includes(subjectId)
         ? prev.filter((id) => id !== subjectId)
@@ -330,24 +363,26 @@ console.log(classes)
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedTeacher || !selectedClass || selectedSubjects.length === 0 || !selectedAcademicYear) {
+    if (!selectedTeacher || !selectedClassConfigId || selectedSubjects.length === 0 || !selectedAcademicYear) {
       alert('Please fill all fields');
       return;
     }
 
     // Validate payload IDs
     const isValidTeacher = teachers?.some((t) => t.id === parseInt(selectedTeacher));
-    const isValidClass = classes?.some((c) => c.id === parseInt(selectedClass));
+    const isValidClass = classes?.some((c) => c.id === parseInt(selectedClassConfigId));
+    const isValidClassId = classes?.some((c) => c.class_id === parseInt(classId));
     const isValidAcademicYear = academicYears?.some((y) => y.id === parseInt(selectedAcademicYear));
     const areValidSubjects = selectedSubjects.every((subjectId) =>
       subjects?.some((s) => s.id === parseInt(subjectId))
     );
 
-    if (!isValidTeacher || !isValidClass || !isValidAcademicYear || !areValidSubjects) {
+    if (!isValidTeacher || !isValidClass || !isValidClassId || !isValidAcademicYear || !areValidSubjects) {
       alert('Invalid selection: Please ensure all selected IDs are valid.');
       console.error('Validation failed:', {
         teacherId: selectedTeacher,
-        classId: selectedClass,
+        classConfigId: selectedClassConfigId,
+        classId,
         academicYearId: selectedAcademicYear,
         subjectIds: selectedSubjects,
       });
@@ -356,12 +391,12 @@ console.log(classes)
 
     const assignmentData = {
       subject_assigns: selectedSubjects.map((id) => parseInt(id)),
-      class_assigns: [parseInt(selectedClass)],
+      class_assigns: [parseInt(classId)], // Use class_id
       teacher_id: parseInt(selectedTeacher),
       academic_year: parseInt(selectedAcademicYear),
     };
 
-    const apiUrl = 'https://demo.easydr.xyz/api/teacher-subject-assigns/';
+    const apiUrl = 'https://demo.easydr.xyz/api/teacher-subject-assign/';
     const headers = {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${localStorage.getItem('token') || 'no-token'}`,
@@ -374,45 +409,55 @@ console.log(classes)
     });
 
     try {
-      await createAssignment(assignmentData).unwrap();
+      const response = await createAssignment(assignmentData).unwrap();
+      console.log('Assignment creation response:', response);
       alert('Assignment created successfully');
       setSelectedSubjects([]);
+      setSelectedClassConfigId('');
+      setClassId('');
+      setSelectedTeacher('');
+      setSelectedAcademicYear('');
     } catch (error) {
       console.error('Assignment creation error:', {
         status: error.status,
         data: error.data,
         message: error.message,
         fullError: error,
+        responseText: error.originalError?.response?.text,
       });
       if (error.status === 404) {
         alert('Failed to create assignment: API endpoint not found. Please check the server configuration.');
       } else if (error.status === 400) {
-        alert(`Failed to create assignment: ${error.data?.detail || 'Invalid data provided.'}`);
+        alert(`Failed to create assignment: ${error.data?.detail || JSON.stringify(error.data) || 'Invalid data provided.'}`);
+      } else if (error.status === 401) {
+        alert('Failed to create assignment: Invalid or missing authentication token.');
       } else {
-        alert(`Failed to create assignment: ${error.data?.detail || 'Unknown error occurred.'}`);
+        alert(`Failed to create assignment: ${error.data?.detail || JSON.stringify(error.data) || 'Unknown error occurred.'}`);
       }
     }
   };
 
   // Handle update assignment
   const handleUpdate = async (assignmentId) => {
-    if (!selectedTeacher || !selectedClass || selectedSubjects.length === 0 || !selectedAcademicYear) {
+    if (!selectedTeacher || !selectedClassConfigId || selectedSubjects.length === 0 || !selectedAcademicYear) {
       alert('Please fill all fields');
       return;
     }
 
     const isValidTeacher = teachers?.some((t) => t.id === parseInt(selectedTeacher));
-    const isValidClass = classes?.some((c) => c.id === parseInt(selectedClass));
+    const isValidClass = classes?.some((c) => c.id === parseInt(selectedClassConfigId));
+    const isValidClassId = classes?.some((c) => c.class_id === parseInt(classId));
     const isValidAcademicYear = academicYears?.some((y) => y.id === parseInt(selectedAcademicYear));
     const areValidSubjects = selectedSubjects.every((subjectId) =>
       subjects?.some((s) => s.id === parseInt(subjectId))
     );
 
-    if (!isValidTeacher || !isValidClass || !isValidAcademicYear || !areValidSubjects) {
+    if (!isValidTeacher || !isValidClass || !isValidClassId || !isValidAcademicYear || !areValidSubjects) {
       alert('Invalid selection: Please ensure all selected IDs are valid.');
       console.error('Validation failed:', {
         teacherId: selectedTeacher,
-        classId: selectedClass,
+        classConfigId: selectedClassConfigId,
+        classId,
         academicYearId: selectedAcademicYear,
         subjectIds: selectedSubjects,
       });
@@ -422,13 +467,14 @@ console.log(classes)
     const assignmentData = {
       id: assignmentId,
       subject_assigns: selectedSubjects.map((id) => parseInt(id)),
-      class_assigns: [parseInt(selectedClass)],
+      class_assigns: [parseInt(classId)], // Use class_id
       teacher_id: parseInt(selectedTeacher),
       academic_year: parseInt(selectedAcademicYear),
     };
 
     try {
-      await updateAssignment(assignmentData).unwrap();
+      const response = await updateAssignment(assignmentData).unwrap();
+      console.log('Assignment update response:', response);
       alert('Assignment updated successfully');
     } catch (error) {
       console.error('Assignment update error:', {
@@ -436,8 +482,9 @@ console.log(classes)
         data: error.data,
         message: error.message,
         fullError: error,
+        responseText: error.originalError?.response?.text,
       });
-      alert(`Failed to update assignment: ${error.data?.detail || 'Unknown error'}`);
+      alert(`Failed to update assignment: ${error.data?.detail || JSON.stringify(error.data) || 'Unknown error'}`);
     }
   };
 
@@ -470,8 +517,8 @@ console.log(classes)
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Select Class</label>
           <select
-            value={selectedClass}
-            onChange={(e) => setSelectedClass(e.target.value)}
+            value={selectedClassConfigId}
+            onChange={handleClassChange}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
             disabled={classesLoading}
           >
@@ -486,26 +533,30 @@ console.log(classes)
           </select>
         </div>
 
-        {selectedClass && (
+        {selectedClassConfigId && (
           <div>
             <h3 className="text-lg font-semibold text-amber-600 mb-3">Select Subjects</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {subjects?.map((subject) => (
-                <div key={subject.id} className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id={`subject-${subject.id}`}
-                    checked={selectedSubjects.includes(subject.id)}
-                    onChange={() => handleSubjectChange(subject.id)}
-                    className="h-4 w-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
-                    disabled={subjectsLoading}
-                  />
-                  <label htmlFor={`subject-${subject.id}`} className="text-sm text-gray-600">
-                    {subject.name}
-                  </label>
-                </div>
-              ))}
-            </div>
+            {subjects?.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {subjects.map((subject) => (
+                  <div key={subject.id} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={`subject-${subject.id}`}
+                      checked={selectedSubjects.includes(subject.id)}
+                      onChange={() => handleSubjectChange(subject.id)}
+                      className="h-4 w-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+                      disabled={subjectsLoading}
+                    />
+                    <label htmlFor={`subject-${subject.id}`} className="text-sm text-gray-600">
+                      {subject.name}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">No subjects available for this class.</p>
+            )}
           </div>
         )}
 
@@ -555,8 +606,8 @@ console.log(classes)
                 Select a class
               </option>
               {classes?.map((cls) => (
-                <option key={cls.id} value={cls.id}>
-                  {cls.name}
+                <option key={cls.id} value={cls.class_id}>
+                  {cls.class_name} {cls.shift_name} {cls.section_name}
                 </option>
               ))}
             </select>
@@ -597,16 +648,16 @@ console.log(classes)
                 {assignmentsByClassSubject.map((assignment) => (
                   <tr key={assignment.id} className="border-t">
                     <td className="p-3 text-sm text-gray-600">
-                      {teachers?.find((t) => t.id === assignment.teacher_id)?.name}
+                      {teachers?.find((t) => t.id === assignment.teacher_id)?.name || 'Unknown Teacher'}
                     </td>
                     <td className="p-3 text-sm text-gray-600">
-                      {classes?.find((c) => c.id === assignment.class_assigns[0])?.name}
+                      {classes?.find((c) => c.class_id === assignment.class_assigns[0])?.class_name || 'Unknown Class'}
                     </td>
                     <td className="p-3 text-sm text-gray-600">
-                      {subjects?.find((s) => s.id === assignment.subject_assigns[0])?.name}
+                      {subjects?.find((s) => s.id === assignment.subject_assigns[0])?.name || 'Unknown Subject'}
                     </td>
                     <td className="p-3 text-sm text-gray-600">
-                      {academicYears?.find((y) => y.id === assignment.academic_year)?.name}
+                      {academicYears?.find((y) => y.id === assignment.academic_year)?.name || 'Unknown Year'}
                     </td>
                   </tr>
                 ))}
@@ -617,45 +668,51 @@ console.log(classes)
       </div>
 
       {/* Teacher's Assigned Subjects */}
-      {selectedTeacher && teacherAssignments?.length > 0 && (
+      {selectedTeacher && (
         <div className="mt-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Teacher's Assigned Subjects</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full border border-gray-200 rounded-lg">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="p-3 text-left text-sm font-semibold text-gray-700">Class</th>
-                  <th className="p-3 text-left text-sm font-semibold text-gray-700">Subject</th>
-                  <th className="p-3 text-left text-sm font-semibold text-gray-700">Academic Year</th>
-                  <th className="p-3 text-left text-sm font-semibold text-gray-700">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {teacherAssignments.map((assignment) => (
-                  <tr key={assignment.id} className="border-t">
-                    <td className="p-3 text-sm text-gray-600">
-                      {classes?.find((c) => c.id === assignment.class_assigns[0])?.name}
-                    </td>
-                    <td className="p-3 text-sm text-gray-600">
-                      {subjects?.find((s) => s.id === assignment.subject_assigns[0])?.name}
-                    </td>
-                    <td className="p-3 text-sm text-gray-600">
-                      {academicYears?.find((y) => y.id === assignment.academic_year)?.name}
-                    </td>
-                    <td className="p-3 text-sm">
-                      <button
-                        onClick={() => handleUpdate(assignment.id)}
-                        className="bg-amber-500 text-white px-4 py-1 rounded-lg hover:bg-amber-700 transition duration-200"
-                        disabled={updateLoading}
-                      >
-                        {updateLoading ? 'Updating...' : 'Update'}
-                      </button>
-                    </td>
+          {teacherAssignmentsLoading ? (
+            <p className="text-sm text-gray-500">Loading assignments...</p>
+          ) : teacherAssignments?.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full border border-gray-200 rounded-lg">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-700">Class</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-700">Subject</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-700">Academic Year</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-700">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {teacherAssignments.map((assignment) => (
+                    <tr key={assignment.id} className="border-t">
+                      <td className="p-3 text-sm text-gray-600">
+                        {classes?.find((c) => c.class_id === assignment.class_assigns[0])?.class_name || 'Unknown Class'}
+                      </td>
+                      <td className="p-3 text-sm text-gray-600">
+                        {subjects?.find((s) => s.id === assignment.subject_assigns[0])?.name || 'Unknown Subject'}
+                      </td>
+                      <td className="p-3 text-sm text-gray-600">
+                        {academicYears?.find((y) => y.id === assignment.academic_year)?.name || 'Unknown Year'}
+                      </td>
+                      <td className="p-3 text-sm">
+                        <button
+                          onClick={() => handleUpdate(assignment.id)}
+                          className="bg-amber-500 text-white px-4 py-1 rounded-lg hover:bg-amber-700 transition duration-200"
+                          disabled={updateLoading}
+                        >
+                          {updateLoading ? 'Updating...' : 'Update'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">No assignments found for this teacher.</p>
+          )}
         </div>
       )}
     </div>
