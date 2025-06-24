@@ -156,7 +156,7 @@ const mainMenu = [
           },
         ],
       },
-         {
+      {
         id: "05/07",
         title: "Periods",
         link: "/talimat/periods",
@@ -168,7 +168,7 @@ const mainMenu = [
           },
         ],
       },
-          {
+      {
         id: "05/08",
         title: "teacher",
         link: "/talimat/teacher-subject-assign",
@@ -179,6 +179,11 @@ const mainMenu = [
             link: "/talimat/teacher-subject-assign",
           },
         ],
+      },
+      {
+        id: "05/09",
+        title: "স্বাক্ষর পত্র",
+        link: "/talimat/signature-sheet",
       },
     ],
   },
