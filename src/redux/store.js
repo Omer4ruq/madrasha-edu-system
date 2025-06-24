@@ -53,6 +53,8 @@ import { subjectMarkConfigsApi } from './features/api/marks/subjectMarkConfigsAp
 import { gmarkTypeApi } from './features/api/marks/gmarktype';
 import { subjectMarksApi } from './features/api/marks/subjectMarksApi';
 import { classPeriodsApi } from './features/api/periods/classPeriodsApi';
+import { instituteLatestApi } from './features/api/institute/instituteLatestApi';
+import { classExamStudentApi } from './features/api/class-exam-students/classExamStudentApi ';
 
 
 
@@ -115,6 +117,8 @@ export const store = configureStore({
     [gmarkTypeApi.reducerPath]: gmarkTypeApi.reducer,
     [subjectMarksApi.reducerPath]: subjectMarksApi.reducer,
     [classPeriodsApi.reducerPath]: classPeriodsApi.reducer,
+    [instituteLatestApi.reducerPath]: instituteLatestApi.reducer,
+    [classExamStudentApi.reducerPath]: classExamStudentApi.reducer,
   
 
   },
@@ -165,8 +169,6 @@ export const store = configureStore({
     .concat(studentFeesPreviousApi.middleware)
     .concat(deleteFeesApi.middleware)
     .concat(mealStatusApi.middleware)
-
-  
     .concat(studentSubAttendanceApi.middleware)
     .concat(subjectAssignApi.middleware)
     .concat(gsubjectApi.middleware)
@@ -176,6 +178,8 @@ export const store = configureStore({
     .concat(subjectMarksApi.middleware)
     .concat(classPeriodsApi.middleware)
  
+    .concat(instituteLatestApi.middleware)
+    .concat(classExamStudentApi.middleware)
   
 });
 

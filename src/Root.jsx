@@ -53,6 +53,10 @@ import SubjectMarkConfigs from "./components/marks/SubjectMarkConfigs";
 import SubjectMarks from "./components/marks/SubjectMarks";
 import AttendanceSheet from "./components/layout/AttendanceSheet";
 import ClassPeriodSetup from "./components/periods/ClassPeriodSetup";
+import AdmitCard from "./components/admit-card/AdmitCard";
+import SeatPlan from "./components/seat-plan/SeatPlan";
+
+
 
 function Root() {
   const router = createBrowserRouter([
@@ -175,7 +179,15 @@ function Root() {
                 },
               ],
             },
-                  {
+            {
+              path: "admit-card",
+              element: <AdmitCard></AdmitCard>,
+            },
+            {
+              path: "seat-plan",
+              element: <SeatPlan></SeatPlan>,
+            },
+            {
               path: "marks-given",
               children: [
                 {

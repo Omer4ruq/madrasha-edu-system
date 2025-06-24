@@ -134,25 +134,35 @@ const mainMenu = [
           },
         ],
       },
-            {
+      {
         id: "05/04",
+        title: "প্রবেশপত্র",
+        link: "/talimat/admit-card",
+      },
+      {
+        id: "05/05",
+        title: "সিট প্ল্যান",
+        link: "/talimat/seat-plan",
+      },
+      {
+        id: "05/06",
         title: "Marks Given",
         link: "/talimat/marks-given",
         children: [
           {
-            id: "05/04/01",
+            id: "05/06/01",
             title: "marks-given",
             link: "/talimat/marks-given",
           },
         ],
       },
          {
-        id: "05/05",
+        id: "05/07",
         title: "Periods",
         link: "/talimat/periods",
         children: [
           {
-            id: "05/04/01",
+            id: "05/07/01",
             title: "periods",
             link: "/talimat/periods",
           },
