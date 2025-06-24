@@ -55,8 +55,8 @@ import AttendanceSheet from "./components/layout/AttendanceSheet";
 import ClassPeriodSetup from "./components/periods/ClassPeriodSetup";
 import AdmitCard from "./components/admit-card/AdmitCard";
 import SeatPlan from "./components/seat-plan/SeatPlan";
-
-
+import TeacherSubjectAssign from "./components/teachers/TeacherSubjectAssign";
+import SignatureSheet from "./components/signature-sheet/SignatureSheet";
 
 function Root() {
   const router = createBrowserRouter([
@@ -192,18 +192,31 @@ function Root() {
               children: [
                 {
                   index: true,
-                  element: <SubjectMarks />
+                  element: <SubjectMarks />,
                 },
               ],
             },
-               {
+            {
               path: "periods",
               children: [
                 {
                   index: true,
-                  element: <ClassPeriodSetup />
+                  element: <ClassPeriodSetup />,
                 },
               ],
+            },
+            {
+              path: "teacher-subject-assign",
+              children: [
+                {
+                  index: true,
+                  element: <TeacherSubjectAssign />,
+                },
+              ],
+            },
+             {
+              path: "signature-sheet",
+              element: <SignatureSheet></SignatureSheet>,
             },
           ],
         },

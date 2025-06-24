@@ -52,6 +52,12 @@ export const roleStaffProfileApi = createApi({
       }),
       invalidatesTags: ['roleStaffProfileApi'],
     }),
+    // Inside endpoints: (builder) => ({
+getTeacherStaffProfiles: builder.query({
+  query: () => '/role-staff-profiles/?role__name=Teacher',
+  providesTags: ['roleStaffProfileApi'],
+}),
+
   }),
 });
 
@@ -61,4 +67,5 @@ export const {
   useCreateRoleStaffProfileApiMutation,
   useUpdateRoleStaffProfileApiMutation,
   useDeleteRoleStaffProfileApiMutation,
+  useGetTeacherStaffProfilesQuery,
 } = roleStaffProfileApi;
