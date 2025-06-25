@@ -108,6 +108,11 @@ const mainMenu = [
             title: "পরীক্ষার ধরন",
             link: "/talimat/settings/exam-type",
           },
+          {
+            id: "05/01/06",
+            title: "ইভেন্ট তৈরি",
+            link: "/talimat/settings/event-type",
+          },
         ],
       },
       {
@@ -187,7 +192,7 @@ const mainMenu = [
       },
       {
         id: "05/10",
-        title: "ইভেন্ট",
+        title: "ইভেন্ট ক্যালেন্ডার",
         link: "/talimat/event",
       },
     ],

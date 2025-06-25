@@ -26,11 +26,23 @@ const Event = () => {
   });
 
   // API hooks
-  const { data: events, isLoading: eventsLoading, error: eventsError, refetch } = useGetEventsQuery();
-  const { data: academicYears, isLoading: yearsLoading, error: yearsError } = useGetAcademicYearApiQuery();
-  const [createEvent, { isLoading: isCreating, error: createError }] = useCreateEventMutation();
-  const [updateEvent, { isLoading: isUpdating, error: updateError }] = useUpdateEventMutation();
-  const [deleteEvent, { isLoading: isDeleting, error: deleteError }] = useDeleteEventMutation();
+  const {
+    data: events,
+    isLoading: eventsLoading,
+    error: eventsError,
+    refetch,
+  } = useGetEventsQuery();
+  const {
+    data: academicYears,
+    isLoading: yearsLoading,
+    error: yearsError,
+  } = useGetAcademicYearApiQuery();
+  const [createEvent, { isLoading: isCreating, error: createError }] =
+    useCreateEventMutation();
+  const [updateEvent, { isLoading: isUpdating, error: updateError }] =
+    useUpdateEventMutation();
+  const [deleteEvent, { isLoading: isDeleting, error: deleteError }] =
+    useDeleteEventMutation();
 
   // Handle date click to open modal for new event
   const handleDateClick = (info) => {
@@ -64,7 +76,12 @@ const Event = () => {
   // Handle form submission for adding new event
   const handleSubmitEvent = async (e) => {
     e.preventDefault();
-    if (!newEvent.title.trim() || !newEvent.start || !newEvent.end || !newEvent.academic_year) {
+    if (
+      !newEvent.title.trim() ||
+      !newEvent.start ||
+      !newEvent.end ||
+      !newEvent.academic_year
+    ) {
       toast.error("অনুগ্রহ করে সকল ক্ষেত্র পূরণ করুন");
       return;
     }
@@ -97,7 +114,12 @@ const Event = () => {
   // Handle update event
   const handleUpdate = async (e) => {
     e.preventDefault();
-    if (!newEvent.title.trim() || !newEvent.start || !newEvent.end || !newEvent.academic_year) {
+    if (
+      !newEvent.title.trim() ||
+      !newEvent.start ||
+      !newEvent.end ||
+      !newEvent.academic_year
+    ) {
       toast.error("অনুগ্রহ করে সকল ক্ষেত্র পূরণ করুন");
       return;
     }
@@ -141,8 +163,25 @@ const Event = () => {
       }
       refetch();
     } catch (err) {
-      console.error(`ত্রুটি ${modalAction === "create" ? "তৈরি করা" : modalAction === "update" ? "আপডেট" : "মুছে ফেলা"}:`, err);
-      toast.error(`ইভেন্ট ${modalAction === "create" ? "তৈরি" : modalAction === "update" ? "আপডেট" : "মুছে ফেলা"} ব্যর্থ: ${err.status || "অজানা"} - ${JSON.stringify(err.data || {})}`);
+      console.error(
+        `ত্রুটি ${
+          modalAction === "create"
+            ? "তৈরি করা"
+            : modalAction === "update"
+            ? "আপডেট"
+            : "মুছে ফেলা"
+        }:`,
+        err
+      );
+      toast.error(
+        `ইভেন্ট ${
+          modalAction === "create"
+            ? "তৈরি"
+            : modalAction === "update"
+            ? "আপডেট"
+            : "মুছে ফেলা"
+        } ব্যর্থ: ${err.status || "অজানা"} - ${JSON.stringify(err.data || {})}`
+      );
     } finally {
       setIsModalOpen(false);
       setModalAction(null);
@@ -151,17 +190,19 @@ const Event = () => {
   };
 
   // Format events for FullCalendar
-  const calendarEvents = events?.map((event) => ({
-    id: event.id,
-    title: event.title,
-    start: event.start,
-    end: event.end,
-    backgroundColor: "#DB9E30",
-    borderColor: "#441a05",
-    textColor: "#441a05",
-  })) || [];
+  const calendarEvents =
+    events?.map((event) => ({
+      id: event.id,
+      title: event.title,
+      start: event.start,
+      end: event.end,
+      backgroundColor: "#DB9E30",
+      borderColor: "#441a05",
+      textColor: "#441a05",
+    })) || [];
 
-  if (eventsLoading || yearsLoading) return <div style={styles.fullPage}>লোড হচ্ছে...</div>;
+  if (eventsLoading || yearsLoading)
+    return <div style={styles.fullPage}>লোড হচ্ছে...</div>;
   if (eventsError || yearsError)
     return (
       <div style={styles.fullPage}>
@@ -219,10 +260,10 @@ const Event = () => {
             background: rgba(10, 13, 21, 0.44);
           }
           .fc {
-            font-family: 'Noto Serif Bengali', sans-serif !important;
+            // font-family: 'Noto Serif Bengali', sans-serif !important;
           }
           .fc-toolbar-title {
-            color: #441a05 !important;
+            color: #DB9E30 !important;
             font-size: 1.5rem !important;
             font-weight: 700 !important;
           }
@@ -243,6 +284,8 @@ const Event = () => {
           }
           .fc-event {
             border-radius: 6px !important;
+            border: none;
+            // color: #fff;
             padding: 2px 5px !important;
             cursor: pointer !important;
           }
@@ -251,29 +294,21 @@ const Event = () => {
             font-size: 1.1rem !important;
           }
           .fc-col-header-cell-cushion {
-            color: #441a05 !important;
+            color: #DB9E30 !important;
             font-weight: 600 !important;
           }
         `}
       </style>
 
-      {/* Header */}
-      {/* <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl w-full max-w-6xl">
-        <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-          <IoAddCircle className="text-4xl text-[#441a05]" />
-          <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">ইসলামিক ইভেন্ট ক্যালেন্ডার</h3>
-        </div>
-      </div> */}
-
       {/* Calendar */}
-      <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl animate-fadeIn shadow-xl w-full">
+      <div className=" border border-white/20 py-8 rounded-2xl animate-fadeIn">
         <div style={styles.calendarContainer}>
           <FullCalendar
             plugins={[dayGridPlugin, interactionPlugin]}
             initialView="dayGridMonth"
             events={calendarEvents}
-            dateClick={handleDateClick}
-            eventClick={handleEventClick}
+            // dateClick={handleDateClick}
+            // eventClick={handleEventClick}
             editable={false}
             locale="bn"
             headerToolbar={{
@@ -296,9 +331,7 @@ const Event = () => {
       {/* Modal for Creating/Editing/Deleting Events */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
-          <div
-            className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"
-          >
+          <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
             <h3 className="text-lg font-semibold text-[#441a05] mb-4">
               {modalAction === "create"
                 ? "নতুন ইভেন্ট তৈরি করুন"
@@ -308,13 +341,17 @@ const Event = () => {
             </h3>
             {modalAction !== "delete" ? (
               <form
-                onSubmit={modalAction === "create" ? handleSubmitEvent : handleUpdate}
+                onSubmit={
+                  modalAction === "create" ? handleSubmitEvent : handleUpdate
+                }
                 className="grid grid-cols-1 gap-6"
               >
                 <input
                   type="text"
                   value={newEvent.title}
-                  onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                  onChange={(e) =>
+                    setNewEvent({ ...newEvent, title: e.target.value })
+                  }
                   className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
                   placeholder="ইভেন্ট শিরোনাম (যেমন, ঈদুল ফিতর)"
                   disabled={isCreating || isUpdating}
@@ -324,7 +361,9 @@ const Event = () => {
                 <input
                   type="datetime-local"
                   value={newEvent.start}
-                  onChange={(e) => setNewEvent({ ...newEvent, start: e.target.value })}
+                  onChange={(e) =>
+                    setNewEvent({ ...newEvent, start: e.target.value })
+                  }
                   className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
                   disabled={isCreating || isUpdating}
                   aria-label="শুরুর সময়"
@@ -333,7 +372,9 @@ const Event = () => {
                 <input
                   type="datetime-local"
                   value={newEvent.end}
-                  onChange={(e) => setNewEvent({ ...newEvent, end: e.target.value })}
+                  onChange={(e) =>
+                    setNewEvent({ ...newEvent, end: e.target.value })
+                  }
                   className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
                   disabled={isCreating || isUpdating}
                   aria-label="শেষের সময়"
@@ -341,7 +382,9 @@ const Event = () => {
                 />
                 <select
                   value={newEvent.academic_year}
-                  onChange={(e) => setNewEvent({ ...newEvent, academic_year: e.target.value })}
+                  onChange={(e) =>
+                    setNewEvent({ ...newEvent, academic_year: e.target.value })
+                  }
                   className="w-full bg-transparent text-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
                   disabled={isCreating || isUpdating}
                   aria-label="একাডেমিক বছর"
@@ -386,15 +429,25 @@ const Event = () => {
                     className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white transition-colors duration-300 btn-glow ${
                       isCreating || isUpdating ? "cursor-not-allowed" : ""
                     }`}
-                    title={modalAction === "create" ? "ইভেন্ট তৈরি করুন" : "ইভেন্ট আপডেট করুন"}
+                    title={
+                      modalAction === "create"
+                        ? "ইভেন্ট তৈরি করুন"
+                        : "ইভেন্ট আপডেট করুন"
+                    }
                   >
                     {isCreating || isUpdating ? (
                       <span className="flex items-center space-x-3">
                         <FaSpinner className="animate-spin text-lg" />
-                        <span>{modalAction === "create" ? "তৈরি করা হচ্ছে..." : "আপডেট করা হচ্ছে..."}</span>
+                        <span>
+                          {modalAction === "create"
+                            ? "তৈরি করা হচ্ছে..."
+                            : "আপডেট করা হচ্ছে..."}
+                        </span>
                       </span>
+                    ) : modalAction === "create" ? (
+                      "তৈরি করুন"
                     ) : (
-                      modalAction === "create" ? "তৈরি করুন" : "আপডেট করুন"
+                      "আপডেট করুন"
                     )}
                   </button>
                 </div>
@@ -431,8 +484,12 @@ const Event = () => {
                 className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
                 style={{ animationDelay: "0.4s" }}
               >
-                ত্রুটি: {(createError || updateError || deleteError).status || "অজানা"} -{" "}
-                {JSON.stringify((createError || updateError || deleteError).data || {})}
+                ত্রুটি:{" "}
+                {(createError || updateError || deleteError).status || "অজানা"}{" "}
+                -{" "}
+                {JSON.stringify(
+                  (createError || updateError || deleteError).data || {}
+                )}
               </div>
             )}
           </div>
@@ -444,32 +501,22 @@ const Event = () => {
 
 const styles = {
   fullPage: {
-
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    padding: "20px",
-    boxSizing: "border-box",
+    // padding: "20px",
+    // boxSizing: "border-box",
     // background: "linear-gradient(135deg, #f0f4f8, #e0e7ff)",
-    fontFamily: "'Noto Serif Bengali', sans-serif",
+    // fontFamily: "'Noto Serif Bengali', sans-serif",
   },
   calendarContainer: {
-    width: "100%",
+    // width: "100%",
     // maxWidth: "1200px",
-    // background: "transparent",
+    background: "white",
     borderRadius: "16px",
     padding: "20px",
     transition: "transform 0.3s ease",
   },
 };
-
-// Add this CSS to your project (e.g., in index.html)
-const customCSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;700&display=swap');
-`;
-
-// Add the custom CSS to your project by including it in a <style> tag
-// For example, in your index.html:
-// <style>{customCSS}</style>
 
 export default Event;
