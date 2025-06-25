@@ -7,13 +7,151 @@ import { useCreateBehaviorReportApiMutation, useGetBehaviorReportApiQuery, useUp
 import { FaSpinner, FaCheck, FaTimes } from 'react-icons/fa';
 import { IoAddCircle } from 'react-icons/io5';
 import toast from 'react-hot-toast';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable'; 
+import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
 
-// Base64 ফন্ট ডেটা ইম্পোর্ট করুন
-// যেহেতু fonts.js এবং AddBehaviorMarks.jsx একই ফোল্ডারে আছে, পাথটি './fonts' হবে।
-import { NotoSansBengaliBase64 } from './font'; 
+// Register Noto Sans Bengali font (local path)
+Font.register({
+  family: 'NotoSansBengali',
+  src: '/fonts/NotoSansBengali-Regular.ttf', // Ensure this file exists in public/fonts
+});
 
+// PDF styles
+const styles = StyleSheet.create({
+  page: {
+    padding: 30,
+    fontFamily: 'NotoSansBengali',
+    fontSize: 10,
+    color: '#333',
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  schoolName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#441a05',
+  },
+  headerText: {
+    fontSize: 10,
+    marginTop: 4,
+  },
+  title: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginTop: 10,
+    color: '#441a05',
+  },
+  metaContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  metaText: {
+    fontSize: 9,
+  },
+  divider: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#441a05',
+    marginVertical: 10,
+  },
+  table: {
+    display: 'table',
+    width: 'auto',
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderColor: '#441a05',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#441a05',
+  },
+  tableHeader: {
+    backgroundColor: '#441a05',
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 10,
+    padding: 5,
+    textAlign: 'center',
+  },
+  tableCell: {
+    padding: 5,
+    fontSize: 9,
+    borderRightWidth: 1,
+    borderRightColor: '#441a05',
+    flex: 1,
+    textAlign: 'left',
+  },
+  tableCellCenter: {
+    textAlign: 'center',
+  },
+  tableCellComment: {
+    flex: 2,
+  },
+  tableRowAlternate: {
+    backgroundColor: '#f5f5f5',
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 30,
+    right: 30,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    fontSize: 8,
+    color: '#666',
+  },
+});
+
+// PDF Document Component
+const PDFDocument = ({ selectedClass, examName, currentDate, behaviorTypes, filteredStudents, existingMarks, totalMarks }) => (
+  <Document>
+    <Page size="A4" style={styles.page}>
+      <View style={styles.header}>
+        <Text style={styles.schoolName}>আদর্শ বিদ্যালয়</Text>
+        <Text style={styles.headerText}>ঢাকা, বাংলাদেশ</Text>
+        <Text style={styles.title}>আচরণ প্রতিবেদন</Text>
+        <View style={styles.metaContainer}>
+          <View>
+            <Text style={styles.metaText}>শ্রেণি: {selectedClass}</Text>
+            <Text style={styles.metaText}>পরীক্ষা: {examName}</Text>
+          </View>
+          <Text style={styles.metaText}>তারিখ: {currentDate}</Text>
+        </View>
+        <View style={styles.divider} />
+      </View>
+      <View style={styles.table}>
+        <View style={styles.tableRow}>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>ছাত্রের নাম</Text>
+          <Text style={[styles.tableHeader, { flex: 0.5 }]}>রোল নম্বর</Text>
+          {behaviorTypes?.map((bt) => (
+            <Text key={bt.id} style={[styles.tableHeader, { flex: 0.5 }]}>{`${bt?.name} (${bt?.obtain_mark})`}</Text>
+          ))}
+          <Text style={[styles.tableHeader, { flex: 0.5 }]}>মোট মার্কস</Text>
+          <Text style={[styles.tableHeader, { flex: 2 }]}>মন্তব্য</Text>
+        </View>
+        {filteredStudents.map((student, index) => (
+          <View key={student.id} style={[styles.tableRow, index % 2 === 1 && styles.tableRowAlternate]}>
+            <Text style={[styles.tableCell, { flex: 1 }]}>{student.name || 'N/A'}</Text>
+            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 0.5 }]}>{student.roll_no || 'N/A'}</Text>
+            {behaviorTypes?.map((bt) => (
+              <Text key={bt.id} style={[styles.tableCell, styles.tableCellCenter, { flex: 0.5 }]}>
+                {existingMarks[student?.id]?.marks[bt.id]?.marks?.toString() || '0'}
+              </Text>
+            ))}
+            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 0.5 }]}>{totalMarks[student?.id]?.toString() || '0'}</Text>
+            <Text style={[styles.tableCell, styles.tableCellComment, { flex: 2 }]}>{existingMarks[student?.id]?.comment || ''}</Text>
+          </View>
+        ))}
+      </View>
+      <View style={styles.footer} fixed>
+        <Text>প্রতিবেদনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে।</Text>
+        <Text render={({ pageNumber, totalPages }) => `পৃষ্ঠা ${pageNumber} এর ${totalPages}`} />
+      </View>
+    </Page>
+  </Document>
+);
 
 const AddBehaviorMarks = () => {
   const [selectedClass, setSelectedClass] = useState('');
@@ -47,6 +185,7 @@ const AddBehaviorMarks = () => {
     { exam_name_id: selectedExam, class_name: selectedClass },
     { skip: !selectedClass || !selectedExam }
   );
+  console.log('behaviorReportData', behaviorReportData);
   const behaviorReports = behaviorReportData?.data || [];
 
   // Mutations for creating and updating behavior reports
@@ -203,73 +342,71 @@ const AddBehaviorMarks = () => {
 
     const inputKey = behaviorTypeId ? `${studentId}-${behaviorTypeId}` : `${studentId}-comment`;
     const studentMarks = marksInput[studentId] || {};
-    const behaviorMarkData = behaviorTypeId ? studentMarks[behaviorTypeId] : null;
-
-    // Validate mark if provided
-    if (behaviorTypeId && (!behaviorMarkData || behaviorMarkData.marks === '')) {
-      return;
-    }
-
-    const mark = behaviorTypeId ? Number(behaviorMarkData.marks) : null;
-    const behavior = behaviorTypeId ? behaviorTypes.find((b) => b.id === parseInt(behaviorTypeId)) : null;
-
-    if (behaviorTypeId && !behavior) {
-      toast.error('আচরণের ধরন পাওয়া যায়নি।');
-      return;
-    }
-
-    if (behaviorTypeId && mark > behavior.obtain_mark) {
-      toast.error(`${behavior.name} এর মার্কস ${behavior.obtain_mark} এর বেশি হতে পারে না।`);
-      return;
-    }
-    if (behaviorTypeId && mark < 0) {
-      toast.error(`${behavior.name} এর মার্কস নেগেটিভ হতে পারে না।`);
-      return;
-    }
 
     setSavingStatus((prev) => ({ ...prev, [inputKey]: 'saving' }));
 
     try {
       const existingStudentData = existingMarks[studentId];
-      const behaviorMarks = behaviorTypes.map((bt) => {
-        const existingMark = existingStudentData?.marks[bt.id];
-        const isCurrentBehavior = bt.id === parseInt(behaviorTypeId);
-        const inputMark = isCurrentBehavior ? mark : studentMarks[bt.id]?.marks;
-        return {
-          student_id: parseInt(studentId),
-          behavior_type: parseInt(bt.id),
-          mark: inputMark !== null && inputMark !== undefined && isFinite(Number(inputMark)) ? Number(inputMark) : (existingMark?.marks || 0),
-        };
-      });
 
-      const currentComment = studentMarks.comment !== undefined ? studentMarks.comment : existingStudentData?.comment || '';
-
-      const payload = {
-        exam_name_id: parseInt(selectedExam),
-        student_id: parseInt(studentId),
-        behavior_marks: behaviorMarks,
-        comment: currentComment,
-      };
-
-      console.log('Saving payload:', JSON.stringify(payload, null, 2));
-
-      let response;
-      if (existingStudentData && existingStudentData.reportId) {
-        response = await updateBehaviorReport({
-          id: existingStudentData.reportId,
-          ...payload,
-        }).unwrap();
-        console.log('Update response:', response);
-        toast.success(behaviorTypeId ? 'মার্কস আপডেট হয়েছে!' : 'মন্তব্য আপডেট হয়েছে!');
-      } else {
-        response = await createBehaviorReport(payload).unwrap();
-        console.log('Create response:', response);
-        toast.success(behaviorTypeId ? 'মার্কস সংরক্ষিত হয়েছে!' : 'মন্তব্য সংরক্ষিত হয়েছে!');
-      }
-
-      await refetch();
-
+      // Handle mark saving
       if (behaviorTypeId) {
+        const behaviorMarkData = studentMarks[behaviorTypeId];
+        if (!behaviorMarkData || behaviorMarkData.marks === '') {
+          setSavingStatus((prev) => ({ ...prev, [inputKey]: null }));
+          return;
+        }
+
+        const mark = Number(behaviorMarkData.marks);
+        const behavior = behaviorTypes.find((b) => b.id === parseInt(behaviorTypeId));
+
+        if (!behavior) {
+          toast.error('আচরণের ধরন পাওয়া যায়নি।');
+          setSavingStatus((prev) => ({ ...prev, [inputKey]: 'error' }));
+          return;
+        }
+
+        if (mark > behavior.obtain_mark) {
+          toast.error(`${behavior.name} এর মার্কস ${behavior.obtain_mark} এর বেশি হতে পারে না।`);
+          setSavingStatus((prev) => ({ ...prev, [inputKey]: 'error' }));
+          return;
+        }
+        if (mark < 0) {
+          toast.error(`${behavior.name} এর মার্কস নেগেটিভ হতে পারে না।`);
+          setSavingStatus((prev) => ({ ...prev, [inputKey]: 'error' }));
+          return;
+        }
+
+        const payload = {
+          exam_name_id: parseInt(selectedExam),
+          student_id: parseInt(studentId),
+          behavior_marks: [
+            {
+              student_id: parseInt(studentId),
+              behavior_type: parseInt(behaviorTypeId),
+              mark: mark,
+            },
+          ],
+          comment: existingStudentData?.comment || '',
+        };
+
+        let response;
+        if (existingStudentData && existingStudentData.reportId) {
+          // Update only the specific mark
+          response = await updateBehaviorReport({
+            id: existingStudentData.reportId,
+            ...payload,
+          }).unwrap();
+          console.log('Update response:', response);
+          toast.success('মার্কস আপডেট হয়েছে!');
+        } else {
+          // Create new report with only the specific mark
+          response = await createBehaviorReport(payload).unwrap();
+          console.log('Create response:', response);
+          toast.success('মার্কস সংরক্ষিত হয়েছে!');
+        }
+
+        await refetch();
+
         setMarksInput((prev) => ({
           ...prev,
           [studentId]: {
@@ -277,6 +414,51 @@ const AddBehaviorMarks = () => {
             [behaviorTypeId]: { marks: '', isEditing: false },
           },
         }));
+      } else {
+        // Handle comment saving
+        const currentComment = studentMarks.comment !== undefined ? studentMarks.comment : existingStudentData?.comment || '';
+
+        if (!existingStudentData && !currentComment) {
+          toast.error('মন্তব্য সংরক্ষণের জন্য অন্তত একটি মার্কস থাকতে হবে।');
+          setSavingStatus((prev) => ({ ...prev, [inputKey]: 'error' }));
+          return;
+        }
+
+        const payload = {
+          exam_name_id: parseInt(selectedExam),
+          student_id: parseInt(studentId),
+          behavior_marks: existingStudentData?.marks
+            ? Object.values(existingStudentData.marks).map((mark) => ({
+                student_id: parseInt(studentId),
+                behavior_type: parseInt(mark.behaviorTypeId),
+                mark: Number(mark.marks),
+              }))
+            : [],
+          comment: currentComment,
+        };
+
+        let response;
+        if (existingStudentData && existingStudentData.reportId) {
+          // Update only the comment
+          response = await updateBehaviorReport({
+            id: existingStudentData.reportId,
+            ...payload,
+          }).unwrap();
+          console.log('Update response:', response);
+          toast.success('মন্তব্য আপডেট হয়েছে!');
+        } else {
+          if (payload.behavior_marks.length === 0) {
+            toast.error('মন্তব্য সংরক্ষণের জন্য অন্তত একটি মার্কস থাকতে হবে।');
+            setSavingStatus((prev) => ({ ...prev, [inputKey]: 'error' }));
+            return;
+          }
+          // Create new report with only the comment
+          response = await createBehaviorReport(payload).unwrap();
+          console.log('Create response:', response);
+          toast.success('মন্তব্য সংরক্ষিত হয়েছে!');
+        }
+
+        await refetch();
       }
 
       setSavingStatus((prev) => ({ ...prev, [inputKey]: 'success' }));
@@ -351,80 +533,42 @@ const AddBehaviorMarks = () => {
   // Generate and download PDF report
   const generatePDFReport = async () => {
     if (!selectedClass || !selectedExam || filteredStudents.length === 0 || behaviorTypes.length === 0) {
-      toast.error('শ্রেণি, পরীক্ষা, ছাত্র, এবং আচরণের ধরন নির্বাচন করুন।');
+      toast.error('শ্রেণি, পরীক্ষা, ছাত্র এবং আচরণের ধরন নির্বাচন করুন।');
       return;
     }
 
     try {
-      const doc = new jsPDF();
-
-      // Step 1: Add the Base64 font to jsPDF's VFS (Virtual File System)
-      doc.addFileToVFS('NotoSansBengali-Regular.ttf', NotoSansBengaliBase64);
-
-      // Step 2: Add the font to jsPDF's font list
-      doc.addFont('NotoSansBengali-Regular.ttf', 'NotoSansBengali', 'normal');
-
-      // Step 3: Set the font for the document
-      doc.setFont('NotoSansBengali'); 
-      doc.setFontSize(16);
-
-      // Add title
-      doc.text(`আচরণের রিপোর্ট - শ্রেণি: ${selectedClass} (পরীক্ষা: ${exams.find(e => e.id == selectedExam)?.name})`, 10, 20);
-
-      // Table headers and data
-      const headers = [['ছাত্রের নাম', 'রোল নম্বর', ...behaviorTypes.map((bt) => `${bt.name} (${bt.obtain_mark})`), 'মোট মার্কস', 'মন্তব্য']];
-      
-      const body = filteredStudents.map((student) => [
-        student.name || 'N/A',
-        student.roll_no || 'N/A',
-        ...behaviorTypes.map((bt) => {
-          const mark = existingMarks[student.id]?.marks[bt.id]?.marks || 0;
-          return mark.toString();
-        }),
-        totalMarks[student.id]?.toString() || '0',
-        existingMarks[student.id]?.comment || '',
-      ]);
-
-      // Log data for debugging
-      console.log('PDF Data:', { headers, body });
-
-      // Generate table using jspdf-autotable
-      doc.autoTable({
-        startY: 30,
-        head: headers,
-        body: body,
-        theme: 'grid',
-        styles: {
-          font: 'NotoSansBengali', // Use the Bengali font for table content
-          fontSize: 10,
-          cellPadding: 3,
-          overflow: 'linebreak',
-          textColor: [0, 0, 0],
-        },
-        headStyles: {
-          fillColor: [68, 26, 5],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-        },
-        bodyStyles: {
-          textColor: [0, 0, 0],
-        },
-        columnStyles: {
-          0: { cellWidth: 40 }, // Student Name
-          1: { cellWidth: 20 }, // Roll No
-          ...behaviorTypes.reduce((acc, _, index) => ({ ...acc, [index + 2]: { cellWidth: 20, overflow: 'linebreak' } }), {}), // Behavior Marks
-          [behaviorTypes.length + 2]: { cellWidth: 20 }, // Total Marks
-          [behaviorTypes.length + 3]: { cellWidth: 60, overflow: 'linebreak' }, // Comment
-        },
-        margin: { top: 30, left: 10, right: 10 },
+      const examName = exams.find((e) => e.id == selectedExam)?.name || 'N/A';
+      const currentDate = new Date().toLocaleDateString('bn-BD', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
       });
 
-      // Save the PDF
-      doc.save(`Behavior_Report_${selectedClass}_Exam_${selectedExam}.pdf`);
-      toast.success('রিপোর্ট সফলভাবে ডাউনলোড হয়েছে!');
+      const doc = (
+        <PDFDocument
+          selectedClass={selectedClass}
+          examName={examName}
+          currentDate={currentDate}
+          behaviorTypes={behaviorTypes}
+          filteredStudents={filteredStudents}
+          existingMarks={existingMarks}
+          totalMarks={totalMarks}
+        />
+      );
+
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `আচরণ_প্রতিবেদন_${selectedClass}_পরীক্ষা_${examName}_${currentDate}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      toast.success('প্রতিবেদন সফলভাবে ডাউনলোড হয়েছে!');
     } catch (error) {
       console.error('PDF generation error:', error);
-      toast.error(`রিপোর্ট তৈরি করতে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
+      toast.error(`প্রতিবেদন তৈরিতে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
     }
   };
 
