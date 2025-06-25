@@ -56,6 +56,7 @@ import { classPeriodsApi } from './features/api/periods/classPeriodsApi';
 import { instituteLatestApi } from './features/api/institute/instituteLatestApi';
 import { classExamStudentApi } from './features/api/class-exam-students/classExamStudentApi ';
 import { teacherSubjectAssignsApi } from './features/api/teacherSubjectAssigns/teacherSubjectAssignsApi';
+import { eventApi } from './features/api/event/eventApi';
 
 
 
@@ -121,6 +122,7 @@ export const store = configureStore({
     [instituteLatestApi.reducerPath]: instituteLatestApi.reducer,
     [classExamStudentApi.reducerPath]: classExamStudentApi.reducer,
     [teacherSubjectAssignsApi.reducerPath]: teacherSubjectAssignsApi.reducer,
+    [eventApi.reducerPath]: eventApi.reducer,
   
 
   },
@@ -179,10 +181,10 @@ export const store = configureStore({
     .concat(gmarkTypeApi.middleware)
     .concat(subjectMarksApi.middleware)
     .concat(classPeriodsApi.middleware)
- 
     .concat(instituteLatestApi.middleware)
     .concat(classExamStudentApi.middleware)
     .concat(teacherSubjectAssignsApi.middleware)
+    .concat(eventApi.middleware)
   
 });
 

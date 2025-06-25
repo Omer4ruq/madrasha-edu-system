@@ -57,6 +57,7 @@ import AdmitCard from "./components/admit-card/AdmitCard";
 import SeatPlan from "./components/seat-plan/SeatPlan";
 import TeacherSubjectAssign from "./components/teachers/TeacherSubjectAssign";
 import SignatureSheet from "./components/signature-sheet/SignatureSheet";
+import Event from "./components/event/Event";
 
 function Root() {
   const router = createBrowserRouter([
@@ -217,6 +218,10 @@ function Root() {
              {
               path: "signature-sheet",
               element: <SignatureSheet></SignatureSheet>,
+            },
+             {
+              path: "event",
+              element: <Event></Event>,
             },
           ],
         },

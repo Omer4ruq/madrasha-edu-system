@@ -185,6 +185,11 @@ const mainMenu = [
         title: "স্বাক্ষর পত্র",
         link: "/talimat/signature-sheet",
       },
+      {
+        id: "05/10",
+        title: "ইভেন্ট",
+        link: "/talimat/event",
+      },
     ],
   },
   {
