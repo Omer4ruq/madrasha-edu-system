@@ -108,6 +108,11 @@ const mainMenu = [
             title: "পরীক্ষার ধরন",
             link: "/talimat/settings/exam-type",
           },
+          {
+            id: "05/01/06",
+            title: "ইভেন্ট তৈরি",
+            link: "/talimat/settings/event-type",
+          },
         ],
       },
       {
@@ -124,7 +129,7 @@ const mainMenu = [
       },
       {
         id: "05/03",
-        title: "মার্ক্স Cofig",
+        title: "মার্কস কনফিগার",
         link: "/talimat/marks-config",
         children: [
           {
@@ -146,7 +151,7 @@ const mainMenu = [
       },
       {
         id: "05/06",
-        title: "মার্ক্স প্রদান",
+        title: "নম্বরপ্রাপ্ত",
         link: "/talimat/marks-given",
         children: [
           {
@@ -158,12 +163,12 @@ const mainMenu = [
       },
       {
         id: "05/07",
-        title: "পিরিয়ডস",
+        title: "পিরিয়ড",
         link: "/talimat/periods",
         children: [
           {
             id: "05/07/01",
-            title: "পিরিয়ডস",
+            title: "পিরিয়ড",
             link: "/talimat/periods",
           },
         ],
@@ -175,7 +180,7 @@ const mainMenu = [
         children: [
           {
             id: "05/08/01",
-            title: "শিক্ষক",
+            title: "বিষয় অ্যাসাইনমেন্ট",
             link: "/talimat/teacher-subject-assign",
           },
         ],
@@ -184,6 +189,11 @@ const mainMenu = [
         id: "05/09",
         title: "স্বাক্ষর পত্র",
         link: "/talimat/signature-sheet",
+      },
+      {
+        id: "05/10",
+        title: "ইভেন্ট ক্যালেন্ডার",
+        link: "/talimat/event",
       },
     ],
   },

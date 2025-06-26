@@ -261,31 +261,31 @@ const SignatureSheet = () => {
             স্বাক্ষর শীট {selectedClassId && selectedExamId && `- ক্লাস: ${activeClasses.find(cls => cls.id === parseInt(selectedClassId))?.class_name} ${activeClasses.find(cls => cls.id === parseInt(selectedClassId))?.section_name}, পরীক্ষা: ${exams.find(exam => exam.id === parseInt(selectedExamId))?.name}`}
           </h3>
           {(isClassesLoading || isExamsLoading || isStudentsLoading || isSubjectsLoading) && (
-            <p className="p-4 text-[#441a05]/70 flex items-center">
+            <p className="p-4 text-black flex items-center">
               <FaSpinner className="animate-spin mr-2" /> ডেটা লোড হচ্ছে...
             </p>
           )}
           {!selectedClassId || !selectedExamId ? (
-            <p className="p-4 text-[#441a05]/70">অনুগ্রহ করে ক্লাস এবং পরীক্ষা নির্বাচন করুন।</p>
+            <p className="p-4 text-black">অনুগ্রহ করে ক্লাস এবং পরীক্ষা নির্বাচন করুন।</p>
           ) : students.length === 0 ? (
-            <p className="p-4 text-[#441a05]/70">এই ক্লাসে কোনো সক্রিয় ছাত্র নেই।</p>
+            <p className="p-4 text-black">এই ক্লাসে কোনো সক্রিয় ছাত্র নেই।</p>
           ) : activeSubjects.length === 0 ? (
-            <p className="p-4 text-[#441a05]/70">এই ক্লাসে কোনো সক্রিয় বিষয় নেই।</p>
+            <p className="p-4 text-black">এই ক্লাসে কোনো সক্রিয় বিষয় নেই।</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-white/20 print-table">
                 <thead className="bg-white/5">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider border">
                       শিক্ষার্থীর নাম
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider border">
                       রোল
                     </th>
                     {activeSubjects.map((subject) => (
                       <th
                         key={subject.id}
-                        className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider no-print"
+                        className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider no-print border"
                       >
                         {subject.name}
                       </th>
@@ -293,7 +293,7 @@ const SignatureSheet = () => {
                     {activeSubjects.map((subject) => (
                       <th
                         key={subject.id}
-                        className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider print-only"
+                        className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider print-only"
                       >
                         {/* Empty header for print/PDF */}
                       </th>
@@ -304,19 +304,19 @@ const SignatureSheet = () => {
                   {students.map((student, index) => (
                     <tr
                       key={student.id}
-                      className="bg-white/5 animate-fadeIn"
+                      className="bg-white/5 animate-fadeIn border"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05] border">
                         {student.name}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                        {student.roll_no || '-'}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05] border">
+                        {student.roll_no || ''}
                       </td>
                       {activeSubjects.map((subject) => (
                         <td
                           key={subject.id}
-                          className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]"
+                          className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05] border"
                         >
                           {/* Placeholder for signature or mark */}
                         </td>

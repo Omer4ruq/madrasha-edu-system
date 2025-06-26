@@ -57,6 +57,9 @@ import AdmitCard from "./components/admit-card/AdmitCard";
 import SeatPlan from "./components/seat-plan/SeatPlan";
 import TeacherSubjectAssign from "./components/teachers/TeacherSubjectAssign";
 import SignatureSheet from "./components/signature-sheet/SignatureSheet";
+import Event from "./components/event/Event";
+import AddEvent from "./components/event/AddEvent";
+
 
 function Root() {
   const router = createBrowserRouter([
@@ -159,6 +162,10 @@ function Root() {
                   path: "exam-type",
                   element: <AddExamTypes />,
                 },
+                {
+                  path: "event-type",
+                  element: <AddEvent />,
+                },
               ],
             },
             {
@@ -217,6 +224,10 @@ function Root() {
              {
               path: "signature-sheet",
               element: <SignatureSheet></SignatureSheet>,
+            },
+             {
+              path: "event",
+              element: <Event></Event>,
             },
           ],
         },
