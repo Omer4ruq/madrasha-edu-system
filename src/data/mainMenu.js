@@ -124,7 +124,7 @@ const mainMenu = [
       },
       {
         id: "05/03",
-        title: "Marks Cofig",
+        title: "মার্ক্স Cofig",
         link: "/talimat/marks-config",
         children: [
           {
@@ -146,36 +146,36 @@ const mainMenu = [
       },
       {
         id: "05/06",
-        title: "Marks Given",
+        title: "মার্ক্স প্রদান",
         link: "/talimat/marks-given",
         children: [
           {
             id: "05/06/01",
-            title: "marks-given",
+            title: "মার্ক্স প্রদান",
             link: "/talimat/marks-given",
           },
         ],
       },
       {
         id: "05/07",
-        title: "Periods",
+        title: "পিরিয়ডস",
         link: "/talimat/periods",
         children: [
           {
             id: "05/07/01",
-            title: "periods",
+            title: "পিরিয়ডস",
             link: "/talimat/periods",
           },
         ],
       },
       {
         id: "05/08",
-        title: "teacher",
+        title: "শিক্ষক",
         link: "/talimat/teacher-subject-assign",
         children: [
           {
             id: "05/08/01",
-            title: "periods",
+            title: "শিক্ষক",
             link: "/talimat/teacher-subject-assign",
           },
         ],
@@ -257,7 +257,7 @@ const mainMenu = [
       },
       {
         id: "07/08",
-        title: "previous- ফি",
+        title: "পূর্বের - ফি",
         link: "/accounts/previous-fee",
       },
       {

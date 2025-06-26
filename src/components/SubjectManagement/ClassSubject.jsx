@@ -19,7 +19,8 @@ const ClassSubject = () => {
     selectedClassId,
     { skip: !selectedClassId }
   );
-
+console.log(classSubjects)
+console.log("classes", classes)
   // Mutations
   const [createClassSubject] = useCreateClassSubjectMutation();
   const [updateClassSubject] = useUpdateClassSubjectMutation();
@@ -166,7 +167,7 @@ const ClassSubject = () => {
       )}
 
       {/* Display Class Subjects */}
-      {subjectsLoading || classesLoading ? (
+      {/* {subjectsLoading || classesLoading ? (
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
           <p className="mt-2 text-gray-600">Loading...</p>
@@ -195,7 +196,8 @@ const ClassSubject = () => {
                 {classSubjects?.map((subject) => {
                   const gSubject = gSubjects.find((gSub) => gSub.id === subject.class_subject) || {};
                   const className = gSubject.class_id
-                    ? classes.find((cls) => cls.id === gSubject.class_id)?.name || 'Unknown'
+                    ? classes.find((cls) => cls.id === gSubject.class_id)?.student_class
+?.name || 'Unknown'
                     : 'Unknown';
                   return (
                     <tr key={subject.id} className="hover:bg-gray-50 transition duration-150 ease-in-out">
@@ -233,7 +235,7 @@ const ClassSubject = () => {
             </table>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

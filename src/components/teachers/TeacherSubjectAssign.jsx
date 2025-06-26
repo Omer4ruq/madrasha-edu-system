@@ -1,720 +1,224 @@
-// import React, { useState, useEffect } from 'react';
-// import { useGetTeacherStaffProfilesQuery } from '../../redux/features/api/roleStaffProfile/roleStaffProfileApi';
-// import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
-// import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
-// import { useGetGSubjectsByClassQuery } from '../../redux/features/api/class-subjects/gsubjectApi';
-// import { useCreateTeacherSubjectAssignMutation, useGetTeacherSubjectAssignsByClassAndSubjectQuery, useGetTeacherSubjectAssignsQuery, useUpdateTeacherSubjectAssignMutation } from '../../redux/features/api/teacherSubjectAssigns/teacherSubjectAssignsApi';
-
-
-// const TeacherSubjectAssign = () => {
-//   const [selectedTeacher, setSelectedTeacher] = useState('');
-//   const [selectedClass, setSelectedClass] = useState('');
-//   const [selectedSubject, setSelectedSubject] = useState('');
-//   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
-//   const [viewClass, setViewClass] = useState('');
-//   const [viewSubject, setViewSubject] = useState('');
-
-//   // Fetch data from APIs
-//   const { data: teachers, isLoading: teachersLoading } = useGetTeacherStaffProfilesQuery();
-//   const { data: classes, isLoading: classesLoading } = useGetclassConfigApiQuery();
-//   const { data: academicYears, isLoading: yearsLoading } = useGetAcademicYearApiQuery();
-//   const { data: subjects, isLoading: subjectsLoading } = useGetGSubjectsByClassQuery(selectedClass, {
-//     skip: !selectedClass,
-//   });
-//   const { data: assignmentsByClassSubject, isLoading: assignmentsLoading } =
-//     useGetTeacherSubjectAssignsByClassAndSubjectQuery(
-//       { classId: viewClass, subjectId: viewSubject },
-//       { skip: !viewClass || !viewSubject }
-//     );
-//   const { data: teacherAssignments, isLoading: teacherAssignmentsLoading } =
-//     useGetTeacherSubjectAssignsQuery(undefined, { skip: !selectedTeacher });
-
-//   const [createAssignment, { isLoading: createLoading }] = useCreateTeacherSubjectAssignMutation();
-//   const [updateAssignment, { isLoading: updateLoading }] = useUpdateTeacherSubjectAssignMutation();
-
-//   // Handle form submission
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     if (!selectedTeacher || !selectedClass || !selectedSubject || !selectedAcademicYear) {
-//       alert('Please fill all fields');
-//       return;
-//     }
-
-//     const assignmentData = {
-//       subject_assigns: [parseInt(selectedSubject)],
-//       class_assigns: [parseInt(selectedClass)],
-//       teacher_id: parseInt(selectedTeacher),
-//       academic_year: parseInt(selectedAcademicYear),
-//     };
-
-//     try {
-//       await createAssignment(assignmentData).unwrap();
-//       alert('Assignment created successfully');
-//       setSelectedSubject('');
-//     } catch (error) {
-//       alert('Failed to create assignment');
-//     }
-//   };
-
-//   // Handle update assignment
-//   const handleUpdate = async (assignmentId) => {
-//     if (!selectedTeacher || !selectedClass || !selectedSubject || !selectedAcademicYear) {
-//       alert('Please fill all fields');
-//       return;
-//     }
-
-//     const assignmentData = {
-//       id: assignmentId,
-//       subject_assigns: [parseInt(selectedSubject)],
-//       class_assigns: [parseInt(selectedClass)],
-//       teacher_id: parseInt(selectedTeacher),
-//       academic_year: parseInt(selectedAcademicYear),
-//     };
-
-//     try {
-//       await updateAssignment(assignmentData).unwrap();
-//       alert('Assignment updated successfully');
-//     } catch (error) {
-//       alert('Failed to update assignment');
-//     }
-//   };
-
-//   return (
-//     <div className="p-6 max-w-6xl mx-auto">
-//       <h1 className="text-2xl font-bold mb-6">Teacher Subject Assignment</h1>
-
-//       {/* Teacher Selection */}
-//       <div className="mb-6">
-//         <label className="block text-sm font-medium mb-2">Select Teacher</label>
-//         <select
-//           value={selectedTeacher}
-//           onChange={(e) => setSelectedTeacher(e.target.value)}
-//           className="w-full p-2 border rounded"
-//           disabled={teachersLoading}
-//         >
-//           <option value="">Select a teacher</option>
-//           {teachers?.map((teacher) => (
-//             <option key={teacher.id} value={teacher.id}>
-//               {teacher.name}
-//             </option>
-//           ))}
-//         </select>
-//       </div>
-
-//       {/* Assignment Form */}
-//       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-//         <div>
-//           <label className="block text-sm font-medium mb-2">Select Class</label>
-//           <select
-//             value={selectedClass}
-//             onChange={(e) => setSelectedClass(e.target.value)}
-//             className="w-full p-2 border rounded"
-//             disabled={classesLoading}
-//           >
-//             <option value="">Select a class</option>
-//             {classes?.map((cls) => (
-//               <option key={cls.id} value={cls.id}>
-//                 {cls.name}
-//               </option>
-//             ))}
-//           </select>
-//         </div>
-
-//         <div>
-//           <label className="block text-sm font-medium mb-2">Select Subject</label>
-//           <select
-//             value={selectedSubject}
-//             onChange={(e) => setSelectedSubject(e.target.value)}
-//             className="w-full p-2 border rounded"
-//             disabled={subjectsLoading || !selectedClass}
-//           >
-//             <option value="">Select a subject</option>
-//             {subjects?.map((subject) => (
-//               <option key={subject.id} value={subject.id}>
-//                 {subject.name}
-//               </option>
-//             ))}
-//           </select>
-//         </div>
-
-//         <div>
-//           <label className="block text-sm font-medium mb-2">Select Academic Year</label>
-//           <select
-//             value={selectedAcademicYear}
-//             onChange={(e) => setSelectedAcademicYear(e.target.value)}
-//             className="w-full p-2 border rounded"
-//             disabled={yearsLoading}
-//           >
-//             <option value="">Select an academic year</option>
-//             {academicYears?.map((year) => (
-//               <option key={year.id} value={year.id}>
-//                 {year.name}
-//               </option>
-//             ))}
-//           </select>
-//         </div>
-
-//         <div className="flex items-end">
-//           <button
-//             type="submit"
-//             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-//             disabled={createLoading}
-//           >
-//             {createLoading ? 'Assigning...' : 'Assign'}
-//           </button>
-//         </div>
-//       </form>
-
-//       {/* View Assignments by Class and Subject */}
-//       <div className="mb-8">
-//         <h2 className="text-xl font-semibold mb-4">View Assignments</h2>
-//         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//           <div>
-//             <label className="block text-sm font-medium mb-2">Select Class</label>
-//             <select
-//               value={viewClass}
-//               onChange={(e) => setViewClass(e.target.value)}
-//               className="w-full p-2 border rounded"
-//               disabled={classesLoading}
-//             >
-//               <option value="">Select a class</option>
-//               {classes?.map((cls) => (
-//                 <option key={cls.id} value={cls.id}>
-//                   {cls.name}
-//                 </option>
-//               ))}
-//             </select>
-//           </div>
-
-//           <div>
-//             <label className="block text-sm font-medium mb-2">Select Subject</label>
-//             <select
-//               value={viewSubject}
-//               onChange={(e) => setViewSubject(e.target.value)}
-//               className="w-full p-2 border rounded"
-//               disabled={subjectsLoading || !viewClass}
-//             >
-//               <option value="">Select a subject</option>
-//               {subjects?.map((subject) => (
-//                 <option key={subject.id} value={subject.id}>
-//                   {subject.name}
-//                 </option>
-//               ))}
-//             </select>
-//           </div>
-//         </div>
-
-//         {assignmentsByClassSubject?.length > 0 && (
-//           <div className="mt-4">
-//             <h3 className="text-lg font-medium mb-2">Assignments</h3>
-//             <table className="w-full border">
-//               <thead>
-//                 <tr className="bg-gray-100">
-//                   <th className="p-2 border">Teacher</th>
-//                   <th className="p-2 border">Class</th>
-//                   <th className="p-2 border">Subject</th>
-//                   <th className="p-2 border">Academic Year</th>
-//                 </tr>
-//               </thead>
-//               <tbody>
-//                 {assignmentsByClassSubject.map((assignment) => (
-//                   <tr key={assignment.id}>
-//                     <td className="p-2 border">
-//                       {teachers?.find((t) => t.id === assignment.teacher_id)?.name}
-//                     </td>
-//                     <td className="p-2 border">
-//                       {classes?.find((c) => c.id === assignment.class_assigns[0])?.name}
-//                     </td>
-//                     <td className="p-2 border">
-//                       {subjects?.find((s) => s.id === assignment.subject_assigns[0])?.name}
-//                     </td>
-//                     <td className="p-2 border">
-//                       {academicYears?.find((y) => y.id === assignment.academic_year)?.name}
-//                     </td>
-//                   </tr>
-//                 ))}
-//               </tbody>
-//             </table>
-//           </div>
-//         )}
-//       </div>
-
-//       {/* Teacher's Assigned Subjects */}
-//       {selectedTeacher && teacherAssignments?.length > 0 && (
-//         <div>
-//           <h2 className="text-xl font-semibold mb-4">Teacher's Assigned Subjects</h2>
-//           <table className="w-full border">
-//             <thead>
-//               <tr className="bg-gray-100">
-//                 <th className="p-2 border">Class</th>
-//                 <th className="p-2 border">Subject</th>
-//                 <th className="p-2 border">Academic Year</th>
-//                 <th className="p-2 border">Actions</th>
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {teacherAssignments.map((assignment) => (
-//                 <tr key={assignment.id}>
-//                   <td className="p-2 border">
-//                     {classes?.find((c) => c.id === assignment.class_assigns[0])?.name}
-//                   </td>
-//                   <td className="p-2 border">
-//                     {subjects?.find((s) => s.id === assignment.subject_assigns[0])?.name}
-//                   </td>
-//                   <td className="p-2 border">
-//                     {academicYears?.find((y) => y.id === assignment.academic_year)?.name}
-//                   </td>
-//                   <td className="p-2 border">
-//                     <button
-//                       onClick={() => handleUpdate(assignment.id)}
-//                       className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600"
-//                       disabled={updateLoading}
-//                     >
-//                       {updateLoading ? 'Updating...' : 'Update'}
-//                     </button>
-//                   </td>
-//                 </tr>
-//               ))}
-//             </tbody>
-//           </table>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default TeacherSubjectAssign;
-
 import React, { useState, useEffect } from 'react';
 import { useGetTeacherStaffProfilesQuery } from '../../redux/features/api/roleStaffProfile/roleStaffProfileApi';
 import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
+import { useGetClassSubjectsQuery } from '../../redux/features/api/class-subjects/classSubjectsApi';
 import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
-import { useGetGSubjectsByClassQuery } from '../../redux/features/api/class-subjects/gsubjectApi';
-import { useCreateTeacherSubjectAssignMutation, useGetTeacherSubjectAssignsByClassAndSubjectQuery, useGetTeacherSubjectAssignsQuery, useUpdateTeacherSubjectAssignMutation } from '../../redux/features/api/teacherSubjectAssigns/teacherSubjectAssignsApi';
-import { useGetClassSubjectsByClassIdQuery, useGetClassSubjectsQuery } from '../../redux/features/api/class-subjects/classSubjectsApi';
-
+import { useCreateTeacherSubjectAssignMutation, useGetTeacherSubjectAssignsQuery, useUpdateTeacherSubjectAssignMutation } from '../../redux/features/api/teacherSubjectAssigns/teacherSubjectAssignsApi';
 
 
 const TeacherSubjectAssign = () => {
   const [selectedTeacher, setSelectedTeacher] = useState('');
-  const [selectedClassConfigId, setSelectedClassConfigId] = useState('');
-  const [classId, setClassId] = useState('');
+  const [selectedClasses, setSelectedClasses] = useState([]);
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
-  const [viewClass, setViewClass] = useState('');
-  const [viewSubject, setViewSubject] = useState('');
+  const [assignmentId, setAssignmentId] = useState(null);
 
-  // Fetch data from APIs
+  // Fetch data from RTK Query hooks
   const { data: teachers, isLoading: teachersLoading } = useGetTeacherStaffProfilesQuery();
   const { data: classes, isLoading: classesLoading } = useGetclassConfigApiQuery();
-  const { data: testSubjcet, isLoading: testSubjcetLoading } = useGetClassSubjectsQuery();
+  const { data: classSubjects = [], isLoading: subjectsLoading } = useGetClassSubjectsQuery();
   const { data: academicYears, isLoading: yearsLoading } = useGetAcademicYearApiQuery();
-  const { data: subjects, isLoading: subjectsLoading } = useGetGSubjectsByClassQuery(classId, {
-    skip: !classId,
-  });
-  const { data: assignmentsByClassSubject, isLoading: assignmentsLoading } =
-    useGetTeacherSubjectAssignsByClassAndSubjectQuery(
-      { classId: viewClass, subjectId: viewSubject },
-      { skip: !viewClass || !viewSubject }
-    );
-  const { data: teacherAssignments, isLoading: teacherAssignmentsLoading } =
-    useGetTeacherSubjectAssignsQuery(undefined, { skip: !selectedTeacher });
-
+  const { data: teacherAssignments, isLoading: assignmentsLoading } = useGetTeacherSubjectAssignsQuery(
+    selectedTeacher ? { teacherId: selectedTeacher } : undefined,
+    { skip: !selectedTeacher }
+  );
   const [createAssignment, { isLoading: createLoading }] = useCreateTeacherSubjectAssignMutation();
   const [updateAssignment, { isLoading: updateLoading }] = useUpdateTeacherSubjectAssignMutation();
 
-  // Clear selectedSubjects when classId changes to prevent invalid IDs
+  // Pre-select classes and subjects for the selected teacher
   useEffect(() => {
-    setSelectedSubjects([]);
-  }, [classId]);
+    if (teacherAssignments && selectedTeacher) {
+      console.log('Teacher assignments:', teacherAssignments); // Debug log
+      // Filter assignments for the selected teacher
+      const relevantAssignments = teacherAssignments.filter(
+        (assignment) => assignment.teacher_id === parseInt(selectedTeacher)
+      );
+      // Extract class and subject IDs from class_assigns and subject_assigns arrays
+      const assignedClasses = relevantAssignments
+        .flatMap((assignment) => assignment.class_assigns || [])
+        .filter(Boolean);
+      const assignedSubjects = relevantAssignments
+        .flatMap((assignment) => assignment.subject_assigns || [])
+        .filter(Boolean);
+      setSelectedClasses(assignedClasses);
+      setSelectedSubjects(assignedSubjects);
+      // Store assignment ID for updates (use first assignment for simplicity)
+      setAssignmentId(relevantAssignments.length > 0 ? relevantAssignments[0].id : null);
+    } else {
+      setSelectedClasses([]);
+      setSelectedSubjects([]);
+      setAssignmentId(null);
+    }
+  }, [teacherAssignments, selectedTeacher]);
 
-  // Log data for debugging
-  useEffect(() => {
-    console.log('Fetched data:', {
-      teachers: teachers?.map(t => ({ id: t.id, name: t.name })),
-      classes: classes?.map(c => ({ id: c.id, class_id: c.class_id, name: c.class_name })),
-      subjects: subjects?.map(s => ({ id: s.id, name: s.name })),
-      testSubjcet: testSubjcet?.map(s => ({ id: s.id, name: s.name })),
-      academicYears: academicYears?.map(y => ({ id: y.id, name: y.name })),
-      classId,
-      selectedClassConfigId,
-      selectedSubjects,
-    });
-  }, [teachers, classes, subjects, testSubjcet, academicYears, classId, selectedClassConfigId, selectedSubjects]);
-
-  // Handle class selection to set both IDs
-  const handleClassChange = (e) => {
-    const selectedId = e.target.value;
-    setSelectedClassConfigId(selectedId);
-    const selectedClass = classes?.find((cls) => cls.id.toString() === selectedId);
-    setClassId(selectedClass ? selectedClass.class_id.toString() : '');
+  // Handle teacher selection
+  const handleTeacherChange = (e) => {
+    setSelectedTeacher(e.target.value);
   };
 
-  // Handle subject checkbox changes
-  const handleSubjectChange = (subjectId) => {
-    console.log("select subject", subjectId)
-    setSelectedSubjects((prev) =>
-      prev.includes(subjectId)
-        ? prev.filter((id) => id !== subjectId)
-        : [...prev, subjectId]
+  // Handle class selection
+  const handleClassChange = (classId) => {
+    setSelectedClasses((prev) =>
+      prev.includes(classId) ? prev.filter((id) => id !== classId) : [...prev, classId]
     );
+  };
+
+  // Handle subject selection
+  const handleSubjectChange = (subjectId) => {
+    setSelectedSubjects((prev) =>
+      prev.includes(subjectId) ? prev.filter((id) => id !== subjectId) : [...prev, subjectId]
+    );
+  };
+
+  // Handle academic year selection
+  const handleAcademicYearChange = (e) => {
+    setSelectedAcademicYear(e.target.value);
   };
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedTeacher || !selectedClassConfigId || selectedSubjects.length === 0 || !selectedAcademicYear) {
-      alert('Please fill all fields');
-      return;
-    }
-
-    // Validate payload IDs
-    const isValidTeacher = teachers?.some((t) => t.id === parseInt(selectedTeacher));
-    const isValidClass = classes?.some((c) => c.id === parseInt(selectedClassConfigId));
-    const isValidClassId = classes?.some((c) => c.class_id === parseInt(classId));
-    const isValidAcademicYear = academicYears?.some((y) => y.id === parseInt(selectedAcademicYear));
-    const areValidSubjects = selectedSubjects.every((subjectId) =>
-      subjects?.some((s) => s.id === parseInt(subjectId))
-    );
-
-    if (!isValidTeacher || !isValidClass || !isValidClassId || !isValidAcademicYear || !areValidSubjects) {
-      alert('Invalid selection: Please ensure all selected IDs are valid.');
-      console.error('Validation failed:', {
-        teacherId: selectedTeacher,
-        classConfigId: selectedClassConfigId,
-        classId,
-        academicYearId: selectedAcademicYear,
-        subjectIds: selectedSubjects,
-      });
+    if (!selectedTeacher || !selectedAcademicYear || selectedClasses.length === 0 || selectedSubjects.length === 0) {
+      alert('Please select a teacher, academic year, at least one class, and at least one subject.');
       return;
     }
 
     const assignmentData = {
-      subject_assigns: selectedSubjects.map((id) => parseInt(id)),
-      class_assigns: [parseInt(classId)], // Use class_id
+      subject_assigns: selectedSubjects,
+      class_assigns: selectedClasses,
       teacher_id: parseInt(selectedTeacher),
       academic_year: parseInt(selectedAcademicYear),
     };
 
-    const apiUrl = 'https://demo.easydr.xyz/api/teacher-subject-assign/';
-    const headers = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${localStorage.getItem('token') || 'no-token'}`,
-    };
-
-    console.log('Submitting assignment data:', {
-      url: apiUrl,
-      headers: headers,
-      payload: assignmentData,
-    });
+    console.log('Submitting assignment data:', assignmentData); // Debug log
 
     try {
-      const response = await createAssignment(assignmentData).unwrap();
-      console.log('Assignment creation response:', response);
-      alert('Assignment created successfully');
-      setSelectedSubjects([]);
-      setSelectedClassConfigId('');
-      setClassId('');
-      setSelectedTeacher('');
-      setSelectedAcademicYear('');
-    } catch (error) {
-      console.error('Assignment creation error:', {
-        status: error.status,
-        data: error.data,
-        message: error.message,
-        fullError: error,
-        responseText: error.originalError?.response?.text,
-      });
-      if (error.status === 404) {
-        alert('Failed to create assignment: API endpoint not found. Please check the server configuration.');
-      } else if (error.status === 400) {
-        alert(`Failed to create assignment: ${error.data?.detail || JSON.stringify(error.data) || 'Invalid data provided.'}`);
-      } else if (error.status === 401) {
-        alert('Failed to create assignment: Invalid or missing authentication token.');
+      if (assignmentId) {
+        await updateAssignment({ id: assignmentId, ...assignmentData }).unwrap();
+        alert('Assignment updated successfully!');
       } else {
-        alert(`Failed to create assignment: ${error.data?.detail || JSON.stringify(error.data) || 'Unknown error occurred.'}`);
+        await createAssignment(assignmentData).unwrap();
+        alert('Assignment created successfully!');
       }
-    }
-  };
-
-  // Handle update assignment
-  const handleUpdate = async (assignmentId) => {
-    if (!selectedTeacher || !selectedClassConfigId || selectedSubjects.length === 0 || !selectedAcademicYear) {
-      alert('Please fill all fields');
-      return;
-    }
-
-    const isValidTeacher = teachers?.some((t) => t.id === parseInt(selectedTeacher));
-    const isValidClass = classes?.some((c) => c.id === parseInt(selectedClassConfigId));
-    const isValidClassId = classes?.some((c) => c.class_id === parseInt(classId));
-    const isValidAcademicYear = academicYears?.some((y) => y.id === parseInt(selectedAcademicYear));
-    const areValidSubjects = selectedSubjects.every((subjectId) =>
-      subjects?.some((s) => s.id === parseInt(subjectId))
-    );
-
-    if (!isValidTeacher || !isValidClass || !isValidClassId || !isValidAcademicYear || !areValidSubjects) {
-      alert('Invalid selection: Please ensure all selected IDs are valid.');
-      console.error('Validation failed:', {
-        teacherId: selectedTeacher,
-        classConfigId: selectedClassConfigId,
-        classId,
-        academicYearId: selectedAcademicYear,
-        subjectIds: selectedSubjects,
-      });
-      return;
-    }
-
-    const assignmentData = {
-      id: assignmentId,
-      subject_assigns: selectedSubjects.map((id) => parseInt(id)),
-      class_assigns: [parseInt(classId)], // Use class_id
-      teacher_id: parseInt(selectedTeacher),
-      academic_year: parseInt(selectedAcademicYear),
-    };
-
-    try {
-      const response = await updateAssignment(assignmentData).unwrap();
-      console.log('Assignment update response:', response);
-      alert('Assignment updated successfully');
     } catch (error) {
-      console.error('Assignment update error:', {
-        status: error.status,
-        data: error.data,
-        message: error.message,
-        fullError: error,
-        responseText: error.originalError?.response?.text,
-      });
-      alert(`Failed to update assignment: ${error.data?.detail || JSON.stringify(error.data) || 'Unknown error'}`);
+      console.error('Assignment error:', error); // Debug log
+      let errorMessage = 'Unknown error occurred';
+      if (error.status === 400 && error.data) {
+        if (typeof error.data === 'object') {
+          errorMessage = Object.entries(error.data)
+            .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+            .join('; ');
+        } else {
+          errorMessage = error.data || 'Bad request';
+        }
+      } else if (error.error) {
+        errorMessage = error.error;
+      }
+      alert(`Failed to ${assignmentId ? 'update' : 'create'} assignment: ${errorMessage}`);
     }
   };
 
   return (
-    <div className="bg-white shadow-lg rounded-lg p-6 mt-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Teacher Subject Assignment</h1>
-
-      {/* Teacher Selection */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Teacher Name</label>
-        <select
-          value={selectedTeacher}
-          onChange={(e) => setSelectedTeacher(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
-          disabled={teachersLoading}
-        >
-          <option value="" disabled>
-            Select a teacher
-          </option>
-          {teachers?.map((teacher) => (
-            <option key={teacher.id} value={teacher.id}>
-              {teacher.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Assignment Form */}
+    <div className="p-6 max-w-4xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4">Assign Subjects to Teacher</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Teacher Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Select Class</label>
+          <label className="block text-sm font-medium text-gray-700">Select Teacher</label>
           <select
-            value={selectedClassConfigId}
-            onChange={handleClassChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
-            disabled={classesLoading}
+            value={selectedTeacher}
+            onChange={handleTeacherChange}
+            disabled={teachersLoading}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
           >
-            <option value="" disabled>
-              Select a class
-            </option>
-            {classes?.map((cls) => (
-              <option key={cls.id} value={cls.id}>
-                {cls.class_name} {cls.shift_name} {cls.section_name}
+            <option value="">Select a teacher</option>
+            {teachers?.map((teacher) => (
+              <option key={teacher.id} value={teacher.id}>
+                {teacher.name || `Teacher ${teacher.id}`}
               </option>
             ))}
           </select>
+          {teachersLoading && <p>Loading teachers...</p>}
         </div>
 
-        {selectedClassConfigId && (
-          <div>
-            <h3 className="text-lg font-semibold text-amber-600 mb-3">Select Subjects</h3>
-            {subjects?.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {subjects.map((subject) => (
-                  <div key={subject.id} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id={`subject-${subject.id}`}
-                      checked={selectedSubjects.includes(subject.id)}
-                      onChange={() => handleSubjectChange(subject.id)}
-                      className="h-4 w-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
-                      disabled={subjectsLoading}
-                    />
-                    <label htmlFor={`subject-${subject.id}`} className="text-sm text-gray-600">
-                      {subject.name}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500">No subjects available for this class.</p>
-            )}
-          </div>
-        )}
-
+        {/* Academic Year Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Select Academic Year</label>
+          <label className="block text-sm font-medium text-gray-700">Select Academic Year</label>
           <select
             value={selectedAcademicYear}
-            onChange={(e) => setSelectedAcademicYear(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+            onChange={handleAcademicYearChange}
             disabled={yearsLoading}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
           >
-            <option value="" disabled>
-              Select an academic year
-            </option>
+            <option value="">Select an academic year</option>
             {academicYears?.map((year) => (
               <option key={year.id} value={year.id}>
-                {year.name}
+                {year.name || `Year ${year.id}`}
               </option>
             ))}
           </select>
+          {yearsLoading && <p>Loading academic years...</p>}
         </div>
 
-        <div className="flex justify-end">
+        {/* Class Selection */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Select Classes</label>
+          <div className="mt-2 grid grid-cols-1 md:grid-cols-4 gap-4">
+            {classes?.map((classItem) => (
+              <div key={classItem.id} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={`class-${classItem.id}`}
+                  checked={selectedClasses.includes(classItem.id)}
+                  onChange={() => handleClassChange(classItem.id)}
+                  disabled={classesLoading}
+                  className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                />
+                <label htmlFor={`class-${classItem.id}`} className="ml-2 text-sm text-gray-600">
+                  {classItem.class_name} - {classItem.section_name} ({classItem.shift_name})
+                </label>
+              </div>
+            ))}
+          </div>
+          {classesLoading && <p>Loading classes...</p>}
+        </div>
+
+        {/* Subject Selection */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Select Subjects</label>
+          <div className="mt-2 grid grid-cols-1 md:grid-cols-4 gap-4">
+            {classSubjects
+              ?.filter((subject) => subject.is_active)
+              .map((subject) => (
+                <div key={subject.id} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id={`subject-${subject.id}`}
+                    checked={selectedSubjects.includes(subject.id)}
+                    onChange={() => handleSubjectChange(subject.id)}
+                    disabled={subjectsLoading}
+                    className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                  />
+                  <label htmlFor={`subject-${subject.id}`} className="ml-2 text-sm text-gray-600">
+                    {subject.name}
+                  </label>
+                </div>
+              ))}
+          </div>
+          {subjectsLoading && <p>Loading subjects...</p>}
+        </div>
+
+        {/* Submit Button */}
+        <div>
           <button
             type="submit"
-            className="bg-amber-600 text-white px-6 py-2 rounded-lg shadow-md hover:bg-amber-700 hover:-translate-y-1 transition duration-200"
-            disabled={createLoading || teachersLoading || classesLoading || subjectsLoading || yearsLoading}
+            disabled={createLoading || updateLoading || assignmentsLoading}
+            className="w-full md:w-auto px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-400"
           >
-            {createLoading ? 'Saving...' : 'Save'}
+            {createLoading || updateLoading ? 'Submitting...' : 'Save Assignments'}
           </button>
         </div>
       </form>
-
-      {/* View Assignments by Class and Subject */}
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">View Assignments</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Select Class</label>
-            <select
-              value={viewClass}
-              onChange={(e) => setViewClass(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
-              disabled={classesLoading}
-            >
-              <option value="" disabled>
-                Select a class
-              </option>
-              {classes?.map((cls) => (
-                <option key={cls.id} value={cls.class_id}>
-                  {cls.class_name} {cls.shift_name} {cls.section_name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Select Subject</label>
-            <select
-              value={viewSubject}
-              onChange={(e) => setViewSubject(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
-              disabled={subjectsLoading || !viewClass}
-            >
-              <option value="" disabled>
-                Select a subject
-              </option>
-              {subjects?.map((subject) => (
-                <option key={subject.id} value={subject.id}>
-                  {subject.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {assignmentsByClassSubject?.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full border border-gray-200 rounded-lg">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="p-3 text-left text-sm font-semibold text-gray-700">Teacher Name</th>
-                  <th className="p-3 text-left text-sm font-semibold text-gray-700">Class</th>
-                  <th className="p-3 text-left text-sm font-semibold text-gray-700">Subject</th>
-                  <th className="p-3 text-left text-sm font-semibold text-gray-700">Academic Year</th>
-                </tr>
-              </thead>
-              <tbody>
-                {assignmentsByClassSubject.map((assignment) => (
-                  <tr key={assignment.id} className="border-t">
-                    <td className="p-3 text-sm text-gray-600">
-                      {teachers?.find((t) => t.id === assignment.teacher_id)?.name || 'Unknown Teacher'}
-                    </td>
-                    <td className="p-3 text-sm text-gray-600">
-                      {classes?.find((c) => c.class_id === assignment.class_assigns[0])?.class_name || 'Unknown Class'}
-                    </td>
-                    <td className="p-3 text-sm text-gray-600">
-                      {subjects?.find((s) => s.id === assignment.subject_assigns[0])?.name || 'Unknown Subject'}
-                    </td>
-                    <td className="p-3 text-sm text-gray-600">
-                      {academicYears?.find((y) => y.id === assignment.academic_year)?.name || 'Unknown Year'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Teacher's Assigned Subjects */}
-      {selectedTeacher && (
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Teacher's Assigned Subjects</h2>
-          {teacherAssignmentsLoading ? (
-            <p className="text-sm text-gray-500">Loading assignments...</p>
-          ) : teacherAssignments?.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full border border-gray-200 rounded-lg">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="p-3 text-left text-sm font-semibold text-gray-700">Class</th>
-                    <th className="p-3 text-left text-sm font-semibold text-gray-700">Subject</th>
-                    <th className="p-3 text-left text-sm font-semibold text-gray-700">Academic Year</th>
-                    <th className="p-3 text-left text-sm font-semibold text-gray-700">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {teacherAssignments.map((assignment) => (
-                    <tr key={assignment.id} className="border-t">
-                      <td className="p-3 text-sm text-gray-600">
-                        {classes?.find((c) => c.class_id === assignment.class_assigns[0])?.class_name || 'Unknown Class'}
-                      </td>
-                      <td className="p-3 text-sm text-gray-600">
-                        {subjects?.find((s) => s.id === assignment.subject_assigns[0])?.name || 'Unknown Subject'}
-                      </td>
-                      <td className="p-3 text-sm text-gray-600">
-                        {academicYears?.find((y) => y.id === assignment.academic_year)?.name || 'Unknown Year'}
-                      </td>
-                      <td className="p-3 text-sm">
-                        <button
-                          onClick={() => handleUpdate(assignment.id)}
-                          className="bg-amber-500 text-white px-4 py-1 rounded-lg hover:bg-amber-700 transition duration-200"
-                          disabled={updateLoading}
-                        >
-                          {updateLoading ? 'Updating...' : 'Update'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-sm text-gray-500">No assignments found for this teacher.</p>
-          )}
-        </div>
-      )}
     </div>
   );
 };
