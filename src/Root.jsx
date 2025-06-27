@@ -107,10 +107,6 @@ function Root() {
                   path: "performance-type",
                   element: <PerformanceType />,
                 },
-                {
-                  path: "*",
-                  element: <Navigate to="/darul-iqam/settings" replace />,
-                },
               ],
             },
             {
