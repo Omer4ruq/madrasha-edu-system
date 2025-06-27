@@ -272,7 +272,7 @@ const mainMenu = [
       },
       {
         id: "07/09",
-        title: "Delete- ফি",
+        title: "মুছুন - ফি",
         link: "/accounts/delete-fee",
       },
     ],
