@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { FaSpinner, FaTrash } from 'react-icons/fa';
+import { IoAddCircle } from 'react-icons/io5';
+import { Toaster, toast } from 'react-hot-toast';
 import { useGetExamApiQuery } from '../../redux/features/api/exam/examApi';
 import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
 import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
@@ -15,31 +18,29 @@ const SubjectMarks = () => {
   const [marks, setMarks] = useState({});
   const [absentStudents, setAbsentStudents] = useState(new Set());
   const [savingStates, setSavingStates] = useState({});
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalData, setModalData] = useState(null);
 
-  const { data: exams, isLoading: examsLoading, error: examsError } = useGetExamApiQuery();
-  const { data: academicYears, isLoading: yearsLoading, error: yearsError } = useGetAcademicYearApiQuery();
-  const { data: classes, isLoading: classesLoading, error: classesError } = useGetclassConfigApiQuery();
+  const { data: exams, isLoading: examsLoading } = useGetExamApiQuery();
+  const { data: academicYears, isLoading: yearsLoading } = useGetAcademicYearApiQuery();
+  const { data: classes, isLoading: classesLoading } = useGetclassConfigApiQuery();
   const { 
     data: subjectMarkConfigs, 
     isLoading: configsLoading, 
-    error: configsError,
     isFetching: configsFetching 
   } = useGetSubjectMarkConfigsByClassQuery(classId, { skip: !classId });
   const { 
     data: subjectMarkConfigsBySubject, 
-    isLoading: subjectConfigsLoading, 
-    error: subjectConfigsError 
+    isLoading: subjectConfigsLoading 
   } = useGetSubjectMarkConfigsBySubjectQuery(subjectId, { skip: !subjectId });
   const { 
     data: students, 
     isLoading: studentsLoading, 
-    error: studentsError, 
     isFetching: studentsFetching 
   } = useGetStudentActiveByClassQuery(selectedClassConfigId, { skip: !selectedClassConfigId });
   const { 
     data: existingMarks, 
     isLoading: marksLoading, 
-    error: marksError,
     refetch: refetchMarks
   } = useGetSubjectMarksQuery({ exam_id: examId, class_id: classId, subject_id: subjectId }, { skip: !examId || !classId || !subjectId });
   
@@ -73,10 +74,18 @@ const SubjectMarks = () => {
   }, [existingMarks]);
 
   const handleMarkChange = (studentId, markConfigId, value) => {
-    setMarks((prev) => ({
-      ...prev,
-      [`${studentId}_${markConfigId}`]: value,
-    }));
+    const config = subjectMarkConfigsBySubject?.[0]?.mark_configs.find(c => c.id === markConfigId);
+    const maxMark = config?.max_mark || 100;
+    const numValue = Number(value);
+
+    if (value === '' || (numValue >= 0 && numValue <= maxMark)) {
+      setMarks((prev) => ({
+        ...prev,
+        [`${studentId}_${markConfigId}`]: value,
+      }));
+    } else {
+      toast.error(`মার্ক ০ থেকে ${maxMark} এর মধ্যে হতে হবে।`);
+    }
   };
 
   const setSavingState = (studentId, markConfigId, state) => {
@@ -89,6 +98,7 @@ const SubjectMarks = () => {
 
   const saveIndividualMark = async (studentId, markConfigId, value) => {
     if (!examId || !academicYearId || !classId || !subjectId) {
+      toast.error('দয়া করে পরীক্ষা, শিক্ষাবর্ষ, ক্লাস এবং বিষয় নির্বাচন করুন।');
       return;
     }
 
@@ -116,16 +126,19 @@ const SubjectMarks = () => {
 
       if (existingMark) {
         await updateSubjectMark({ id: existingMark.id, ...markData }).unwrap();
+        toast.success('মার্ক সফলভাবে আপডেট করা হয়েছে!');
       } else {
         await createSubjectMark(markData).unwrap();
+        toast.success('মার্ক সফলভাবে সংরক্ষিত!');
       }
       
       setSavingState(studentId, markConfigId, 'saved');
       setTimeout(() => setSavingState(studentId, markConfigId, null), 2000);
       refetchMarks();
     } catch (error) {
-      console.error(`Failed to save mark for student ${studentId}:`, error);
+      console.error(`মার্ক সংরক্ষণে ত্রুটি ছাত্র ${studentId}:`, error);
       setSavingState(studentId, markConfigId, 'error');
+      toast.error(`ত্রুটি: ${error?.data?.message || 'মার্ক সংরক্ষণ ব্যর্থ।'}`);
       setTimeout(() => setSavingState(studentId, markConfigId, null), 3000);
     }
   };
@@ -155,7 +168,10 @@ const SubjectMarks = () => {
       return newSet;
     });
 
-    if (!examId || !academicYearId || !classId || !subjectId) return;
+    if (!examId || !academicYearId || !classId || !subjectId) {
+      toast.error('দয়া করে পরীক্ষা, শিক্ষাবর্ষ, ক্লাস এবং বিষয় নির্বাচন করুন।');
+      return;
+    }
 
     const markConfigs = subjectMarkConfigsBySubject?.[0]?.mark_configs || [];
     
@@ -185,20 +201,23 @@ const SubjectMarks = () => {
           await createSubjectMark(markData).unwrap();
         }
       } catch (error) {
-        console.error(`Failed to update absent status for student ${studentId}:`, error);
+        console.error(`অনুপস্থিতি স্ট্যাটাস আপডেটে ত্রুটি ছাত্র ${studentId}:`, error);
+        toast.error(`ত্রুটি: ${error?.data?.message || 'অনুপস্থিতি স্ট্যাটাস আপডেট ব্যর্থ।'}`);
       }
     }
+    toast.success(`ছাত্রের উপস্থিতি স্ট্যাটাস ${newAbsentState ? 'অনুপস্থিত' : 'উপস্থিত'} হিসেবে আপডেট করা হয়েছে!`);
     refetchMarks();
   };
 
   const deleteStudentMarks = async (studentId) => {
-    if (!window.confirm('Are you sure you want to delete all marks for this student?')) {
-      return;
-    }
+    setModalData({ studentId });
+    setIsModalOpen(true);
+  };
 
+  const confirmDelete = async () => {
     try {
       const studentMarks = existingMarks?.filter(
-        (mark) => mark.student === studentId && mark.exam === Number(examId)
+        (mark) => mark.student === modalData.studentId && mark.exam === Number(examId)
       ) || [];
 
       for (const mark of studentMarks) {
@@ -208,19 +227,24 @@ const SubjectMarks = () => {
       const markConfigs = subjectMarkConfigsBySubject?.[0]?.mark_configs || [];
       const updatedMarks = { ...marks };
       markConfigs.forEach(config => {
-        delete updatedMarks[`${studentId}_${config.id}`];
+        delete updatedMarks[`${modalData.studentId}_${config.id}`];
       });
       setMarks(updatedMarks);
 
       setAbsentStudents(prev => {
         const newSet = new Set(prev);
-        newSet.delete(studentId);
+        newSet.delete(modalData.studentId);
         return newSet;
       });
 
+      toast.success('ছাত্রের সব মার্ক সফলভাবে মুছে ফেলা হয়েছে!');
       refetchMarks();
     } catch (error) {
-      console.error(`Failed to delete marks for student ${studentId}:`, error);
+      console.error(`ছাত্র ${modalData.studentId} এর মার্ক মুছে ফেলায় ত্রুটি:`, error);
+      toast.error(`ত্রুটি: ${error?.data?.message || 'মার্ক মুছে ফেলা ব্যর্থ।'}`);
+    } finally {
+      setIsModalOpen(false);
+      setModalData(null);
     }
   };
 
@@ -231,22 +255,22 @@ const SubjectMarks = () => {
     switch (state) {
       case 'saving':
         return (
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-pulse">
-            <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
+          <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#DB9E30] rounded-full animate-pulse">
+            <div className="w-2 h-2 bg-white rounded-full m-1"></div>
           </div>
         );
       case 'saved':
         return (
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
-            <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
           </div>
         );
       case 'error':
         return (
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
-            <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+          <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
           </div>
@@ -260,165 +284,184 @@ const SubjectMarks = () => {
   const markConfigs = selectedSubjectConfig?.mark_configs || [];
 
   // Loading states
-  if (configsLoading || configsFetching) {
+  if (configsLoading || configsFetching || studentsLoading || studentsFetching || examsLoading || yearsLoading || classesLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600 font-medium">Loading subjects...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (studentsLoading || studentsFetching) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600 font-medium">Loading students...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Error states
-  if (configsError || studentsError) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-red-100 max-w-md w-full mx-4">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold text-gray-800">Error Loading Data</h3>
-          </div>
-          <p className="text-gray-600">
-            {configsError?.data?.message || studentsError?.data?.message || 'An unexpected error occurred'}
-          </p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-black/10 backdrop-blur-sm rounded-xl shadow-lg p-8 flex items-center space-x-4 animate-fadeIn">
+          <FaSpinner className="animate-spin text-2xl text-[#441a05]" />
+          <span className="text-[#441a05] font-medium">লোড হচ্ছে...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header Section */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 mb-8 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6">
-            <h1 className="text-3xl font-bold text-white flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <span>Subject Marks Entry</span>
-            </h1>
-            <p className="text-blue-100 mt-2">Enter and manage student marks efficiently</p>
-          </div>
+    <div className="py-8">
+      <Toaster position="top-right" reverseOrder={false} />
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes scaleIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+          }
+          @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 0.6s ease-out forwards;
+          }
+          .animate-scaleIn {
+            animation: scaleIn 0.4s ease-out forwards;
+          }
+          .animate-slideUp {
+            animation: slideUp 0.4s ease-out forwards;
+          }
+          .tick-glow {
+            transition: all 0.3s ease;
+          }
+          .tick-glow:focus {
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+          }
+          .btn-glow:hover {
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
+          }
+          ::-webkit-scrollbar {
+            width: 8px;
+          }
+          ::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          ::-webkit-scrollbar-thumb {
+            background: rgba(22, 31, 48, 0.26);
+            border-radius: 10px;
+          }
+          ::-webkit-scrollbar-thumb:hover {
+            background: rgba(10, 13, 21, 0.44);
+          }
+        `}
+      </style>
 
-          {/* Filters Section */}
-          <div className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Exam</label>
-                <select
-                  value={examId}
-                  onChange={(e) => setExamId(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 font-medium text-gray-700"
-                >
-                  <option value="">Select Exam</option>
-                  {exams?.map((exam) => (
-                    <option key={exam.id} value={exam.id}>
-                      {exam.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+      <div className="">
+        {/* Header */}
+        <div className="flex items-center space-x-4 mb-6 animate-fadeIn ml-5">
+          <IoAddCircle className="text-3xl text-[#441a05]" />
+          <h1 className="text-2xl font-bold text-[#441a05] tracking-tight">
+            বিষয় মার্ক এন্ট্রি
+          </h1>
+        </div>
 
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Academic Year</label>
-                <select
-                  value={academicYearId}
-                  onChange={(e) => setAcademicYearId(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 font-medium text-gray-700"
-                >
-                  <option value="">Select Academic Year</option>
-                  {academicYears?.map((year) => (
-                    <option key={year.id} value={year.id}>
-                      {year.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Class</label>
-                <select
-                  value={selectedClassConfigId}
-                  onChange={handleClassChange}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 font-medium text-gray-700"
-                >
-                  <option value="">Select Class</option>
-                  {classes?.map((cls) => (
-                    <option key={cls.id} value={cls.id}>
-                      {cls.class_name} - {cls.section_name} ({cls.shift_name})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Subject</label>
-                <select
-                  value={subjectId}
-                  onChange={(e) => setSubjectId(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 font-medium text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={!classId}
-                >
-                  <option value="">Select Subject</option>
-                  {subjectMarkConfigs?.map((config) => (
-                    <option key={config.subject_id} value={config.subject_id}>
-                      {config.subject_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+        {/* Filters Section */}
+        <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8 animate-fadeIn">
+          <h2 className="text-xl font-semibold text-[#441a05] mb-4 flex items-center">
+            <span className="bg-[#DB9E30]/20 text-[#441a05] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">১</span>
+            ফিল্টার নির্বাচন করুন
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#441a05]">পরীক্ষা</label>
+              <select
+                value={examId}
+                onChange={(e) => setExamId(e.target.value)}
+                className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
+                aria-label="পরীক্ষা নির্বাচন করুন"
+                title="পরীক্ষা নির্বাচন করুন / Select exam"
+              >
+                <option value="">পরীক্ষা নির্বাচন করুন</option>
+                {exams?.map((exam) => (
+                  <option key={exam.id} value={exam.id}>
+                    {exam.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#441a05]">শিক্ষাবর্ষ</label>
+              <select
+                value={academicYearId}
+                onChange={(e) => setAcademicYearId(e.target.value)}
+                className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
+                aria-label="শিক্ষাবর্ষ নির্বাচন করুন"
+                title="শিক্ষাবর্ষ নির্বাচন করুন / Select academic year"
+              >
+                <option value="">শিক্ষাবর্ষ নির্বাচন করুন</option>
+                {academicYears?.map((year) => (
+                  <option key={year.id} value={year.id}>
+                    {year.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#441a05]">ক্লাস</label>
+              <select
+                value={selectedClassConfigId}
+                onChange={handleClassChange}
+                className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
+                aria-label="ক্লাস নির্বাচন করুন"
+                title="ক্লাস নির্বাচন করুন / Select class"
+              >
+                <option value="">ক্লাস নির্বাচন করুন</option>
+                {classes?.map((cls) => (
+                  <option key={cls.id} value={cls.id}>
+                    {cls.class_name} - {cls.section_name} ({cls.shift_name})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#441a05]">বিষয়</label>
+              <select
+                value={subjectId}
+                onChange={(e) => setSubjectId(e.target.value)}
+                className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!classId}
+                aria-label="বিষয় নির্বাচন করুন"
+                title="বিষয় নির্বাচন করুন / Select subject"
+              >
+                <option value="">বিষয় নির্বাচন করুন</option>
+                {subjectMarkConfigs?.map((config) => (
+                  <option key={config.subject_id} value={config.subject_id}>
+                    {config.subject_name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
 
         {/* No Data Messages */}
         {selectedClassConfigId && !subjectMarkConfigs?.length && (
-          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-2xl p-8 mb-8">
+          <div className="bg-black/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 mb-8 animate-fadeIn">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-[#DB9E30]/20 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-[#DB9E30]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-yellow-800">No Subjects Available</h3>
-                <p className="text-yellow-600">No subjects found for the selected class configuration.</p>
+                <h3 className="text-lg font-semibold text-[#441a05]">কোনো বিষয় পাওয়া যায়নি</h3>
+                <p className="text-[#441a05]/70">নির্বাচিত ক্লাসের জন্য কোনো বিষয় কনফিগার করা হয়নি।</p>
               </div>
             </div>
           </div>
         )}
 
         {selectedClassConfigId && !students?.length && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-8 mb-8">
+          <div className="bg-black/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 mb-8 animate-fadeIn">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-[#DB9E30]/20 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-[#DB9E30]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-blue-800">No Students Found</h3>
-                <p className="text-blue-600">No active students found for the selected class.</p>
+                <h3 className="text-lg font-semibold text-[#441a05]">কোনো ছাত্র পাওয়া যায়নি</h3>
+                <p className="text-[#441a05]/70">নির্বাচিত ক্লাসে কোনো সক্রিয় ছাত্র পাওয়া যায়নি।</p>
               </div>
             </div>
           </div>
@@ -426,43 +469,43 @@ const SubjectMarks = () => {
 
         {/* Marks Table */}
         {students?.length > 0 && markConfigs.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+          <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden animate-fadeIn">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-                    <th className="px-6 py-4 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
-                      Student Information
+                  <tr className="bg-white/10 border-b border-white/20">
+                    <th className="px-6 py-4 text-left text-sm font-bold text-[#441a05] uppercase tracking-wider">
+                      ছাত্রের তথ্য
                     </th>
                     {markConfigs.map((config) => (
-                      <th key={config.id} className="px-6 py-4 text-center text-sm font-bold text-gray-700 uppercase tracking-wider min-w-[140px]">
+                      <th key={config.id} className="px-6 py-4 text-center text-sm font-bold text-[#441a05] uppercase tracking-wider min-w-[140px]">
                         <div className="space-y-1">
                           <div className="font-semibold">{config.mark_type_name}</div>
-                          <div className="text-xs text-gray-500 normal-case">
-                            Max: {config.max_mark} | Pass: {config.pass_mark}
+                          <div className="text-xs text-[#441a05]/70 normal-case">
+                            সর্বোচ্চ: {config.max_mark} | পাস: {config.pass_mark}
                           </div>
                         </div>
                       </th>
                     ))}
-                    <th className="px-6 py-4 text-center text-sm font-bold text-gray-700 uppercase tracking-wider">
-                      Attendance
+                    <th className="px-6 py-4 text-center text-sm font-bold text-[#441a05] uppercase tracking-wider">
+                      উপস্থিতি
                     </th>
-                    <th className="px-6 py-4 text-center text-sm font-bold text-gray-700 uppercase tracking-wider">
-                      Actions
+                    <th className="px-6 py-4 text-center text-sm font-bold text-[#441a05] uppercase tracking-wider">
+                      অ্যাকশন
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-white/20">
                   {students.map((student, index) => (
-                    <tr key={student.id} className={`hover:bg-gray-50 transition-colors duration-200 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                    <tr key={student.id} className="hover:bg-white/10 transition-colors duration-200 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-4">
-                          <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                          <div className="w-10 h-10 bg-[#DB9E30]/20 rounded-full flex items-center justify-center text-[#441a05] font-bold text-sm">
                             {student.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <div className="font-semibold text-gray-900">{student.name}</div>
-                            <div className="text-sm text-gray-500">Roll: {student.roll_no}</div>
+                            <div className="font-semibold text-[#441a05]">{student.name}</div>
+                            <div className="text-sm text-[#441a05]/70">রোল: {student.roll_no}</div>
                           </div>
                         </div>
                       </td>
@@ -475,15 +518,17 @@ const SubjectMarks = () => {
                               onChange={(e) => handleMarkChange(student.id, config.id, e.target.value)}
                               onBlur={(e) => handleMarkBlur(student.id, config.id, e.target.value)}
                               onKeyPress={(e) => handleMarkKeyPress(e, student.id, config.id, e.target.value)}
-                              className={`w-20 h-12 text-center border-2 rounded-xl font-semibold transition-all duration-200 ${
+                              className={`w-20 h-12 text-center border-2 rounded-lg font-semibold transition-all duration-200 tick-glow ${
                                 absentStudents.has(student.id)
-                                  ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                                  : 'bg-white border-gray-200 text-gray-900 hover:border-blue-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                                  ? 'bg-gray-100 border-[#9d9087] text-[#441a05]/50 cursor-not-allowed'
+                                  : 'bg-white/10 border-[#9d9087] text-[#441a05] hover:border-[#DB9E30] focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30]'
                               }`}
                               disabled={absentStudents.has(student.id)}
                               min="0"
                               max={config.max_mark}
                               placeholder="0"
+                              aria-label={`মার্ক প্রবেশ করান ${student.name} ${config.mark_type_name}`}
+                              title={`মার্ক প্রবেশ করান / Enter marks for ${student.name} in ${config.mark_type_name}`}
                             />
                             {getSavingStateIcon(student.id, config.id)}
                           </div>
@@ -492,24 +537,25 @@ const SubjectMarks = () => {
                       <td className="px-6 py-4 text-center">
                         <button
                           onClick={() => toggleAbsent(student.id)}
-                          className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-200 transform hover:scale-105 ${
+                          className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 transform hover:scale-105 btn-glow ${
                             absentStudents.has(student.id)
-                              ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg hover:shadow-xl'
-                              : 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg hover:shadow-xl'
+                              ? 'bg-red-500 text-white hover:bg-red-600'
+                              : 'bg-[#DB9E30] text-[#441a05] hover:bg-[#DB9E30]/80'
                           }`}
+                          aria-label={`উপস্থিতি টগল করুন ${student.name}`}
+                          title={`উপস্থিতি টগল করুন / Toggle attendance for ${student.name}`}
                         >
-                          {absentStudents.has(student.id) ? 'Absent' : 'Present'}
+                          {absentStudents.has(student.id) ? 'অনুপস্থিত' : 'উপস্থিত'}
                         </button>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <button
                           onClick={() => deleteStudentMarks(student.id)}
-                          className="w-10 h-10 bg-gradient-to-r from-red-100 to-red-200 hover:from-red-500 hover:to-red-600 text-red-600 hover:text-white rounded-xl transition-all duration-200 transform hover:scale-110 flex items-center justify-center group"
-                          title="Delete all marks for this student"
+                          className="w-10 h-10 bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white rounded-lg transition-all duration-200 transform hover:scale-110 flex items-center justify-center btn-glow"
+                          aria-label={`মার্ক মুছুন ${student.name}`}
+                          title={`মার্ক মুছুন / Delete marks for ${student.name}`}
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
+                          <FaTrash className="w-5 h-5" />
                         </button>
                       </td>
                     </tr>
@@ -519,25 +565,55 @@ const SubjectMarks = () => {
             </div>
 
             {/* Table Footer with Stats */}
-            <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-t border-gray-200">
-              <div className="flex items-center justify-between text-sm text-gray-600">
+            <div className="bg-white/10 px-6 py-4 border-t border-white/20">
+              <div className="flex items-center justify-between text-sm text-[#441a05]">
                 <div className="flex items-center space-x-6">
                   <span className="flex items-center space-x-2">
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span>Total Students: {students.length}</span>
+                    <span>মোট ছাত্র: {students.length}</span>
                   </span>
                   <span className="flex items-center space-x-2">
                     <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <span>Absent: {absentStudents.size}</span>
+                    <span>অনুপস্থিত: {absentStudents.size}</span>
                   </span>
                   <span className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                    <span>Present: {students.length - absentStudents.size}</span>
+                    <div className="w-3 h-3 bg-[#DB9E30] rounded-full"></div>
+                    <span>উপস্থিত: {students.length - absentStudents.size}</span>
                   </span>
                 </div>
-                <div className="text-xs text-gray-500">
-                  Auto-save enabled • Press Enter or click outside to save
+                <div className="text-xs text-[#441a05]/70">
+                  স্বয়ংক্রিয় সংরক্ষণ সক্রিয় • সংরক্ষণের জন্য এন্টার চাপুন বা বাইরে ক্লিক করুন
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Confirmation Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[10000]">
+            <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
+              <h3 className="text-lg font-semibold text-[#441a05] mb-4">
+                মার্ক মুছে ফেলা নিশ্চিত করুন
+              </h3>
+              <p className="text-[#441a05] mb-6">
+                আপনি কি নিশ্চিত যে এই ছাত্রের সব মার্ক মুছে ফেলতে চান?
+              </p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
+                  title="বাতিল করুন / Cancel"
+                >
+                  বাতিল
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white transition-colors duration-300 btn-glow"
+                  title="নিশ্চিত করুন / Confirm"
+                >
+                  নিশ্চিত করুন
+                </button>
               </div>
             </div>
           </div>
