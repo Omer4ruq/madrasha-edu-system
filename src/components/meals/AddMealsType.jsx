@@ -28,10 +28,10 @@ const AddMealType = () => {
   const [deleteMeal, { isLoading: isDeleting, error: deleteError }] = useDeleteMealsNameApiMutation();
 
   // Validate meal name
-  const validateMealName = (name) => {
-    const regex = /^[a-zA-Z0-9\s\-_,()]{1,50}$/;
-    return regex.test(name);
-  };
+  // const validateMealName = (name) => {
+  //   const regex = /^[a-zA-Z0-9\s\-_,()]{1,50}$/;
+  //   return regex.test(name);
+  // };
 
   // Handle form submission for adding or updating meal type
   const handleSubmit = async (e) => {
@@ -41,10 +41,10 @@ const AddMealType = () => {
       toast.error("অনুগ্রহ করে খাবারের ধরনের নাম লিখুন");
       return;
     }
-    if (!validateMealName(name)) {
-      toast.error("নাম ৫০ অক্ষরের মধ্যে এবং বৈধ অক্ষর ধারণ করবে");
-      return;
-    }
+    // if (!validateMealName(name)) {
+    //   toast.error("নাম ৫০ অক্ষরের মধ্যে এবং বৈধ অক্ষর ধারণ করবে");
+    //   return;
+    // }
     if (mealTypes?.some((mt) => mt.name.toLowerCase() === name.toLowerCase() && mt.id !== editMealId)) {
       toast.error("এই খাবারের ধরন ইতিমধ্যে বিদ্যমান!");
       return;
@@ -178,13 +178,13 @@ const AddMealType = () => {
             {editMealId ? (
               <FaEdit className="text-3xl text-[#441a05]" />
             ) : (
-              <IoAddCircle className="text-4xl text-[#441a05]" />
+              <IoAddCircle className="text-3xl text-[#441a05]" />
             )}
             <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
               {editMealId ? "খাবারের ধরন সম্পাদনা করুন" : "নতুন খাবারের ধরন যোগ করুন"}
             </h3>
           </div>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <input
               type="text"
               id="mealName"
