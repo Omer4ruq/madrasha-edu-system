@@ -31,22 +31,19 @@ const IncomeItems = () => {
   const [errors, setErrors] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 3; // Fixed to match StudentList
 
   const {
-    data: incomeItems = [],
+    data: incomeItems,
     isLoading: isItemsLoading,
     error: itemsError,
-  } = useGetIncomeItemsQuery();
+  } = useGetIncomeItemsQuery({ page: currentPage, page_size: pageSize });
+
   const { data: incomeHeads = [], isLoading: isHeadsLoading } = useGetIncomeHeadsQuery();
   const { data: fundTypes = [], isLoading: isFundLoading, error: fundError } = useGetFundsQuery();
-  const {
-    data: academicYears = [],
-    isLoading: isYearsLoading,
-  } = useGetAcademicYearApiQuery();
-  const {
-    data: transactionBooks = [],
-    isLoading: isBooksLoading,
-  } = useGetTransactionBooksQuery();
+  const { data: academicYears = [], isLoading: isYearsLoading } = useGetAcademicYearApiQuery();
+  const { data: transactionBooks = [], isLoading: isBooksLoading } = useGetTransactionBooksQuery();
   const [createIncomeItem, { isLoading: isCreating, error: createError }] = useCreateIncomeItemMutation();
   const [updateIncomeItem, { isLoading: isUpdating, error: updateError }] = useUpdateIncomeItemMutation();
   const [deleteIncomeItem, { isLoading: isDeleting, error: deleteError }] = useDeleteIncomeItemMutation();
@@ -146,6 +143,7 @@ const IncomeItems = () => {
         academic_year: "",
       });
       setErrors({});
+      setCurrentPage(1); // Reset to first page after creating
     } catch (err) {
       console.error("Create error:", err);
       toast.error(
@@ -226,6 +224,7 @@ const IncomeItems = () => {
         academic_year: "",
       });
       setErrors({});
+      setCurrentPage(1); // Reset to first page after updating
     } catch (err) {
       console.error("Update error:", err);
       toast.error(
@@ -246,6 +245,7 @@ const IncomeItems = () => {
     try {
       await deleteIncomeItem(modalData.id).unwrap();
       toast.success("আয় আইটেম সফলভাবে মুছে ফেলা হয়েছে!", { id: toastId });
+      setCurrentPage(1); // Reset to first page after deleting
     } catch (err) {
       console.error("Delete error:", err);
       toast.error(
@@ -258,7 +258,34 @@ const IncomeItems = () => {
     }
   };
 
-  const safeIncomeItems = Array.isArray(incomeItems) ? incomeItems : [];
+  const safeIncomeItems = Array.isArray(incomeItems?.results) ? incomeItems.results : [];
+
+  // Pagination logic
+  const totalPages = Math.ceil((incomeItems?.count || 0) / pageSize);
+  const hasNextPage = !!incomeItems?.next;
+  const hasPreviousPage = !!incomeItems?.previous;
+
+  const getPageNumbers = () => {
+    const maxPagesToShow = 5;
+    const pages = [];
+    let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+    let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+    if (endPage - startPage + 1 < maxPagesToShow) {
+      startPage = Math.max(1, endPage - maxPagesToShow + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   return (
     <div className="py-8 w-full">
@@ -300,10 +327,17 @@ const IncomeItems = () => {
             animation: slideUp 0.4s ease-out forwards;
           }
           .btn-glow:hover {
-            box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 0 15px rgba(219, 158, 48, 0.3);
+          }
+          .table-container {
+            max-height: 60vh;
+            overflow-x: auto;
+            overflow-y: auto;
+            position: relative;
           }
           ::-webkit-scrollbar {
             width: 8px;
+            height: 8px;
           }
           ::-webkit-scrollbar-track {
             background: transparent;
@@ -508,23 +542,6 @@ const IncomeItems = () => {
             )}
           </div>
           <div>
-            <input
-              type="file"
-              name="attach_doc"
-              onChange={handleChange}
-              className="w-full bg-transparent text-[#441a05] text-sm pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-              disabled={isCreating || isUpdating}
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-              aria-label="ডকুমেন্ট সংযুক্ত করুন"
-              aria-describedby={errors.attach_doc ? "attach_doc-error" : undefined}
-            />
-            {errors.attach_doc && (
-              <p id="attach_doc-error" className="text-red-400 text-sm mt-1">
-                {errors.attach_doc}
-              </p>
-            )}
-          </div>
-          <div>
             <select
               name="academic_year"
               value={formData.academic_year}
@@ -550,7 +567,7 @@ const IncomeItems = () => {
               </p>
             )}
           </div>
-          <div className="md:col-span-2">
+          <div className="md:col-span-3">
             <textarea
               name="description"
               value={formData.description}
@@ -617,13 +634,9 @@ const IncomeItems = () => {
           </div>
         </form>
         {(createError || updateError || fundError) && (
-          <div
-            className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-scaleIn"
-          >
+          <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-scaleIn">
             {fundError && (
-              <p id="fund-error">
-                তহবিল লোড করতে ত্রুটি: {JSON.stringify(fundError)}
-              </p>
+              <p id="fund-error">তহবিল লোড করতে ত্রুটি: {JSON.stringify(fundError)}</p>
             )}
             {(createError || updateError) && (
               <p id="form-error">
@@ -636,110 +649,154 @@ const IncomeItems = () => {
       </div>
 
       {/* Income Items Table */}
-      <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] p-6">
+      <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn p-6">
         <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">
           আয় আইটেম তালিকা
         </h3>
         {isItemsLoading ? (
-          <p className="p-4 text-[#441a05]/70 flex items-center">
-            <FaSpinner className="animate-spin text-sm mr-2" />
-            লোড হচ্ছে...
-          </p>
+          <div className="p-4 flex items-center justify-center">
+            <FaSpinner className="animate-spin text-[#441a05] text-2xl mr-2" />
+            <p className="text-[#441a05]/70">লোড হচ্ছে...</p>
+          </div>
         ) : itemsError ? (
           <p className="p-4 text-red-400 bg-red-500/10 rounded-lg">
-            ত্রুটি: {itemsError.status || "অজানা"} -{" "}
-            {JSON.stringify(itemsError.data || {})}
+            ত্রুটি: {itemsError.status || "অজানা"} - {JSON.stringify(itemsError.data || {})}
           </p>
         ) : safeIncomeItems.length === 0 ? (
-          <p className="p-4 text-[#441a05]/70">কোনো আয় আইটেম উপলব্ধ নেই।</p>
+          <p className="p-4 text-[#441a05]/70 text-center">কোনো আয় আইটেম উপলব্ধ নেই।</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-white/20">
-              <thead className="bg-white/5">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    আয়ের ধরণ
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    নাম
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    তহবিল
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    লেনদেন নম্বর
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    ইনভয়েস নম্বর
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    তারিখ
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    পরিমাণ
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    শিক্ষাবর্ষ
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    ক্রিয়া
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/20">
-                {safeIncomeItems.map((item, index) => (
-                  <tr
-                    key={item.id}
-                    className="bg-white/5 animate-fadeIn"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {incomeHeads.find((head) => head.id === item.incometype_id)?.incometype || "N/A"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {item.name || "N/A"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {fundTypes.find((fund) => fund.id === item.fund_id)?.name || "N/A"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {item.transaction_number || "N/A"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {item.invoice_number || "N/A"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {item.income_date || "N/A"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {item.amount || "N/A"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {academicYears.find((year) => year.id === item.academic_year)?.name || "N/A"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex space-x-4">
-                        <button
-                          onClick={() => handleEditClick(item)}
-                          className="text-[#441a05] hover:text-blue-500 transition-all duration-300"
-                          aria-label={`সম্পাদনা করুন ${item.name || "আয় আইটেম"}`}
-                        >
-                          <FaEdit className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          className="text-[#441a05] hover:text-red-500 transition-all duration-300"
-                          aria-label={`মুছুন ${item.name || "আয় আইটেম"}`}
-                        >
-                          <FaTrash className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </td>
+          <>
+            <div className="table-container">
+              <table className="min-w-full divide-y divide-white/20">
+                <thead className="bg-white/5 sticky top-0 z-10">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      আয়ের ধরণ
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      নাম
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      তহবিল
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      লেনদেন নম্বর
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      ইনভয়েস নম্বর
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      তারিখ
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      পরিমাণ
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      শিক্ষাবর্ষ
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      ক্রিয়া
+                    </th>
                   </tr>
+                </thead>
+                <tbody className="divide-y divide-white/20">
+                  {safeIncomeItems.map((item, index) => (
+                    <tr
+                      key={item.id}
+                      className="bg-white/5 animate-fadeIn"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {incomeHeads.find((head) => head.id === item.incometype_id)?.incometype || "N/A"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {item.name || "N/A"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {fundTypes.find((fund) => fund.id === item.fund_id)?.name || "N/A"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {item.transaction_number || "N/A"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {item.invoice_number || "N/A"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {item.income_date || "N/A"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {item.amount || "N/A"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {academicYears.find((year) => year.id === item.academic_year)?.name || "N/A"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div className="flex space-x-4">
+                          <button
+                            onClick={() => handleEditClick(item)}
+                            className="text-[#441a05] hover:text-blue-500 transition-colors duration-300"
+                            aria-label={`সম্পাদনা করুন ${item.name || "আয় আইটেম"}`}
+                          >
+                            <FaEdit className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                            aria-label={`মুছুন ${item.name || "আয় আইটেম"}`}
+                          >
+                            <FaTrash className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center mt-6 space-x-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={!hasPreviousPage}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                    !hasPreviousPage
+                      ? 'bg-gray-500/20 text-[#441a05]/30 cursor-not-allowed'
+                      : 'bg-[#DB9E30] text-[#441a05] hover:text-white'
+                  }`}
+                  aria-label="পূর্ববর্তী পৃষ্ঠা"
+                >
+                  পূর্ববর্তী
+                </button>
+                {getPageNumbers().map((pageNumber) => (
+                  <button
+                    key={pageNumber}
+                    onClick={() => handlePageChange(pageNumber)}
+                    className={`px-3 py-1 rounded-lg font-medium transition-all duration-300 ${
+                      currentPage === pageNumber
+                        ? 'bg-[#DB9E30] text-white'
+                        : 'bg-white/20 text-[#441a05] hover:bg-white/30'
+                    }`}
+                    aria-label={`পৃষ্ঠা ${pageNumber} এ যান`}
+                  >
+                    {pageNumber}
+                  </button>
                 ))}
-              </tbody>
-            </table>
-          </div>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={!hasNextPage}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                    !hasNextPage
+                      ? 'bg-gray-500/20 text-[#441a05]/30 cursor-not-allowed'
+                      : 'bg-[#DB9E30] text-[#441a05] hover:text-white'
+                  }`}
+                  aria-label="পরবর্তী পৃষ্ঠা"
+                >
+                  পরবর্তী
+                </button>
+              </div>
+            )}
+          </>
         )}
         {(isDeleting || deleteError) && (
           <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-scaleIn">
@@ -753,9 +810,7 @@ const IncomeItems = () => {
       {/* Confirmation Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
-          <div
-            className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"
-          >
+          <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
             <h3 className="text-lg font-semibold text-[#441a05] mb-4">
               আয় আইটেম মুছে ফেলা নিশ্চিত করুন
             </h3>
@@ -765,17 +820,27 @@ const IncomeItems = () => {
             <div className="flex justify-end space-x-4">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-all duration-300"
+                className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
                 aria-label="বাতিল"
               >
                 বাতিল
               </button>
               <button
                 onClick={confirmDelete}
-                className="px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white transition-all duration-300 btn-glow"
+                disabled={isDeleting}
+                className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg transition-colors duration-300 btn-glow ${
+                  isDeleting ? 'cursor-not-allowed opacity-60' : 'hover:text-white'
+                }`}
                 aria-label="নিশ্চিত করুন"
               >
-                নিশ্চিত করুন
+                {isDeleting ? (
+                  <span className="flex items-center space-x-2">
+                    <FaSpinner className="animate-spin text-lg" />
+                    <span>মুছছে...</span>
+                  </span>
+                ) : (
+                  'নিশ্চিত করুন'
+                )}
               </button>
             </div>
           </div>
