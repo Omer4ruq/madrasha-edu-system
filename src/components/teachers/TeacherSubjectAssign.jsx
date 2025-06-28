@@ -24,7 +24,7 @@ const TeacherSubjectAssign = () => {
   );
   const [createAssignment, { isLoading: createLoading }] = useCreateTeacherSubjectAssignMutation();
   const [updateAssignment, { isLoading: updateLoading }] = useUpdateTeacherSubjectAssignMutation();
-
+console.log(teachers)
   // Pre-select classes and subjects for the selected teacher
   useEffect(() => {
     if (teacherAssignments && selectedTeacher) {

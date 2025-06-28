@@ -59,6 +59,8 @@ import TeacherSubjectAssign from "./components/teachers/TeacherSubjectAssign";
 import SignatureSheet from "./components/signature-sheet/SignatureSheet";
 import Event from "./components/event/Event";
 import AddEvent from "./components/event/AddEvent";
+import { ClassRoutine } from "./components/routine/routine-index";
+
 
 
 function Root() {
@@ -228,6 +230,10 @@ function Root() {
              {
               path: "event",
               element: <Event></Event>,
+            },
+               {
+              path: "routine",
+              element: <ClassRoutine></ClassRoutine>,
             },
           ],
         },
