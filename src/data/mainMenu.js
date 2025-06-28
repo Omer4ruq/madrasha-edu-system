@@ -195,6 +195,11 @@ const mainMenu = [
         title: "ইভেন্ট ক্যালেন্ডার",
         link: "/talimat/event",
       },
+        {
+        id: "05/10",
+        title: "রুটিন",
+        link: "/talimat/routine",
+      },
     ],
   },
   {
