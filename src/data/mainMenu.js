@@ -13,7 +13,7 @@ const mainMenu = [
   {
     id: "03",
     title: "প্রতিষ্ঠানের তথ্য",
-    icon: "HiOutlineBuildingStorefront",
+    icon: "HiOutlineBuildingStorefront", 
     link: "/institute-profile",
   },
   {
@@ -196,9 +196,14 @@ const mainMenu = [
         link: "/talimat/event",
       },
         {
-        id: "05/10",
+        id: "05/11",
         title: "রুটিন",
         link: "/talimat/routine",
+      },
+        {
+        id: "05/12",
+        title: "পরীক্ষার রুটিন",
+        link: "/talimat/exam-routine",
       },
     ],
   },

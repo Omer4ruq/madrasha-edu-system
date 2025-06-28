@@ -264,7 +264,7 @@ export default function ClassRoutine() {
         </div>
 
         {selectedClass && isValidId(selectedClass.class_id) && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
             {/* Days Section */}
             <div>
               <h3 className="text-lg font-semibold text-[#441a05] mb-3">

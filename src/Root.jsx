@@ -44,7 +44,6 @@ import MealItems from "./components/meals/MealItems";
 import MealSetup from "./components/meals/MealSetup";
 import MealStatus from "./components/meals/MealStatus";
 import ClassSubject from "./components/SubjectManagement/ClassSubject";
-
 import SentSms from "./components/Communication2/General-SMS/SendSms";
 import SmsTemplate from "./components/Communication2/General-SMS/SmsTemplate";
 import SentNotificationSMS from "./components/Communication2/Notification-SMS/SentNotificationSMS";
@@ -60,8 +59,7 @@ import SignatureSheet from "./components/signature-sheet/SignatureSheet";
 import Event from "./components/event/Event";
 import AddEvent from "./components/event/AddEvent";
 import { ClassRoutine } from "./components/routine/routine-index";
-
-
+import ExamRoutine from "./components/routine/exam-routine/ExamRoutine";
 
 function Root() {
   const router = createBrowserRouter([
@@ -219,17 +217,21 @@ function Root() {
                 },
               ],
             },
-             {
+            {
               path: "signature-sheet",
               element: <SignatureSheet></SignatureSheet>,
             },
-             {
+            {
               path: "event",
               element: <Event></Event>,
             },
-               {
+            {
               path: "routine",
               element: <ClassRoutine></ClassRoutine>,
+            },
+            {
+              path: "exam-routine",
+              element: <ExamRoutine></ExamRoutine>,
             },
           ],
         },

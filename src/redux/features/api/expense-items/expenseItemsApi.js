@@ -24,21 +24,57 @@ export const expenseItemsApi = createApi({
   tagTypes: ['ExpenseItems'],
   endpoints: (builder) => ({
     getExpenseItems: builder.query({
-      query: (page = 1) => `/expense-items/?page=${page}`,
+      query: ({ page = 1 } = {}) => `/expense-items/?page=${page}`,
       providesTags: ['ExpenseItems'],
       transformResponse: (response) => {
         return {
-          items: Array.isArray(response.results) ? response.results : [],
           count: response.count || 0,
           next: response.next || null,
           previous: response.previous || null,
+          results: Array.isArray(response.results) ? response.results : [],
         };
       },
     }),
+
+    // ✅ New: Fetch all paginated data like incomeItemsApi
+    getAllExpenseItems: builder.query({
+      async queryFn(_arg, { dispatch }, _extraOptions, fetchWithBQ) {
+        let allResults = [];
+        let nextPage = `${BASE_URL}/expense-items/?page=1`;
+        let page = 1;
+
+        while (nextPage) {
+          try {
+            const response = await fetchWithBQ(`/expense-items/?page=${page}`);
+            if (response.error) {
+              throw response.error;
+            }
+            const data = response.data;
+            allResults = [...allResults, ...data.results];
+            nextPage = data.next;
+            page += 1;
+          } catch (error) {
+            return { error };
+          }
+        }
+
+        return {
+          data: {
+            count: allResults.length,
+            next: null,
+            previous: null,
+            results: allResults,
+          },
+        };
+      },
+      providesTags: ['ExpenseItems'],
+    }),
+
     getExpenseItemById: builder.query({
       query: (id) => `/expense-items/${id}/`,
       providesTags: ['ExpenseItems'],
     }),
+
     createExpenseItem: builder.mutation({
       query: (expenseItemData) => {
         const formData = new FormData();
@@ -46,7 +82,9 @@ export const expenseItemsApi = createApi({
           if (key === 'attach_doc' && value instanceof File) {
             formData.append(key, value);
           } else if (value !== null && value !== undefined) {
-            if (['expensetype_id', 'fund_id', 'transaction_book_id', 'transaction_number', 'academic_year', 'created_by', 'updated_by'].includes(key)) {
+            if (
+              ['expensetype_id', 'fund_id', 'transaction_book_id', 'transaction_number', 'academic_year', 'created_by', 'updated_by'].includes(key)
+            ) {
               formData.append(key, parseInt(value));
             } else if (key === 'amount') {
               formData.append(key, parseFloat(value));
@@ -63,6 +101,7 @@ export const expenseItemsApi = createApi({
       },
       invalidatesTags: ['ExpenseItems'],
     }),
+
     updateExpenseItem: builder.mutation({
       query: ({ id, ...expenseItemData }) => {
         const formData = new FormData();
@@ -70,7 +109,9 @@ export const expenseItemsApi = createApi({
           if (key === 'attach_doc' && value instanceof File) {
             formData.append(key, value);
           } else if (value !== null && value !== undefined) {
-            if (['expensetype_id', 'fund_id', 'transaction_book_id', 'transaction_number', 'academic_year', 'created_by', 'updated_by'].includes(key)) {
+            if (
+              ['expensetype_id', 'fund_id', 'transaction_book_id', 'transaction_number', 'academic_year', 'created_by', 'updated_by'].includes(key)
+            ) {
               formData.append(key, parseInt(value));
             } else if (key === 'amount') {
               formData.append(key, parseFloat(value));
@@ -87,6 +128,7 @@ export const expenseItemsApi = createApi({
       },
       invalidatesTags: ['ExpenseItems'],
     }),
+
     deleteExpenseItem: builder.mutation({
       query: (id) => ({
         url: `/expense-items/${id}/`,
@@ -99,6 +141,7 @@ export const expenseItemsApi = createApi({
 
 export const {
   useGetExpenseItemsQuery,
+  useGetAllExpenseItemsQuery, 
   useGetExpenseItemByIdQuery,
   useCreateExpenseItemMutation,
   useUpdateExpenseItemMutation,
