@@ -59,7 +59,7 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">{t("module.routine.schedule")}</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">Routine Schedule</h2>
       <div className="overflow-x-auto">
         <div
           className="grid gap-1"

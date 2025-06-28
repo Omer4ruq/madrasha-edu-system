@@ -266,8 +266,9 @@ export default function ClassRoutine() {
                 ) : filterTeacher.length === 0 ? (
                   <p className="text-red-500">
                     {selectedSubjects.length === 0
-                      ? t("module.routine.select_subject_first")
-                      : t("module.routine.no_teachers_available")}
+                      ? "select subject first"
+                      : "no teachers available"
+                    }
                   </p>
                 ) : (
                   <div className="flex flex-col gap-2">
