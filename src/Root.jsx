@@ -290,6 +290,10 @@ function Root() {
               path: "delete-fee",
               element: <DeleteStudentFees />,
             },
+               {
+              path: "boarding-fee",
+              element: <DeleteStudentFees />,
+            },
           ],
         },
         {

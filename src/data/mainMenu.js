@@ -280,6 +280,11 @@ const mainMenu = [
         title: "মুছুন - ফি",
         link: "/accounts/delete-fee",
       },
+         {
+        id: "07/10",
+        title: "boarding - ফি",
+        link: "/accounts/boarding-fee",
+      },
     ],
   },
   {

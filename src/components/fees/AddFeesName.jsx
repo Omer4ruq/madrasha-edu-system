@@ -13,6 +13,7 @@ import { useCreateFeesNameMutation } from '../../redux/features/api/fees-name/fe
 const AddFeesName = () => {
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
+  const [isBoarding, setIsBoarding] = useState(false); // State for boarding
   const [selectedFeePackages, setSelectedFeePackages] = useState([]);
   const [selectedFeeSubheads, setSelectedFeeSubheads] = useState([]);
   const [configurations, setConfigurations] = useState([]);
@@ -96,6 +97,7 @@ const AddFeesName = () => {
           startDate: '',
           endDate: '',
           amount: pkg?.amount || '0.00',
+          isBoarding: isBoarding,
         };
       });
     }).flat();
@@ -146,7 +148,8 @@ const AddFeesName = () => {
           academic_year: parseInt(config.academicYear),
           created_by: 1,
           updated_by: null,
-          fee_amount_id: config.packageId
+          fee_amount_id: config.packageId,
+          is_boarding: config.isBoarding
         };
 
         await createFeesName(payload).unwrap();
@@ -155,6 +158,7 @@ const AddFeesName = () => {
       setConfigurations([]);
       setSelectedClass(null);
       setSelectedAcademicYear('');
+      setIsBoarding(false);
       setErrors({});
       setIsModalOpen(false);
     } catch (error) {
@@ -186,6 +190,8 @@ const AddFeesName = () => {
           .animate-scaleIn { animation: scaleIn 0.4s ease-out forwards; }
           .animate-slideUp { animation: slideUp 0.4s ease-out forwards; }
           .btn-glow:hover { box-shadow: 0 0 15px rgba(37, 99, 235, 0.3); }
+          .toggle-bg { background: #9d9087; }
+          .toggle-bg-checked { background: #DB9E30; }
           ::-webkit-scrollbar { width: 8px; }
           ::-webkit-scrollbar-track { background: transparent; }
           ::-webkit-scrollbar-thumb { background: rgba(22, 31, 48, 0.26); border-radius: 10px; }
@@ -209,8 +215,7 @@ const AddFeesName = () => {
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg transition-colors duration-300 btn-glow ${isSubmitting ? 'cursor-not-allowed opacity-60' : 'hover:text-white'
-                  }`}
+                className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg transition-colors duration-300 btn-glow ${isSubmitting ? 'cursor-not-allowed opacity-60' : 'hover:text-white'}`}
               >
                 {isSubmitting ? (
                   <span className="flex items-center space-x-2">
@@ -233,13 +238,32 @@ const AddFeesName = () => {
           <h2 className="text-2xl font-bold text-[#441a05] tracking-tight">ফি কনফিগারেশন যোগ করুন</h2>
         </div>
 
+        {/* Boarding Toggle */}
+        <div className="mb-6">
+          <label className="flex items-center cursor-pointer">
+            <div className="relative">
+              <input
+                type="checkbox"
+                checked={isBoarding}
+                onChange={() => setIsBoarding(!isBoarding)}
+                className="sr-only"
+              />
+              <div className={`w-12 h-6 rounded-full transition-all duration-300 ${isBoarding ? 'toggle-bg-checked' : 'toggle-bg'}`}>
+                <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${isBoarding ? 'translate-x-6' : 'translate-x-0'}`} />
+              </div>
+            </div>
+            <span className="ml-3 text-[#441a05] font-medium">{isBoarding ? 'বোর্ডিং' : 'নন-বোর্ডিং'}</span>
+          </label>
+        </div>
+
         {/* Class Tabs */}
         <div className="mb-6 flex flex-wrap gap-2">
           {classes?.map((cls) => (
             <button
               key={cls.id}
-              className={`px-4 py-2 rounded-lg transition-all duration-300 ${selectedClass === cls.id ? 'bg-[#DB9E30] text-white' : 'bg-gray-500/20 text-[#441a05] hover:bg-gray-500/30'
-                }`}
+              className={`px-4 py-2 rounded-lg transition-all duration-300 ${selectedClass
+
+ === cls.id ? 'bg-[#DB9E30] text-white' : 'bg-gray-500/20 text-[#441a05] hover:bg-gray-500/30'}`}
               onClick={() => {
                 setSelectedClass(cls.id);
                 setErrors((prev) => ({ ...prev, class: null }));
@@ -413,6 +437,7 @@ const AddFeesName = () => {
                   <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ফি প্যাকেজ</th>
                   <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ফি সাবহেড</th>
                   <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শিক্ষাবর্ষ</th>
+                  <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">বোর্ডিং</th>
                   <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শুরুর তারিখ</th>
                   <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শেষের তারিখ</th>
                 </tr>
@@ -425,6 +450,13 @@ const AddFeesName = () => {
                     <td className="border border-white/20 p-3 text-sm text-[#441a05]">{config.subheadName}</td>
                     <td className="border border-white/20 p-3 text-sm text-[#441a05]">
                       {academicYears?.find((y) => y.id === parseInt(config.academicYear))?.name || config.academicYear}
+                    </td>
+                    <td className="border border-white/20 p-3 text-sm text-[#441a05]">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${config.isBoarding ? 'bg-[#DB9E30] text-[#441a05]' : 'bg-gray-500/20 text-[#441a05]'}`}
+                      >
+                        {config.isBoarding ? 'বোর্ডিং' : 'নন-বোর্ডিং'}
+                      </span>
                     </td>
                     <td className="border border-white/20 p-3 text-sm text-[#441a05]">
                       <input
@@ -452,8 +484,7 @@ const AddFeesName = () => {
         {/* Submit Button */}
         <button
           onClick={handleOpenModal}
-          className={`${configurations.length === 0 ? "hidden" : ""} flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${configurations.length === 0 || isSubmitting ? 'cursor-not-allowed opacity-70' : 'hover:text-white btn-glow'
-            }`}
+          className={`${configurations.length === 0 ? "hidden" : ""} flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${configurations.length === 0 || isSubmitting ? 'cursor-not-allowed opacity-70' : 'hover:text-white btn-glow'}`}
           disabled={configurations.length === 0 || isSubmitting}
         >
           {isSubmitting ? (
@@ -472,7 +503,7 @@ const AddFeesName = () => {
         {/* Error Display */}
         {submitError && (
           <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
-            ত্রুটি: {submitError?.status || 'অজানা'} - {JSON.stringify(submitError?.data || {})}
+            ত্রুটি: {submitError?.status || 'অজানা'} - {JSON.stringify(subError?.data || {})}
           </div>
         )}
       </div>
