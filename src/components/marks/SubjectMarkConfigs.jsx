@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { 
+import { FaSpinner, FaTrash } from 'react-icons/fa';
+import { IoAddCircle } from 'react-icons/io5';
+import { Toaster, toast } from 'react-hot-toast';
+import {
   useGetClassListApiQuery,
- 
 } from '../../redux/features/api/class/classListApi';
-import { 
+import {
   useGetSubjectMarkConfigsQuery,
   useCreateSubjectMarkConfigMutation,
   useUpdateSubjectMarkConfigMutation,
-  useDeleteSubjectMarkConfigMutation 
+  useDeleteSubjectMarkConfigMutation,
 } from '../../redux/features/api/marks/subjectMarkConfigsApi';
 import { useGetGmarkTypesQuery } from '../../redux/features/api/marks/gmarktype';
 import { useGetClassSubjectsByClassIdQuery } from '../../redux/features/api/class-subjects/classSubjectsApi';
@@ -15,6 +17,9 @@ import { useGetClassSubjectsByClassIdQuery } from '../../redux/features/api/clas
 const SubjectMarkConfigs = () => {
   const { data: classes = [], isLoading: classesLoading } = useGetClassListApiQuery();
   const [selectedClassId, setSelectedClassId] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalData, setModalData] = useState(null);
+  const [modalAction, setModalAction] = useState(null);
   const { 
     data: subjects = [], 
     isLoading: subjectsLoading, 
@@ -40,7 +45,7 @@ const SubjectMarkConfigs = () => {
     [type.id]: type.name
   }), {});
 
-  // Load existing configurations when available
+  // Load existing configurations
   useEffect(() => {
     if (markConfigs && selectedClassId && markTypes.length > 0) {
       const configs = markConfigs.reduce((acc, config) => {
@@ -119,11 +124,17 @@ const SubjectMarkConfigs = () => {
     setSubjectConfigs(newConfigs);
   };
 
-  const handleUpdate = async (subjectId) => {
+  const handleUpdate = (subjectId) => {
+    setModalAction('update');
+    setModalData({ subjectId });
+    setIsModalOpen(true);
+  };
+
+  const confirmUpdate = async () => {
     try {
-      const config = subjectConfigs[subjectId];
+      const config = subjectConfigs[modalData.subjectId];
       if (!config || !config.id) {
-        alert('No configuration found to update');
+        toast.error('কোনো কনফিগারেশন পাওয়া যায়নি।');
         return;
       }
 
@@ -143,61 +154,66 @@ const SubjectMarkConfigs = () => {
           }))
       };
 
-      const result = await updateSubjectMarkConfig(payload).unwrap();
-      alert('Subject mark configuration updated successfully!');
-      console.log('Update result:', result);
+      await updateSubjectMarkConfig(payload).unwrap();
+      toast.success('বিষয় মার্ক কনফিগারেশন সফলভাবে আপডেট করা হয়েছে!');
     } catch (error) {
-      console.error('Error updating configuration:', error);
-      alert(`Error: ${error?.data?.message || 'Failed to update configuration.'}`);
+      console.error('কনফিগারেশন আপডেটে ত্রুটি:', error);
+      toast.error(`ত্রুটি: ${error?.data?.message || 'কনফিগারেশন আপডেট ব্যর্থ।'}`);
+    } finally {
+      setIsModalOpen(false);
+      setModalAction(null);
+      setModalData(null);
     }
   };
 
-   const handleDelete = async (subjectId) => {
+  const handleDelete = (subjectId) => {
+    setModalAction('delete');
+    setModalData({ subjectId });
+    setIsModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
     try {
-      const config = subjectConfigs[subjectId];
+      const config = subjectConfigs[modalData.subjectId];
       if (!config || !config.id) {
-        console.error('No configuration found for subject ID:', subjectId);
-        alert('No configuration found to delete.');
+        toast.error('কোনো কনফিগারেশন পাওয়া যায়নি।');
         return;
       }
-
-      if (!window.confirm('Are you sure you want to delete this configuration?')) {
-        return;
-      }
-
-      console.log('Delete payload:', { id: config.id });
 
       await deleteSubjectMarkConfig(config.id).unwrap();
-      alert('Subject mark configuration deleted successfully!');
+      toast.success('বিষয় মার্ক কনফিগারেশন সফলভাবে মুছে ফেলা হয়েছে!');
       
-      // Remove from local state
       const newConfigs = { ...subjectConfigs };
-      delete newConfigs[subjectId];
+      delete newConfigs[modalData.subjectId];
       setSubjectConfigs(newConfigs);
     } catch (error) {
-      console.error('Error deleting configuration:', {
-        subjectId,
+      console.error('কনফিগারেশন মুছে ফেলায় ত্রুটি:', {
+        subjectId: modalData.subjectId,
         error: error?.data || error?.message || error,
         status: error?.status
       });
-      let errorMessage = 'Failed to delete configuration. Please try again.';
+      let errorMessage = 'কনফিগারেশন মুছে ফেলা ব্যর্থ। আবার চেষ্টা করুন।';
       if (error?.status === 400) {
-        errorMessage = `Bad Request: ${error.data?.message || 'Invalid ID.'}`;
+        errorMessage = `ভুল অনুরোধ: ${error.data?.message || 'অবৈধ আইডি।'}`;
       } else if (error?.status === 401) {
-        errorMessage = 'Unauthorized. Please log in again.';
+        errorMessage = 'অননুমোদিত। দয়া করে আবার লগইন করুন।';
       } else if (error?.status === 404) {
-        errorMessage = 'Configuration not found.';
+        errorMessage = 'কনফিগারেশন পাওয়া যায়নি।';
       } else if (error?.message) {
         errorMessage = error.message;
       }
-      alert(`Error: ${errorMessage}`);
+      toast.error(`ত্রুটি: ${errorMessage}`);
+    } finally {
+      setIsModalOpen(false);
+      setModalAction(null);
+      setModalData(null);
     }
   };
 
   const handleSubmit = async () => {
     try {
       if (!selectedClassId) {
-        alert('Please select a class first');
+        toast.error('দয়া করে প্রথমে একটি ক্লাস নির্বাচন করুন।');
         return;
       }
 
@@ -224,16 +240,15 @@ const SubjectMarkConfigs = () => {
       };
 
       if (subjects.length === 0) {
-        alert('Please configure at least one subject before submitting');
+        toast.error('অন্তত একটি বিষয় কনফিগার করুন।');
         return;
       }
 
-      const result = await createSubjectMarkConfig(payload).unwrap();
-      alert('Subject mark configurations saved successfully!');
-      console.log('Create result:', result);
+      await createSubjectMarkConfig(payload).unwrap();
+      toast.success('বিষয় মার্ক কনফিগারেশন সফলভাবে সংরক্ষিত!');
     } catch (error) {
-      console.error('Error saving configurations:', error);
-      alert(`Error: ${error?.data?.message || 'Failed to save configurations.'}`);
+      console.error('কনফিগারেশন সংরক্ষণে ত্রুটি:', error);
+      toast.error(`ত্রুটি: ${error?.data?.message || 'কনফিগারেশন সংরক্ষণ ব্যর্থ।'}`);
     }
   };
 
@@ -253,10 +268,10 @@ const SubjectMarkConfigs = () => {
 
   if (classesLoading || subjectsLoading || markTypesLoading || configsLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-lg p-8 flex items-center space-x-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-          <span className="text-gray-700 font-medium">Loading...</span>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-black/10 backdrop-blur-sm rounded-xl shadow-lg p-8 flex items-center space-x-4 animate-fadeIn">
+          <FaSpinner className="animate-spin text-2xl text-[#441a05]" />
+          <span className="text-[#441a05] font-medium">লোড হচ্ছে...</span>
         </div>
       </div>
     );
@@ -264,60 +279,115 @@ const SubjectMarkConfigs = () => {
 
   if (subjectsError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-black/10 backdrop-blur-sm rounded-xl shadow-lg p-8 text-center animate-fadeIn">
           <div className="text-red-500 text-5xl mb-4">⚠️</div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Error Loading Subjects</h2>
-          <p className="text-gray-600">Please try refreshing the page or contact support.</p>
+          <h2 className="text-xl font-semibold text-[#441a05] mb-2">বিষয় লোডে ত্রুটি</h2>
+          <p className="text-[#441a05]/70">দয়া করে পৃষ্ঠাটি রিফ্রেশ করুন বা সহায়তার জন্য যোগাযোগ করুন।</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
-            Subject Mark Configuration
+    <div className="py-8">
+      <Toaster position="top-right" reverseOrder={false} />
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes scaleIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+          }
+          @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 0.6s ease-out forwards;
+          }
+          .animate-scaleIn {
+            animation: scaleIn 0.4s ease-out forwards;
+          }
+          .animate-slideUp {
+            animation: slideUp 0.4s ease-out forwards;
+          }
+          .tick-glow {
+            transition: all 0.3s ease;
+          }
+          .tick-glow:focus {
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+          }
+          .btn-glow:hover {
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
+          }
+          ::-webkit-scrollbar {
+            width: 8px;
+          }
+          ::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          ::-webkit-scrollbar-thumb {
+            background: rgba(22, 31, 48, 0.26);
+            border-radius: 10px;
+          }
+          ::-webkit-scrollbar-thumb:hover {
+            background: rgba(10, 13, 21, 0.44);
+          }
+        `}
+      </style>
+
+      <div className="">
+        {/* Header */}
+        <div className="flex items-center space-x-4 mb-6 animate-fadeIn ml-5">
+          <IoAddCircle className="text-3xl text-[#441a05]" />
+          <h1 className="text-2xl font-bold text-[#441a05] tracking-tight">
+            বিষয় মার্ক কনফিগারেশন
           </h1>
-          <p className="text-gray-600 text-lg">Configure subject marks and assessment criteria for your classes</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-            <span className="bg-indigo-100 text-indigo-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">1</span>
-            Select Class
+        {/* Class Selection */}
+        <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8">
+          <h2 className="text-xl font-semibold text-[#441a05] mb-4 flex items-center">
+            <span className="bg-[#DB9E30]/20 text-[#441a05] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">১</span>
+            ক্লাস নির্বাচন করুন
           </h2>
           <div className="flex flex-wrap gap-3">
-            {classes.map(cls => (
+            {classes.map((cls, index) => (
               <button
                 key={cls.id}
                 onClick={() => handleClassChange(cls.id)}
-                className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 transform hover:scale-105 ${
+                className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 animate-scaleIn ${
                   selectedClassId === cls.id 
-                    ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg ring-2 ring-indigo-200' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-md'
+                    ? 'bg-[#DB9E30] text-[#441a05] shadow-lg ring-2 ring-[#9d9087]' 
+                    : 'bg-white/10 text-[#441a05] hover:bg-white/20 hover:shadow-md'
                 }`}
+                style={{ animationDelay: `${index * 0.1}s` }}
+                aria-label={`ক্লাস নির্বাচন ${cls?.student_class?.name}`}
+                title={`ক্লাস নির্বাচন করুন / Select class ${cls?.student_class?.name}`}
               >
                 {cls?.student_class?.name}
               </button>
             ))}
           </div>
           {selectedClassId && (
-            <div className="mt-4 p-4 bg-indigo-50 rounded-lg">
-              <p className="text-indigo-700 font-medium">
-                ✓ Selected: <span className="font-bold">{getSelectedClass()?.student_class?.name}</span>
+            <div className="mt-4 p-4 bg-white/10 rounded-lg animate-fadeIn">
+              <p className="text-[#441a05] font-medium">
+                ✓ নির্বাচিত: <span className="font-bold">{getSelectedClass()?.student_class?.name}</span>
               </p>
             </div>
           )}
         </div>
 
+        {/* Subject Configurations */}
         {selectedClassId && (
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-              <span className="bg-indigo-100 text-indigo-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">2</span>
-              Configure Subjects ({subjects.length} subjects)
+          <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl p-6">
+            <h2 className="text-xl font-semibold text-[#441a05] mb-6 flex items-center">
+              <span className="bg-[#DB9E30]/20 text-[#441a05] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">২</span>
+              বিষয় কনফিগার করুন ({subjects.length}টি বিষয়)
             </h2>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -328,27 +398,29 @@ const SubjectMarkConfigs = () => {
                 const remainingMarks = subjectMaxMark - totalDistributed;
 
                 return (
-                  <div key={subject.id} className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all duration-200">
+                  <div key={subject.id} className="bg-white/10 border border-white/20 rounded-2xl p-6 hover:shadow-lg transition-all duration-200 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-bold text-gray-800 truncate flex-1">{subject?.name}</h3>
+                      <h3 className="text-lg font-bold text-[#441a05] truncate flex-1">{subject?.name}</h3>
                       <div className="flex space-x-2">
                         {subjectConfigs[subject.id]?.id && (
                           <>
                             <button
                               onClick={() => handleUpdate(subject.id)}
-                              className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm"
+                              className="px-3 py-1 bg-[#DB9E30] text-[#441a05] rounded-md hover:bg-[#DB9E30]/80 text-sm btn-glow"
+                              title="আপডেট করুন / Update"
                             >
-                              Update
+                              আপডেট
                             </button>
                             <button
                               onClick={() => handleDelete(subject.id)}
-                              className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
+                              className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm btn-glow"
+                              title="মুছুন / Delete"
                             >
-                              Delete
+                              <FaTrash className="w-4 h-4" />
                             </button>
                           </>
                         )}
-                        <span className="bg-indigo-100 text-indigo-600 text-xs font-medium px-2 py-1 rounded-full">
+                        <span className="bg-[#DB9E30]/20 text-[#441a05] text-xs font-medium px-2 py-1 rounded-full">
                           #{index + 1}
                         </span>
                       </div>
@@ -356,59 +428,65 @@ const SubjectMarkConfigs = () => {
 
                     <div className="space-y-4 mb-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Subject Type</label>
+                        <label className="block text-sm font-medium text-[#441a05] mb-2">বিষয়ের ধরন</label>
                         <select
                           value={subjectConfigs[subject.id]?.subject_type || 'COMPULSARY'}
                           onChange={(e) => handleInputChange(subject.id, 'subject_type', e.target.value)}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white"
+                          className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
+                          aria-label={`বিষয়ের ধরন ${subject.name}`}
+                          title={`বিষয়ের ধরন নির্বাচন করুন / Select subject type for ${subject.name}`}
                         >
-                          <option value="COMPULSARY">📝 Compulsory</option>
-                          <option value="CHOOSABLE">🎯 Optional</option>
-                          <option value="Uncountable">📊 Non-graded</option>
+                          <option value="COMPULSARY">📝 বাধ্যতামূলক</option>
+                          <option value="CHOOSABLE">🎯 ঐচ্ছিক</option>
+                          <option value="Uncountable">📊 গ্রেডবিহীন</option>
                         </select>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Max Marks</label>
+                          <label className="block text-sm font-medium text-[#441a05] mb-2">সর্বোচ্চ মার্ক</label>
                           <input
                             type="number"
                             value={subjectConfigs[subject.id]?.max_mark || ''}
                             onChange={(e) => handleInputChange(subject.id, 'max_mark', e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
                             placeholder="100"
                             min="0"
+                            aria-label={`সর্বোচ্চ মার্ক ${subject.name}`}
+                            title={`সর্বোচ্চ মার্ক নির্ধারণ করুন / Set max marks for ${subject.name}`}
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Serial No.</label>
+                          <label className="block text-sm font-medium text-[#441a05] mb-2">ক্রমিক নং</label>
                           <input
                             type="number"
                             value={subjectConfigs[subject.id]?.subject_serial || ''}
                             onChange={(e) => handleInputChange(subject.id, 'subject_serial', e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
                             placeholder={index + 1}
                             min="1"
+                            aria-label={`ক্রমিক নং ${subject.name}`}
+                            title={`ক্রমিক নং নির্ধারণ করুন / Set serial number for ${subject.name}`}
                           />
                         </div>
                       </div>
                     </div>
 
-                    <div className="border-t border-gray-200 pt-4">
+                    <div className="border-t border-white/20 pt-4">
                       <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-semibold text-gray-800">Mark Distribution</h4>
+                        <h4 className="font-semibold text-[#441a05]">মার্ক বণ্টন</h4>
                         <div className={`text-xs font-medium px-2 py-1 rounded-full ${
                           isOverLimit ? 'bg-red-100 text-red-600' : 
                           remainingMarks === 0 ? 'bg-green-100 text-green-600' : 
-                          'bg-yellow-100 text-yellow-600'
+                          'bg-[#DB9E30]/20 text-[#441a05]'
                         }`}>
                           {totalDistributed}/{subjectMaxMark}
                         </div>
                       </div>
 
                       <div className="space-y-3">
-                        {markTypes.map((markType) => (
-                          <div key={markType.id} className={`rounded-lg p-4 ${markType.name === 'MCQ' ? 'bg-blue-50' : 'bg-green-50'}`}>
+                        {markTypes.map((markType, idx) => (
+                          <div key={markType.id} className={`rounded-lg p-4 ${markType.name === 'MCQ' ? 'bg-blue-50/10' : 'bg-green-50/10'} animate-fadeIn`} style={{ animationDelay: `${idx * 0.1}s` }}>
                             <div className="flex items-center mb-2">
                               <span className={`font-medium text-sm ${markType.name === 'MCQ' ? 'text-blue-600' : 'text-green-600'}`}>
                                 {markType.name === 'MCQ' ? '📝' : '✍️'} {markType.name}
@@ -420,9 +498,11 @@ const SubjectMarkConfigs = () => {
                                   type="number"
                                   value={getMarkConfigValue(subject.id, markType.name, 'max_mark')}
                                   onChange={(e) => handleInputChange(subject.id, 'max_mark', e.target.value, markType.name)}
-                                  className={`w-full p-2 border ${markType.name === 'MCQ' ? 'border-blue-200' : 'border-green-200'} rounded-md focus:ring-2 focus:ring-${markType.name === 'MCQ' ? 'blue' : 'green'}-500 focus:border-${markType.name === 'MCQ' ? 'blue' : 'green'}-500 text-sm`}
-                                  placeholder="Max marks"
+                                  className={`w-full p-2 border ${markType.name === 'MCQ' ? 'border-blue-200' : 'border-green-200'} rounded-md focus:ring-2 focus:ring-${markType.name === 'MCQ' ? 'blue' : 'green'}-500 focus:border-${markType.name === 'MCQ' ? 'blue' : 'green'}-500 text-sm bg-white/10 text-[#441a05] animate-scaleIn tick-glow`}
+                                  placeholder="সর্বোচ্চ মার্ক"
                                   min="0"
+                                  aria-label={`সর্বোচ্চ মার্ক ${markType.name} ${subject.name}`}
+                                  title={`সর্বোচ্চ মার্ক নির্ধারণ করুন / Set max marks for ${markType.name} in ${subject.name}`}
                                 />
                               </div>
                               <div>
@@ -430,9 +510,11 @@ const SubjectMarkConfigs = () => {
                                   type="number"
                                   value={getMarkConfigValue(subject.id, markType.name, 'pass_mark')}
                                   onChange={(e) => handleInputChange(subject.id, 'pass_mark', e.target.value, markType.name)}
-                                  className={`w-full p-2 border ${markType.name === 'MCQ' ? 'border-blue-200' : 'border-green-200'} rounded-md focus:ring-2 focus:ring-${markType.name === 'MCQ' ? 'blue' : 'green'}-500 focus:border-${markType.name === 'MCQ' ? 'blue' : 'green'}-500 text-sm`}
-                                  placeholder="Pass marks"
+                                  className={`w-full p-2 border ${markType.name === 'MCQ' ? 'border-blue-200' : 'border-green-200'} rounded-md focus:ring-2 focus:ring-${markType.name === 'MCQ' ? 'blue' : 'green'}-500 focus:border-${markType.name === 'MCQ' ? 'blue' : 'green'}-500 text-sm bg-white/10 text-[#441a05] animate-scaleIn tick-glow`}
+                                  placeholder="পাস মার্ক"
                                   min="0"
+                                  aria-label={`পাস মার্ক ${markType.name} ${subject.name}`}
+                                  title={`পাস মার্ক নির্ধারণ করুন / Set pass marks for ${markType.name} in ${subject.name}`}
                                 />
                               </div>
                             </div>
@@ -441,22 +523,22 @@ const SubjectMarkConfigs = () => {
                       </div>
 
                       <div className="mt-4">
-                        <div className="flex justify-between text-xs text-gray-600 mb-1">
-                          <span>Distribution Progress</span>
+                        <div className="flex justify-between text-xs text-[#441a05] mb-1">
+                          <span>বণ্টন অগ্রগতি</span>
                           <span>{((totalDistributed / subjectMaxMark) * 100).toFixed(0)}%</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-white/20 rounded-full h-2">
                           <div 
                             className={`h-2 rounded-full transition-all duration-300 ${
                               isOverLimit ? 'bg-red-500' : 
                               remainingMarks === 0 ? 'bg-green-500' : 
-                              'bg-indigo-500'
+                              'bg-[#DB9E30]'
                             }`}
                             style={{ width: `${Math.min((totalDistributed / subjectMaxMark) * 100, 100)}%` }}
                           ></div>
                         </div>
                         {isOverLimit && (
-                          <p className="text-red-500 text-xs mt-1">⚠️ Exceeds maximum marks by {totalDistributed - subjectMaxMark}</p>
+                          <p className="text-red-500 text-xs mt-1">⚠️ সর্বোচ্চ মার্ক অতিক্রম করেছে {totalDistributed - subjectMaxMark} দ্বারা</p>
                         )}
                       </div>
                     </div>
@@ -468,20 +550,55 @@ const SubjectMarkConfigs = () => {
             <div className="mt-8 text-center">
               <button 
                 onClick={handleSubmit} 
-                className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-8 py-4 rounded-xl font-semibold hover:from-indigo-600 hover:to-purple-600 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center mx-auto"
+                className="bg-[#DB9E30] text-[#441a05] px-8 py-4 rounded-xl font-semibold hover:bg-[#DB9E30]/80 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center mx-auto btn-glow"
+                title="সব কনফিগারেশন সংরক্ষণ করুন / Save all configurations"
               >
                 <span className="mr-2">💾</span>
-                Save All Configurations
+                সব কনফিগারেশন সংরক্ষণ করুন
               </button>
             </div>
           </div>
         )}
 
         {!selectedClassId && (
-          <div className="text-center py-12">
+          <div className="text-center py-12 animate-fadeIn">
             <div className="text-6xl mb-4">🎯</div>
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">Ready to Configure?</h3>
-            <p className="text-gray-500">Select a class above to start configuring subject marks</p>
+            <h3 className="text-xl font-semibold text-[#441a05] mb-2">কনফিগারেশন শুরু করতে প্রস্তুত?</h3>
+            <p className="text-[#441a05]/70">বিষয় মার্ক কনফিগার করতে উপরে একটি ক্লাস নির্বাচন করুন</p>
+          </div>
+        )}
+
+        {/* Confirmation Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[10000]">
+            <div
+              className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"
+            >
+              <h3 className="text-lg font-semibold text-[#441a05] mb-4">
+                {modalAction === 'delete' && 'কনফিগারেশন মুছে ফেলা নিশ্চিত করুন'}
+                {modalAction === 'update' && 'কনফিগারেশন আপডেট নিশ্চিত করুন'}
+              </h3>
+              <p className="text-[#441a05] mb-6">
+                {modalAction === 'delete' && 'আপনি কি নিশ্চিত যে এই কনফিগারেশন মুছে ফেলতে চান?'}
+                {modalAction === 'update' && 'আপনি কি নিশ্চিত যে এই কনফিগারেশন আপডেট করতে চান?'}
+              </p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
+                  title="বাতিল করুন / Cancel"
+                >
+                  বাতিল
+                </button>
+                <button
+                  onClick={modalAction === 'delete' ? confirmDelete : confirmUpdate}
+                  className="px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white transition-colors duration-300 btn-glow"
+                  title="নিশ্চিত করুন / Confirm"
+                >
+                  নিশ্চিত করুন
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

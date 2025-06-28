@@ -277,7 +277,7 @@ const mainMenu = [
       },
       {
         id: "07/09",
-        title: "Delete- ফি",
+        title: "মুছুন - ফি",
         link: "/accounts/delete-fee",
       },
     ],
@@ -380,7 +380,7 @@ const mainMenu = [
           {
             id: "09/01/01",
             title: "খাবারের ধরন",
-            link: "/boarding/settings/meal-type",
+            link: "/boarding/settings",
           },
           {
             id: "09/01/02",

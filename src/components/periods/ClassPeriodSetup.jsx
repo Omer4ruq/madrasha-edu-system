@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
+import { FaSpinner, FaTrash, FaEdit } from 'react-icons/fa';
+import { IoAddCircle } from 'react-icons/io5';
+import { Toaster, toast } from 'react-hot-toast';
 import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
 import { useCreateClassPeriodMutation, useGetClassPeriodsByClassIdQuery, usePatchClassPeriodMutation } from '../../redux/features/api/periods/classPeriodsApi';
-
 
 const ClassPeriodSetup = () => {
   const [selectedClassId, setSelectedClassId] = useState(null);
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [isBreakTime, setIsBreakTime] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalAction, setModalAction] = useState(null);
+  const [modalData, setModalData] = useState(null);
+  const [editPeriod, setEditPeriod] = useState({ startTime: '', endTime: '', breakTime: false });
 
   // Fetch classes
   const { data: classes = [], isLoading: isClassesLoading } = useGetclassConfigApiQuery();
@@ -29,207 +33,392 @@ const ClassPeriodSetup = () => {
   // Calculate next period_id for the selected class
   const nextPeriodId = periods.length > 0 ? Math.max(...periods.map((p) => p.period_id)) + 1 : 1;
 
-  // Handle form submission
+  // Handle form submission for adding new period
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted');
-    setErrorMessage('');
-    setSuccessMessage('');
-
-    if (!selectedClassId || !startTime || !endTime) {
-      setErrorMessage('Please select a class and provide start and end times.');
-      return;
-    }
-
-    // Format payload with sequential period_id
-    const payload = {
-      class_id: parseInt(selectedClassId, 10),
-      periods: [
-        {
-          period_id: nextPeriodId,
-          start_time: startTime.includes(':') ? `${startTime}:00` : startTime, // Use HH:MM if server expects it: startTime
-          end_time: endTime.includes(':') ? `${endTime}:00` : endTime, // Use HH:MM if server expects it: endTime
-          break_time: isBreakTime,
-        },
-      ],
-    };
-
-    try {
-      console.log('Next period_id:', nextPeriodId);
-      console.log('Submitting payload:', JSON.stringify(payload, null, 2));
-      const response = await createClassPeriod(payload).unwrap();
-      console.log('API response:', JSON.stringify(response, null, 2));
-      setSuccessMessage('Period added successfully!');
-      setStartTime('');
-      setEndTime('');
-      setIsBreakTime(false);
-      console.log('Triggering refetch');
-      refetch();
-    } catch (error) {
-      console.error('Failed to create period:', error);
-      setErrorMessage(
-        error?.data?.detail || error?.data?.message || `Failed to create period (Status: ${error?.status}). Check console.`
-      );
-    }
+    setModalAction('add');
+    setModalData({ startTime, endTime, breakTime: isBreakTime });
+    setIsModalOpen(true);
   };
 
   // Handle period update
-  const handleUpdate = async (periodId, updatedData) => {
+  const handleUpdate = (period) => {
+    setModalAction('update');
+    setModalData({ periodId: period.period_id });
+    setEditPeriod({
+      startTime: period.start_time,
+      endTime: period.end_time,
+      breakTime: period.break_time,
+    });
+    setIsModalOpen(true);
+  };
+
+  // Confirm modal action
+  const confirmAction = async () => {
     try {
-      await patchClassPeriod({
-        id: periodId,
-        ...updatedData,
-      }).unwrap();
-      setSuccessMessage('Period updated successfully!');
-      setErrorMessage('');
-      console.log('Triggering refetch');
-      refetch();
+      if (modalAction === 'add') {
+        if (!selectedClassId || !modalData.startTime || !modalData.endTime) {
+          toast.error('দয়া করে ক্লাস এবং শুরু ও শেষের সময় নির্বাচন করুন।');
+          return;
+        }
+
+        const payload = {
+          class_id: parseInt(selectedClassId, 10),
+          periods: [
+            {
+              period_id: nextPeriodId,
+              start_time: modalData.startTime.includes(':') ? `${modalData.startTime}:00` : modalData.startTime,
+              end_time: modalData.endTime.includes(':') ? `${modalData.endTime}:00` : modalData.endTime,
+              break_time: modalData.breakTime,
+            },
+          ],
+        };
+
+        await createClassPeriod(payload).unwrap();
+        toast.success('পিরিয়ড সফলভাবে যোগ করা হয়েছে!');
+        setStartTime('');
+        setEndTime('');
+        setIsBreakTime(false);
+        refetch();
+      } else if (modalAction === 'update') {
+        if (!editPeriod.startTime || !editPeriod.endTime) {
+          toast.error('দয়া করে শুরু এবং শেষের সময় প্রদান করুন।');
+          return;
+        }
+
+        await patchClassPeriod({
+          id: modalData.periodId,
+          start_time: editPeriod.startTime.includes(':') ? `${editPeriod.startTime}:00` : editPeriod.startTime,
+          end_time: editPeriod.endTime.includes(':') ? `${editPeriod.endTime}:00` : editPeriod.endTime,
+          break_time: editPeriod.breakTime,
+        }).unwrap();
+        toast.success('পিরিয়ড সফলভাবে আপডেট করা হয়েছে!');
+        refetch();
+      }
     } catch (error) {
-      console.error('Failed to update period:', error);
-      setErrorMessage('Failed to update period.');
+      console.error(`${modalAction === 'add' ? 'পিরিয়ড যোগে' : 'পিরিয়ড আপডেটে'} ত্রুটি:`, error);
+      const errorMessage =
+        error?.data?.detail || error?.data?.message || `পিরিয়ড ${modalAction === 'add' ? 'যোগ' : 'আপডেট'} ব্যর্থ।`;
+      toast.error(errorMessage);
+    } finally {
+      setIsModalOpen(false);
+      setModalAction(null);
+      setModalData(null);
+      setEditPeriod({ startTime: '', endTime: '', breakTime: false });
     }
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Class Period Setup</h1>
+    <div className="py-8">
+      <Toaster position="top-right" reverseOrder={false} />
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes scaleIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+          }
+          @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 0.6s ease-out forwards;
+          }
+          .animate-scaleIn {
+            animation: scaleIn 0.4s ease-out forwards;
+          }
+          .animate-slideUp {
+            animation: slideUp 0.4s ease-out forwards;
+          }
+          .tick-glow {
+            transition: all 0.3s ease;
+          }
+          .tick-glow:checked + span {
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+          }
+          .tick-glow:focus {
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+          }
+          .btn-glow:hover {
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
+          }
+          ::-webkit-scrollbar {
+            width: 8px;
+          }
+          ::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          ::-webkit-scrollbar-thumb {
+            background: rgba(22, 31, 48, 0.26);
+            border-radius: 10px;
+          }
+          ::-webkit-scrollbar-thumb:hover {
+            background: rgba(10, 13, 21, 0.44);
+          }
+        `}
+      </style>
 
-      {/* Feedback Messages */}
-      {errorMessage && (
-        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
-          {errorMessage}
+      <div className="">
+        {/* Header */}
+        <div className="flex items-center space-x-4 mb-6 animate-fadeIn ml-5">
+          <IoAddCircle className="text-3xl text-[#441a05]" />
+          <h1 className="text-2xl font-bold text-[#441a05] tracking-tight">
+            ক্লাস পিরিয়ড সেটআপ
+          </h1>
         </div>
-      )}
-      {successMessage && (
-        <div className="mb-4 p-4 bg-green-100 text-green-700 rounded-md">
-          {successMessage}
-        </div>
-      )}
 
-      {/* Class Tabs */}
-      <div className="tabs mb-4">
-        {isClassesLoading ? (
-          <p className="text-gray-600">Loading classes...</p>
-        ) : activeClasses.length === 0 ? (
-          <p>No active classes found.</p>
-        ) : (
-          <div className="flex space-x-2 border-b">
-            {activeClasses.map((cls) => (
+        {/* Class Tabs */}
+        <div className="mb-6">
+          <div className="border-b border-white/20 bg-black/10 backdrop-blur-sm rounded-lg p-2">
+            <h2 className="text-xl font-semibold text-[#441a05] mb-4 flex items-center px-5 pt-3">
+              <span className="bg-[#DB9E30]/20 text-[#441a05] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">১</span>
+              ক্লাস নির্বাচন করুন
+            </h2>
+            <nav className="flex space-x-4 overflow-x-auto px-5 pb-5">
+              {isClassesLoading ? (
+                <span className="text-[#441a05]/70 p-4 animate-fadeIn">ক্লাস লোড হচ্ছে...</span>
+              ) : activeClasses.length === 0 ? (
+                <span className="text-[#441a05]/70 p-4 animate-fadeIn">কোনো সক্রিয় ক্লাস পাওয়া যায়নি</span>
+              ) : (
+                activeClasses.map((cls, index) => (
+                  <button
+                    key={cls.id}
+                    onClick={() => setSelectedClassId(cls.id)}
+                    className={`whitespace-nowrap py-2 px-4 font-medium text-sm rounded-md transition-all duration-300 animate-scaleIn ${
+                      selectedClassId === cls.id
+                        ? 'bg-[#DB9E30] text-[#441a05] shadow-md'
+                        : 'text-[#441a05] hover:bg-white/10 hover:text-[#441a05]'
+                    }`}
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                    aria-label={`ক্লাস নির্বাচন ${cls.class_name} ${cls.shift_name} ${cls.section_name}`}
+                    title={`ক্লাস নির্বাচন করুন / Select class ${cls.class_name} ${cls.shift_name} ${cls.section_name}`}
+                  >
+                    {`${cls.class_name} ${cls.shift_name} ${cls.section_name}`}
+                  </button>
+                ))
+              )}
+            </nav>
+          </div>
+        </div>
+
+        {/* Period Form */}
+        {selectedClassId && (
+          <div className="bg-black/10 backdrop-blur-sm p-6 rounded-2xl shadow-xl mb-10 animate-fadeIn">
+            <h2 className="text-lg font-semibold text-[#441a05] mb-4 flex items-center">
+              <span className="bg-[#DB9E30]/20 text-[#441a05] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">২</span>
+              নতুন পিরিয়ড যোগ করুন
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[#441a05] mb-2">শুরুর সময়</label>
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
+                  required
+                  aria-label="শুরুর সময় নির্বাচন করুন"
+                  title="শুরুর সময় নির্বাচন করুন / Select start time"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#441a05] mb-2">শেষের সময়</label>
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
+                  required
+                  aria-label="শেষের সময় নির্বাচন করুন"
+                  title="শেষের সময় নির্বাচন করুন / Select end time"
+                />
+              </div>
+              <div>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isBreakTime}
+                    onChange={(e) => setIsBreakTime(e.target.checked)}
+                    className="hidden"
+                    aria-label="বিরতির সময় নির্বাচন করুন"
+                    title="বিরতির সময় নির্বাচন করুন / Select break time"
+                  />
+                  <span
+                    className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${
+                      isBreakTime ? 'bg-[#DB9E30] border-[#DB9E30]' : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
+                    }`}
+                  >
+                    {isBreakTime && (
+                      <svg
+                        className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </span>
+                  <span className="ml-3 text-sm text-[#441a05]">বিরতির সময়</span>
+                </label>
+              </div>
               <button
-                key={cls.id}
-                className={`px-4 py-2 -mb-px border-b-2 ${
-                  selectedClassId === cls.id
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-600 hover:text-blue-800'
+                type="submit"
+                disabled={isCreating}
+                className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:bg-[#DB9E30]/80 transition-colors duration-300 btn-glow ${
+                  isCreating ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
-                onClick={() => setSelectedClassId(cls.id)}
+                title="পিরিয়ড যোগ করুন / Add period"
               >
-                {`${cls.class_name} ${cls.shift_name} ${cls.section_name}`}
+                {isCreating ? 'যোগ করা হচ্ছে...' : 'পিরিয়ড যোগ করুন'}
               </button>
-            ))}
+            </form>
+          </div>
+        )}
+
+        {/* Existing Periods */}
+        {selectedClassId && (
+          <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
+            <h2 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">বিদ্যমান পিরিয়ডসমূহ</h2>
+            {isPeriodsLoading ? (
+              <div className="text-center animate-fadeIn">
+                <FaSpinner className="inline-block animate-spin text-2xl text-[#441a05] mb-2" />
+                <p className="text-[#441a05]/70">পিরিয়ড লোড হচ্ছে...</p>
+              </div>
+            ) : periods.length === 0 ? (
+              <p className="text-[#441a05]/70 p-4 text-center animate-fadeIn">এই ক্লাসের জন্য কোনো পিরিয়ড পাওয়া যায়নি</p>
+            ) : (
+              <ul className="space-y-4">
+                {periods.map((period, index) => (
+                  <li
+                    key={period.period_id}
+                    className="border border-white/20 p-4 rounded-md bg-white/10 hover:bg-white/20 transition-all duration-300 animate-fadeIn"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-[#441a05]">
+                          <strong>সময়:</strong> {period.start_time} - {period.end_time}
+                        </p>
+                        <p className="text-[#441a05]">
+                          <strong>বিরতি:</strong> {period.break_time ? 'হ্যাঁ' : 'না'}
+                        </p>
+                        <p className="text-[#441a05]">
+                          <strong>পিরিয়ড আইডি:</strong> {period.period_id}
+                        </p>
+                      </div>
+                      <div className="space-x-2">
+                        <button
+                          onClick={() => handleUpdate(period)}
+                          className="px-3 py-1 bg-[#DB9E30] text-[#441a05] rounded-md hover:bg-[#DB9E30]/80 btn-glow"
+                          title="পিরিয়ড সম্পাদনা করুন / Edit period"
+                        >
+                          <FaEdit className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {/* Confirmation/Update Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[10000]">
+            <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
+              <h3 className="text-lg font-semibold text-[#441a05] mb-4">
+                {modalAction === 'add' && 'পিরিয়ড যোগ নিশ্চিত করুন'}
+                {modalAction === 'update' && 'পিরিয়ড আপডেট নিশ্চিত করুন'}
+              </h3>
+              {modalAction === 'update' ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#441a05] mb-2">শুরুর সময়</label>
+                    <input
+                      type="time"
+                      value={editPeriod.startTime}
+                      onChange={(e) => setEditPeriod({ ...editPeriod, startTime: e.target.value })}
+                      className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
+                      required
+                      aria-label="শুরুর সময় সম্পাদনা করুন"
+                      title="শুরুর সময় সম্পাদনা করুন / Edit start time"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#441a05] mb-2">শেষের সময়</label>
+                    <input
+                      type="time"
+                      value={editPeriod.endTime}
+                      onChange={(e) => setEditPeriod({ ...editPeriod, endTime: e.target.value })}
+                      className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
+                      required
+                      aria-label="শেষের সময় সম্পাদনা করুন"
+                      title="শেষের সময় সম্পাদনা করুন / Edit end time"
+                    />
+                  </div>
+                  <div>
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editPeriod.breakTime}
+                        onChange={(e) => setEditPeriod({ ...editPeriod, breakTime: e.target.checked })}
+                        className="hidden"
+                        aria-label="বিরতির সময় সম্পাদনা করুন"
+                        title="বিরতির সময় সম্পাদনা করুন / Edit break time"
+                      />
+                      <span
+                        className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${
+                          editPeriod.breakTime ? 'bg-[#DB9E30] border-[#DB9E30]' : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
+                        }`}
+                      >
+                        {editPeriod.breakTime && (
+                          <svg
+                            className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </span>
+                      <span className="ml-3 text-sm text-[#441a05]">বিরতির সময়</span>
+                    </label>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-[#441a05] mb-6">
+                  আপনি কি নিশ্চিত যে এই পিরিয়ড যোগ করতে চান?
+                </p>
+              )}
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
+                  title="বাতিল করুন / Cancel"
+                >
+                  বাতিল
+                </button>
+                <button
+                  onClick={confirmAction}
+                  className="px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white transition-colors duration-300 btn-glow"
+                  title="নিশ্চিত করুন / Confirm"
+                >
+                  নিশ্চিত করুন
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
-
-      {/* Period Form */}
-      {selectedClassId && (
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-2">Add New Period</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Start Time</label>
-              <input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">End Time</label>
-              <input
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              />
-            </div>
-            <div>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={isBreakTime}
-                  onChange={(e) => setIsBreakTime(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-600 border-gray-600 rounded"
-                />
-                <span className="ml-2 text-sm text-gray-700">Break Time</span>
-              </label>
-            </div>
-            <button
-              type="submit"
-              disabled={isCreating}
-              className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${
-                isCreating ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              {isCreating ? 'Adding...' : 'Add Period'}
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* Existing Periods */}
-      {selectedClassId && (
-        <div>
-          <h2 className="text-xl font-semibold mb-2">Existing Periods</h2>
-          {isPeriodsLoading ? (
-            <p>Loading periods...</p>
-          ) : periods.length === 0 ? (
-            <p>No periods found for this class.</p>
-          ) : (
-            <ul className="space-y-4">
-              {periods.map((period) => (
-                <li key={period.period_id} className="border p-4 rounded-md">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p>
-                        <strong>Time:</strong> {period.start_time} - {period.end_time}
-                      </p>
-                      <p>
-                        <strong>Break:</strong> {period.break_time ? 'Yes' : 'No'}
-                      </p>
-                      <p>
-                        <strong>Period ID:</strong> {period.period_id}
-                      </p>
-                    </div>
-                    <div className="space-x-2">
-                      <button
-                        onClick={() => {
-                          const newStartTime = prompt('New start time (HH:MM):', period.start_time);
-                          const newEndTime = prompt('New end time (HH:MM):', period.end_time);
-                          const newBreakTime = confirm('Is this a break time?');
-                          if (newStartTime && newEndTime) {
-                            handleUpdate(period.period_id, {
-                              start_time: newStartTime.includes(':') ? `${newStartTime}:00` : newStartTime,
-                              end_time: newEndTime.includes(':') ? `${newEndTime}:00` : newEndTime,
-                              break_time: newBreakTime,
-                            });
-                          }
-                        }}
-                        className="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
     </div>
   );
 };
