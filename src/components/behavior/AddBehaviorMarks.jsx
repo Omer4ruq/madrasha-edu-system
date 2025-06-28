@@ -7,9 +7,11 @@ import { useCreateBehaviorReportApiMutation, useGetBehaviorReportApiQuery, useUp
 import { FaSpinner, FaCheck, FaTimes } from 'react-icons/fa';
 import { IoAddCircle } from 'react-icons/io5';
 import toast from 'react-hot-toast';
-import { saveAs } from 'file-saver';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
+import { NotoSansBengaliBase64 } from './font';
+// import { NotoSansBengaliBase64 } from './font';
+
 
 const AddBehaviorMarks = () => {
   const [selectedClass, setSelectedClass] = useState('');
@@ -236,17 +238,13 @@ const AddBehaviorMarks = () => {
 
         let response;
         if (existingStudentData?.marks[behaviorTypeId]?.id) {
-          // Update only the specific mark
           response = await updateBehaviorReport({
             id: existingStudentData.reportId,
             behavior_marks: payload.behavior_marks,
           }).unwrap();
-          console.log('Update response:', response);
           toast.success('মার্কস আপডেট হয়েছে!');
         } else {
-          // Create new mark if it doesn't exist
           response = await createBehaviorReport(payload).unwrap();
-          console.log('Create response:', response);
           toast.success('মার্কস সংরক্ষিত হয়েছে!');
         }
       } else {
@@ -262,12 +260,10 @@ const AddBehaviorMarks = () => {
 
         let response;
         if (existingStudentData && existingStudentData.reportId) {
-          // Update only the comment
           response = await updateBehaviorReport({
             id: existingStudentData.reportId,
             ...payload,
           }).unwrap();
-          console.log('Update response:', response);
           toast.success('মন্তব্য আপডেট হয়েছে!');
         } else {
           if (!currentComment && (!existingStudentData || !existingStudentData.marks || Object.keys(existingStudentData.marks).length === 0)) {
@@ -275,7 +271,6 @@ const AddBehaviorMarks = () => {
             setSavingStatus((prev) => ({ ...prev, [inputKey]: 'error' }));
             return;
           }
-          // Create new report with comment and existing marks if any
           payload.behavior_marks = existingStudentData?.marks
             ? Object.values(existingStudentData.marks).map((mark) => ({
                 student_id: parseInt(studentId),
@@ -285,7 +280,6 @@ const AddBehaviorMarks = () => {
               }))
             : [];
           response = await createBehaviorReport(payload).unwrap();
-          console.log('Create response:', response);
           toast.success('মন্তব্য সংরক্ষিত হয়েছে!');
         }
       }
@@ -308,7 +302,6 @@ const AddBehaviorMarks = () => {
       }, 2000);
     } catch (err) {
       console.error('সংরক্ষণে ত্রুটি:', err);
-      console.error('Error details:', err?.data || err);
       toast.error(`সংরক্ষণে ব্যর্থ: ${err.status || 'অজানা ত্রুটি'}`);
       setSavingStatus((prev) => ({ ...prev, [inputKey]: 'error' }));
 
@@ -378,56 +371,124 @@ const AddBehaviorMarks = () => {
     }
 
     const doc = new jsPDF();
+
+    // বাংলা ফন্ট লোড করা
+    try {
+      // Base64 ডেটা যাচাই
+      if (!NotoSansBengaliBase64 || typeof NotoSansBengaliBase64 !== 'string' || NotoSansBengaliBase64.length < 1000) {
+        throw new Error('Base64 ডেটা অবৈধ বা ফাঁকা।');
+      }
+
+      // Base64 ডেটা থেকে অবৈধ ক্যারেক্টার সরানো
+      const cleanBase64 = NotoSansBengaliBase64;
+
+      doc.addFileToVFS('NotoSansBengali-Regular.ttf', cleanBase64);
+      doc.addFont('NotoSansBengali-Regular.ttf', 'NotoSansBengali', 'normal');
+      doc.setFont('NotoSansBengali');
+
+      // ফন্ট লোড হয়েছে কিনা চেক করা
+      const fontList = doc.getFontList();
+      if (!fontList['NotoSansBengali']) {
+        throw new Error('NotoSansBengali ফন্ট লোড হয়নি।');
+      }
+      console.log('Font List:', fontList);
+    } catch (error) {
+      console.error('ফন্ট লোড করতে ত্রুটি:', error);
+      toast.error('বাংলা ফন্ট লোড করতে ব্যর্থ। দয়া করে Base64 ডেটা চেক করুন।');
+      return;
+    }
+
+    // ইউনিকোড টেক্সট নিশ্চিত করা
+    const ensureUTF8 = (text) => {
+      if (!text) return text;
+      try {
+        return new TextDecoder('utf-8').decode(new TextEncoder('utf-8').encode(text));
+      } catch (e) {
+        console.warn('UTF-8 কনভার্শন ত্রুটি:', e);
+        return text;
+      }
+    };
+
     const currentDate = new Date().toLocaleDateString('bn-BD', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    }).replace(/,/, ''); // e.g., "২৭ জুন ২০২৫ ১০:৪৩ সকাল"
-    const examName = exams.find((e) => e.id == selectedExam)?.name || 'অজানা পরীক্ষা';
+    }).replace(/,/, '');
+    const examName = ensureUTF8(exams.find((e) => e.id == selectedExam)?.name || 'অজানা পরীক্ষা');
 
     // Title
     doc.setFontSize(18);
-    doc.text('আচরণ মূল্যায়ন রিপোর্ট', 105, 20, { align: 'center' });
+    doc.text(ensureUTF8('আচরণ মূল্যায়ন রিপোর্ট'), 105, 20, { align: 'center' });
     doc.setFontSize(12);
-    doc.text(`শ্রেণি: ${selectedClass}`, 105, 30, { align: 'center' });
-    doc.text(`পরীক্ষা: ${examName}`, 105, 40, { align: 'center' });
-    doc.text(`তারিখ: ${currentDate}`, 105, 50, { align: 'center' });
+    doc.text(ensureUTF8(`শ্রেণি: ${selectedClass}`), 105, 30, { align: 'center' });
+    doc.text(ensureUTF8(`পরীক্ষা: ${examName}`), 105, 40, { align: 'center' });
+    doc.text(ensureUTF8(`তারিখ: ${currentDate}`), 105, 50, { align: 'center' });
 
     // Table data
-    const tableColumnHeaders = ['ছাত্রের নাম', 'রোল নম্বর', ...behaviorTypes.map(b => `${b.name} (${b.obtain_mark})`), 'মন্তব্য', 'মোট মার্কস'];
+    const tableColumnHeaders = [
+      ensureUTF8('ছাত্রের নাম'),
+      ensureUTF8('রোল নম্বর'),
+      ...behaviorTypes.map(b => ensureUTF8(`${b.name} (${b.obtain_mark})`)),
+      ensureUTF8('মন্তব্য'),
+      ensureUTF8('মোট মার্কস'),
+    ];
     const tableRows = filteredStudents.map(student => {
       const studentMarks = existingMarks[student.id]?.marks || {};
-      const comment = existingMarks[student.id]?.comment || getCurrentComment(student.id);
-      const row = [student.name, student.roll_no];
+      const comment = ensureUTF8(existingMarks[student.id]?.comment || getCurrentComment(student.id));
+      const row = [ensureUTF8(student.name), ensureUTF8(student.roll_no)];
       behaviorTypes.forEach(behavior => {
-        row.push(studentMarks[behavior.id]?.marks || getCurrentMarks(student.id, behavior.id) || '০');
+        row.push(ensureUTF8(studentMarks[behavior.id]?.marks || getCurrentMarks(student.id, behavior.id) || '০'));
       });
-      row.push(comment || 'নেই');
-      row.push(totalMarks[student.id] || '০');
+      row.push(comment || ensureUTF8('নেই'));
+      row.push(ensureUTF8(totalMarks[student.id] || '০'));
       return row;
     });
 
     // AutoTable for generating table
-    doc.autoTable({
-      head: [tableColumnHeaders],
-      body: tableRows,
-      startY: 70,
-      theme: 'grid',
-      headStyles: { fillColor: [139, 69, 19], textColor: [255, 255, 255], fontSize: 12 },
-      bodyStyles: { textColor: [0, 0, 0], fontSize: 10 },
-      alternateRowStyles: { fillColor: [245, 245, 220] },
-      margin: { top: 60 },
-      didDrawPage: (data) => {
-        doc.setFontSize(10);
-        doc.text(`পৃষ্ঠা ${doc.internal.getCurrentPageInfo().pageNumber}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
-      },
-    });
+    try {
+      doc.autoTable({
+        head: [tableColumnHeaders],
+        body: tableRows,
+        startY: 70,
+        theme: 'grid',
+        headStyles: { 
+          fillColor: [139, 69, 19], 
+          textColor: [255, 255, 255], 
+          fontSize: 12, 
+          font: 'NotoSansBengali', 
+          halign: 'center',
+        },
+        bodyStyles: { 
+          textColor: [0, 0, 0], 
+          fontSize: 10, 
+          font: 'NotoSansBengali', 
+          halign: 'center',
+          lineHeightFactor: 1.5,
+        },
+        alternateRowStyles: { fillColor: [245, 245, 220] },
+        margin: { top: 60 },
+        didDrawPage: (data) => {
+          doc.setFont('NotoSansBengali');
+          doc.setFontSize(10);
+          doc.text(ensureUTF8(`পৃষ্ঠা ${doc.internal.getCurrentPageInfo().pageNumber}`), 105, doc.internal.pageSize.height - 10, { align: 'center' });
+        },
+      });
+    } catch (error) {
+      console.error('টেবিল জেনারেট করতে ত্রুটি:', error);
+      toast.error('টেবিল তৈরি করতে ব্যর্থ।');
+      return;
+    }
 
     // Save the PDF
-    doc.save(`আচরণ_রিপোর্ট_${selectedClass}_${examName}_${currentDate}.pdf`);
-    toast.success('PDF ডাউনলোড সম্পন্ন হয়েছে!');
+    try {
+      doc.save(`আচরণ_রিপোর্ট_${selectedClass}_${examName}_${currentDate}.pdf`);
+      toast.success('PDF ডাউনলোড সম্পন্ন হয়েছে!');
+    } catch (error) {
+      console.error('PDF সেভ করতে ত্রুটি:', error);
+      toast.error('PDF সেভ করতে ব্যর্থ।');
+    }
   };
 
   return (
@@ -497,7 +558,7 @@ const AddBehaviorMarks = () => {
             <IoAddCircle className="text-4xl text-[#441a05]" />
             <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">শ্রেণি এবং পরীক্ষা নির্বাচন করুন</h3>
           </div>
-          <div className="flex space-x-4 max-w-2xl">
+          <div className="flex space-x-4">
             <div className="flex-1">
               <select
                 value={selectedClass}
