@@ -10,10 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ashwinthomas/react-time-picker-dropdown": "^1.0.5",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@fullcalendar/daygrid": "^6.1.17",
     "@fullcalendar/interaction": "^6.1.17",
     "@fullcalendar/react": "^6.1.17",
     "@infinite-table/infinite-react": "^4.2.0",
+    "@mui/material": "^7.1.2",
+    "@mui/x-date-pickers": "^8.6.0",
     "@react-pdf/renderer": "^4.3.0",
     "@reduxjs/toolkit": "^2.8.2",
     "@rollup/rollup-win32-ia32-msvc": "^4.44.1",
@@ -21,6 +26,7 @@
     "axios": "^1.7.9",
     "chart.js": "^4.4.3",
     "date-fns": "^4.1.0",
+    "dayjs": "^1.11.13",
     "file-saver": "^2.0.5",
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.10.3",
