@@ -141,7 +141,7 @@ const PDFDocument = ({ students, behaviorTypes, existingMarks, selectedExam, exa
           <Text style={[styles.tableHeader, { flex: 1.5 }]}>ছাত্রের নাম</Text>
           <Text style={[styles.tableHeader, { flex: 0.8 }]}>রোল নম্বর </Text>
           {behaviorTypes.map((behavior) => (
-            <Text key={behavior.id} style={[styles.tableHeader, { flex: 0.8 }]}>{behavior.name} ({behavior.obtain_mark})</Text>
+            <Text key={behavior.id} style={[styles.tableHeader, { flex: 0.8 }]}>{behavior.name} <br />{behavior.obtain_mark}</Text>
           ))}
           <Text style={[styles.tableHeader, { flex: 0.8 }]}>মোট মার্কস</Text>
           <Text style={[styles.tableHeader, { flex: 2 }]}>মন্তব্য</Text>

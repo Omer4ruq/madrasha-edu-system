@@ -2,12 +2,134 @@ import React, { useState, useRef } from 'react';
 import { FaPrint, FaFilePdf, FaSpinner } from 'react-icons/fa';
 import { Toaster, toast } from 'react-hot-toast';
 import { useReactToPrint } from 'react-to-print';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
 import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
 import { useGetExamApiQuery } from '../../redux/features/api/exam/examApi';
 import { useGetStudentActiveByClassQuery } from '../../redux/features/api/student/studentActiveApi';
 import { useGetSubjectAssignQuery } from '../../redux/features/api/subject-assign/subjectAssignApi';
+
+// Register Noto Sans Bengali font from URL
+try {
+  Font.register({
+    family: 'NotoSansBengali',
+    src: 'https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf',
+  });
+  console.log('Font registered successfully:', Font.getRegisteredFonts());
+} catch (error) {
+  console.error('Font registration failed:', error);
+  Font.register({
+    family: 'Helvetica',
+    src: 'https://fonts.gstatic.com/s/helvetica/v13/Helvetica.ttf',
+  });
+  console.log('Falling back to Helvetica font.');
+}
+
+// PDF styles
+const styles = StyleSheet.create({
+  page: {
+    padding: 10,
+    fontFamily: 'NotoSansBengali',
+    fontSize: 12,
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  schoolName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  title: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginTop: 5,
+  },
+  metaContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 5,
+  },
+  metaText: {
+    fontSize: 10,
+  },
+  table: {
+    width: '100%',
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderColor: '#000',
+  },
+  tableRow: {
+    flexDirection: 'row',
+  },
+  tableColHeader: {
+    width: '20%',
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderColor: '#000',
+    backgroundColor: '#f0f0f0',
+    padding: 5,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  tableCol: {
+    width: '20%',
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderColor: '#000',
+    padding: 5,
+    textAlign: 'center',
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 10,
+    left: 10,
+    right: 10,
+    textAlign: 'center',
+    fontSize: 8,
+  },
+});
+
+// PDF Document Component
+const PDFDocument = ({ students, activeSubjects, selectedClassId, activeClasses, selectedExamId, exams }) => (
+  <Document>
+    <Page size="A4" orientation="landscape" style={styles.page}>
+      <View style={styles.header}>
+        <Text style={styles.schoolName}>আদর্শ বিদ্যালয়, ঢাকা</Text>
+        <Text style={styles.title}>স্বাক্ষর শীট</Text>
+        <View style={styles.metaContainer}>
+          <Text style={styles.metaText}>
+            শ্রেণি: {selectedClassId && activeClasses.find(cls => cls.id === parseInt(selectedClassId))?.class_name || 'নির্বাচিত শ্রেণি'} {selectedClassId && activeClasses.find(cls => cls.id === parseInt(selectedClassId))?.section_name || ''}
+          </Text>
+          <Text style={styles.metaText}>
+            পরীক্ষা: {selectedExamId && exams.find(exam => exam.id === parseInt(selectedExamId))?.name || 'নির্বাচিত পরীক্ষা'}
+          </Text>
+          <Text style={styles.metaText}>তারিখ: ২৯ জুন ২০২৫, বিকাল ৪:০৪ PM</Text>
+        </View>
+      </View>
+      <View style={styles.table}>
+        <View style={styles.tableRow}>
+          <Text style={styles.tableColHeader}>শিক্ষার্থীর নাম</Text>
+          <Text style={styles.tableColHeader}>রোল</Text>
+          {activeSubjects.map((subject) => (
+            <Text key={subject.id} style={styles.tableColHeader}></Text>
+          ))}
+        </View>
+        {students.map((student, index) => (
+          <View key={student.id} style={styles.tableRow}>
+            <Text style={styles.tableCol}>{student.name || 'N/A'}</Text>
+            <Text style={styles.tableCol}>{student.roll_no || 'N/A'}</Text>
+            {activeSubjects.map((subject) => (
+              <Text key={subject.id} style={styles.tableCol}></Text> // Placeholder for signature
+            ))}
+          </View>
+        ))}
+      </View>
+      <View style={styles.footer}>
+        <Text>প্রতিবেদনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে।</Text>
+      </View>
+    </Page>
+  </Document>
+);
 
 const SignatureSheet = () => {
   const [selectedClassId, setSelectedClassId] = useState(null);
@@ -41,11 +163,11 @@ const SignatureSheet = () => {
   const activeSubjects = subjectAssignData?.subjects[0]?.subject_details?.filter((subject) => subject.is_active) || [];
 
   // Get current date and time in Bangladesh format
-  const currentDateTime = new Date().toLocaleString('en-US', {
+  const currentDateTime = new Date().toLocaleString('bn-BD', {
     timeZone: 'Asia/Dhaka',
     year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+    month: 'long',
+    day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,
@@ -59,34 +181,25 @@ const SignatureSheet = () => {
     onAfterPrint: () => toast.success('প্রিন্টিং সম্পন্ন!'),
   });
 
-  // Handle PDF generation
+  // Generate and download PDF report
   const handleGeneratePDF = async () => {
-    if (!tableRef.current) return;
+    if (!selectedClassId || !selectedExamId) {
+      toast.error('শ্রেণি এবং পরীক্ষা নির্বাচন করুন।');
+      return;
+    }
     try {
-      const canvas = await html2canvas(tableRef.current, { scale: 2, useCORS: true });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('landscape', 'mm', 'a4');
-      const imgWidth = 287;
-      const pageHeight = 210;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 10;
-
-      pdf.addImage(imgData, 'PNG', 5, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight + 10;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 5, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      pdf.save(`Signature_Sheet_${selectedClassId}_${selectedExamId}.pdf`);
+      const doc = <PDFDocument students={students} activeSubjects={activeSubjects} selectedClassId={selectedClassId} activeClasses={activeClasses} selectedExamId={selectedExamId} exams={exams} />;
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Signature_Sheet_${selectedClassId}_${exams.find((exam) => exam.id === parseInt(selectedExamId))?.name || 'unknown'}_${currentDateTime.replace(/[/,: ]/g, '_')}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
       toast.success('PDF সফলভাবে ডাউনলোড হয়েছে!');
     } catch (error) {
       console.error('PDF generation error:', error);
-      toast.error('PDF তৈরি করা যায়নি!');
+      toast.error(`PDF তৈরিতে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
     }
   };
 
@@ -256,7 +369,6 @@ const SignatureSheet = () => {
 
       <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
         <div ref={tableRef} className="print-container">
-        
           <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20 no-print">
             স্বাক্ষর শীট {selectedClassId && selectedExamId && `- ক্লাস: ${activeClasses.find(cls => cls.id === parseInt(selectedClassId))?.class_name} ${activeClasses.find(cls => cls.id === parseInt(selectedClassId))?.section_name}, পরীক্ষা: ${exams.find(exam => exam.id === parseInt(selectedExamId))?.name}`}
           </h3>
@@ -276,16 +388,16 @@ const SignatureSheet = () => {
               <table className="min-w-full divide-y divide-white/20 print-table">
                 <thead className="bg-white/5">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider border">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider border border-black">
                       শিক্ষার্থীর নাম
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider border">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider border border-black">
                       রোল
                     </th>
                     {activeSubjects.map((subject) => (
                       <th
                         key={subject.id}
-                        className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider no-print border"
+                        className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider no-print border border-black"
                       >
                         {subject.name}
                       </th>
@@ -307,16 +419,16 @@ const SignatureSheet = () => {
                       className="bg-white/5 animate-fadeIn border"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05] border">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black border border-black">
                         {student.name}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05] border">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black border border-black">
                         {student.roll_no || ''}
                       </td>
                       {activeSubjects.map((subject) => (
                         <td
                           key={subject.id}
-                          className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05] border"
+                          className="px-6 py-4 whitespace-nowrap text-sm text-black border border-black"
                         >
                           {/* Placeholder for signature or mark */}
                         </td>
