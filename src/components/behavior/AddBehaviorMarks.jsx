@@ -397,12 +397,12 @@ const AddBehaviorMarks = () => {
             ...payload,
           }).unwrap();
           console.log('Update response:', response);
-          toast.success('মার্কস আপডেট হয়েছে!');
+          // toast.success('মার্কস আপডেট হয়েছে!');
         } else {
           // Create new report with only the specific mark
           response = await createBehaviorReport(payload).unwrap();
           console.log('Create response:', response);
-          toast.success('মার্কস সংরক্ষিত হয়েছে!');
+          // toast.success('মার্কস সংরক্ষিত হয়েছে!');
         }
 
         await refetch();
