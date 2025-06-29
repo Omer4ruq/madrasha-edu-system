@@ -272,17 +272,17 @@ const mainMenu = [
       },
       {
         id: "07/07",
-        title: "বর্তমান- ফি",
-        link: "/accounts/current-fee",
+        title: "সম্মিলিত ফি",
+        link: "/accounts/fee-summary",
       },
-      {
-        id: "07/08",
-        title: "পূর্বের - ফি",
-        link: "/accounts/previous-fee",
-      },
+      // {
+      //   id: "07/08",
+      //   title: "পূর্বের - ফি",
+      //   link: "/accounts/previous-fee",
+      // },
       {
         id: "07/09",
-        title: "মুছুন - ফি",
+        title: "ডিলিট - ফি",
         link: "/accounts/delete-fee",
       },
          {

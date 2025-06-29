@@ -61,6 +61,7 @@ import AddEvent from "./components/event/AddEvent";
 import { ClassRoutine } from "./components/routine/routine-index";
 import ExamRoutine from "./components/routine/exam-routine/ExamRoutine";
 import BoardingFees from "./components/fees/BoardingFees";
+import FeeSummary from "./components/fees/FeeSummary";
 
 function Root() {
   const router = createBrowserRouter([
@@ -282,13 +283,13 @@ function Root() {
               element: <AddFeesName />,
             },
             {
-              path: "current-fee",
-              element: <CurrentFees />,
+              path: "fee-summary",
+              element: <FeeSummary></FeeSummary>,
             },
-            {
-              path: "previous-fee",
-              element: <PreviousFees />,
-            },
+            // {
+            //   path: "previous-fee",
+            //   element: <PreviousFees />,
+            // },
             {
               path: "delete-fee",
               element: <DeleteStudentFees />,
