@@ -8,48 +8,9 @@ import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classC
 import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
 import { useGetExamApiQuery } from '../../redux/features/api/exam/examApi';
 import { useGetInstituteLatestQuery } from '../../redux/features/api/institute/instituteLatestApi';
+
+import selectStyles from '../../utilitis/selectStyles';
 import { useGetClassExamStudentsQuery } from '../../redux/features/api/class-exam-students/classExamStudentApi ';
-
-
-// Custom styles for React Select
-const selectStyles = {
-  control: (provided) => ({
-    ...provided,
-    background: 'transparent',
-    borderColor: '#9d9087',
-    color: '#441a05',
-    padding: '2px',
-    borderRadius: '0.5rem',
-    transition: 'all 0.3s ease',
-    '&:hover': {
-      borderColor: '#441a05',
-    },
-  }),
-  singleValue: (provided) => ({
-    ...provided,
-    color: '#441a05',
-  }),
-  placeholder: (provided) => ({
-    ...provided,
-    color: '#441a05',
-    opacity: 0.7,
-  }),
-  menu: (provided) => ({
-    ...provided,
-    background: 'rgba(0, 0, 0, 0.1)',
-    backdropFilter: 'blur(10px)',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    borderRadius: '0.5rem',
-  }),
-  option: (provided, state) => ({
-    ...provided,
-    background: state.isSelected ? '#DB9E30' : 'transparent',
-    color: '#441a05',
-    '&:hover': {
-      background: 'rgba(219, 158, 48, 0.2)',
-    },
-  }),
-};
 
 const SeatPlan = () => {
   // State for filter selections
@@ -75,17 +36,6 @@ const SeatPlan = () => {
     },
     { skip: !selectedClassConfig || !selectedExam || !selectedAcademicYear }
   );
-
-  // Debug logs
-  console.log('API Data:', { classConfigs, academicYears, exams, institute });
-  console.log('Selected Filters:', { 
-    class_id: selectedClassConfig?.value, 
-    exam_id: selectedExam?.value, 
-    academic_year_id: selectedAcademicYear?.value 
-  });
-  console.log('Exam Students:', examStudents);
-  console.log('API Errors:', { classError, yearError, examError, instituteError, studentsError });
-  console.log('Token:', localStorage.getItem('token'));
 
   // Print ref
   const printRef = useRef();
@@ -258,7 +208,6 @@ const SeatPlan = () => {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 5mm;
-        
             box-sizing: border-box;
             font-family: 'Noto Sans Bengali', sans-serif;
           }
@@ -288,8 +237,8 @@ const SeatPlan = () => {
       {/* Filter Controls */}
       <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
         <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-            <IoPrint className="text-4xl text-[#441a05]"/>
-            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">পরীক্ষার আসন বিন্যাস</h3>
+          <IoPrint className="text-4xl text-[#441a05]"/>
+          <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">পরীক্ষার আসন বিন্যাস</h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 no-print">
@@ -302,7 +251,11 @@ const SeatPlan = () => {
               placeholder="ক্লাস নির্বাচন করুন..."
               isClearable
               styles={selectStyles}
+              menuPortalTarget={document.body}
+              menuPosition="fixed"
               className="animate-scaleIn"
+              aria-label="ক্লাস কনফিগারেশন"
+              title="ক্লাস নির্বাচন করুন / Select class configuration"
             />
           </div>
           <div>
@@ -314,7 +267,11 @@ const SeatPlan = () => {
               placeholder="বছর নির্বাচন করুন..."
               isClearable
               styles={selectStyles}
+              menuPortalTarget={document.body}
+              menuPosition="fixed"
               className="animate-scaleIn"
+              aria-label="শিক্ষাবর্ষ"
+              title="শিক্ষাবর্ষ নির্বাচন করুন / Select academic year"
             />
           </div>
           <div>
@@ -326,7 +283,11 @@ const SeatPlan = () => {
               placeholder="পরীক্ষা নির্বাচন করুন..."
               isClearable
               styles={selectStyles}
+              menuPortalTarget={document.body}
+              menuPosition="fixed"
               className="animate-scaleIn"
+              aria-label="পরীক্ষা"
+              title="পরীক্ষা নির্বাচন করুন / Select exam"
             />
           </div>
         </div>
@@ -337,6 +298,8 @@ const SeatPlan = () => {
             <button
               onClick={handlePrint}
               className="px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn hover:text-white btn-glow"
+              aria-label="আসন বিন্যাস প্রিন্ট করুন"
+              title="আসন বিন্যাস প্রিন্ট করুন / Print seat plan"
             >
               <span className="flex items-center space-x-2">
                 <IoPrint className="w-5 h-5" />
@@ -346,6 +309,8 @@ const SeatPlan = () => {
             <button
               onClick={handleDownloadPDF}
               className="px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn hover:text-white btn-glow"
+              aria-label="পিডিএফ ডাউনলোড"
+              title="পিডিএফ ডাউনলোড / Download PDF"
             >
               <span className="flex items-center space-x-2">
                 <IoDocumentText className="w-5 h-5" />

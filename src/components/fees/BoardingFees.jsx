@@ -8,7 +8,8 @@ import { useGetStudentCurrentFeesQuery } from '../../redux/features/api/studentF
 import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
 import { useGetFundsQuery } from '../../redux/features/api/funds/fundsApi';
 import { useGetWaiversQuery } from '../../redux/features/api/waivers/waiversApi';
-import { useCreateFeeMutation, useDeleteFeeMutation, useUpdateFeeMutation } from '../../redux/features/api/fees/feesApi';
+import { useCreateFeeMutation, useUpdateFeeMutation, useDeleteFeeMutation } from '../../redux/features/api/fees/feesApi';
+import selectStyles from '../../utilitis/selectStyles';
 
 const BoardingFees = () => {
   const [userId, setUserId] = useState('');
@@ -22,6 +23,7 @@ const BoardingFees = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
+  const [selectAll, setSelectAll] = useState(false); // State for Select All checkbox
   const dropdownRef = useRef(null);
 
   // API Queries
@@ -29,7 +31,6 @@ const BoardingFees = () => {
     userId ? { user_id: userId } : undefined,
     { skip: !userId }
   );
-  console.log("studentData", studentData)
   const {
     data: feesData,
     refetch: refetchFees
@@ -38,9 +39,9 @@ const BoardingFees = () => {
   const { data: funds } = useGetFundsQuery();
   const { data: waivers } = useGetWaiversQuery();
   const [createFee, { isLoading: isCreating }] = useCreateFeeMutation();
-  const [updateFee, { isLoading: isUpdating }] = useDeleteFeeMutation();
+  const [updateFee, { isLoading: isUpdating }] = useUpdateFeeMutation();
   const [deleteFee, { isLoading: isDeleting }] = useDeleteFeeMutation();
-console.log("feesData", feesData)
+
   // Handle clicks outside dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -64,6 +65,12 @@ console.log("feesData", feesData)
     }
   }, [studentData, userId]);
 
+  // Reset selectAll when feesData changes
+  useEffect(() => {
+    setSelectAll(false);
+    setSelectedFees([]);
+  }, [feesData]);
+
   // Calculate payable amount with waiver
   const calculatePayableAmount = (fee, waivers) => {
     const feeHeadId = parseInt(fee.fee_head_id);
@@ -84,7 +91,7 @@ console.log("feesData", feesData)
       payableAfterWaiver: payableAfterWaiver.toFixed(2)
     };
   };
-console.log("feesData", feesData)
+
   // Filter out deleted fees and only show boarding fees
   const filteredFees = feesData?.fees_name_records?.filter(
     (fee) =>
@@ -93,7 +100,7 @@ console.log("feesData", feesData)
         del.feetype.some((df) => df.id === fee.id)
       )
   ) || [];
-console.log("filteredFees", filteredFees)
+
   // Get latest fee status and amounts
   const getFeeStatus = (fee) => {
     const feeRecord = feesData?.fees_records?.find((fr) => fr.feetype_id === fee.id);
@@ -138,6 +145,32 @@ console.log("filteredFees", filteredFees)
         : [...prev, feeId]
     );
   };
+
+  // Handle Select All checkbox
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedFees([]);
+      setSelectAll(false);
+    } else {
+      const selectableFees = filteredFees
+        .filter((fee) => getFeeStatus(fee).status !== 'PAID')
+        .map((fee) => fee.id);
+      setSelectedFees(selectableFees);
+      setSelectAll(true);
+    }
+  };
+
+  // Update selectAll state based on selectedFees
+  useEffect(() => {
+    const selectableFees = filteredFees
+      .filter((fee) => getFeeStatus(fee).status !== 'PAID')
+      .map((fee) => fee.id);
+    if (selectableFees.length > 0 && selectedFees.length === selectableFees.length) {
+      setSelectAll(true);
+    } else {
+      setSelectAll(false);
+    }
+  }, [selectedFees, filteredFees]);
 
   // Validate form
   const validateForm = () => {
@@ -229,6 +262,7 @@ console.log("filteredFees", filteredFees)
         setSelectedFees([]);
         setPaymentInputs({});
         setDiscountInputs({});
+        setSelectAll(false); // Reset Select All after submission
         refetchFees();
       } else if (modalAction === 'update') {
         await updateFee(modalData).unwrap();
@@ -272,59 +306,6 @@ console.log("filteredFees", filteredFees)
     value: fund.id,
     label: fund.name,
   })) || [];
-
-  // Custom styles for react-select
-  const selectStyles = {
-    control: (base) => ({
-      ...base,
-      background: 'transparent',
-      borderColor: '#9d9087',
-      borderRadius: '8px',
-      paddingLeft: '0.75rem',
-      padding: '3px',
-      color: '#441a05',
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-      transition: 'all 0.3s ease',
-      '&:hover': { borderColor: '#441a05' },
-      '&:focus': { outline: 'none', boxShadow: 'none' },
-    }),
-    placeholder: (base) => ({
-      ...base,
-      color: '#441a05',
-      opacity: 0.7,
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-    }),
-    singleValue: (base) => ({
-      ...base,
-      color: '#441a05',
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-    }),
-    menu: (base) => ({
-      ...base,
-      backgroundColor: 'rgba(0, 0, 0, 0.1)',
-      backdropFilter: 'blur(10px)',
-      border: '1px solid rgba(255, 255, 255, 0.2)',
-      borderRadius: '8px',
-      zIndex: 9999,
-      marginTop: '4px',
-    }),
-    menuPortal: (base) => ({
-      ...base,
-      zIndex: 9999,
-    }),
-    option: (base, { isFocused, isSelected }) => ({
-      ...base,
-      color: '#441a05',
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-      backgroundColor: isSelected ? '#DB9E30' : isFocused ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-      cursor: 'pointer',
-      '&:active': { backgroundColor: '#DB9E30' },
-    }),
-  };
 
   return (
     <div className="py-8">
@@ -491,7 +472,38 @@ console.log("filteredFees", filteredFees)
                         স্থিতি
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                        নির্বাচন
+                        <label className="inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectAll}
+                            onChange={handleSelectAll}
+                            disabled={isCreating || isUpdating || filteredFees.every(fee => getFeeStatus(fee).status === 'PAID')}
+                            className="hidden"
+                            aria-label="সব ফি নির্বাচন করুন"
+                            title="সব ফি নির্বাচন করুন / Select all fees"
+                          />
+                          <span
+                            className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${selectAll ? 'bg-[#DB9E30] border-[#DB9E30]' : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'}`}
+                          >
+                            {selectAll && (
+                              <svg
+                                className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            )}
+                          </span>
+                          <span className="ml-2 text-[#441a05]/70 text-nowrap">সব নির্বাচন</span>
+                        </label>
                       </th>
                     </tr>
                   </thead>
