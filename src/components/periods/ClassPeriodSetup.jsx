@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef  } from "react";
 import { FaSpinner, FaTrash, FaEdit } from "react-icons/fa";
 import { IoAddCircle } from "react-icons/io5";
 import { Toaster, toast } from "react-hot-toast";
@@ -14,6 +14,8 @@ const ClassPeriodSetup = () => {
   const [startTime, setStartTime] = useState("13:14"); // Current time (1:14 PM in 24-hour format)
   const [endTime, setEndTime] = useState("14:14"); // 1 hour later
   const [isBreakTime, setIsBreakTime] = useState(false);
+    const inputRef = useRef();
+    const inputRef2 = useRef();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
@@ -22,6 +24,22 @@ const ClassPeriodSetup = () => {
     endTime: "",
     breakTime: false,
   });
+
+ const handleClick = () => {
+  if (inputRef.current) {
+    inputRef.current.focus(); // ফোকাস আগে
+    setTimeout(() => {
+      inputRef.current.showPicker(); // তারপর ড্রপডাউন
+    }, 0); // 0ms delay is enough
+  }
+};
+  const handleClick2 = () => {
+    if (inputRef2.current) {
+      inputRef2.current.showPicker();
+      inputRef2.current.focus(); 
+    }
+  };
+
 
   // Fetch classes
   const { data: classes = [], isLoading: isClassesLoading } =
@@ -266,7 +284,9 @@ const ClassPeriodSetup = () => {
                     শুরুর সময়
                   </label>
                   <input
+                   onClick={handleClick2}
                     type="time"
+                    ref={inputRef2}
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
                     className="time-input animate-scaleIn tick-glow"
@@ -280,7 +300,9 @@ const ClassPeriodSetup = () => {
                     শেষের সময়
                   </label>
                   <input
+                   onClick={handleClick}
                     type="time"
+                    ref={inputRef}
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
                     className="time-input animate-scaleIn tick-glow"
