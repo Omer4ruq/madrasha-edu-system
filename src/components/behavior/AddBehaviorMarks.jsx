@@ -254,47 +254,17 @@ const AddBehaviorMarks = () => {
 
   // Process existing marks data
   const existingMarks = useMemo(() => {
-    if (!behaviorReportData?.data || !selectedExam || !behaviorTypes || !studentData) {
-      console.log('existingMarks: Skipping due to missing data', {
-        behaviorReportData: !!behaviorReportData?.data,
-        selectedExam: !!selectedExam,
-        behaviorTypes: !!behaviorTypes,
-        studentData: !!studentData,
-      });
-      return {};
-    }
-
-    const marksMap = {};
-    behaviorReportData?.data.forEach((report) => {
-      if (report.exam_name_id === parseInt(selectedExam)) {
-        const student = studentData.find((s) => s.id === report.student_id && s.class_name === selectedClass);
-        if (!student) return;
-
-        report.behavior_marks?.forEach((behaviorMark) => {
-          const studentId = behaviorMark.student_id;
-          const behaviorTypeId = behaviorMark.behavior_type;
-          const behaviorType = behaviorTypes.find((bt) => bt.id === behaviorTypeId);
-          if (behaviorType) {
-            if (!marksMap[studentId]) {
-              marksMap[studentId] = {
-                reportId: report.id,
-                comment: report.comment || '',
-                marks: {},
-              };
-            }
-            marksMap[studentId].marks[behaviorTypeId] = {
-              id: behaviorMark.id,
-              marks: behaviorMark.mark,
-              behaviorTypeId: behaviorTypeId,
-            };
-          }
-        });
-      }
+  if (!behaviorReportData || !selectedExam || !behaviorTypes || !studentData) {
+    console.log('existingMarks: Skipping due to missing data', {
+      behaviorReportData: !!behaviorReportData,
+      selectedExam: !!selectedExam,
+      behaviorTypes: !!behaviorTypes,
+      studentData: !!studentData,
     });
+    return {};
+  }
+   const marksMap = {};
 
-    console.log('existingMarks:', marksMap);
-    return marksMap;
-  }, [behaviorReportData, selectedExam, behaviorTypes, studentData, selectedClass]);
 
   // Calculate total marks for each student
   const totalMarks = useMemo(() => {
@@ -334,149 +304,170 @@ const AddBehaviorMarks = () => {
   };
 
   // Unified save function for marks and comments
-  const handleSave = async (studentId, behaviorTypeId = null) => {
-    if (!selectedExam) {
-      toast.error('পরীক্ষা নির্বাচন করুন।');
-      return;
-    }
+// Unified save function for marks and comments
+const handleSave = async (studentId, behaviorTypeId = null) => {
+  if (!selectedExam) {
+    toast.error('পরীক্ষা নির্বাচন করুন।');
+    return;
+  }
 
-    const inputKey = behaviorTypeId ? `${studentId}-${behaviorTypeId}` : `${studentId}-comment`;
-    const studentMarks = marksInput[studentId] || {};
+  const inputKey = behaviorTypeId ? `${studentId}-${behaviorTypeId}` : `${studentId}-comment`;
+  const studentMarks = marksInput[studentId] || {};
 
-    setSavingStatus((prev) => ({ ...prev, [inputKey]: 'saving' }));
+  setSavingStatus((prev) => ({ ...prev, [inputKey]: 'saving' }));
 
-    try {
-      const existingStudentData = existingMarks[studentId];
+  try {
+    const existingStudentData = existingMarks[studentId];
 
-      // Handle mark saving
-      if (behaviorTypeId) {
-        const behaviorMarkData = studentMarks[behaviorTypeId];
-        if (!behaviorMarkData || behaviorMarkData.marks === '') {
-          setSavingStatus((prev) => ({ ...prev, [inputKey]: null }));
-          return;
-        }
+    // Handle mark saving
+    if (behaviorTypeId) {
+      const behaviorMarkData = studentMarks[behaviorTypeId];
+      if (!behaviorMarkData || behaviorMarkData.marks === '') {
+        setSavingStatus((prev) => ({ ...prev, [inputKey]: null }));
+        return;
+      }
 
-        const mark = Number(behaviorMarkData.marks);
-        const behavior = behaviorTypes.find((b) => b.id === parseInt(behaviorTypeId));
+      const mark = Number(behaviorMarkData.marks);
+      const behavior = behaviorTypes.find((b) => b.id === parseInt(behaviorTypeId));
 
-        if (!behavior) {
-          toast.error('আচরণের ধরন পাওয়া যায়নি।');
-          setSavingStatus((prev) => ({ ...prev, [inputKey]: 'error' }));
-          return;
-        }
+      if (!behavior) {
+        toast.error('আচরণের ধরন পাওয়া যায়নি।');
+        setSavingStatus((prev) => ({ ...prev, [inputKey]: 'error' }));
+        return;
+      }
 
-        if (mark > behavior.obtain_mark) {
-          toast.error(`${behavior.name} এর মার্কস ${behavior.obtain_mark} এর বেশি হতে পারে না।`);
-          setSavingStatus((prev) => ({ ...prev, [inputKey]: 'error' }));
-          return;
-        }
-        if (mark < 0) {
-          toast.error(`${behavior.name} এর মার্কস নেগেটিভ হতে পারে না।`);
-          setSavingStatus((prev) => ({ ...prev, [inputKey]: 'error' }));
-          return;
-        }
+      if (mark > behavior.obtain_mark) {
+        toast.error(`${behavior.name} এর মার্কস ${behavior.obtain_mark} এর বেশি হতে পারে না।`);
+        setSavingStatus((prev) => ({ ...prev, [inputKey]: 'error' }));
+        return;
+      }
+      if (mark < 0) {
+        toast.error(`${behavior.name} এর মার্কস নেগেটিভ হতে পারে না।`);
+        setSavingStatus((prev) => ({ ...prev, [inputKey]: 'error' }));
+        return;
+      }
 
-        const payload = {
-          exam_name_id: parseInt(selectedExam),
-          student_id: parseInt(studentId),
-          behavior_marks: [
-            {
+      // Prepare all behavior marks for this student
+      const allBehaviorMarks = [];
+      
+      // Add existing marks (except the one being updated)
+      if (existingStudentData?.marks) {
+        Object.values(existingStudentData.marks).forEach(existingMark => {
+          if (existingMark.behaviorTypeId !== parseInt(behaviorTypeId)) {
+            allBehaviorMarks.push({
               student_id: parseInt(studentId),
-              behavior_type: parseInt(behaviorTypeId),
-              mark: mark,
-            },
-          ],
-          comment: existingStudentData?.comment || '',
-        };
+              behavior_type: parseInt(existingMark.behaviorTypeId),
+              mark: Number(existingMark.marks),
+            });
+          }
+        });
+      }
+      
+      // Add the new/updated mark
+      allBehaviorMarks.push({
+        student_id: parseInt(studentId),
+        behavior_type: parseInt(behaviorTypeId),
+        mark: mark,
+      });
 
-        let response;
-        if (existingStudentData && existingStudentData.reportId) {
-          // Update only the specific mark
-          response = await updateBehaviorReport({
-            id: existingStudentData.reportId,
-            ...payload,
-          }).unwrap();
-          console.log('Update response:', response);
-          toast.success('মার্কস আপডেট হয়েছে!');
-        } else {
-          // Create new report with only the specific mark
-          response = await createBehaviorReport(payload).unwrap();
-          console.log('Create response:', response);
-          toast.success('মার্কস সংরক্ষিত হয়েছে!');
-        }
+      const payload = {
+        exam_name_id: parseInt(selectedExam),
+        student_id: parseInt(studentId),
+        behavior_marks: allBehaviorMarks,
+        comment: existingStudentData?.comment || '',
+      };
 
-        await refetch();
-
-        setMarksInput((prev) => ({
-          ...prev,
-          [studentId]: {
-            ...prev[studentId],
-            [behaviorTypeId]: { marks: '', isEditing: false },
-          },
-        }));
+      let response;
+      if (existingStudentData && existingStudentData.reportId) {
+        // Update existing report
+        response = await updateBehaviorReport({
+          id: existingStudentData.reportId,
+          ...payload,
+        }).unwrap();
+        console.log('Update response:', response);
+        toast.success('মার্কস আপডেট হয়েছে!');
       } else {
-        // Handle comment saving
-        const currentComment = studentMarks.comment !== undefined ? studentMarks.comment : existingStudentData?.comment || '';
+        // Create new report
+        response = await createBehaviorReport(payload).unwrap();
+        console.log('Create response:', response);
+        toast.success('মার্কস সংরক্ষিত হয়েছে!');
+      }
 
-        if (!existingStudentData && !currentComment) {
+      await refetch();
+
+      setMarksInput((prev) => ({
+        ...prev,
+        [studentId]: {
+          ...prev[studentId],
+          [behaviorTypeId]: { marks: '', isEditing: false },
+        },
+      }));
+    } else {
+      // Handle comment saving
+      const currentComment = studentMarks.comment !== undefined ? studentMarks.comment : existingStudentData?.comment || '';
+
+      if (!existingStudentData && !currentComment) {
+        toast.error('মন্তব্য সংরক্ষণের জন্য অন্তত একটি মার্কস থাকতে হবে।');
+        setSavingStatus((prev) => ({ ...prev, [inputKey]: 'error' }));
+        return;
+      }
+
+      // Prepare all existing behavior marks
+      const allBehaviorMarks = existingStudentData?.marks
+        ? Object.values(existingStudentData.marks).map((mark) => ({
+            student_id: parseInt(studentId),
+            behavior_type: parseInt(mark.behaviorTypeId),
+            mark: Number(mark.marks),
+          }))
+        : [];
+
+      const payload = {
+        exam_name_id: parseInt(selectedExam),
+        student_id: parseInt(studentId),
+        behavior_marks: allBehaviorMarks,
+        comment: currentComment,
+      };
+
+      let response;
+      if (existingStudentData && existingStudentData.reportId) {
+        // Update existing report
+        response = await updateBehaviorReport({
+          id: existingStudentData.reportId,
+          ...payload,
+        }).unwrap();
+        console.log('Update response:', response);
+        toast.success('মন্তব্য আপডেট হয়েছে!');
+      } else {
+        if (payload.behavior_marks.length === 0) {
           toast.error('মন্তব্য সংরক্ষণের জন্য অন্তত একটি মার্কস থাকতে হবে।');
           setSavingStatus((prev) => ({ ...prev, [inputKey]: 'error' }));
           return;
         }
-
-        const payload = {
-          exam_name_id: parseInt(selectedExam),
-          student_id: parseInt(studentId),
-          behavior_marks: existingStudentData?.marks
-            ? Object.values(existingStudentData.marks).map((mark) => ({
-                student_id: parseInt(studentId),
-                behavior_type: parseInt(mark.behaviorTypeId),
-                mark: Number(mark.marks),
-              }))
-            : [],
-          comment: currentComment,
-        };
-
-        let response;
-        if (existingStudentData && existingStudentData.reportId) {
-          // Update only the comment
-          response = await updateBehaviorReport({
-            id: existingStudentData.reportId,
-            ...payload,
-          }).unwrap();
-          console.log('Update response:', response);
-          toast.success('মন্তব্য আপডেট হয়েছে!');
-        } else {
-          if (payload.behavior_marks.length === 0) {
-            toast.error('মন্তব্য সংরক্ষণের জন্য অন্তত একটি মার্কস থাকতে হবে।');
-            setSavingStatus((prev) => ({ ...prev, [inputKey]: 'error' }));
-            return;
-          }
-          // Create new report with only the comment
-          response = await createBehaviorReport(payload).unwrap();
-          console.log('Create response:', response);
-          toast.success('মন্তব্য সংরক্ষিত হয়েছে!');
-        }
-
-        await refetch();
+        // Create new report
+        response = await createBehaviorReport(payload).unwrap();
+        console.log('Create response:', response);
+        toast.success('মন্তব্য সংরক্ষিত হয়েছে!');
       }
 
-      setSavingStatus((prev) => ({ ...prev, [inputKey]: 'success' }));
-
-      setTimeout(() => {
-        setSavingStatus((prev) => ({ ...prev, [inputKey]: null }));
-      }, 2000);
-    } catch (err) {
-      console.error('সংরক্ষণে ত্রুটি:', err);
-      console.error('Error details:', err?.data || err);
-      toast.error(`সংরক্ষণে ব্যর্থ: ${err.status || 'অজানা ত্রুটি'}`);
-      setSavingStatus((prev) => ({ ...prev, [inputKey]: 'error' }));
-
-      setTimeout(() => {
-        setSavingStatus((prev) => ({ ...prev, [inputKey]: null }));
-      }, 3000);
+      await refetch();
     }
-  };
+
+    setSavingStatus((prev) => ({ ...prev, [inputKey]: 'success' }));
+
+    setTimeout(() => {
+      setSavingStatus((prev) => ({ ...prev, [inputKey]: null }));
+    }, 2000);
+  } catch (err) {
+    console.error('সংরক্ষণে ত্রুটি:', err);
+    console.error('Error details:', err?.data || err);
+    toast.error(`সংরক্ষণে ব্যর্থ: ${err.status || 'অজানা ত্রুটি'}`);
+    setSavingStatus((prev) => ({ ...prev, [inputKey]: 'error' }));
+
+    setTimeout(() => {
+      setSavingStatus((prev) => ({ ...prev, [inputKey]: null }));
+    }, 3000);
+  }
+};
 
   // Handle Enter key for marks
   const handleKeyDown = async (e, studentId, behaviorTypeId, studentIndex) => {
@@ -526,10 +517,11 @@ const AddBehaviorMarks = () => {
   };
 
   // Check if a field has existing data
-  const hasExistingData = (studentId, behaviorTypeId) => {
-    return existingMarks[studentId]?.marks[behaviorTypeId]?.marks !== undefined;
-  };
-
+ // Check if a field has existing data
+const hasExistingData = (studentId, behaviorTypeId) => {
+  return existingMarks[studentId]?.marks[behaviorTypeId]?.marks !== undefined && 
+         existingMarks[studentId].marks[behaviorTypeId].marks !== null;
+};
   // Generate and download PDF report
   const generatePDFReport = async () => {
     if (!selectedClass || !selectedExam || filteredStudents.length === 0 || behaviorTypes.length === 0) {
