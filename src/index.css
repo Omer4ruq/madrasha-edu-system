@@ -47,3 +47,9 @@ input[type='number']::-webkit-inner-spin-button {
 input[type='number'] {
   -moz-appearance: textfield;
 }
+
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(50%) sepia(100%) saturate(500%) hue-rotate(10deg);
+  cursor: pointer;
+}
