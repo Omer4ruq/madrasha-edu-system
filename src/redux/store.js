@@ -58,6 +58,7 @@ import { classExamStudentApi } from './features/api/class-exam-students/classExa
 import { teacherSubjectAssignsApi } from './features/api/teacherSubjectAssigns/teacherSubjectAssignsApi';
 import { eventApi } from './features/api/event/eventApi';
 import { routinesApi } from './features/api/routines/routinesApi';
+import { examRoutineApi } from './features/api/routines/examRoutineApi';
 
 
 
@@ -125,6 +126,7 @@ export const store = configureStore({
     [teacherSubjectAssignsApi.reducerPath]: teacherSubjectAssignsApi.reducer,
     [eventApi.reducerPath]: eventApi.reducer,
     [routinesApi.reducerPath]: routinesApi.reducer,
+    [examRoutineApi.reducerPath]: examRoutineApi.reducer,
   
 
   },
@@ -188,6 +190,7 @@ export const store = configureStore({
     .concat(teacherSubjectAssignsApi.middleware)
     .concat(eventApi.middleware)
     .concat(routinesApi.middleware)
+    .concat(examRoutineApi.middleware)
   
 });
 
