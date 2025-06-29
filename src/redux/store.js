@@ -58,9 +58,13 @@ import { classExamStudentApi } from './features/api/class-exam-students/classExa
 import { teacherSubjectAssignsApi } from './features/api/teacherSubjectAssigns/teacherSubjectAssignsApi';
 import { eventApi } from './features/api/event/eventApi';
 import { routinesApi } from './features/api/routines/routinesApi';
+<<<<<<< HEAD
 import { groupListApi } from './features/api/permissionRole/groupListApi';
 import { permissionListApi } from './features/api/permissionRole/permissionListApi';
 import { groupsApi } from './features/api/permissionRole/groupsApi';
+=======
+import { examRoutineApi } from './features/api/routines/examRoutineApi';
+>>>>>>> 9ac2b1f7dbd2079be2badf37365e396daac810d5
 
 
 
@@ -128,9 +132,13 @@ export const store = configureStore({
     [teacherSubjectAssignsApi.reducerPath]: teacherSubjectAssignsApi.reducer,
     [eventApi.reducerPath]: eventApi.reducer,
     [routinesApi.reducerPath]: routinesApi.reducer,
+<<<<<<< HEAD
     [groupListApi.reducerPath]: groupListApi.reducer,
     [permissionListApi.reducerPath]: permissionListApi.reducer,
     [groupsApi.reducerPath]: groupsApi.reducer,
+=======
+    [examRoutineApi.reducerPath]: examRoutineApi.reducer,
+>>>>>>> 9ac2b1f7dbd2079be2badf37365e396daac810d5
   
 
   },
@@ -194,9 +202,13 @@ export const store = configureStore({
     .concat(teacherSubjectAssignsApi.middleware)
     .concat(eventApi.middleware)
     .concat(routinesApi.middleware)
+<<<<<<< HEAD
     .concat(groupListApi.middleware)
     .concat(permissionListApi.middleware)
     .concat(groupsApi.middleware)
+=======
+    .concat(examRoutineApi.middleware)
+>>>>>>> 9ac2b1f7dbd2079be2badf37365e396daac810d5
   
 });
 
