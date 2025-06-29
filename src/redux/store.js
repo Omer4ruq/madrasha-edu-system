@@ -58,6 +58,9 @@ import { classExamStudentApi } from './features/api/class-exam-students/classExa
 import { teacherSubjectAssignsApi } from './features/api/teacherSubjectAssigns/teacherSubjectAssignsApi';
 import { eventApi } from './features/api/event/eventApi';
 import { routinesApi } from './features/api/routines/routinesApi';
+import { groupListApi } from './features/api/permissionRole/groupListApi';
+import { permissionListApi } from './features/api/permissionRole/permissionListApi';
+import { groupsApi } from './features/api/permissionRole/groupsApi';
 
 
 
@@ -125,6 +128,9 @@ export const store = configureStore({
     [teacherSubjectAssignsApi.reducerPath]: teacherSubjectAssignsApi.reducer,
     [eventApi.reducerPath]: eventApi.reducer,
     [routinesApi.reducerPath]: routinesApi.reducer,
+    [groupListApi.reducerPath]: groupListApi.reducer,
+    [permissionListApi.reducerPath]: permissionListApi.reducer,
+    [groupsApi.reducerPath]: groupsApi.reducer,
   
 
   },
@@ -188,6 +194,9 @@ export const store = configureStore({
     .concat(teacherSubjectAssignsApi.middleware)
     .concat(eventApi.middleware)
     .concat(routinesApi.middleware)
+    .concat(groupListApi.middleware)
+    .concat(permissionListApi.middleware)
+    .concat(groupsApi.middleware)
   
 });
 

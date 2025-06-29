@@ -62,6 +62,7 @@ import { ClassRoutine } from "./components/routine/routine-index";
 import ExamRoutine from "./components/routine/exam-routine/ExamRoutine";
 import BoardingFees from "./components/fees/BoardingFees";
 import FeeSummary from "./components/fees/FeeSummary";
+import RolePermissions from "./components/permission/RolePermissions";
 
 function Root() {
   const router = createBrowserRouter([
@@ -358,6 +359,10 @@ function Root() {
                   element: <StaffList />,
                 },
               ],
+            },
+            {
+              path: "role-permission",
+              element: <RolePermissions />,
             },
           ],
         },
