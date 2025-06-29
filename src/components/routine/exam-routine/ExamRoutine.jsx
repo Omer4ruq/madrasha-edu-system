@@ -25,14 +25,14 @@ const ExamRoutine = () => {
   });
 
   // Fetch existing schedules for the selected exam, class, and year
-  const { data: existingSchedulesData = { results: [] }, isLoading: isScheduleLoading } = useGetExamSchedulesQuery({
+  const { data: existingSchedulesData = [], isLoading: isScheduleLoading } = useGetExamSchedulesQuery({
     exam_name: selectedExam,
     class_name: activeTab,
     academic_year: selectedYear,
   }, {
     skip: !selectedExam || !activeTab || !selectedYear,
   });
-  const existingSchedules = Array.isArray(existingSchedulesData) ? existingSchedulesData : existingSchedulesData.results || [];
+  const existingSchedules = Array.isArray(existingSchedulesData) && existingSchedulesData.length > 0 ? existingSchedulesData[0]?.schedules || [] : [];
 
   useEffect(() => {
     if (classes.length > 0 && !activeTab) {
@@ -53,6 +53,7 @@ const ExamRoutine = () => {
       const newSchedules = existingSchedules.reduce((acc, schedule) => ({
         ...acc,
         [schedule.subject_id]: {
+          id: schedule.id,
           exam_date: schedule.exam_date,
           start_time: schedule.start_time,
           end_time: schedule.end_time,
@@ -86,7 +87,7 @@ const ExamRoutine = () => {
     }
 
     const updatedSchedule = {
-      id: scheduleId,
+      id: schedule.id || scheduleId,
       exam_date: schedule.exam_date,
       start_time: schedule.start_time,
       end_time: schedule.end_time,
