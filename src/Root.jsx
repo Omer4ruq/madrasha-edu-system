@@ -60,6 +60,7 @@ import Event from "./components/event/Event";
 import AddEvent from "./components/event/AddEvent";
 import { ClassRoutine } from "./components/routine/routine-index";
 import ExamRoutine from "./components/routine/exam-routine/ExamRoutine";
+import BoardingFees from "./components/fees/BoardingFees";
 
 function Root() {
   const router = createBrowserRouter([
@@ -294,7 +295,7 @@ function Root() {
             },
                {
               path: "boarding-fee",
-              element: <DeleteStudentFees />,
+              element: <BoardingFees />,
             },
           ],
         },
