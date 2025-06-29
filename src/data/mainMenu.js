@@ -287,7 +287,7 @@ const mainMenu = [
       },
          {
         id: "07/10",
-        title: "boarding - ফি",
+        title: "বোর্ডিং - ফি",
         link: "/accounts/boarding-fee",
       },
     ],
