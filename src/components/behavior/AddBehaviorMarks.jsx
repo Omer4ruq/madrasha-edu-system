@@ -5,15 +5,15 @@ import { useGetStudentActiveByClassQuery } from '../../redux/features/api/studen
 import { useGetBehaviorTypeApiQuery } from '../../redux/features/api/behavior/behaviorTypeApi';
 import { useCreateBehaviorReportApiMutation, useGetBehaviorReportApiQuery } from '../../redux/features/api/behavior/behaviorReportApi';
 
-
+// {cls.class_name} {cls.shift_name}
 
 const AddBehaviorMarks = () => {
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedExam, setSelectedExam] = useState('');
   const [behaviorReports, setBehaviorReports] = useState({});
-  const [invalidMarks, setInvalidMarks] = useState({});
-  const [savedMarks, setSavedMarks] = useState({});
-  const [toastMessage, setToastMessage] = useState('');
+  const [invalidMarks, setInvalidMarks] = useState({}); // Track invalid inputs
+  const [savedMarks, setSavedMarks] = useState({}); // Track successfully saved marks
+  const [toastMessage, setToastMessage] = useState(''); // Toast message for invalid submission
 
   // Fetch classes
   const { data: classes, isLoading: classesLoading } = useGetclassConfigApiQuery();
@@ -31,12 +31,11 @@ const AddBehaviorMarks = () => {
   // Filter active behavior types
   const activeBehaviorTypes = behaviorTypes?.filter(bt => bt.is_active) || [];
 
-  // Initialize states when students or behavior types change
+  // Initialize behavior reports state when students or behavior types change
   useEffect(() => {
     if (students && activeBehaviorTypes.length > 0) {
       const initialReports = {};
       const initialSavedMarks = {};
-      const initialInvalidMarks = {};
       students.forEach(student => {
         initialReports[student.id] = {};
         initialSavedMarks[student.id] = {};
@@ -45,22 +44,8 @@ const AddBehaviorMarks = () => {
           initialSavedMarks[student.id][bt.id] = false;
         });
       });
-      setBehaviorReports(prev => {
-        // Preserve user-entered values if they exist
-        const updatedReports = { ...initialReports };
-        Object.keys(prev).forEach(studentId => {
-          if (updatedReports[studentId]) {
-            Object.keys(prev[studentId]).forEach(behaviorTypeId => {
-              if (prev[studentId][behaviorTypeId] !== '') {
-                updatedReports[studentId][behaviorTypeId] = prev[studentId][behaviorTypeId];
-              }
-            });
-          }
-        });
-        return updatedReports;
-      });
+      setBehaviorReports(initialReports);
       setSavedMarks(initialSavedMarks);
-      setInvalidMarks(initialInvalidMarks);
     }
   }, [students, activeBehaviorTypes]);
 
@@ -69,24 +54,13 @@ const AddBehaviorMarks = () => {
     if (existingReports && students && activeBehaviorTypes.length > 0 && selectedExam) {
       const updatedReports = { ...behaviorReports };
       const updatedSavedMarks = { ...savedMarks };
-      students.forEach(student => {
-        if (!updatedReports[student.id]) {
-          updatedReports[student.id] = {};
-          updatedSavedMarks[student.id] = {};
-          activeBehaviorTypes.forEach(bt => {
-            updatedReports[student.id][bt.id] = '';
-            updatedSavedMarks[student.id][bt.id] = false;
-          });
-        }
-      });
-
       existingReports.forEach(report => {
         // Filter by selected exam
         if (report.exam_name_id === parseInt(selectedExam)) {
           report.behavior_marks.forEach(mark => {
             // Ensure student is in the selected class
             if (students.some(student => student.id === mark.student_id)) {
-              if (updatedReports[mark.student_id] && updatedReports[mark.student_id][mark.behavior_type] === '') {
+              if (updatedReports[mark.student_id]) {
                 updatedReports[mark.student_id][mark.behavior_type] = mark.mark.toString();
                 updatedSavedMarks[mark.student_id][mark.behavior_type] = true;
               }
@@ -130,7 +104,7 @@ const AddBehaviorMarks = () => {
       if (value !== '') {
         // Show toast message for invalid submission
         setToastMessage(`Invalid mark! Must be between 0 and ${behaviorType.obtain_mark}.`);
-        setTimeout(() => setToastMessage(''), 3000);
+        setTimeout(() => setToastMessage(''), 3000); // Clear toast after 3 seconds
         // Revert to previous valid value or empty string
         setBehaviorReports(prev => ({
           ...prev,
@@ -148,17 +122,28 @@ const AddBehaviorMarks = () => {
       return;
     }
 
+    // Collect all valid marks for this student for the selected exam
+    const behaviorMarks = [];
+    activeBehaviorTypes.forEach(bt => {
+      const markValue = parseFloat(behaviorReports[studentId][bt.id]);
+      // Include marks that are valid and either saved or currently being submitted
+      if (
+        (bt.id === behaviorTypeId && !isNaN(mark) && mark >= 0 && mark <= bt.obtain_mark) ||
+        (savedMarks[studentId][bt.id] && !isNaN(markValue) && markValue >= 0 && markValue <= bt.obtain_mark)
+      ) {
+        behaviorMarks.push({
+          student_id: parseInt(studentId),
+          behavior_type: parseInt(bt.id),
+          mark: bt.id === behaviorTypeId ? mark : markValue
+        });
+      }
+    });
+
     // Prepare data for API
     const reportData = {
       exam_name_id: parseInt(selectedExam),
       student_id: parseInt(studentId),
-      behavior_marks: [
-        {
-          student_id: parseInt(studentId),
-          behavior_type: parseInt(behaviorTypeId),
-          mark: mark
-        }
-      ]
+      behavior_marks: behaviorMarks
     };
 
     try {
