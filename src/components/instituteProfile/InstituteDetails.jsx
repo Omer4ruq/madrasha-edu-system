@@ -119,7 +119,7 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
               <div className="flex flex-wrap gap-3">
                 {[
                   { id: 'basic', label: 'মৌলিক তথ্য' },
-                  { id: 'online', label: 'অনলাইন উপস্থিতি' },
+                  { id: 'online', label: 'অনলাইন তথ্য' },
                   { id: 'manager', label: 'ইনচার্জ ম্যানেজার' },
                   { id: 'additional', label: 'অতিরিক্ত তথ্য' },
                 ].map((tab) => (
@@ -165,7 +165,7 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
               {activeTab === 'online' && (
                 <div className="space-y-4 text-[#441a05] animate-fadeIn">
                   <h3 className="text-lg font-semibold flex items-center">
-                    <FaGlobe className="mr-2 text-[#DB9E30]" /> অনলাইন উপস্থিতি
+                    <FaGlobe className="mr-2 text-[#DB9E30]" /> অনলাইন তথ্য
                   </h3>
                   <p>
                     <span className="font-medium">ওয়েবসাইট:</span>{' '}

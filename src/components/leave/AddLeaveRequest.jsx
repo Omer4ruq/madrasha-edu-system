@@ -65,7 +65,7 @@ const AddLeaveRequest = () => {
     if (!start_date) errors.start_date = "শুরুর তারিখ নির্বাচন করুন";
     if (!end_date) errors.end_date = "শেষের তারিখ নির্বাচন করুন";
     if (!leave_type) errors.leave_type = "ছুটির ধরন নির্বাচন করুন";
-    if (!leave_description) errors.leave_description = "বিবরণ প্রবেশ করুন";
+    // if (!leave_description) errors.leave_description = "বিবরণ প্রবেশ করুন";
     if (!academic_year) errors.academic_year = "শিক্ষাবর্ষ নির্বাচন করুন";
     return Object.keys(errors).length ? errors : null;
   };
@@ -356,12 +356,12 @@ const AddLeaveRequest = () => {
               rows="4"
               placeholder="বিবরণ প্রবেশ করুন"
               disabled={isCreating}
-              required
+              
               aria-describedby={errors.leave_description ? "leave_description-error" : undefined}
             />
-            {errors.leave_description && (
+            {/* {errors.leave_description && (
               <p id="leave_description-error" className="text-red-400 text-sm mt-1">{errors.leave_description}</p>
-            )}
+            )} */}
           </div>
           <div className="flex space-x-4 md:col-span-2">
             <button

@@ -40,7 +40,7 @@ const mainMenu = [
 
           {
             id: "04/01/03",
-            title: "পার্ফরমেন্স ধরন",
+            title: "শিক্ষকের পারফরমেন্সের ধরন",
             link: "/darul-iqam/settings/performance-type",
           },
         ],
