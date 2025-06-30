@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Select from "react-select";
 import { FaSpinner, FaTrash } from "react-icons/fa";
 import { IoAdd, IoAddCircle } from "react-icons/io5";
 import { toast, Toaster } from "react-hot-toast";
@@ -12,6 +13,8 @@ import {
 } from "../../redux/features/api/leave/leaveRequestApi";
 import { useGetLeaveApiQuery } from "../../redux/features/api/leave/leaveApi";
 import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
+import { useCreateMealStatusMutation } from '../../redux/features/api/meal/mealStatusApi';
+import selectStyles from '../../utilitis/selectStyles';
 
 const AddLeaveRequest = () => {
   const [formData, setFormData] = useState({
@@ -36,8 +39,19 @@ const AddLeaveRequest = () => {
   const { data: leaveTypes = [], isLoading: leaveTypesLoading, error: leaveTypesError } = useGetLeaveApiQuery();
   const { data: academicYears = [], isLoading: academicYearsLoading, error: academicYearsError } = useGetAcademicYearApiQuery();
   const { data: leaveRequests = [], isLoading: leaveRequestsLoading, error: leaveRequestsError } = useGetLeaveRequestApiQuery();
-  const [createLeaveRequestApi, { isLoading: isCreating, error: createError }] = useCreateLeaveRequestApiMutation();
+  const [createLeaveRequestApi, { isLoading: isCreatingLeave, error: createLeaveError }] = useCreateLeaveRequestApiMutation();
+  const [createMealStatus, { isLoading: isCreatingMeal, error: createMealError }] = useCreateMealStatusMutation();
   const [deleteLeaveRequestApi, { isLoading: isDeleting, error: deleteError }] = useDeleteLeaveRequestApiMutation();
+
+  // Format select options
+  const leaveTypeOptions = leaveTypes.map((type) => ({
+    value: type.id,
+    label: type.name,
+  }));
+  const academicYearOptions = academicYears.map((year) => ({
+    value: year.id,
+    label: year.name,
+  }));
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,24 +62,37 @@ const AddLeaveRequest = () => {
     setErrors((prev) => ({ ...prev, [name]: null }));
   };
 
+  const handleSelectChange = (name) => (selectedOption) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: selectedOption ? selectedOption.value : "",
+    }));
+    setErrors((prev) => ({ ...prev, [name]: null }));
+  };
+
   const handleUserSelect = (user) => {
     setSelectedUser(user);
     setFormData((prev) => ({
       ...prev,
       user_id: user.id.toString(),
     }));
-    setSearchTerm(`${user.name} (${user?.student_profile?.class_name})`);
+    setSearchTerm(`${user.name} (${user?.student_profile?.class_name || "N/A"})`);
     setShowDropdown(false);
     setErrors((prev) => ({ ...prev, user_id: null }));
   };
 
-  const validateForm = ({ user_id, start_date, end_date, leave_type, leave_description, academic_year }) => {
+  const handleDateClick = (e) => {
+    if (e.target.type === "date") {
+      e.target.showPicker(); // Trigger calendar dropdown on click
+    }
+  };
+
+  const validateForm = ({ user_id, start_date, end_date, leave_type, academic_year }) => {
     const errors = {};
     if (!user_id) errors.user_id = "ইউজার নির্বাচন করুন";
     if (!start_date) errors.start_date = "শুরুর তারিখ নির্বাচন করুন";
     if (!end_date) errors.end_date = "শেষের তারিখ নির্বাচন করুন";
     if (!leave_type) errors.leave_type = "ছুটির ধরন নির্বাচন করুন";
-    // if (!leave_description) errors.leave_description = "বিবরণ প্রবেশ করুন";
     if (!academic_year) errors.academic_year = "শিক্ষাবর্ষ নির্বাচন করুন";
     return Object.keys(errors).length ? errors : null;
   };
@@ -78,19 +105,31 @@ const AddLeaveRequest = () => {
       return;
     }
     try {
-      const payload = {
+      const leavePayload = {
         user_id: parseInt(formData.user_id),
         start_date: formData.start_date,
         end_date: formData.end_date,
         leave_type: parseInt(formData.leave_type),
         leave_description: formData.leave_description,
         academic_year: parseInt(formData.academic_year),
-        status: "Pending", // Changed to lowercase 'pending' to match assumed backend choice
+        status: "Pending",
         created_by: parseInt(localStorage.getItem("userId")) || 1,
       };
 
-      await createLeaveRequestApi(payload).unwrap();
-      toast.success("ছুটির আবেদন সফলভাবে জমা হয়েছে!");
+      const mealPayload = {
+        meal_user: parseInt(formData.user_id),
+        start_time: formData.start_date,
+        end_time: formData.end_date,
+        status: "ACTIVE", // Default to DEACTIVATE for leave periods
+        remarks: formData.leave_description || "Leave-related meal status",
+      };
+
+      // Post to Leave Request API
+      await createLeaveRequestApi(leavePayload).unwrap();
+      // Post to Meal Status API
+      await createMealStatus(mealPayload).unwrap();
+
+      toast.success("ছুটির আবেদন এবং খাবারের স্থিতি সফলভাবে জমা হয়েছে!");
       setFormData({
         user_id: "",
         start_date: "",
@@ -104,9 +143,10 @@ const AddLeaveRequest = () => {
       setShowDropdown(false);
       setErrors({});
     } catch (err) {
-      console.error("Create error:", err);
+      console.error("Submission error:", err);
       setErrors(err.data || {});
-      toast.error(`ছুটির আবেদন জমা ব্যর্থ: ${err.status || "অজানা"}`);
+      const errorMessage = `ছুটির আবেদন বা খাবারের স্থিতি জমা ব্যর্থ: ${err.status || "অজানা"}`;
+      toast.error(errorMessage);
     }
   };
 
@@ -176,6 +216,7 @@ const AddLeaveRequest = () => {
                 className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg transition-colors duration-300 btn-glow ${
                   isDeleting ? "cursor-not-allowed opacity-60" : "hover:text-white"
                 }`}
+                aria-label="ছুটির আবেদন মুছুন নিশ্চিত করুন"
               >
                 {isDeleting ? (
                   <span className="flex items-center space-x-2">
@@ -216,9 +257,11 @@ const AddLeaveRequest = () => {
                   }
                 }}
                 placeholder="ইউজার খুঁজুন (অন্তত ৩টি অক্ষর)"
-                className="w-full bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
-                disabled={isCreating}
+                className="w-full outline-none bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 focus:outline-none focus:border-[#441a05] focus:ring-[#441a05]"
+                disabled={isCreatingLeave || isCreatingMeal}
                 aria-describedby={errors.user_id ? "user_id-error" : undefined}
+                aria-label="ইউজার খুঁজুন"
+                title="ইউজার খুঁজুন / Search for a user"
               />
               {showDropdown && searchTerm.length >= 3 && (
                 <div className="absolute z-10 mt-1 w-full bg-white border border-[#9d9087] rounded-md shadow-lg max-h-60 overflow-auto">
@@ -233,8 +276,10 @@ const AddLeaveRequest = () => {
                         key={user.id}
                         onClick={() => handleUserSelect(user)}
                         className="p-2 text-[#441a05] bg-white hover:bg-[#DB9E30] cursor-pointer"
+                        role="option"
+                        aria-selected={selectedUser?.id === user.id}
                       >
-                        {user.name} ({user?.student_profile?.class_name})
+                        {user.name} ({user?.student_profile?.class_name || "N/A"})
                       </div>
                     ))
                   ) : (
@@ -251,29 +296,26 @@ const AddLeaveRequest = () => {
             <label htmlFor="leave_type" className="block text-sm font-medium text-[#441a05] mb-1">
               ছুটির ধরন
             </label>
-            <select
+            <Select
               id="leave_type"
-              name="leave_type"
-              value={formData.leave_type}
-              onChange={handleChange}
-              className="w-full bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
-              disabled={isCreating || leaveTypesLoading}
-              required
-              aria-describedby={errors.leave_type ? "leave_type-error" : undefined}
-            >
-              <option value="" disabled>ছুটির ধরন নির্বাচন করুন</option>
-              {leaveTypesLoading ? (
-                <option>লোড হচ্ছে...</option>
-              ) : leaveTypesError ? (
-                <option>ছুটির ধরন লোডে ত্রুটি</option>
-              ) : (
-                leaveTypes.map((type) => (
-                  <option key={type.id} value={type.id}>{type.name}</option>
-                ))
-              )}
-            </select>
+              options={leaveTypeOptions}
+              value={leaveTypeOptions.find((option) => option.value === formData.leave_type) || null}
+              onChange={handleSelectChange("leave_type")}
+              placeholder="ছুটির ধরন নির্বাচন করুন..."
+              isClearable
+              styles={selectStyles}
+              menuPortalTarget={document.body}
+              menuPosition="fixed"
+              isDisabled={isCreatingLeave || isCreatingMeal || leaveTypesLoading}
+              className="animate-scaleIn"
+              aria-label="ছুটির ধরন"
+              title="ছুটির ধরন নির্বাচন করুন / Select leave type"
+            />
             {errors.leave_type && (
               <p id="leave_type-error" className="text-red-400 text-sm mt-1">{errors.leave_type}</p>
+            )}
+            {leaveTypesError && (
+              <p className="text-red-400 text-sm mt-1">ছুটির ধরন লোডে ত্রুটি</p>
             )}
           </div>
           <div>
@@ -286,10 +328,13 @@ const AddLeaveRequest = () => {
               name="start_date"
               value={formData.start_date}
               onChange={handleChange}
-              className="w-full bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
-              disabled={isCreating}
+              onClick={handleDateClick}
+              className="w-full bg-transparent outline-none text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 focus:outline-none focus:border-[#441a05] focus:ring-[#441a05]"
+              disabled={isCreatingLeave || isCreatingMeal}
               required
               aria-describedby={errors.start_date ? "start_date-error" : undefined}
+              aria-label="শুরুর তারিখ"
+              title="শুরুর তারিখ নির্বাচন করুন / Select start date"
             />
             {errors.start_date && (
               <p id="start_date-error" className="text-red-400 text-sm mt-1">{errors.start_date}</p>
@@ -305,10 +350,13 @@ const AddLeaveRequest = () => {
               name="end_date"
               value={formData.end_date}
               onChange={handleChange}
-              className="w-full bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
-              disabled={isCreating}
+              onClick={handleDateClick}
+              className="w-full bg-transparent outline-none text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 focus:outline-none focus:border-[#441a05] focus:ring-[#441a05]"
+              disabled={isCreatingLeave || isCreatingMeal}
               required
               aria-describedby={errors.end_date ? "end_date-error" : undefined}
+              aria-label="শেষের তারিখ"
+              title="শেষের তারিখ নির্বাচন করুন / Select end date"
             />
             {errors.end_date && (
               <p id="end_date-error" className="text-red-400 text-sm mt-1">{errors.end_date}</p>
@@ -318,29 +366,26 @@ const AddLeaveRequest = () => {
             <label htmlFor="academic_year" className="block text-sm font-medium text-[#441a05] mb-1">
               শিক্ষাবর্ষ
             </label>
-            <select
+            <Select
               id="academic_year"
-              name="academic_year"
-              value={formData.academic_year}
-              onChange={handleChange}
-              className="w-full bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
-              disabled={isCreating || academicYearsLoading}
-              required
-              aria-describedby={errors.academic_year ? "academic_year-error" : undefined}
-            >
-              <option value="" disabled>শিক্ষাবর্ষ নির্বাচন করুন</option>
-              {academicYearsLoading ? (
-                <option>লোড হচ্ছে...</option>
-              ) : academicYearsError ? (
-                <option>শিক্ষাবর্ষ লোডে ত্রুটি</option>
-              ) : (
-                academicYears.map((year) => (
-                  <option key={year.id} value={year.id}>{year.name}</option>
-                ))
-              )}
-            </select>
+              options={academicYearOptions}
+              value={academicYearOptions.find((option) => option.value === formData.academic_year) || null}
+              onChange={handleSelectChange("academic_year")}
+              placeholder="শিক্ষাবর্ষ নির্বাচন করুন..."
+              isClearable
+              styles={selectStyles}
+              menuPortalTarget={document.body}
+              menuPosition="fixed"
+              isDisabled={isCreatingLeave || isCreatingMeal || academicYearsLoading}
+              className="animate-scaleIn"
+              aria-label="শিক্ষাবর্ষ"
+              title="শিক্ষাবর্ষ নির্বাচন করুন / Select academic year"
+            />
             {errors.academic_year && (
               <p id="academic_year-error" className="text-red-400 text-sm mt-1">{errors.academic_year}</p>
+            )}
+            {academicYearsError && (
+              <p className="text-red-400 text-sm mt-1">শিক্ষাবর্ষ লোডে ত্রুটি</p>
             )}
           </div>
           <div className="md:col-span-3">
@@ -352,24 +397,25 @@ const AddLeaveRequest = () => {
               name="leave_description"
               value={formData.leave_description}
               onChange={handleChange}
-              className="w-full bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
+              className="w-full bg-transparent outline-none text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 focus:outline-none focus:border-[#441a05] focus:ring-[#441a05]"
               rows="4"
               placeholder="বিবরণ প্রবেশ করুন"
-              disabled={isCreating}
-              
-              aria-describedby={errors.leave_description ? "leave_description-error" : undefined}
+              disabled={isCreatingLeave || isCreatingMeal}
+              aria-label="বিবরণ"
+              title="বিবরণ প্রবেশ করুন / Enter description"
             />
-            {/* {errors.leave_description && (
-              <p id="leave_description-error" className="text-red-400 text-sm mt-1">{errors.leave_description}</p>
-            )} */}
           </div>
           <div className="flex space-x-4 md:col-span-2">
             <button
               type="submit"
-              disabled={isCreating}
-              className={`flex items-center justify-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${isCreating ? "cursor-not-allowed opacity-70" : "hover:text-white hover:shadow-md"}`}
+              disabled={isCreatingLeave || isCreatingMeal}
+              className={`flex items-center justify-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
+                isCreatingLeave || isCreatingMeal ? "cursor-not-allowed opacity-70" : "hover:text-white btn-glow"
+              }`}
+              aria-label="ছুটির আবেদন জমা"
+              title="ছুটির আবেদন জমা / Submit leave request"
             >
-              {isCreating ? (
+              {isCreatingLeave || isCreatingMeal ? (
                 <>
                   <FaSpinner className="animate-spin text-lg mr-2" />
                   জমা হচ্ছে...
@@ -383,9 +429,9 @@ const AddLeaveRequest = () => {
             </button>
           </div>
         </form>
-        {(createError || leaveTypesError || academicYearsError) && (
+        {(createLeaveError || createMealError || leaveTypesError || academicYearsError) && (
           <div id="form-error" className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
-            ত্রুটি: {createError?.status || leaveTypesError?.status || academicYearsError?.status || "অজানা"} - {JSON.stringify(createError?.data || leaveTypesError?.data || academicYearsError?.data || {})}
+            ত্রুটি: {createLeaveError?.status || createMealError?.status || leaveTypesError?.status || academicYearsError?.status || "অজানা"} - {JSON.stringify(createLeaveError?.data || createMealError?.data || leaveTypesError?.data || academicYearsError?.data || {})}
           </div>
         )}
       </div>
@@ -431,6 +477,7 @@ const AddLeaveRequest = () => {
                         onClick={() => handleDelete(request.id)}
                         className="text-[#441a05] hover:text-red-500 transition-all duration-300"
                         aria-label={`ছুটির আবেদন মুছুন ${request.id}`}
+                        title="ছুটির আবেদন মুছুন / Delete leave request"
                       >
                         <FaTrash className="w-5 h-5" />
                       </button>
@@ -443,7 +490,7 @@ const AddLeaveRequest = () => {
         )}
         {(isDeleting || deleteError) && (
           <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
-            {isDeleting ? "মুছছে..." : `ত্রুটি: ${deleteError?.status || "অজানা"} - ${JSON.stringify(deleteError?.data || {})}`}
+            {isDeleting ? "মুছছে..." : `ত্রুটি: ${deleteError?.status || "অজানা"} - ${JSON.stringify(deleteError?.data || {})} `}
           </div>
         )}
       </div>

@@ -9,6 +9,7 @@ import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classC
 import { useGetStudentActiveApiQuery } from '../../redux/features/api/student/studentActiveApi';
 import { useGetSubjectAssignQuery } from '../../redux/features/api/subject-assign/subjectAssignApi';
 import { useGetStudentSubAttendanceQuery } from '../../redux/features/api/student-sub-attendance/studentSubAttendanceApi';
+import selectStyles from '../../utilitis/selectStyles';
 
 // Custom CSS for animations and styling
 const customStyles = `
@@ -73,26 +74,6 @@ const customStyles = `
   ::-webkit-scrollbar-thumb:hover {
     background: #441a05;
   }
-  .react-datepicker-wrapper {
-    width: 100%;
-  }
-  .react-select__control {
-    background-color: transparent;
-    border-color: #9d9087;
-    color: #441a05;
-  }
-  .react-select__menu {
-    background-color: rgba(255, 255, 255, 0.95);
-    color: #441a05;
-  }
-  .react-select__option--is-focused {
-    background-color: #DB9E30 !important;
-    color: #441a05;
-  }
-  .react-select__option--is-selected {
-    background-color: #DB9E30 !important;
-    color: #441a05;
-  }
   .table-container {
     max-height: 60vh;
     overflow-y: auto;
@@ -119,6 +100,7 @@ const StudentAttendance = () => {
   const [startDate, endDate] = dateRange;
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [filterType, setFilterType] = useState('dateRange');
+  const [classDate, setClassDate] = useState('');
 
   // Fetch classes
   const { data: classData, isLoading: isClassesLoading, error: classesError } = useGetclassConfigApiQuery();
@@ -149,10 +131,10 @@ const StudentAttendance = () => {
   const { data: attendanceData, isLoading: isAttendanceLoading, error: attendanceError } = useGetStudentSubAttendanceQuery(
     {
       class_subject_id: '',
-      start_date: startDate ? startDate.toISOString().split('T')[0] : '',
-      end_date: endDate ? endDate.toISOString().split('T')[0] : '',
+      start_date: activeTab === 'class' ? classDate : (startDate ? startDate.toISOString().split('T')[0] : ''),
+      end_date: activeTab === 'class' ? classDate : (endDate ? endDate.toISOString().split('T')[0] : ''),
     },
-    { skip: !selectedClass || (!startDate && !endDate && !selectedMonth && activeTab === 'date') }
+    { skip: !selectedClass || (!classDate && activeTab === 'class') || (!startDate && !endDate && !selectedMonth && activeTab === 'date') }
   );
 
   // Handle month selection
@@ -187,7 +169,8 @@ const StudentAttendance = () => {
     subjects.forEach((subject) => {
       filteredStudents.forEach((student) => {
         const attendanceRecords = attendanceData?.attendance.filter(
-          (att) => att.student === student.id && att.class_subject === subject.class_subject
+          (att) => att.student === student.id && att.class_subject === subject.class_subject &&
+          (activeTab === 'class' ? new Date(att.created_at).toISOString().split('T')[0] === classDate : true)
         ) || [];
         attendanceRecords.forEach((att) => {
           sheet.push({
@@ -203,7 +186,7 @@ const StudentAttendance = () => {
             subject: subject.name,
             studentName: student.name,
             studentId: student.id,
-            date: '-',
+            date: activeTab === 'class' ? (classDate ? new Date(classDate).toLocaleDateString('bn-BD') : '-') : '-',
             status: '-',
           });
         }
@@ -215,11 +198,22 @@ const StudentAttendance = () => {
   const attendanceSheet = prepareAttendanceSheet();
   const isLoading = isClassesLoading || isStudentsLoading || isSubjectsLoading || isAttendanceLoading;
 
+  // Handle date click for native date picker
+  const handleDateClick = (e) => {
+    if (e.target.type === 'date') {
+      e.target.showPicker();
+    }
+  };
+
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!selectedClass) {
       toast.error('অনুগ্রহ করে একটি ক্লাস নির্বাচন করুন!');
+      return;
+    }
+    if (activeTab === 'class' && !classDate) {
+      toast.error('অনুগ্রহ করে একটি তারিখ নির্বাচন করুন!');
       return;
     }
     if (activeTab === 'date' && filterType === 'dateRange' && (!startDate || !endDate)) {
@@ -249,7 +243,10 @@ const StudentAttendance = () => {
               setSelectedMonth(null);
               setSelectedStudent(null);
               setSearchQuery('');
+              setClassDate('');
             }}
+            aria-label="ক্লাস অনুযায়ী উপস্থিতি"
+            title="ক্লাস অনুযায়ী উপস্থিতি দেখুন / View attendance by class"
           >
             ক্লাস অনুযায়ী উপস্থিতি
           </button>
@@ -261,7 +258,10 @@ const StudentAttendance = () => {
               setActiveTab('date');
               setSelectedStudent(null);
               setSearchQuery('');
+              setClassDate('');
             }}
+            aria-label="তারিখ/মাস অনুযায়ী উপস্থিতি"
+            title="তারিখ/মাস অনুযায়ী উপস্থিতি দেখুন / View attendance by date/month"
           >
             তারিখ/মাস অনুযায়ী উপস্থিতি
           </button>
@@ -276,7 +276,7 @@ const StudentAttendance = () => {
             </h3>
           </div>
 
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Class Selection */}
             <div className="relative">
               <label className="block text-lg font-medium text-[#441a05]" htmlFor="classSelect">
@@ -292,9 +292,35 @@ const StudentAttendance = () => {
                 className="mt-1"
                 isClearable
                 isDisabled={isLoading}
+                styles={selectStyles}
+                menuPortalTarget={document.body}
+                menuPosition="fixed"
                 aria-label="ক্লাস নির্বাচন"
+                title="ক্লাস নির্বাচন করুন / Select class"
               />
             </div>
+
+            {activeTab === 'class' && (
+              <div className="relative input-icon">
+                <label className="block text-lg font-medium text-[#441a05]" htmlFor="classDate">
+                  তারিখ নির্বাচন করুন <span className="text-red-600">*</span>
+                </label>
+                <input
+                  id="classDate"
+                  type="date"
+                  value={classDate}
+                  onChange={(e) => setClassDate(e.target.value)}
+                  onClick={handleDateClick}
+                  className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
+                  placeholder="তারিখ নির্বাচন করুন"
+                  disabled={isLoading}
+                  required
+                  aria-label="তারিখ নির্বাচন"
+                  title="তারিখ নির্বাচন করুন / Select date"
+                />
+                <FaCalendarAlt className="absolute left-3 top-[42px] text-[#DB9E30]" />
+              </div>
+            )}
 
             {activeTab === 'date' && (
               <>
@@ -311,9 +337,10 @@ const StudentAttendance = () => {
                       setDateRange([null, null]);
                       setSelectedMonth(null);
                     }}
-                    className="mt-1 block w-full bg-transparent text-[#441a05] pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+                    className="mt-1 block w-full bg-transparent text-[#441a05] pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
                     disabled={isLoading}
                     aria-label="ফিল্টার প্রকার"
+                    title="ফিল্টার প্রকার নির্বাচন করুন / Select filter type"
                   >
                     <option value="dateRange">তারিখের পরিসীমা</option>
                     <option value="month">মাস</option>
@@ -334,10 +361,11 @@ const StudentAttendance = () => {
                       endDate={endDate}
                       onChange={(update) => setDateRange(update)}
                       isClearable
-                      className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+                      className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
                       placeholderText="তারিখের পরিসীমা নির্বাচন করুন"
                       disabled={isLoading}
                       aria-label="তারিখের পরিসীমা"
+                      title="তারিখের পরিসীমা নির্বাচন করুন / Select date range"
                     />
                   ) : (
                     <DatePicker
@@ -347,16 +375,41 @@ const StudentAttendance = () => {
                       showMonthYearPicker
                       dateFormat="MMMM yyyy"
                       isClearable
-                      className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+                      className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
                       placeholderText="মাস নির্বাচন করুন"
                       disabled={isLoading}
                       aria-label="মাস নির্বাচন"
+                      title="মাস নির্বাচন করুন / Select month"
                     />
                   )}
                   <FaCalendarAlt className="absolute left-3 top-[42px] text-[#DB9E30]" />
                 </div>
               </>
             )}
+
+            <div className="flex items-end">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={`flex items-center justify-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn btn-ripple ${
+                  isLoading ? 'cursor-not-allowed opacity-70' : 'hover:text-white btn-glow'
+                }`}
+                aria-label="উপস্থিতি দেখুন"
+                title="উপস্থিতি দেখুন / View attendance"
+              >
+                {isLoading ? (
+                  <>
+                    <FaSpinner className="animate-spin text-lg mr-2" />
+                    লোড হচ্ছে...
+                  </>
+                ) : (
+                  <>
+                    <IoAdd className="w-5 h-5 mr-2" />
+                    উপস্থিতি দেখুন
+                  </>
+                )}
+              </button>
+            </div>
           </form>
         </div>
 
@@ -372,9 +425,21 @@ const StudentAttendance = () => {
             <p className="p-4 text-[#441a05]/70 animate-scaleIn">
               অনুগ্রহ করে একটি ক্লাস নির্বাচন করুন।
             </p>
+          ) : (activeTab === 'class' && !classDate) ? (
+            <p className="p-4 text-[#441a05]/70 animate-scaleIn">
+              অনুগ্রহ করে একটি তারিখ নির্বাচন করুন।
+            </p>
+          ) : (activeTab === 'date' && filterType === 'dateRange' && (!startDate || !endDate)) ? (
+            <p className="p-4 text-[#441a05]/70 animate-scaleIn">
+              অনুগ্রহ করে তারিখের পরিসীমা নির্বাচন করুন।
+            </p>
+          ) : (activeTab === 'date' && filterType === 'month' && !selectedMonth) ? (
+            <p className="p-4 text-[#441a05]/70 animate-scaleIn">
+              অনুগ্রহ করে একটি মাস নির্বাচন করুন।
+            </p>
           ) : attendanceSheet.length === 0 ? (
             <p className="p-4 text-[#441a05]/70 animate-scaleIn">
-              কোনো উপস্থিতি তথ্য উপলব্ধ নেই। {activeTab === 'date' ? 'তারিখ/মাস নির্বাচন করুন।' : 'ছাত্র তালিকা খালি।'}
+              কোনো উপস্থিতি তথ্য উপলব্ধ নেই।
             </p>
           ) : (
             <>
@@ -394,8 +459,10 @@ const StudentAttendance = () => {
                       setSelectedStudent(null);
                     }}
                     placeholder="ছাত্রের নাম বা আইডি লিখুন"
-                    className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 pr-3 py-2.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+                    className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 pr-3 py-2.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
+                    disabled={isLoading}
                     aria-label="ছাত্র অনুসন্ধান"
+                    title="ছাত্র অনুসন্ধান / Search student"
                   />
                 </div>
                 <div className="relative">
@@ -415,7 +482,11 @@ const StudentAttendance = () => {
                     className="mt-1"
                     isClearable
                     isDisabled={isLoading}
+                    styles={selectStyles}
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
                     aria-label="নির্দিষ্ট ছাত্র"
+                    title="নির্দিষ্ট ছাত্র নির্বাচন করুন / Select specific student"
                   />
                 </div>
               </div>

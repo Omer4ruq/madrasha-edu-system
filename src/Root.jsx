@@ -127,10 +127,7 @@ function Root() {
               path: "teacher-performance",
               element: <TeacherPerformance></TeacherPerformance>,
             },
-            {
-              path: "student-attendance",
-              element: <StudentAttendance></StudentAttendance>,
-            },
+            
           ],
         },
         {
@@ -234,6 +231,10 @@ function Root() {
             {
               path: "exam-routine",
               element: <ExamRoutine></ExamRoutine>,
+            },
+            {
+              path: "student-attendance",
+              element: <StudentAttendance></StudentAttendance>,
             },
           ],
         },

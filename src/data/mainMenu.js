@@ -65,11 +65,7 @@ const mainMenu = [
         title: "শিক্ষকের পারফরমেন্স",
         link: "/darul-iqam/teacher-performance",
       },
-      {
-        id: "04/06",
-        title: "ছাত্রের উপস্থিতি",
-        link: "/darul-iqam/student-attendance",
-      },
+      
     ],
   },
   {
@@ -204,6 +200,11 @@ const mainMenu = [
         id: "05/12",
         title: "পরীক্ষার রুটিন",
         link: "/talimat/exam-routine",
+      },
+      {
+        id: "04/06",
+        title: "ছাত্রের উপস্থিতি",
+        link: "/talimat/student-attendance",
       },
     ],
   },

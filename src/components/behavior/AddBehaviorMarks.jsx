@@ -274,7 +274,7 @@ const AddBehaviorMarks = () => {
                             type="number"
                             min="0"
                             max={bt.obtain_mark}
-                            value={behaviorReports[student.id]?.[bt.id] || ''}
+                            defaultValue={behaviorReports[student.id]?.[bt.id] || ''}
                             onChange={(e) => handleMarkChange(student.id, bt.id, e.target.value)}
                             onKeyDown={(e) => handleKeyDown(e, student.id, bt.id, studentIndex, behaviorIndex)}
                             onBlur={(e) => handleMarkSubmit(student.id, bt.id, e.target.value, nextInputId)}

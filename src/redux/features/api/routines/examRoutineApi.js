@@ -41,18 +41,10 @@ export const examRoutineApi = createApi({
       invalidatesTags: ['ExamSchedules'],
     }),
     updateExamSchedules: builder.mutation({
-      query: ({ id, ...routineData }) => ({
+      query: ({ id, exam_date, start_time, end_time, exam_name, class_name, subject_id, academic_year }) => ({
         url: `/exam-schedules/${id}/`,
         method: 'PUT',
-        body: routineData,
-      }),
-      invalidatesTags: ['ExamSchedules'],
-    }),
-    patchExamSchedules: builder.mutation({
-      query: ({ id, ...routineData }) => ({
-        url: `/exam-schedules/${id}/`,
-        method: 'PATCH',
-        body: routineData,
+        body: { exam_date, start_time, end_time, exam_name, class_name, subject_id, academic_year },
       }),
       invalidatesTags: ['ExamSchedules'],
     }),
@@ -71,6 +63,5 @@ export const {
   useGetExamSchedulesByIdQuery,
   useCreateExamSchedulesMutation,
   useUpdateExamSchedulesMutation,
-  usePatchExamSchedulesMutation,
   useDeleteExamSchedulesMutation,
 } = examRoutineApi;
