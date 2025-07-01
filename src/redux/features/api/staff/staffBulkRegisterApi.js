@@ -1,46 +1,41 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import BASE_URL from '../../../../utilitis/apiConfig';
 
-
 const getToken = () => {
-  return localStorage.getItem('token'); 
+  return localStorage.getItem('token');
 };
 
-export const staffBulkRegister = createApi({
-  reducerPath: 'staffBulkRegister',
+export const staffBulkRegisterApi = createApi({
+  reducerPath: 'staffBulkRegisterApi',
   baseQuery: fetchBaseQuery({
     baseUrl: BASE_URL,
-    prepareHeaders: (headers) => {
+    prepareHeaders: (headers, { getState, endpoint }) => {
       const token = getToken();
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
-      headers.set('Content-Type', 'application/json');
+      // Only set Content-Type to application/json for non-file-upload endpoints
+      if (endpoint !== 'createStaffsBulkRegistrationApi') {
+        headers.set('Content-Type', 'application/json');
+      }
       return headers;
     },
   }),
-  tagTypes: ['staffBulkRegister'],
+  tagTypes: ['staffBulkRegisterApi'],
   endpoints: (builder) => ({
-  
-
-  
-
-    // POST: Create a new studentRegistrationApi
+    // POST: Create a new staff bulk registration
     createStaffsBulkRegistrationApi: builder.mutation({
       query: (staffBulkRegisterData) => ({
         url: '/staffs/bulk-register/',
         method: 'POST',
         body: staffBulkRegisterData,
       }),
-      invalidatesTags: ['staffBulkRegister'],
+      invalidatesTags: ['staffBulkRegisterApi'],
     }),
-
   }),
 });
 
 // Export hooks for usage in components
 export const {
-
   useCreateStaffsBulkRegistrationApiMutation,
-
-} = staffBulkRegister;
+} = staffBulkRegisterApi;

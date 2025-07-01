@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { useGetStudentClassApIQuery } from '../../../redux/features/api/student/studentClassApi';
-import { useGetclassConfigApiQuery } from '../../../redux/features/api/class/classConfigApi';
-import { useCreateStudentRegistrationApiMutation } from '../../../redux/features/api/student/studentRegistrationApi';
+import { useGetStudentClassApIQuery } from "../../../redux/features/api/student/studentClassApi";
+import { useGetclassConfigApiQuery } from "../../../redux/features/api/class/classConfigApi";
+import { useCreateStudentRegistrationApiMutation } from "../../../redux/features/api/student/studentRegistrationApi";
+import { useCreateStudentBulkRegistrationApiMutation } from "../../../redux/features/api/student/studentBulkRegisterApi";
 import {
   FaSpinner,
   FaUser,
@@ -20,9 +21,14 @@ import {
   FaFileAlt,
   FaBook,
   FaSchool,
+  FaFileExcel,
+  FaDownload,
+  FaUpload,
+  FaTimes,
 } from "react-icons/fa";
 import { IoAddCircleOutline } from "react-icons/io5";
-import toast, { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from "react-hot-toast";
+import * as XLSX from "xlsx";
 
 const StudentRegistrationForm = () => {
   const {
@@ -35,7 +41,14 @@ const StudentRegistrationForm = () => {
     isLoading: isConfigLoading,
     error: configError,
   } = useGetclassConfigApiQuery();
-  console.log("class config", classConfig);
+  const [createStudentRegistration, { isLoading, error }] =
+    useCreateStudentRegistrationApiMutation();
+  const [
+    createStudentBulkRegistration,
+    { isLoading: isBulkLoading, error: bulkError },
+  ] = useCreateStudentBulkRegistrationApiMutation();
+  const [file, setFile] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -82,9 +95,6 @@ const StudentRegistrationForm = () => {
     },
   });
 
-  const [createStudentRegistration, { isLoading, error }] =
-    useCreateStudentRegistrationApiMutation();
-
   const handleChange = (e, parentField = false) => {
     const { name, value } = e.target;
     if (parentField) {
@@ -97,17 +107,60 @@ const StudentRegistrationForm = () => {
     }
   };
 
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (
+      selectedFile &&
+      selectedFile.type ===
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    ) {
+      setFile(selectedFile);
+    } else {
+      toast.error("দয়া করে একটি বৈধ Excel ফাইল (.xlsx) আপলোড করুন।");
+      setFile(null);
+    }
+  };
+
+  const handleBulkSubmit = async (e) => {
+    e.preventDefault();
+    if (!file) {
+      toast.error("দয়া করে একটি Excel ফাইল আপলোড করুন।");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file); // Append the raw Excel file
+
+      await createStudentBulkRegistration(formData).unwrap();
+      toast.success("ছাত্রদের বাল্ক নিবন্ধন সফলভাবে সম্পন্ন হয়েছে!");
+      setFile(null);
+      setIsModalOpen(false);
+      e.target.reset();
+    } catch (err) {
+      console.error("Bulk Registration Error:", JSON.stringify(err, null, 2));
+      const errorMessage =
+        err.data?.message ||
+        err.data?.error ||
+        err.data?.detail ||
+        err.status ||
+        "অজানা ত্রুটি";
+      toast.error(`বাল্ক নিবন্ধন ব্যর্থ: ${errorMessage}`);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate numeric fields
     if (
       isNaN(parseInt(formData.user_id)) ||
       isNaN(parseInt(formData.admission_year_id)) ||
       isNaN(parseInt(formData.class_id)) ||
       (formData.roll_no && isNaN(parseInt(formData.roll_no)))
     ) {
-      toast.error('অনুগ্রহ করে ইউজার আইডি, ভর্তি বছর, ক্লাস এবং রোল নম্বর-এ বৈধ সংখ্যা লিখুন।');
+      toast.error(
+        "অনুগ্রহ করে ইউজার আইডি, ভর্তি বছর, ক্লাস এবং রোল নম্বর-এ বৈধ সংখ্যা লিখুন।"
+      );
       return;
     }
 
@@ -117,28 +170,27 @@ const StudentRegistrationForm = () => {
         user_id: parseInt(formData.user_id),
         admission_year_id: parseInt(formData.admission_year_id),
         class_id: parseInt(formData.class_id),
-        roll_no: formData.roll_no ? parseInt(formData.roll_no) : '',
-        password: formData.password || '',
-        rfid: formData.rfid || '',
-        tc_no: formData.tc_no || '',
-        disability_info: formData.disability_info || '',
-        name_tag: formData.name_tag || '',
+        roll_no: formData.roll_no ? parseInt(formData.roll_no) : "",
+        password: formData.password || "",
+        rfid: formData.rfid || "",
+        tc_no: formData.tc_no || "",
+        disability_info: formData.disability_info || "",
+        name_tag: formData.name_tag || "",
         parent: {
           ...formData.parent,
-          password: formData.parent?.password || '',
-          f_occupation: formData.parent.f_occupation || '',
-          m_occupation: formData.parent.m_occupation || '',
-          g_occupation: formData.parent.g_occupation || '',
-          f_nid: formData.parent.f_nid || '',
-          m_nid: formData.parent.m_nid || '',
-          g_name: formData.parent.g_name || '',
-          g_mobile_no: formData.parent.g_mobile_no || '',
+          password: formData.parent?.password || "",
+          f_occupation: formData.parent.f_occupation || "",
+          m_occupation: formData.parent.m_occupation || "",
+          g_occupation: formData.parent.g_occupation || "",
+          f_nid: formData.parent.f_nid || "",
+          m_nid: formData.parent.m_nid || "",
+          g_name: formData.parent.g_name || "",
+          g_mobile_no: formData.parent.g_mobile_no || "",
         },
       };
 
-      console.log("Submitting Payload:", JSON.stringify(payload, null, 2));
       await createStudentRegistration(payload).unwrap();
-      toast.success('ছাত্র সফলভাবে নিবন্ধিত হয়েছে!');
+      toast.success("ছাত্র সফলভাবে নিবন্ধিত হয়েছে!");
       setFormData({
         name: "",
         password: "",
@@ -193,6 +245,38 @@ const StudentRegistrationForm = () => {
         "অজানা ত্রুটি";
       toast.error(`ছাত্র নিবন্ধন ব্যর্থ: ${errorMessage}`);
     }
+  };
+
+  const downloadSampleExcel = () => {
+    const sampleData = [
+      {
+        student_id: 1001,
+        avatar: "",
+        name: "John Doe",
+        Dob: "2010-05-15",
+        Gender: "Male",
+        "Blood Group": "A+",
+        Rfid: "RFID12345",
+        class_name: "Class 5",
+        Section: "A",
+        Shift: "Morning",
+        roll_no: 1,
+        "Admission Year": 2024,
+        g_name: "Jane Doe",
+        phone_number: "1234567890",
+        Relation: "Mother",
+        "Father Name": "James Doe",
+        Father_mobile_no: "0987654321",
+        Mother_Name: "Jane Doe",
+        Mother_mobile_no: "1234567890",
+        "Present Address": "123 Main St, City",
+      },
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(sampleData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+    XLSX.writeFile(workbook, "student_bulk_register_sample.xlsx");
   };
 
   return (
@@ -269,18 +353,141 @@ const StudentRegistrationForm = () => {
           ::-webkit-scrollbar-thumb:hover {
             background: #441a05;
           }
+          .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+          }
+          .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+          }
+          .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            cursor: pointer;
+          }
         `}
       </style>
 
       <div className="mx-auto">
         <div className="sticky top-0 z-10 mb-8 animate-fadeIn backdrop-blur-sm">
-          <div className="flex items-center justify-center space-x-3">
-            <IoAddCircleOutline className="text-4xl text-[#DB9E30] mb-3" />
-            <h2 className="text-3xl font-bold text-[#441a05] title-underline">
-              ছাত্র নিবন্ধন
-            </h2>
+          <div className="flex items-center justify-end space-x-3">
+            {/* <div className="flex items-center space-x-3">
+              <IoAddCircleOutline className="text-4xl text-[#DB9E30] mb-3" />
+              <h2 className="text-3xl font-bold text-[#441a05] title-underline">
+                ছাত্র নিবন্ধন
+              </h2>
+            </div> */}
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="btn btn-ripple inline-flex items-center gap-2 px-6 py-2.5 rounded-lg hover:text-white font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-200 animate-scaleIn btn-glow"
+                title="বাল্ক আপলোড"
+              >
+                <FaUpload />
+                <span>বাল্ক আপলোড</span>
+              </button>
+            </div>
           </div>
         </div>
+
+        {isModalOpen && (
+          <div className="modal-overlay animate-fadeIn">
+            <div className="modal-content animate-scaleIn">
+              <FaTimes
+                className="modal-close text-[#DB9E30] text-2xl"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setFile(null);
+                }}
+                title="মোডাল বন্ধ করুন"
+              />
+              <div className="flex items-center justify-center mb-4">
+                <FaFileExcel className="text-3xl text-[#DB9E30]" />
+              </div>
+              <h3 className="text-2xl font-semibold text-[#441a05] text-center">
+                বাল্ক নিবন্ধন
+              </h3>
+              <form onSubmit={handleBulkSubmit} className="mt-4">
+                <div className="relative input-icon">
+                  <label
+                    htmlFor="bulk_upload"
+                    className="block font-medium text-[#441a05]"
+                  >
+                    এক্সেল ফাইল আপলোড করুন
+                  </label>
+                  <FaFileExcel className="absolute left-3 top-[43px] text-[#DB9E30]" />
+                  <input
+                    type="file"
+                    id="bulk_upload"
+                    accept=".xlsx"
+                    onChange={handleFileChange}
+                    className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
+                    aria-label="এক্সেল ফাইল আপলোড"
+                  />
+                </div>
+                <div className="text-center mt-6 flex  justify-between gap-5">
+                  <button
+                  type="button"
+                    onClick={downloadSampleExcel}
+                    className="btn btn-ripple inline-flex items-center gap-2 px-6 py-2.5 rounded-lg hover:text-white font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-200 animate-scaleIn btn-glow"
+                    title="স্যাম্পল এক্সেল ডাউনলোড করুন"
+                  >
+                    <FaDownload />
+                    <span>স্যাম্পল ডাউনলোড</span>
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isBulkLoading || !file}
+                    className={`btn btn-ripple inline-flex items-center gap-2 px-10 py-2.5 rounded-lg hover:text-white font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-200 animate-scaleIn ${
+                      isBulkLoading || !file
+                        ? "opacity-50 cursor-not-allowed"
+                        : "btn-glow"
+                    }`}
+                    title="বাল্ক নিবন্ধন করুন"
+                  >
+                    {isBulkLoading ? (
+                      <span className="flex items-center gap-2">
+                        <FaSpinner className="animate-spin text-lg" />
+                        <span>আপলোড হচ্ছে...</span>
+                      </span>
+                    ) : (
+                      <span>বাল্ক নিবন্ধন করুন</span>
+                    )}
+                  </button>
+                </div>
+                {bulkError && (
+                  <div
+                    id="bulk-error-message"
+                    className="text-red-600 bg-red-50 p-4 rounded-lg shadow-inner animate-fadeIn text-center mt-4"
+                    aria-describedby="bulk-error-message"
+                  >
+                    ত্রুটি:{" "}
+                    {bulkError?.data?.message ||
+                      bulkError?.data?.error ||
+                      bulkError?.data?.detail ||
+                      bulkError?.status ||
+                      "অজানা ত্রুটি"}
+                  </div>
+                )}
+              </form>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="rounded-2xl space-y-10">
           {/* ব্যক্তিগত তথ্য */}
@@ -1148,7 +1355,8 @@ const StudentRegistrationForm = () => {
                   htmlFor="g_mobile_no"
                   className="block text-lg font-medium text-[#441a05]"
                 >
-                  অভিভাবকের মোবাইল নম্বর <span className="text-[#DB9E30]">*</span>
+                  অভিভাবকের মোবাইল নম্বর{" "}
+                  <span className="text-[#DB9E30]">*</span>
                 </label>
                 <FaPhone className="absolute left-3 top-[50px] text-[#DB9E30]" />
                 <input

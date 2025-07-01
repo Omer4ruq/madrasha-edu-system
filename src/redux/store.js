@@ -60,7 +60,7 @@ import { examRoutineApi } from "./features/api/routines/examRoutineApi";
 import { gsubjectApi } from "./features/api/class-subjects/gsubjectApi";
 import { gfeeSubheadsApi } from "./features/api/gfee-subheads/gfeeSubheadsApi";
 import { studentBulkRegisterApi } from "./features/api/student/studentBulkRegisterApi";
-import { staffBulkRegister } from "./features/api/staff/staffBulkRegister";
+import { staffBulkRegisterApi } from "./features/api/staff/staffBulkRegisterApi";
 
 export const store = configureStore({
   reducer: {
@@ -125,7 +125,7 @@ export const store = configureStore({
     [routinesApi.reducerPath]: routinesApi.reducer,
     [examRoutineApi.reducerPath]: examRoutineApi.reducer,
     [studentBulkRegisterApi.reducerPath]: studentBulkRegisterApi.reducer,
-    [staffBulkRegister.reducerPath]: staffBulkRegister.reducer,
+    [staffBulkRegisterApi.reducerPath]: staffBulkRegisterApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -188,7 +188,7 @@ export const store = configureStore({
       .concat(eventApi.middleware)
       .concat(routinesApi.middleware)
       .concat(examRoutineApi.middleware)
-      .concat(staffBulkRegister.middleware)
+      .concat(staffBulkRegisterApi.middleware)
       .concat(studentBulkRegisterApi.middleware),
 });
 

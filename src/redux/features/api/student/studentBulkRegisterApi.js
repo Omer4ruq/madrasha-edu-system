@@ -1,31 +1,29 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import BASE_URL from '../../../../utilitis/apiConfig';
 
-
 const getToken = () => {
-  return localStorage.getItem('token'); 
+  return localStorage.getItem('token');
 };
 
 export const studentBulkRegisterApi = createApi({
   reducerPath: 'studentBulkRegisterApi',
   baseQuery: fetchBaseQuery({
     baseUrl: BASE_URL,
-    prepareHeaders: (headers) => {
+    prepareHeaders: (headers, { getState, endpoint }) => {
       const token = getToken();
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
-      headers.set('Content-Type', 'application/json');
+      // Only set Content-Type to application/json for non-file-upload endpoints
+      if (endpoint !== 'createStudentBulkRegistrationApi') {
+        headers.set('Content-Type', 'application/json');
+      }
       return headers;
     },
   }),
   tagTypes: ['studentBulkRegisterApi'],
   endpoints: (builder) => ({
-  
-
-  
-
-    // POST: Create a new studentRegistrationApi
+    // POST: Create a new student bulk registration
     createStudentBulkRegistrationApi: builder.mutation({
       query: (studentBulkRegisterApiData) => ({
         url: '/students/bulk-register/',
@@ -34,13 +32,10 @@ export const studentBulkRegisterApi = createApi({
       }),
       invalidatesTags: ['studentBulkRegisterApi'],
     }),
-
   }),
 });
 
 // Export hooks for usage in components
 export const {
-
   useCreateStudentBulkRegistrationApiMutation,
-
 } = studentBulkRegisterApi;
