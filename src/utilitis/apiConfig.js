@@ -8,7 +8,6 @@ const getSubdomain = () => {
 };
 
 const subdomain = getSubdomain();
-console.log("📌 Subdomain:", subdomain);
 
 let BASE_URL = "";
 

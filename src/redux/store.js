@@ -1,6 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
-import subdomainReducer from "./features/slice/subdomainSlice";
 import { instituteApi } from "./features/api/institute/instituteApi";
 import { instituteTypeApi } from "./features/api/institute/instituteTypeApi";
 import { studentClassApi } from "./features/api/student/studentClassApi";
@@ -40,7 +39,6 @@ import { waiversApi } from "./features/api/waivers/waiversApi";
 import { academicYearApi } from "./features/api/academic-year/academicYearApi";
 import { transactionBooksApi } from "./features/api/transaction-books/transactionBooksApi";
 import { feesNameApi } from "./features/api/fees-name/feesName";
-
 import { feesApi } from "./features/api/fees/feesApi";
 import { studentFeesCurrentApi } from "./features/api/studentFeesCurrentApi/studentFeesCurrentApi";
 import { studentFeesPreviousApi } from "./features/api/studentFeesPreviousApi/studentFeesPreviousApi";
@@ -48,7 +46,6 @@ import { deleteFeesApi } from "./features/api/deleteFees/deleteFeesApi";
 import { mealStatusApi } from "./features/api/meal/mealStatusApi";
 import { studentSubAttendanceApi } from "./features/api/student-sub-attendance/studentSubAttendanceApi";
 import { subjectAssignApi } from "./features/api/subject-assign/subjectAssignApi";
-
 import { classSubjectsApi } from "./features/api/class-subjects/classSubjectsApi";
 import { subjectMarkConfigsApi } from "./features/api/marks/subjectMarkConfigsApi";
 import { gmarkTypeApi } from "./features/api/marks/gmarktype";
@@ -62,10 +59,11 @@ import { routinesApi } from "./features/api/routines/routinesApi";
 import { examRoutineApi } from "./features/api/routines/examRoutineApi";
 import { gsubjectApi } from "./features/api/class-subjects/gsubjectApi";
 import { gfeeSubheadsApi } from "./features/api/gfee-subheads/gfeeSubheadsApi";
+import { studentBulkRegisterApi } from "./features/api/student/studentBulkRegisterApi";
+import { staffBulkRegister } from "./features/api/staff/staffBulkRegister";
 
 export const store = configureStore({
   reducer: {
-    subdomain: subdomainReducer,
 
     [instituteApi.reducerPath]: instituteApi.reducer,
     [instituteTypeApi.reducerPath]: instituteTypeApi.reducer,
@@ -126,6 +124,8 @@ export const store = configureStore({
     [eventApi.reducerPath]: eventApi.reducer,
     [routinesApi.reducerPath]: routinesApi.reducer,
     [examRoutineApi.reducerPath]: examRoutineApi.reducer,
+    [studentBulkRegisterApi.reducerPath]: studentBulkRegisterApi.reducer,
+    [staffBulkRegister.reducerPath]: staffBulkRegister.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -187,7 +187,9 @@ export const store = configureStore({
       .concat(teacherSubjectAssignsApi.middleware)
       .concat(eventApi.middleware)
       .concat(routinesApi.middleware)
-      .concat(examRoutineApi.middleware),
+      .concat(examRoutineApi.middleware)
+      .concat(staffBulkRegister.middleware)
+      .concat(studentBulkRegisterApi.middleware),
 });
 
 // Enable refetchOnFocus/refetchOnReconnect behaviors
