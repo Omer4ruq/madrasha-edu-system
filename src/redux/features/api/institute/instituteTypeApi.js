@@ -1,9 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import BASE_URL2 from '../../../../utilitis/apiConfig2';
 
-// Base URL for the Django backend API
-const BASE_URL = 'https://easydr.xyz/api'; // Updated to match institute type endpoint
-
-// Helper function to get JWT token from localStorage
 const getToken = () => {
   return localStorage.getItem('token');
 };
@@ -11,7 +8,7 @@ const getToken = () => {
 export const instituteTypeApi = createApi({
   reducerPath: 'instituteTypeApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: BASE_URL,
+    baseUrl: BASE_URL2,
     prepareHeaders: (headers) => {
       const token = getToken();
       if (token) {

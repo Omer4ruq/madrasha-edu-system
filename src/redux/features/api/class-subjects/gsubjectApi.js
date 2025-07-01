@@ -1,11 +1,12 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import BASE_URL2 from '../../../../utilitis/apiConfig2';
 
-const BASE_URL = 'https://easydr.xyz/api';
+
 
 export const gsubjectApi = createApi({
   reducerPath: 'gsubjectApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: BASE_URL,
+    baseUrl: BASE_URL2,
     prepareHeaders: (headers) => {
       const token = localStorage.getItem('token'); // Adjust token retrieval method if needed
       if (token) {

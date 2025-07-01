@@ -475,6 +475,9 @@ const ExamRoutine = () => {
                             </h4>
                             <div className="space-y-4">
                               <div className="relative input-icon">
+                                <label htmlFor="" className="text-sm">
+                                  মাস <span className="text-red-500">*</span>
+                                </label>
                                 <input
                                   type="date"
                                   value={schedule.exam_date || ""}
@@ -492,41 +495,49 @@ const ExamRoutine = () => {
                                   aria-label={`তারিখ নির্বাচন: ${subject.name}`}
                                   title={`তারিখ নির্বাচন করুন: ${subject.name} / Select date for ${subject.name}`}
                                 />
-                                <FaCalendarAlt className="absolute left-3 top-3.5 text-[#DB9E30]" />
+                                <FaCalendarAlt className="absolute left-3 top-10 text-[#DB9E30]" />
                               </div>
                               <div className="flex space-x-4">
-                                <input
-                                  type="time"
-                                  value={schedule.start_time || ""}
-                                  onChange={(e) =>
-                                    handleScheduleChange(
-                                      activeTab,
-                                      subject.id,
-                                      "start_time",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-full p-3 bg-transparent text-[#441a05] border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#441a05] focus:ring-2 focus:ring-[#441a05] transition-all duration-300"
-                                  disabled={isLoading}
-                                  aria-label={`শুরুর সময়: ${subject.name}`}
-                                  title={`শুরুর সময় নির্বাচন করুন: ${subject.name} / Select start time for ${subject.name}`}
-                                />
-                                <input
-                                  type="time"
-                                  value={schedule.end_time || ""}
-                                  onChange={(e) =>
-                                    handleScheduleChange(
-                                      activeTab,
-                                      subject.id,
-                                      "end_time",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-full p-3 bg-transparent text-[#441a05] border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#441a05] focus:ring-2 focus:ring-[#441a05] transition-all duration-300"
-                                  disabled={isLoading}
-                                  aria-label={`শেষ সময়: ${subject.name}`}
-                                  title={`শেষ সময় নির্বাচন করুন: ${subject.name} / Select end time for ${subject.name}`}
-                                />
+                                <div className="w-full">
+                                  <label htmlFor="" className="text-sm">
+                                    শুরুর সময় <span className="text-red-500">*</span>
+                                  </label>
+                                  <input
+                                    type="time"
+                                    value={schedule.start_time || ""}
+                                    onChange={(e) =>
+                                      handleScheduleChange(
+                                        activeTab,
+                                        subject.id,
+                                        "start_time",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="w-full p-3 bg-transparent text-[#441a05] border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#441a05] focus:ring-2 focus:ring-[#441a05] transition-all duration-300"
+                                    disabled={isLoading}
+                                    aria-label={`শুরুর সময়: ${subject.name}`}
+                                    title={`শুরুর সময় নির্বাচন করুন: ${subject.name} / Select start time for ${subject.name}`}
+                                  />
+                                </div>
+                                <div className="w-full">
+                                  <label htmlFor="" className="text-sm">শেষের সময় <span className="text-red-500">*</span></label>
+                                  <input
+                                    type="time"
+                                    value={schedule.end_time || ""}
+                                    onChange={(e) =>
+                                      handleScheduleChange(
+                                        activeTab,
+                                        subject.id,
+                                        "end_time",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="w-full p-3 bg-transparent text-[#441a05] border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#441a05] focus:ring-2 focus:ring-[#441a05] transition-all duration-300"
+                                    disabled={isLoading}
+                                    aria-label={`শেষ সময়: ${subject.name}`}
+                                    title={`শেষ সময় নির্বাচন করুন: ${subject.name} / Select end time for ${subject.name}`}
+                                  />
+                                </div>
                               </div>
                               <div className="flex space-x-3">
                                 {existing && (
