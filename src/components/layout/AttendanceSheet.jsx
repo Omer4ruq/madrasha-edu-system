@@ -457,7 +457,7 @@ const AttendanceSheet = () => {
         {/* Print and Download Buttons */}
         {selectedClassConfig && selectedAcademicYear && selectedMonth && (
           <div className="mt-6 flex gap-4 no-print">
-            <button
+            {/* <button
               onClick={handlePrint}
               className="px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn hover:text-white btn-glow"
             >
@@ -465,7 +465,7 @@ const AttendanceSheet = () => {
                 <IoPrint className="w-5 h-5" />
                 <span>হাজিরা শীট প্রিন্ট করুন</span>
               </span>
-            </button>
+            </button> */}
             <button
               onClick={handleDownloadPDF}
               className="px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn hover:text-white btn-glow"
