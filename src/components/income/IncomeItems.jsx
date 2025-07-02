@@ -7,11 +7,173 @@ import {
   useDeleteIncomeItemMutation,
   useGetIncomeItemsQuery,
   useUpdateIncomeItemMutation,
+  useGetFilteredIncomeListQuery,
 } from "../../redux/features/api/income-items/incomeItemsApi";
 import { useGetIncomeHeadsQuery } from "../../redux/features/api/income-heads/incomeHeadsApi";
 import { useGetFundsQuery } from "../../redux/features/api/funds/fundsApi";
 import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
 import { useGetTransactionBooksQuery } from "../../redux/features/api/transaction-books/transactionBooksApi";
+import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
+
+// Register Noto Sans Bengali font
+try {
+  Font.register({
+    family: 'NotoSansBengali',
+    src: 'https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf',
+  });
+} catch (error) {
+  console.error('Font registration failed:', error);
+  Font.register({
+    family: 'Helvetica',
+    src: 'https://fonts.gstatic.com/s/helvetica/v13/Helvetica.ttf',
+  });
+}
+
+// PDF styles
+const styles = StyleSheet.create({
+  page: {
+    padding: 40,
+    fontFamily: 'NotoSansBengali',
+    fontSize: 10,
+    color: '#222',
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  schoolName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#441a05',
+  },
+  headerText: {
+    fontSize: 10,
+    marginTop: 4,
+  },
+  title: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    marginTop: 6,
+    marginBottom: 10,
+    color: '#441a05',
+    textDecoration: 'underline',
+  },
+  metaContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    fontSize: 9,
+    marginBottom: 8,
+  },
+  divider: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#441a05',
+    marginVertical: 6,
+  },
+  table: {
+    display: 'table',
+    width: 'auto',
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderColor: '#441a05',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#441a05',
+  },
+  tableHeader: {
+    backgroundColor: '#441a05',
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    textAlign: 'center',
+    borderRightWidth: 1,
+    borderRightColor: '#fff',
+  },
+  tableCell: {
+    paddingVertical: 5,
+    paddingHorizontal: 4,
+    fontSize: 9,
+    borderRightWidth: 1,
+    borderRightColor: '#ddd',
+    flex: 1,
+    textAlign: 'left',
+  },
+  tableCellCenter: {
+    textAlign: 'center',
+  },
+  tableRowAlternate: {
+    backgroundColor: '#f2f2f2',
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 40,
+    right: 40,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    fontSize: 8,
+    color: '#555',
+  },
+});
+
+// PDF Document Component
+const PDFDocument = ({ incomeItems, incomeTypes, fundTypes, academicYears, startDate, endDate }) => (
+  <Document>
+    <Page size="A4" orientation="landscape" style={styles.page}>
+      <View style={styles.header}>
+        <Text style={styles.schoolName}>আদর্শ বিদ্যালয়</Text>
+        <Text style={styles.headerText}>ঢাকা, বাংলাদেশ</Text>
+        <Text style={styles.title}>আয় আইটেম প্রতিবেদন</Text>
+        <View style={styles.metaContainer}>
+          <Text style={styles.metaText}>
+            তারিখ পরিসীমা: {startDate ? new Date(startDate).toLocaleDateString('bn-BD') : 'শুরু'} থেকে {endDate ? new Date(endDate).toLocaleDateString('bn-BD') : 'শেষ'}
+          </Text>
+          <Text style={styles.metaText}>
+            তৈরির তারিখ: {new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
+          </Text>
+        </View>
+        <View style={styles.divider} />
+      </View>
+      <View style={styles.table}>
+        <View style={styles.tableRow}>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>আয়ের ধরন</Text>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>নাম</Text>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>তহবিল</Text>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>লেনদেন নম্বর</Text>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>ইনভয়েস নম্বর</Text>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>তারিখ</Text>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>পরিমাণ</Text>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>শিক্ষাবর্ষ</Text>
+        </View>
+        {incomeItems.map((item, index) => (
+          <View key={item.id} style={[styles.tableRow, index % 2 === 1 && styles.tableRowAlternate]}>
+            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
+              {incomeTypes.find((type) => type.id === item.incometype_id)?.incometype || 'অজানা'}
+            </Text>
+            <Text style={[styles.tableCell, { flex: 1 }]}>{item.name || 'N/A'}</Text>
+            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
+              {fundTypes.find((fund) => fund.id === item.fund_id)?.name || 'অজানা'}
+            </Text>
+            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{item.transaction_number || '-'}</Text>
+            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{item.invoice_number || '-'}</Text>
+            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{item.income_date || 'N/A'}</Text>
+            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{item.amount || '0'}</Text>
+            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
+              {academicYears.find((year) => year.id === item.academic_year)?.name || 'অজানা'}
+            </Text>
+          </View>
+        ))}
+      </View>
+      <View style={styles.footer} fixed>
+        <Text>প্রতিবেদনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে।</Text>
+        <Text render={({ pageNumber, totalPages }) => `পৃষ্ঠা ${pageNumber} এর ${totalPages}`} />
+      </View>
+    </Page>
+  </Document>
+);
 
 const IncomeItems = () => {
   const [formData, setFormData] = useState({
@@ -32,14 +194,28 @@ const IncomeItems = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 3; // Fixed to match StudentList
+  const [dateFilter, setDateFilter] = useState({ start_date: "", end_date: "", fund_id: "", incometype_id: "" });
+  const pageSize = 3;
 
   const {
     data: incomeItems,
     isLoading: isItemsLoading,
     error: itemsError,
   } = useGetIncomeItemsQuery({ page: currentPage, page_size: pageSize });
-
+  const {
+    data: filteredIncomeData,
+    isLoading: isFilteredLoading,
+    error: filteredError,
+  } = useGetFilteredIncomeListQuery(
+    dateFilter.start_date && dateFilter.end_date
+      ? {
+          start_date: dateFilter.start_date,
+          end_date: dateFilter.end_date,
+          fund_id: dateFilter.fund_id || "",
+          incometype_id: dateFilter.incometype_id || "",
+        }
+      : { skip: true }
+  );
   const { data: incomeHeads = [], isLoading: isHeadsLoading } = useGetIncomeHeadsQuery();
   const { data: fundTypes = [], isLoading: isFundLoading, error: fundError } = useGetFundsQuery();
   const { data: academicYears = [], isLoading: isYearsLoading } = useGetAcademicYearApiQuery();
@@ -48,6 +224,12 @@ const IncomeItems = () => {
   const [updateIncomeItem, { isLoading: isUpdating, error: updateError }] = useUpdateIncomeItemMutation();
   const [deleteIncomeItem, { isLoading: isDeleting, error: deleteError }] = useDeleteIncomeItemMutation();
 
+  const safeIncomeItems = Array.isArray(incomeItems?.results) ? incomeItems.results : [];
+  const filteredIncomeItems = filteredIncomeData?.results || [];
+  const totalPages = Math.ceil((incomeItems?.count || 0) / pageSize);
+  const hasNextPage = !!incomeItems?.next;
+  const hasPreviousPage = !!incomeItems?.previous;
+
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     setFormData((prev) => ({
@@ -55,6 +237,14 @@ const IncomeItems = () => {
       [name]: files ? files[0] : value,
     }));
     setErrors((prev) => ({ ...prev, [name]: null }));
+  };
+
+  const handleDateFilterChange = (e) => {
+    const { name, value } = e.target;
+    setDateFilter((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const validateForm = ({
@@ -143,7 +333,7 @@ const IncomeItems = () => {
         academic_year: "",
       });
       setErrors({});
-      setCurrentPage(1); // Reset to first page after creating
+      setCurrentPage(1);
     } catch (err) {
       console.error("Create error:", err);
       toast.error(
@@ -224,7 +414,7 @@ const IncomeItems = () => {
         academic_year: "",
       });
       setErrors({});
-      setCurrentPage(1); // Reset to first page after updating
+      setCurrentPage(1);
     } catch (err) {
       console.error("Update error:", err);
       toast.error(
@@ -245,7 +435,7 @@ const IncomeItems = () => {
     try {
       await deleteIncomeItem(modalData.id).unwrap();
       toast.success("আয় আইটেম সফলভাবে মুছে ফেলা হয়েছে!", { id: toastId });
-      setCurrentPage(1); // Reset to first page after deleting
+      setCurrentPage(1);
     } catch (err) {
       console.error("Delete error:", err);
       toast.error(
@@ -258,12 +448,45 @@ const IncomeItems = () => {
     }
   };
 
-  const safeIncomeItems = Array.isArray(incomeItems?.results) ? incomeItems.results : [];
-
-  // Pagination logic
-  const totalPages = Math.ceil((incomeItems?.count || 0) / pageSize);
-  const hasNextPage = !!incomeItems?.next;
-  const hasPreviousPage = !!incomeItems?.previous;
+  const generatePDFReport = async () => {
+    if (!dateFilter.start_date || !dateFilter.end_date) {
+      toast.error('অনুগ্রহ করে শুরু এবং শেষ তারিখ নির্বাচন করুন।');
+      return;
+    }
+    if (isFilteredLoading) {
+      toast.error('তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন।');
+      return;
+    }
+    if (filteredError) {
+      toast.error(`তথ্য লোড করতে ত্রুটি: ${filteredError.status || 'অজানা ত্রুটি'}`);
+      return;
+    }
+    if (!filteredIncomeItems.length) {
+      toast.error('নির্বাচিত ফিল্টারে কোনো আয় আইটেম পাওয়া যায়নি।');
+      return;
+    }
+    try {
+      const doc = <PDFDocument 
+        incomeItems={filteredIncomeItems}
+        incomeTypes={incomeHeads}
+        fundTypes={fundTypes}
+        academicYears={academicYears}
+        startDate={dateFilter.start_date}
+        endDate={dateFilter.end_date}
+      />;
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `আয়_প্রতিবেদন_${dateFilter.start_date}_থেকে_${dateFilter.end_date}_${new Date().toLocaleDateString('bn-BD')}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success('প্রতিবেদন সফলভাবে ডাউনলোড হয়েছে!');
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error(`প্রতিবেদন তৈরিতে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
+    }
+  };
 
   const getPageNumbers = () => {
     const maxPagesToShow = 5;
@@ -356,8 +579,58 @@ const IncomeItems = () => {
             background-position: right 0.5rem center;
             background-size: 1.5em;
           }
+          .report-button {
+            background-color: #441a05;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+          }
+          .report-button:hover {
+            background-color: #5a2e0a;
+          }
         `}
       </style>
+
+      {/* Confirmation Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
+          <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
+            <h3 className="text-lg font-semibold text-[#441a05] mb-4">
+              আয় আইটেম মুছে ফেলা নিশ্চিত করুন
+            </h3>
+            <p className="text-[#441a05] mb-6">
+              আপনি কি নিশ্চিত যে এই আয় আইটেমটি মুছে ফেলতে চান?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
+                aria-label="বাতিল"
+              >
+                বাতিল
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg transition-colors duration-300 btn-glow ${
+                  isDeleting ? 'cursor-not-allowed opacity-60' : 'hover:text-white'
+                }`}
+                aria-label="নিশ্চিত করুন"
+              >
+                {isDeleting ? (
+                  <span className="flex items-center space-x-2">
+                    <FaSpinner className="animate-spin text-lg" />
+                    <span>মুছছে...</span>
+                  </span>
+                ) : (
+                  'নিশ্চিত করুন'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Form to Add/Edit Income Item */}
       <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
@@ -650,9 +923,52 @@ const IncomeItems = () => {
 
       {/* Income Items Table */}
       <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn p-6">
-        <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">
-          আয় আইটেম তালিকা
-        </h3>
+        <div className="flex items-center justify-between p-4 border-b border-white/20">
+          <h3 className="text-lg font-semibold text-[#441a05]">আয় আইটেম তালিকা</h3>
+          <div className="flex items-center space-x-4">
+            <select
+              name="incometype_id"
+              value={dateFilter.incometype_id}
+              onChange={handleDateFilterChange}
+              className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
+            >
+              <option value="">সকল আয়ের ধরন</option>
+              {incomeHeads.map((head) => (
+                <option key={head.id} value={head.id}>{head.incometype || 'N/A'}</option>
+              ))}
+            </select>
+            <select
+              name="fund_id"
+              value={dateFilter.fund_id}
+              onChange={handleDateFilterChange}
+              className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
+            >
+              <option value="">সকল তহবিল</option>
+              {fundTypes.map((fund) => (
+                <option key={fund.id} value={fund.id}>{fund.name || 'N/A'}</option>
+              ))}
+            </select>
+            <input
+              type="date"
+              name="start_date"
+              value={dateFilter.start_date}
+              onChange={handleDateFilterChange}
+              className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
+              placeholder="শুরু তারিখ"
+            />
+            <input
+              type="date"
+              name="end_date"
+              value={dateFilter.end_date}
+              onChange={handleDateFilterChange}
+              className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
+              placeholder="শেষ তারিখ"
+            />
+            <button onClick={generatePDFReport} className="report-button" title="Download Income Report">
+              রিপোর্ট
+            </button>
+          </div>
+        </div>
         {isItemsLoading ? (
           <div className="p-4 flex items-center justify-center">
             <FaSpinner className="animate-spin text-[#441a05] text-2xl mr-2" />
@@ -753,7 +1069,6 @@ const IncomeItems = () => {
                 </tbody>
               </table>
             </div>
-            {/* Pagination Controls */}
             {totalPages > 1 && (
               <div className="flex justify-center items-center mt-6 space-x-2">
                 <button
@@ -796,56 +1111,16 @@ const IncomeItems = () => {
                 </button>
               </div>
             )}
+            {(isDeleting || deleteError) && (
+              <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-scaleIn">
+                {isDeleting
+                  ? "মুছে ফেলা হচ্ছে..."
+                  : `ত্রুটি: ${deleteError?.status || "অজানা"} - ${JSON.stringify(deleteError?.data || {})} `}
+              </div>
+            )}
           </>
         )}
-        {(isDeleting || deleteError) && (
-          <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-scaleIn">
-            {isDeleting
-              ? "মুছে ফেলা হচ্ছে..."
-              : `ত্রুটি: ${deleteError?.status || "অজানা"} - ${JSON.stringify(deleteError?.data || {})}`}
-          </div>
-        )}
       </div>
-
-      {/* Confirmation Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
-          <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
-            <h3 className="text-lg font-semibold text-[#441a05] mb-4">
-              আয় আইটেম মুছে ফেলা নিশ্চিত করুন
-            </h3>
-            <p className="text-[#441a05] mb-6">
-              আপনি কি নিশ্চিত যে এই আয় আইটেমটি মুছে ফেলতে চান?
-            </p>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
-                aria-label="বাতিল"
-              >
-                বাতিল
-              </button>
-              <button
-                onClick={confirmDelete}
-                disabled={isDeleting}
-                className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg transition-colors duration-300 btn-glow ${
-                  isDeleting ? 'cursor-not-allowed opacity-60' : 'hover:text-white'
-                }`}
-                aria-label="নিশ্চিত করুন"
-              >
-                {isDeleting ? (
-                  <span className="flex items-center space-x-2">
-                    <FaSpinner className="animate-spin text-lg" />
-                    <span>মুছছে...</span>
-                  </span>
-                ) : (
-                  'নিশ্চিত করুন'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
