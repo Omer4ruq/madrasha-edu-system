@@ -1,17 +1,19 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useMemo, useEffect } from 'react';
 import Select from 'react-select';
 import { FaSearch, FaCalendarAlt, FaSpinner } from 'react-icons/fa';
 import { IoAdd } from 'react-icons/io5';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import toast, { Toaster } from 'react-hot-toast';
-import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
-import { useGetStudentActiveApiQuery } from '../../redux/features/api/student/studentActiveApi';
-import { useGetSubjectAssignQuery } from '../../redux/features/api/subject-assign/subjectAssignApi';
-import { useGetStudentSubAttendanceQuery } from '../../redux/features/api/student-sub-attendance/studentSubAttendanceApi';
 import selectStyles from '../../utilitis/selectStyles';
+import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
+import { useGetClassSubjectsByClassIdQuery } from '../../redux/features/api/class-subjects/classSubjectsApi';
+import { useGetStudentActiveByClassQuery } from '../../redux/features/api/student/studentActiveApi';
+import { useGetStudentSubAttendanceQuery } from '../../redux/features/api/student-sub-attendance/studentSubAttendanceApi';
+import { Tooltip } from 'react-tooltip';
 
-// Custom CSS for animations and styling
+// Custom CSS from old version
 const customStyles = `
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
@@ -92,118 +94,77 @@ const customStyles = `
 `;
 
 const StudentAttendance = () => {
-  const [activeTab, setActiveTab] = useState('class');
+  const [tabValue, setTabValue] = useState(0); // 0: By Date, 1: By Month/Date Range
   const [selectedClass, setSelectedClass] = useState(null);
-  const [selectedStudent, setSelectedStudent] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [month, setMonth] = useState(null);
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
-  const [selectedMonth, setSelectedMonth] = useState(null);
-  const [filterType, setFilterType] = useState('dateRange');
   const [classDate, setClassDate] = useState('');
+  const [studentSearch, setStudentSearch] = useState('');
+  const [subjectSearch, setSubjectSearch] = useState('');
 
-  // Fetch classes
-  const { data: classData, isLoading: isClassesLoading, error: classesError } = useGetclassConfigApiQuery();
-  const classOptions = classData?.map((cls) => ({
+  // Fetch class configurations
+  const { data: classConfigData, isLoading: isClassesLoading, error: classesError } = useGetclassConfigApiQuery();
+  const classes = Array.isArray(classConfigData) ? classConfigData : [];
+  const classOptions = classes.map((cls) => ({
     value: cls.id,
-    label: `${cls.class_name}-${cls.section_name}-${cls.shift_name}`,
-  })) || [];
-
-  // Fetch active students
-  const { data: studentData, isLoading: isStudentsLoading, error: studentsError } = useGetStudentActiveApiQuery(
-    undefined,
-    { skip: !selectedClass }
-  );
-  const students = studentData?.filter((student) => student.class_id === selectedClass?.value) || [];
-  const studentOptions = students.map((student) => ({
-    value: student.id,
-    label: `${student.name} (ID: ${student.id})`,
+    label: `${cls.class_name}-${cls.section_name} (${cls.shift_name})`,
   }));
 
-  // Fetch subjects
-  const { data: subjectData, isLoading: isSubjectsLoading, error: subjectsError } = useGetSubjectAssignQuery(
-    { class_id: selectedClass?.value },
+  // Fetch subjects and students when classId is selected
+  const { data: subjectsData, isLoading: isSubjectsLoading, error: subjectsError } = useGetClassSubjectsByClassIdQuery(
+    selectedClass?.value,
     { skip: !selectedClass }
   );
-  const subjects = subjectData?.subjects?.[0]?.subject_details || [];
+  const { data: studentsData, isLoading: isStudentsLoading, error: studentsError } = useGetStudentActiveByClassQuery(
+    selectedClass?.value,
+    { skip: !selectedClass }
+  );
+  const subjects = Array.isArray(subjectsData) ? subjectsData : [];
+  const students = Array.isArray(studentsData) ? studentsData : [];
 
-  // Fetch attendance
+  // Fetch attendance data based on tab and filters
+  const attendanceQueryParams = {
+    class_id: selectedClass?.value,
+    ...(tabValue === 0 && classDate ? { date: classDate } : {}),
+    ...(tabValue === 1 && month && !startDate && !endDate ? { month: `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}` } : {}),
+    ...(tabValue === 1 && startDate && endDate && !month ? { start_date: startDate.toISOString().split('T')[0], end_date: endDate.toISOString().split('T')[0] } : {}),
+  };
   const { data: attendanceData, isLoading: isAttendanceLoading, error: attendanceError } = useGetStudentSubAttendanceQuery(
-    {
-      class_subject_id: '',
-      start_date: activeTab === 'class' ? classDate : (startDate ? startDate.toISOString().split('T')[0] : ''),
-      end_date: activeTab === 'class' ? classDate : (endDate ? endDate.toISOString().split('T')[0] : ''),
-    },
-    { skip: !selectedClass || (!classDate && activeTab === 'class') || (!startDate && !endDate && !selectedMonth && activeTab === 'date') }
+    attendanceQueryParams,
+    { skip: !selectedClass || (!classDate && tabValue === 0) || (!month && !startDate && !endDate && tabValue === 1) }
   );
 
-  // Handle month selection
-  useEffect(() => {
-    if (selectedMonth && filterType === 'month') {
-      const start = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
-      const end = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0);
-      setDateRange([start, end]);
-    }
-  }, [selectedMonth, filterType]);
+  // Filter students and subjects based on search inputs
+  const filteredStudents = useMemo(() => {
+    if (!students.length) return [];
+    return students.filter(
+      (student) =>
+        (student.name && student.name.toLowerCase().includes(studentSearch.toLowerCase())) ||
+        (student.user_id && student.user_id.toString().includes(studentSearch))
+    );
+  }, [students, studentSearch]);
 
-  // Handle errors
+  const filteredSubjects = useMemo(() => {
+    if (!subjects.length) return [];
+    return subjects.filter(
+      (subject) => subject.name && subject.name.toLowerCase().includes(subjectSearch.toLowerCase())
+    );
+  }, [subjects, subjectSearch]);
+
+  // Generate unique dates for Tab 2
+  const uniqueDates = useMemo(() => {
+    if (!attendanceData?.attendance?.length) return [];
+    return [...new Set(attendanceData.attendance.map((record) => record.attendance_date))].sort();
+  }, [attendanceData]);
+
+  // Handle errors with toast notifications
   useEffect(() => {
     if (classesError) toast.error('ক্লাস তালিকা লোড করতে ব্যর্থ হয়েছে!');
-    if (studentsError) toast.error('ছাত্র তালিকা লোড করতে ব্যর্থ হয়েছে!');
     if (subjectsError) toast.error('বিষয় তালিকা লোড করতে ব্যর্থ হয়েছে!');
+    if (studentsError) toast.error('ছাত্র তালিকা লোড করতে ব্যর্থ হয়েছে!');
     if (attendanceError) toast.error('উপস্থিতি তথ্য লোড করতে ব্যর্থ হয়েছে!');
-  }, [classesError, studentsError, subjectsError, attendanceError]);
-
-  // Filter students
-  const filteredStudents = selectedStudent
-    ? students.filter((student) => student.id === selectedStudent.value)
-    : students.filter(
-        (student) =>
-          student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          student.id?.toString().includes(searchQuery)
-      );
-
-  // Prepare attendance sheet data
-  const prepareAttendanceSheet = () => {
-    const sheet = [];
-    subjects.forEach((subject) => {
-      filteredStudents.forEach((student) => {
-        const attendanceRecords = attendanceData?.attendance.filter(
-          (att) => att.student === student.id && att.class_subject === subject.class_subject &&
-          (activeTab === 'class' ? new Date(att.created_at).toISOString().split('T')[0] === classDate : true)
-        ) || [];
-        attendanceRecords.forEach((att) => {
-          sheet.push({
-            subject: subject.name,
-            studentName: student.name,
-            studentId: student.id,
-            date: new Date(att.created_at).toLocaleDateString('bn-BD'),
-            status: att.status === 'PRESENT' ? '✅ উপস্থিত' : '❌ অনুপস্থিত',
-          });
-        });
-        if (attendanceRecords.length === 0) {
-          sheet.push({
-            subject: subject.name,
-            studentName: student.name,
-            studentId: student.id,
-            date: activeTab === 'class' ? (classDate ? new Date(classDate).toLocaleDateString('bn-BD') : '-') : '-',
-            status: '-',
-          });
-        }
-      });
-    });
-    return sheet;
-  };
-
-  const attendanceSheet = prepareAttendanceSheet();
-  const isLoading = isClassesLoading || isStudentsLoading || isSubjectsLoading || isAttendanceLoading;
-
-  // Handle date click for native date picker
-  const handleDateClick = (e) => {
-    if (e.target.type === 'date') {
-      e.target.showPicker();
-    }
-  };
+  }, [classesError, subjectsError, studentsError, attendanceError]);
 
   // Handle form submission
   const handleSubmit = (e) => {
@@ -212,37 +173,41 @@ const StudentAttendance = () => {
       toast.error('অনুগ্রহ করে একটি ক্লাস নির্বাচন করুন!');
       return;
     }
-    if (activeTab === 'class' && !classDate) {
+    if (tabValue === 0 && !classDate) {
       toast.error('অনুগ্রহ করে একটি তারিখ নির্বাচন করুন!');
       return;
     }
-    if (activeTab === 'date' && filterType === 'dateRange' && (!startDate || !endDate)) {
-      toast.error('অনুগ্রহ করে তারিখের পরিসীমা নির্বাচন করুন!');
-      return;
-    }
-    if (activeTab === 'date' && filterType === 'month' && !selectedMonth) {
-      toast.error('অনুগ্রহ করে একটি মাস নির্বাচন করুন!');
+    if (tabValue === 1 && !month && (!startDate || !endDate)) {
+      toast.error('অনুগ্রহ করে একটি মাস বা তারিখের পরিসীমা নির্বাচন করুন!');
       return;
     }
   };
 
+  // Handle date click for native date picker
+  const handleDateClick = (e) => {
+    if (e.target.type === 'date') {
+      e.target.showPicker();
+    }
+  };
+
+  const isLoading = isClassesLoading || isSubjectsLoading || isStudentsLoading || isAttendanceLoading;
+
   return (
     <div className="py-8 w-full relative">
-      <Toaster position="top-right" reverseOrder={false} />
       <style>{customStyles}</style>
       <div className="mx-auto">
         {/* Tabs */}
         <div className="flex border-b border-white/20 mb-6 animate-fadeIn">
           <button
             className={`flex-1 py-3 px-6 text-lg font-medium rounded-t-lg transition-all duration-300 ${
-              activeTab === 'class' ? 'tab-active' : 'tab-inactive'
+              tabValue === 0 ? 'tab-active' : 'tab-inactive'
             }`}
             onClick={() => {
-              setActiveTab('class');
+              setTabValue(0);
               setDateRange([null, null]);
-              setSelectedMonth(null);
-              setSelectedStudent(null);
-              setSearchQuery('');
+              setMonth(null);
+              setStudentSearch('');
+              setSubjectSearch('');
               setClassDate('');
             }}
             aria-label="ক্লাস অনুযায়ী উপস্থিতি"
@@ -252,12 +217,12 @@ const StudentAttendance = () => {
           </button>
           <button
             className={`flex-1 py-3 px-6 text-lg font-medium rounded-t-lg transition-all duration-300 ${
-              activeTab === 'date' ? 'tab-active' : 'tab-inactive'
+              tabValue === 1 ? 'tab-active' : 'tab-inactive'
             }`}
             onClick={() => {
-              setActiveTab('date');
-              setSelectedStudent(null);
-              setSearchQuery('');
+              setTabValue(1);
+              setStudentSearch('');
+              setSubjectSearch('');
               setClassDate('');
             }}
             aria-label="তারিখ/মাস অনুযায়ী উপস্থিতি"
@@ -272,7 +237,7 @@ const StudentAttendance = () => {
           <div className="flex items-center space-x-4 mb-6">
             <FaCalendarAlt className="text-4xl text-[#441a05]" />
             <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
-              {activeTab === 'class' ? 'ক্লাস অনুযায়ী উপস্থিতি দেখুন' : 'তারিখ/মাস অনুযায়ী উপস্থিতি দেখুন'}
+              {tabValue === 0 ? 'ক্লাস অনুযায়ী উপস্থিতি দেখুন' : 'তারিখ/মাস অনুযায়ী উপস্থিতি দেখুন'}
             </h3>
           </div>
 
@@ -300,7 +265,7 @@ const StudentAttendance = () => {
               />
             </div>
 
-            {activeTab === 'class' && (
+            {tabValue === 0 && (
               <div className="relative input-icon">
                 <label className="block text-lg font-medium text-[#441a05]" htmlFor="classDate">
                   তারিখ নির্বাচন করুন <span className="text-red-600">*</span>
@@ -322,7 +287,7 @@ const StudentAttendance = () => {
               </div>
             )}
 
-            {activeTab === 'date' && (
+            {tabValue === 1 && (
               <>
                 {/* Filter Type Selection */}
                 <div className="relative input-icon">
@@ -331,11 +296,13 @@ const StudentAttendance = () => {
                   </label>
                   <select
                     id="filterType"
-                    value={filterType}
+                    value={month ? 'month' : 'dateRange'}
                     onChange={(e) => {
-                      setFilterType(e.target.value);
-                      setDateRange([null, null]);
-                      setSelectedMonth(null);
+                      if (e.target.value === 'month') {
+                        setDateRange([null, null]);
+                      } else {
+                        setMonth(null);
+                      }
                     }}
                     className="mt-1 block w-full bg-transparent text-[#441a05] pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
                     disabled={isLoading}
@@ -351,27 +318,16 @@ const StudentAttendance = () => {
                 {/* Date Range or Month Picker */}
                 <div className="relative input-icon">
                   <label className="block text-lg font-medium text-[#441a05]" htmlFor="datePicker">
-                    {filterType === 'dateRange' ? 'তারিখের পরিসীমা' : 'মাস নির্বাচন করুন'}
+                    {month ? 'মাস নির্বাচন করুন' : 'তারিখের পরিসীমা'}
                   </label>
-                  {filterType === 'dateRange' ? (
+                  {month ? (
                     <DatePicker
                       id="datePicker"
-                      selectsRange
-                      startDate={startDate}
-                      endDate={endDate}
-                      onChange={(update) => setDateRange(update)}
-                      isClearable
-                      className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
-                      placeholderText="তারিখের পরিসীমা নির্বাচন করুন"
-                      disabled={isLoading}
-                      aria-label="তারিখের পরিসীমা"
-                      title="তারিখের পরিসীমা নির্বাচন করুন / Select date range"
-                    />
-                  ) : (
-                    <DatePicker
-                      id="datePicker"
-                      selected={selectedMonth}
-                      onChange={(date) => setSelectedMonth(date)}
+                      selected={month}
+                      onChange={(date) => {
+                        setMonth(date);
+                        setDateRange([null, null]);
+                      }}
                       showMonthYearPicker
                       dateFormat="MMMM yyyy"
                       isClearable
@@ -380,6 +336,23 @@ const StudentAttendance = () => {
                       disabled={isLoading}
                       aria-label="মাস নির্বাচন"
                       title="মাস নির্বাচন করুন / Select month"
+                    />
+                  ) : (
+                    <DatePicker
+                      id="datePicker"
+                      selectsRange
+                      startDate={startDate}
+                      endDate={endDate}
+                      onChange={(update) => {
+                        setDateRange(update);
+                        setMonth(null);
+                      }}
+                      isClearable
+                      className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
+                      placeholderText="তারিখের পরিসীমা নির্বাচন করুন"
+                      disabled={isLoading}
+                      aria-label="তারিখের পরিসীমা"
+                      title="তারিখের পরিসীমা নির্বাচন করুন / Select date range"
                     />
                   )}
                   <FaCalendarAlt className="absolute left-3 top-[42px] text-[#DB9E30]" />
@@ -425,25 +398,20 @@ const StudentAttendance = () => {
             <p className="p-4 text-[#441a05]/70 animate-scaleIn">
               অনুগ্রহ করে একটি ক্লাস নির্বাচন করুন।
             </p>
-          ) : (activeTab === 'class' && !classDate) ? (
+          ) : (tabValue === 0 && !classDate) ? (
             <p className="p-4 text-[#441a05]/70 animate-scaleIn">
               অনুগ্রহ করে একটি তারিখ নির্বাচন করুন।
             </p>
-          ) : (activeTab === 'date' && filterType === 'dateRange' && (!startDate || !endDate)) ? (
+          ) : (tabValue === 1 && !month && (!startDate || !endDate)) ? (
             <p className="p-4 text-[#441a05]/70 animate-scaleIn">
-              অনুগ্রহ করে তারিখের পরিসীমা নির্বাচন করুন।
+              অনুগ্রহ করে একটি মাস বা তারিখের পরিসীমা নির্বাচন করুন।
             </p>
-          ) : (activeTab === 'date' && filterType === 'month' && !selectedMonth) ? (
+          ) : (tabValue === 0 && filteredSubjects.length === 0) || (tabValue === 1 && filteredStudents.length === 0) ? (
             <p className="p-4 text-[#441a05]/70 animate-scaleIn">
-              অনুগ্রহ করে একটি মাস নির্বাচন করুন।
+              কোনো {tabValue === 0 ? 'বিষয়' : 'ছাত্র'} পাওয়া যায়নি।
             </p>
-          ) : attendanceSheet.length === 0 ? (
-            <p className="p-4 text-[#441a05]/70 animate-scaleIn">
-              কোনো উপস্থিতি তথ্য উপলব্ধ নেই।
-            </p>
-          ) : (
-            <>
-              {/* Search and Student Filter */}
+          ) : tabValue === 0 ? (
+            <div className="overflow-x-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 animate-fadeIn">
                 <div className="relative input-icon">
                   <label className="block text-lg font-medium text-[#441a05]" htmlFor="searchStudent">
@@ -453,10 +421,9 @@ const StudentAttendance = () => {
                   <input
                     id="searchStudent"
                     type="text"
-                    value={searchQuery}
+                    value={studentSearch}
                     onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      setSelectedStudent(null);
+                      setStudentSearch(e.target.value);
                     }}
                     placeholder="ছাত্রের নাম বা আইডি লিখুন"
                     className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 pr-3 py-2.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
@@ -465,75 +432,160 @@ const StudentAttendance = () => {
                     title="ছাত্র অনুসন্ধান / Search student"
                   />
                 </div>
-                <div className="relative">
-                  <label className="block text-lg font-medium text-[#441a05]" htmlFor="studentSelect">
-                    নির্দিষ্ট ছাত্র নির্বাচন
+                <div className="relative input-icon">
+                  <label className="block text-lg font-medium text-[#441a05]" htmlFor="searchSubject">
+                    বিষয় অনুসন্ধান
                   </label>
-                  <Select
-                    id="studentSelect"
-                    options={studentOptions}
-                    value={selectedStudent}
-                    onChange={(selected) => {
-                      setSelectedStudent(selected);
-                      setSearchQuery('');
+                  <FaSearch className="absolute left-3 top-[42px] text-[#DB9E30]" />
+                  <input
+                    id="searchSubject"
+                    type="text"
+                    value={subjectSearch}
+                    onChange={(e) => {
+                      setSubjectSearch(e.target.value);
                     }}
-                    placeholder="ছাত্র নির্বাচন করুন"
-                    classNamePrefix="react-select"
-                    className="mt-1"
-                    isClearable
-                    isDisabled={isLoading}
-                    styles={selectStyles}
-                    menuPortalTarget={document.body}
-                    menuPosition="fixed"
-                    aria-label="নির্দিষ্ট ছাত্র"
-                    title="নির্দিষ্ট ছাত্র নির্বাচন করুন / Select specific student"
+                    placeholder="বিষয়ের নাম লিখুন"
+                    className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 pr-3 py-2.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
+                    disabled={isLoading}
+                    aria-label="বিষয় অনুসন্ধান"
+                    title="বিষয় অনুসন্ধান / Search subject"
                   />
                 </div>
               </div>
-
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-white/20">
-                  <thead className="bg-white/5">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-sm font-medium text-[#441a05]/70 uppercase tracking-wider">
-                        বিষয়
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-medium text-[#441a05]/70 uppercase tracking-wider">
-                        ছাত্রের নাম
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-medium text-[#441a05]/70 uppercase tracking-wider">
-                        তারিখ
-                      </th>
-                      <th className="px-6 py-3 text-right text-sm font-medium text-[#441a05]/70 uppercase tracking-wider">
-                        উপস্থিতি
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/20">
-                    {attendanceSheet.map((row, index) => (
-                      <tr
-                        key={`${row.subject}-${row.studentId}-${row.date}-${index}`}
-                        className="bg-white/5 hover:bg-white/10 transition-colors duration-200 animate-fadeIn"
-                        style={{ animationDelay: `${index * 0.05}s` }}
+              <table className="min-w-full divide-y divide-white/20">
+                <thead className="bg-white/5">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      বিষয়
+                    </th>
+                    {filteredStudents.map((student) => (
+                      <th
+                        key={student.id}
+                        className="px-6 py-3 text-center text-sm font-medium text-[#441a05]/70 uppercase tracking-wider"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                          {row.subject}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                          {row.studentName} (ID: {row.studentId})
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                          {row.date}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-[#441a05]">
-                          {row.status}
-                        </td>
-                      </tr>
+                        {student.name || 'N/A'} (Roll: {student.roll_no || 'N/A'})
+                      </th>
                     ))}
-                  </tbody>
-                </table>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/20">
+                  {filteredSubjects.map((subject, index) => (
+                    <tr
+                      key={subject.id}
+                      className="bg-white/5 hover:bg-white/10 transition-colors duration-200 animate-fadeIn"
+                      style={{ animationDelay: `${index * 0.05}s` }}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                        {subject.name || 'N/A'}
+                      </td>
+                      {filteredStudents.map((student) => {
+                        const attendance = attendanceData?.attendance?.find(
+                          (record) => record.student === student.id && record.class_subject === subject.id && record.attendance_date === classDate
+                        );
+                        return (
+                          <td
+                            key={`${student.id}-${subject.id}`}
+                            className="px-6 py-4 whitespace-nowrap text-sm text-center text-[#441a05]"
+                          >
+                            <Tooltip title={attendance?.remarks || ''}>
+                              <span>{attendance?.status === 'PRESENT' ? '✅ উপস্থিত' : attendance?.status === 'ABSENT' ? '❌ অনুপস্থিত' : 'N/A'}</span>
+                            </Tooltip>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 animate-fadeIn">
+                <div className="relative input-icon">
+                  <label className="block text-lg font-medium text-[#441a05]" htmlFor="searchStudent">
+                    ছাত্র অনুসন্ধান
+                  </label>
+                  <FaSearch className="absolute left-3 top-[42px] text-[#DB9E30]" />
+                  <input
+                    id="searchStudent"
+                    type="text"
+                    value={studentSearch}
+                    onChange={(e) => {
+                      setStudentSearch(e.target.value);
+                    }}
+                    placeholder="ছাত্রের নাম বা আইডি লিখুন"
+                    className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 pr-3 py-2.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
+                    disabled={isLoading}
+                    aria-label="ছাত্র অনুসন্ধান"
+                    title="ছাত্র অনুসন্ধান / Search student"
+                  />
+                </div>
+                <div className="relative input-icon">
+                  <label className="block text-lg font-medium text-[#441a05]" htmlFor="searchSubject">
+                    বিষয় অনুসন্ধান
+                  </label>
+                  <FaSearch className="absolute left-3 top-[42px] text-[#DB9E30]" />
+                  <input
+                    id="searchSubject"
+                    type="text"
+                    value={subjectSearch}
+                    onChange={(e) => {
+                      setSubjectSearch(e.target.value);
+                    }}
+                    placeholder="বিষয়ের নাম লিখুন"
+                    className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 pr-3 py-2.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
+                    disabled={isLoading}
+                    aria-label="বিষয় অনুসন্ধান"
+                    title="বিষয় অনুসন্ধান / Search subject"
+                  />
+                </div>
               </div>
-            </>
+              <table className="min-w-full divide-y divide-white/20">
+                <thead className="bg-white/5">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      ছাত্র
+                    </th>
+                    {uniqueDates.map((date) => (
+                      <th
+                        key={date}
+                        className="px-6 py-3 text-center text-sm font-medium text-[#441a05]/70 uppercase tracking-wider"
+                      >
+                        {new Date(date).toLocaleDateString('bn-BD')}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/20">
+                  {filteredStudents.map((student, index) => (
+                    <tr
+                      key={student.id}
+                      className="bg-white/5 hover:bg-white/10 transition-colors duration-200 animate-fadeIn"
+                      style={{ animationDelay: `${index * 0.05}s` }}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                        {student.name || 'N/A'} (ID: {student.user_id || 'N/A'})
+                      </td>
+                      {uniqueDates.map((date) => {
+                        const attendance = attendanceData?.attendance?.find(
+                          (record) => record.student === student.id && record.attendance_date === date
+                        );
+                        return (
+                          <td
+                            key={`${student.id}-${date}`}
+                            className="px-6 py-4 whitespace-nowrap text-sm text-center text-[#441a05]"
+                          >
+                            <Tooltip title={attendance?.remarks || ''}>
+                              <span>{attendance?.status === 'PRESENT' ? '✅ উপস্থিত' : attendance?.status === 'ABSENT' ? '❌ অনুপস্থিত' : 'N/A'}</span>
+                            </Tooltip>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>
