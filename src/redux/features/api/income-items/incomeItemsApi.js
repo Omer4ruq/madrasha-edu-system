@@ -166,4 +166,5 @@ export const {
   useCreateIncomeItemMutation,
   useUpdateIncomeItemMutation,
   useDeleteIncomeItemMutation,
+  useGetFilteredIncomeListQuery,
 } = incomeItemsApi;

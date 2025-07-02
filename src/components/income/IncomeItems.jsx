@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { FaEdit, FaSpinner, FaTrash } from "react-icons/fa";
 import { IoAdd, IoAddCircle } from "react-icons/io5";
 import { Toaster, toast } from "react-hot-toast";
@@ -29,7 +29,7 @@ try {
   });
 }
 
-// PDF styles
+// PDF styles (identical to ExpenseItems.jsx)
 const styles = StyleSheet.create({
   page: {
     padding: 40,
@@ -192,7 +192,7 @@ const IncomeItems = () => {
   const [editId, setEditId] = useState(null);
   const [errors, setErrors] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalData, setModalData] = useState(null);
+  const [deleteItemId, setDeleteItemId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [dateFilter, setDateFilter] = useState({ start_date: "", end_date: "", fund_id: "", incometype_id: "" });
   const pageSize = 3;
@@ -256,6 +256,7 @@ const IncomeItems = () => {
     academic_year,
     transaction_book_id,
     transaction_number,
+    invoice_number,
   }) => {
     const errors = {};
     if (!incometype_id) errors.incometype_id = "আয়ের ধরণ প্রয়োজন";
@@ -278,6 +279,10 @@ const IncomeItems = () => {
       (isNaN(parseInt(transaction_number)) || parseInt(transaction_number) <= 0)
     ) {
       errors.transaction_number = "লেনদেন নম্বর বৈধ ধনাত্মক সংখ্যা হতে হবে";
+    }
+
+    if (invoice_number && !invoice_number.trim()) {
+      errors.invoice_number = "ইনভয়েস নম্বর খালি হতে পারে না";
     }
 
     return Object.keys(errors).length ? errors : null;
@@ -313,7 +318,7 @@ const IncomeItems = () => {
         payload.transaction_number = parseInt(formData.transaction_number);
       }
 
-      if (formData.invoice_number) {
+      if (formData.invoice_number.trim()) {
         payload.invoice_number = formData.invoice_number.trim();
       }
 
@@ -393,7 +398,7 @@ const IncomeItems = () => {
         payload.transaction_number = parseInt(formData.transaction_number);
       }
 
-      if (formData.invoice_number) {
+      if (formData.invoice_number.trim()) {
         payload.invoice_number = formData.invoice_number.trim();
       }
 
@@ -426,15 +431,17 @@ const IncomeItems = () => {
   };
 
   const handleDelete = (id) => {
-    setModalData({ id });
+    setDeleteItemId(id);
     setIsModalOpen(true);
   };
 
   const confirmDelete = async () => {
     const toastId = toast.loading("আয় আইটেম মুছে ফেলা হচ্ছে...");
     try {
-      await deleteIncomeItem(modalData.id).unwrap();
+      await deleteIncomeItem(deleteItemId).unwrap();
       toast.success("আয় আইটেম সফলভাবে মুছে ফেলা হয়েছে!", { id: toastId });
+      setIsModalOpen(false);
+      setDeleteItemId(null);
       setCurrentPage(1);
     } catch (err) {
       console.error("Delete error:", err);
@@ -442,9 +449,8 @@ const IncomeItems = () => {
         `আয় আইটেম মুছে ফেলা ব্যর্থ: ${err.status || "অজানা"} - ${JSON.stringify(err.data || {})}`,
         { id: toastId }
       );
-    } finally {
       setIsModalOpen(false);
-      setModalData(null);
+      setDeleteItemId(null);
     }
   };
 
@@ -765,7 +771,7 @@ const IncomeItems = () => {
               value={formData.invoice_number}
               onChange={handleChange}
               className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
-              placeholder="ইনভয়েস নম্বর লিখুন"
+              placeholder="ইনভয়েস নম্বর লিখুন (ঐচ্ছিক)"
               disabled={isCreating || isUpdating}
               aria-label="ইনভয়েস নম্বর"
               aria-describedby={errors.invoice_number ? "invoice_number-error" : undefined}
@@ -899,7 +905,7 @@ const IncomeItems = () => {
                   setErrors({});
                 }}
                 className="flex items-center justify-center px-6 py-3 rounded-lg font-medium bg-gray-500/20 text-[#441a05] hover:bg-gray-500/30 transition-all duration-300 animate-scaleIn"
-                aria-label="বাতিল করুন"
+                aria-label="বাতিল"
               >
                 বাতিল
               </button>
