@@ -149,6 +149,13 @@ export const incomeItemsApi = createApi({
       }),
       invalidatesTags: ["IncomeItems"],
     }),
+        // GET: Fetch income list with filters
+    getFilteredIncomeList: builder.query({
+      query: ({ start_date, end_date, fund_id, incometype_id }) =>
+        `/income-list/?start_date=${start_date}&end_date=${end_date}&fund_id=${fund_id}&incometype_id=${incometype_id}`,
+      providesTags: ['IncomeList'],
+    }),
+
   }),
 });
 

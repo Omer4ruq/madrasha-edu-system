@@ -7,6 +7,7 @@ import {
   useDeleteExpenseItemMutation,
   useGetExpenseItemsQuery,
   useUpdateExpenseItemMutation,
+  useGetFilteredExpenseItemsQuery,
 } from "../../redux/features/api/expense-items/expenseItemsApi";
 import { useGetFundsQuery } from "../../redux/features/api/funds/fundsApi";
 import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
@@ -193,7 +194,7 @@ const ExpenseItems = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState(null);
-  const [dateFilter, setDateFilter] = useState({ start_date: "", end_date: "" });
+  const [dateFilter, setDateFilter] = useState({ start_date: "", end_date: "", fund_id: "", expensetype_id: "" });
   const itemsPerPage = 3;
 
   const { data: expenseTypes = [], isLoading: isTypesLoading } = useGetExpenseHeadsQuery();
@@ -205,12 +206,27 @@ const ExpenseItems = () => {
     isLoading: isItemsLoading,
     error: itemsError,
   } = useGetExpenseItemsQuery({ page: currentPage, page_size: itemsPerPage });
+  const {
+    data: filteredExpenseData,
+    isLoading: isFilteredLoading,
+    error: filteredError,
+  } = useGetFilteredExpenseItemsQuery(
+    dateFilter.start_date && dateFilter.end_date
+      ? {
+          start_date: dateFilter.start_date,
+          end_date: dateFilter.end_date,
+          fund_id: dateFilter.fund_id || "",
+          expensetype_id: dateFilter.expensetype_id || "",
+        }
+      : { skip: true }
+  );
 
   const expenseItems = expenseData?.results || [];
   const totalItems = expenseData?.count || 0;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const hasNext = !!expenseData?.next;
   const hasPrevious = !!expenseData?.previous;
+  const filteredExpenseItems = filteredExpenseData?.results || [];
 
   const [createExpenseItem, { isLoading: isCreating, error: createError }] = useCreateExpenseItemMutation();
   const [updateExpenseItem, { isLoading: isUpdating, error: updateError }] = useUpdateExpenseItemMutation();
@@ -219,6 +235,7 @@ const ExpenseItems = () => {
   console.log("expenseData:", expenseData);
   console.log("expenseItems:", expenseItems);
   console.log("totalItems:", totalItems, "currentPage:", currentPage);
+  console.log("filteredExpenseData:", filteredExpenseData);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -430,21 +447,21 @@ const ExpenseItems = () => {
       toast.error('অনুগ্রহ করে শুরু এবং শেষ তারিখ নির্বাচন করুন।');
       return;
     }
+    if (isFilteredLoading) {
+      toast.error('তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন।');
+      return;
+    }
+    if (filteredError) {
+      toast.error(`তথ্য লোড করতে ত্রুটি: ${filteredError.status || 'অজানা ত্রুটি'}`);
+      return;
+    }
+    if (!filteredExpenseItems.length) {
+      toast.error('নির্বাচিত ফিল্টারে কোনো ব্যয় আইটেম পাওয়া যায়নি।');
+      return;
+    }
     try {
-      const filteredItems = expenseItems.filter(item => {
-        const itemDate = new Date(item.expense_date);
-        const startDate = new Date(dateFilter.start_date);
-        const endDate = new Date(dateFilter.end_date);
-        return itemDate >= startDate && itemDate <= endDate;
-      });
-
-      if (filteredItems.length === 0) {
-        toast.error('নির্বাচিত তারিখ পরিসীমায় কোনো ব্যয় আইটেম পাওয়া যায়নি।');
-        return;
-      }
-
       const doc = <PDFDocument 
-        expenseItems={filteredItems}
+        expenseItems={filteredExpenseItems}
         expenseTypes={expenseTypes}
         fundTypes={fundTypes}
         academicYears={academicYears}
@@ -850,6 +867,28 @@ const ExpenseItems = () => {
         <div className="flex items-center justify-between p-4 border-b border-white/20">
           <h3 className="text-lg font-semibold text-[#441a05]">ব্যয় আইটেম তালিকা</h3>
           <div className="flex items-center space-x-4">
+            <select
+              name="expensetype_id"
+              value={dateFilter.expensetype_id}
+              onChange={handleDateFilterChange}
+              className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
+            >
+              <option value="">সকল ব্যয়ের ধরন</option>
+              {expenseTypes.map((type) => (
+                <option key={type.id} value={type.id}>{type.expensetype}</option>
+              ))}
+            </select>
+            <select
+              name="fund_id"
+              value={dateFilter.fund_id}
+              onChange={handleDateFilterChange}
+              className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
+            >
+              <option value="">সকল ফান্ড</option>
+              {fundTypes.map((fund) => (
+                <option key={fund.id} value={fund.id}>{fund.name}</option>
+              ))}
+            </select>
             <input
               type="date"
               name="start_date"

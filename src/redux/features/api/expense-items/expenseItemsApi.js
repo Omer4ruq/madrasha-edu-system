@@ -136,6 +136,13 @@ export const expenseItemsApi = createApi({
       }),
       invalidatesTags: ['ExpenseItems'],
     }),
+        // GET: Fetch expense items with filters
+    getFilteredExpenseItems: builder.query({
+      query: ({ start_date, end_date, fund_id, expensetype_id }) =>
+        `/expense-items/?start_date=${start_date}&end_date=${end_date}&fund_id=${fund_id}&expensetype_id=${expensetype_id}`,
+      providesTags: ['ExpenseItems'],
+    }),
+
   }),
 });
 
@@ -146,4 +153,5 @@ export const {
   useCreateExpenseItemMutation,
   useUpdateExpenseItemMutation,
   useDeleteExpenseItemMutation,
+  useGetFilteredExpenseItemsQuery,
 } = expenseItemsApi;
