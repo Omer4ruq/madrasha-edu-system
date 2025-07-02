@@ -2,32 +2,26 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FaEdit, FaSpinner, FaTrash } from 'react-icons/fa';
 import { IoAdd, IoAddCircle } from 'react-icons/io5';
 import Select from 'react-select';
-import { DateRange } from 'react-date-range';
-import { format } from 'date-fns';
-import { bn } from 'date-fns/locale';
-import 'react-date-range/dist/styles.css';
-import 'react-date-range/dist/theme/default.css';
+import { Toaster, toast } from 'react-hot-toast';
 import { useGetMealStatusesQuery, useCreateMealStatusMutation, useUpdateMealStatusMutation, useDeleteMealStatusMutation } from '../../redux/features/api/meal/mealStatusApi';
 import { useSearchJointUsersQuery } from '../../redux/features/api/jointUsers/jointUsersApi';
-import { Toaster, toast } from 'react-hot-toast';
+import selectStyles from '../../utilitis/selectStyles';
 
 const MealStatus = () => {
   const [formData, setFormData] = useState({
-    start_time: new Date(),
-    end_time: new Date(),
+    start_time: '',
+    end_time: '',
     status: 'ACTIVE',
     remarks: '',
     meal_user: null,
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
   const dropdownRef = useRef(null);
-  const calendarRef = useRef(null);
 
   // Fetch data
   const { data: mealStatuses = [], isLoading: statusesLoading, error: statusesError, refetch } = useGetMealStatusesQuery();
@@ -38,14 +32,11 @@ const MealStatus = () => {
   const [updateMealStatus, { isLoading: isUpdating, error: updateError }] = useUpdateMealStatusMutation();
   const [deleteMealStatus, { isLoading: isDeleting, error: deleteError }] = useDeleteMealStatusMutation();
 
-  // Handle clicks outside dropdown and calendar
+  // Handle clicks outside dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsUserDropdownOpen(false);
-      }
-      if (calendarRef.current && !calendarRef.current.contains(event.target)) {
-        setIsCalendarOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -58,11 +49,15 @@ const MealStatus = () => {
       toast.error('অনুগ্রহ করে একজন ব্যবহারকারী নির্বাচন করুন');
       return false;
     }
-    if (!formData.start_time || !formData.end_time) {
-      toast.error('অনুগ্রহ করে তারিখের পরিসর নির্বাচন করুন');
+    if (!formData.start_time) {
+      toast.error('অনুগ্রহ করে শুরুর তারিখ নির্বাচন করুন');
       return false;
     }
-    if (formData.start_time > formData.end_time) {
+    if (!formData.end_time) {
+      toast.error('অনুগ্রহ করে শেষের তারিখ নির্বাচন করুন');
+      return false;
+    }
+    if (new Date(formData.start_time) > new Date(formData.end_time)) {
       toast.error('শুরুর তারিখ শেষের তারিখের পরে হতে পারে না');
       return false;
     }
@@ -74,7 +69,8 @@ const MealStatus = () => {
   };
 
   // Handle form input changes
-  const handleInputChange = (name, value) => {
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
@@ -85,13 +81,11 @@ const MealStatus = () => {
     setIsUserDropdownOpen(false);
   };
 
-  // Handle date range selection
-  const handleDateRangeSelect = (ranges) => {
-    setFormData({
-      ...formData,
-      start_time: ranges.selection.startDate,
-      end_time: ranges.selection.endDate,
-    });
+  // Handle date click
+  const handleDateClick = (e) => {
+    if (e.target.type === 'date') {
+      e.target.showPicker(); // Trigger calendar dropdown on click
+    }
   };
 
   // Handle status toggle
@@ -115,8 +109,8 @@ const MealStatus = () => {
 
     const payload = {
       id: editingId,
-      start_time: format(formData.start_time, 'yyyy-MM-dd'),
-      end_time: format(formData.end_time, 'yyyy-MM-dd'),
+      start_time: formData.start_time,
+      end_time: formData.end_time,
       status: formData.status,
       remarks: formData.remarks,
       meal_user: formData.meal_user,
@@ -130,15 +124,14 @@ const MealStatus = () => {
   // Handle edit button click
   const handleEdit = (status) => {
     setFormData({
-      start_time: new Date(status.start_time),
-      end_time: new Date(status.end_time),
+      start_time: status.start_time,
+      end_time: status.end_time,
       status: status.status,
       remarks: status.remarks || '',
       meal_user: status.meal_user,
     });
-    setSearchTerm('');
+    setSearchTerm(jointUsers.find((user) => user.id === status.meal_user)?.name || '');
     setEditingId(status.id);
-    setIsCalendarOpen(false);
   };
 
   // Handle delete button click
@@ -155,8 +148,8 @@ const MealStatus = () => {
         await createMealStatus(modalData).unwrap();
         toast.success('খাবারের স্থিতি সফলভাবে তৈরি করা হয়েছে!');
         setFormData({
-          start_time: new Date(),
-          end_time: new Date(),
+          start_time: '',
+          end_time: '',
           status: 'ACTIVE',
           remarks: '',
           meal_user: null,
@@ -167,8 +160,8 @@ const MealStatus = () => {
         toast.success('খাবারের স্থিতি সফলভাবে আপডেট করা হয়েছে!');
         setEditingId(null);
         setFormData({
-          start_time: new Date(),
-          end_time: new Date(),
+          start_time: '',
+          end_time: '',
           status: 'ACTIVE',
           remarks: '',
           meal_user: null,
@@ -189,7 +182,6 @@ const MealStatus = () => {
       setIsModalOpen(false);
       setModalAction(null);
       setModalData(null);
-      setIsCalendarOpen(false);
     }
   };
 
@@ -198,68 +190,6 @@ const MealStatus = () => {
     { value: 'ACTIVE', label: 'সক্রিয়' },
     { value: 'DEACTIVATE', label: 'নিষ্ক্রিয়' },
   ];
-
-  // Date range configuration
-  const dateRange = [
-    {
-      startDate: formData.start_time,
-      endDate: formData.end_time,
-      key: 'selection',
-    },
-  ];
-
-  // Custom styles for react-select and date-range
-  const selectStyles = {
-    control: (base) => ({
-      ...base,
-      background: 'transparent',
-      borderColor: '#9d9087',
-      borderRadius: '8px',
-      paddingLeft: '0.75rem',
-      padding: '3px',
-      color: '#441a05',
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-      transition: 'all 0.3s ease',
-      '&:hover': { borderColor: '#441a05' },
-      '&:focus': { outline: 'none', boxShadow: 'none' },
-    }),
-    placeholder: (base) => ({
-      ...base,
-      color: '#441a05',
-      opacity: 0.7,
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-    }),
-    singleValue: (base) => ({
-      ...base,
-      color: '#441a05',
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-    }),
-    menu: (base) => ({
-      ...base,
-      backgroundColor: 'rgba(0, 0, 0, 0.1)',
-      backdropFilter: 'blur(10px)',
-      border: '1px solid rgba(255, 255, 255, 0.2)',
-      borderRadius: '8px',
-      zIndex: 9999,
-      marginTop: '4px',
-    }),
-    menuPortal: (base) => ({
-      ...base,
-      zIndex: 9999,
-    }),
-    option: (base, { isFocused, isSelected }) => ({
-      ...base,
-      color: '#441a05',
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-      backgroundColor: isSelected ? '#DB9E30' : isFocused ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-      cursor: 'pointer',
-      '&:active': { backgroundColor: '#DB9E30' },
-    }),
-  };
 
   return (
     <div className="py-8 w-full relative">
@@ -309,35 +239,6 @@ const MealStatus = () => {
           ::-webkit-scrollbar-thumb:hover {
             background: rgba(10, 13, 21, 0.44);
           }
-          .rdrCalendarWrapper, .rdrMonth {
-            background: rgba(0, 0, 0, 0.1) !important;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: #441a05 !important;
-            font-family: 'Noto Sans Bengali', sans-serif;
-          }
-          .rdrDayToday .rdrDayNumber span {
-            color: #DB9E30 !important;
-            font-weight: bold;
-          }
-          .rdrDayNumber span {
-            color: #441a05 !important;
-          }
-          .rdrDayHovered, .rdrDayStartPreview, .rdrDayInPreview, .rdrDayEndPreview {
-            background: rgba(255, 255, 255, 0.1) !important;
-            border-color: #441a05 !important;
-          }
-          .rdrDay:not(.rdrDayPassive) .rdrInRange, .rdrDay:not(.rdrDayPassive) .rdrStartEdge, .rdrDay:not(.rdrDayPassive) .rdrEndEdge {
-            background: #DB9E30 !important;
-            color: #441a05 !important;
-          }
-          .rdrMonthAndYearWrapper, .rdrNextPrevButton, .rdrPaddedDays {
-            background: transparent !important;
-          }
-          .rdrNextPrevButton:hover {
-            background: rgba(255, 255, 255, 0.1) !important;
-          }
         `}
       </style>
 
@@ -354,7 +255,7 @@ const MealStatus = () => {
               {editingId ? 'খাবারের স্থিতি সম্পাদনা করুন' : 'নতুন খাবারের স্থিতি যোগ করুন'}
             </h3>
           </div>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div ref={dropdownRef}>
               <label className="block text-sm font-medium text-[#441a05] mb-1">ব্যবহারকারী নির্বাচন করুন</label>
               <input
@@ -390,38 +291,48 @@ const MealStatus = () => {
                 </div>
               )}
             </div>
-            <div ref={calendarRef} className="">
-              <label className="block text-sm font-medium text-[#441a05] mb-1">তারিখের পরিসর</label>
-              <button
-                type="button"
-                onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+            <div>
+              <label htmlFor="start_time" className="block text-sm font-medium text-[#441a05] mb-1">
+                শুরুর তারিখ
+              </label>
+              <input
+                id="start_time"
+                type="date"
+                name="start_time"
+                value={formData.start_time}
+                onChange={handleInputChange}
+                onClick={handleDateClick}
+                className="w-full bg-transparent outline-none text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 focus:outline-none focus:border-[#441a05] focus:ring-[#441a05]"
                 disabled={isCreating || isUpdating}
-                className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] p-2 rounded-lg transition-all duration-300 text-left"
-                aria-label="তারিখের পরিসর নির্বাচন করুন"
-                title="তারিখের পরিসর নির্বাচন করুন / Select date range"
-              >
-                {format(formData.start_time, 'MMM dd, yyyy', { locale: bn })} -{' '}
-                {format(formData.end_time, 'MMM dd, yyyy', { locale: bn })}
-              </button>
-              {isCalendarOpen && (
-                <div className="absolute z-[10000] mt-1 bg-black/10 backdrop-blur-sm border border-white/20 rounded-lg shadow-lg ">
-                  <DateRange
-                    ranges={dateRange}
-                    onChange={handleDateRangeSelect}
-                    moveRangeOnFirstSelection={false}
-                    locale={bn}
-                    className="rounded-lg"
-                  />
-                </div>
-              )}
-              {/* <p className="mt-1 text-sm text-[#441a05]/70">শুরু এবং শেষের তারিখ নির্বাচন করুন</p> */}
+                required
+                aria-label="শুরুর তারিখ"
+                title="শুরুর তারিখ নির্বাচন করুন / Select start date"
+              />
+            </div>
+            <div>
+              <label htmlFor="end_time" className="block text-sm font-medium text-[#441a05] mb-1">
+                শেষের তারিখ
+              </label>
+              <input
+                id="end_time"
+                type="date"
+                name="end_time"
+                value={formData.end_time}
+                onChange={handleInputChange}
+                onClick={handleDateClick}
+                className="w-full bg-transparent outline-none text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 focus:outline-none focus:border-[#441a05] focus:ring-[#441a05]"
+                disabled={isCreating || isUpdating}
+                required
+                aria-label="শেষের তারিখ"
+                title="শেষের তারিখ নির্বাচন করুন / Select end date"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-[#441a05] mb-1">স্থিতি</label>
               <Select
                 options={statusOptions}
                 value={statusOptions.find((opt) => opt.value === formData.status) || null}
-                onChange={(selected) => handleInputChange('status', selected ? selected.value : 'ACTIVE')}
+                onChange={(selected) => setFormData({ ...formData, status: selected ? selected.value : 'ACTIVE' })}
                 isDisabled={isCreating || isUpdating}
                 placeholder="স্থিতি নির্বাচন করুন"
                 className="react-select-container"
@@ -434,7 +345,7 @@ const MealStatus = () => {
                 styles={selectStyles}
               />
             </div>
-            <div className="md:col-span-3">
+            <div className="md:col-span-4">
               <label htmlFor="remarks" className="block text-sm font-medium text-[#441a05] mb-1">
                 মন্তব্য
               </label>
@@ -442,7 +353,7 @@ const MealStatus = () => {
                 id="remarks"
                 name="remarks"
                 value={formData.remarks}
-                onChange={(e) => handleInputChange('remarks', e.target.value)}
+                onChange={handleInputChange}
                 className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
                 rows={4}
                 disabled={isCreating || isUpdating}
@@ -456,7 +367,7 @@ const MealStatus = () => {
                 disabled={isCreating || isUpdating}
                 title={editingId ? 'খাবারের স্থিতি আপডেট করুন / Update meal status' : 'নতুন খাবারের স্থিতি তৈরি করুন / Create a new meal status'}
                 className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                  isCreating || isUpdating ? 'cursor-not-allowed' : 'hover:text-white hover:shadow-md'
+                  isCreating || isUpdating ? 'cursor-not-allowed' : 'hover:text-white btn-glow'
                 }`}
               >
                 {(isCreating || isUpdating) ? (
@@ -476,15 +387,14 @@ const MealStatus = () => {
                   type="button"
                   onClick={() => {
                     setFormData({
-                      start_time: new Date(),
-                      end_time: new Date(),
+                      start_time: '',
+                      end_time: '',
                       status: 'ACTIVE',
                       remarks: '',
                       meal_user: null,
                     });
                     setSearchTerm('');
                     setEditingId(null);
-                    setIsCalendarOpen(false);
                   }}
                   title="সম্পাদনা বাতিল করুন / Cancel editing"
                   className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
@@ -525,7 +435,7 @@ const MealStatus = () => {
                       আইডি
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ব্যবহারকারীর আইডি
+                      ব্যবহারকারীর নাম
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       শুরুর তারিখ
@@ -551,87 +461,90 @@ const MealStatus = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/20">
-                  {mealStatuses?.map((status, index) => (
-                    <tr
-                      key={status.id}
-                      className="bg-white/5 animate-fadeIn"
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                        {status.id}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                        {status.meal_user}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                        {format(new Date(status.start_time), 'MMM dd, yyyy', { locale: bn })}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                        {format(new Date(status.end_time), 'MMM dd, yyyy', { locale: bn })}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
-                        <label className="inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={status.status === 'ACTIVE'}
-                            onChange={() => handleToggleStatus(status)}
-                            className="hidden"
-                            aria-label={`স্থিতি ${status.status === 'ACTIVE' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}`}
-                            title={`স্থিতি ${status.status === 'ACTIVE' ? 'সক্রিয়' : 'নিষ্ক্রিয়'} / Status ${status.status}`}
-                          />
-                          <span
-                            className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${
-                              status.status === 'ACTIVE'
-                                ? 'bg-[#DB9E30] border-[#DB9E30]'
-                                : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
-                            }`}
+                  {mealStatuses?.map((status, index) => {
+                    const user = jointUsers.find((u) => u.id === status.meal_user);
+                    return (
+                      <tr
+                        key={status.id}
+                        className="bg-white/5 animate-fadeIn"
+                        style={{ animationDelay: `${index * 0.1}s` }}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                          {status.id}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                          {user ? user.name : status.meal_user}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                          {status.start_time}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                          {status.end_time}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
+                          <label className="inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={status.status === 'ACTIVE'}
+                              onChange={() => handleToggleStatus(status)}
+                              className="hidden"
+                              aria-label={`স্থিতি ${status.status === 'ACTIVE' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}`}
+                              title={`স্থিতি ${status.status === 'ACTIVE' ? 'সক্রিয়' : 'নিষ্ক্রিয়'} / Status ${status.status}`}
+                            />
+                            <span
+                              className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${
+                                status.status === 'ACTIVE'
+                                  ? 'bg-[#DB9E30] border-[#DB9E30]'
+                                  : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
+                              }`}
+                            >
+                              {status.status === 'ACTIVE' && (
+                                <svg
+                                  className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              )}
+                            </span>
+                          </label>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                          {status.remarks || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
+                          {new Date(status.created_at).toLocaleString('bn-BD')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
+                          {new Date(status.updated_at).toLocaleString('bn-BD')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <button
+                            onClick={() => handleEdit(status)}
+                            title="খাবারের স্থিতি সম্পাদনা করুন / Edit meal status"
+                            className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
                           >
-                            {status.status === 'ACTIVE' && (
-                              <svg
-                                className="w-4 h-4 text-[#441a05] animate-scaleIn"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
-                            )}
-                          </span>
-                        </label>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                        {status.remarks || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
-                        {new Date(status.created_at).toLocaleString('bn-BD')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
-                        {new Date(status.updated_at).toLocaleString('bn-BD')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleEdit(status)}
-                          title="খাবারের স্থিতি সম্পাদনা করুন / Edit meal status"
-                          className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
-                        >
-                          <FaEdit className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(status.id)}
-                          title="খাবারের স্থিতি মুছুন / Delete meal status"
-                          className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
-                        >
-                          <FaTrash className="w-5 h-5" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                            <FaEdit className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(status.id)}
+                            title="খাবারের স্থিতি মুছুন / Delete meal status"
+                            className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                          >
+                            <FaTrash className="w-5 h-5" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

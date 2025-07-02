@@ -1,7 +1,8 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { useSelector } from "react-redux";
+import BASE_URL2 from '../../../../utilitis/apiConfig2';
 
 
-const BASE_URL = 'https://easydr.xyz/api';
 
 
 const getToken = () => {
@@ -11,7 +12,7 @@ const getToken = () => {
 export const academicYearApi = createApi({
   reducerPath: 'academicYearApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: BASE_URL,
+    baseUrl: BASE_URL2,
     prepareHeaders: (headers) => {
       const token = getToken();
       if (token) {

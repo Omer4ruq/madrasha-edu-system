@@ -1,17 +1,15 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import BASE_URL2 from '../../../../utilitis/apiConfig2';
 
-// Assuming your Django backend API is hosted at this base URL
-const BASE_URL = 'https://easydr.xyz/api';
 
-// Helper function to get JWT token from localStorage or your preferred storage
 const getToken = () => {
-  return localStorage.getItem('token'); // Adjust based on your token storage method
+  return localStorage.getItem('token'); 
 };
 
 export const gfeeSubheadsApi = createApi({
   reducerPath: 'gfeeSubheadsApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: BASE_URL,
+    baseUrl: BASE_URL2,
     prepareHeaders: (headers) => {
       const token = getToken();
       if (token) {

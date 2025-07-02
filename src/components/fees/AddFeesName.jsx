@@ -6,9 +6,10 @@ import { IoAddCircle } from 'react-icons/io5';
 import { useGetClassListApiQuery } from '../../redux/features/api/class/classListApi';
 import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
 import { useGetFeePackagesQuery } from '../../redux/features/api/fee-packages/feePackagesApi';
-import { useGetGfeeSubheadsQuery } from '../../redux/features/api/gfee-subheads/gfeeSubheadsApi';
+
 import { useGetFeeHeadsQuery } from '../../redux/features/api/fee-heads/feeHeadsApi';
 import { useCreateFeesNameMutation } from '../../redux/features/api/fees-name/feesName';
+import { useGetGfeeSubheadsQuery } from '../../redux/features/api/gfee-subheads/gfeeSubheadsApi';
 
 const AddFeesName = () => {
   const [selectedClass, setSelectedClass] = useState(null);

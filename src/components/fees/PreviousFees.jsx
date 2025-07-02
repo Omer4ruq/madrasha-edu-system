@@ -9,6 +9,7 @@ import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-ye
 import { useGetFundsQuery } from '../../redux/features/api/funds/fundsApi';
 import { useGetWaiversQuery } from '../../redux/features/api/waivers/waiversApi';
 import { useCreateFeeMutation, useDeleteFeeMutation, useUpdateFeeMutation } from '../../redux/features/api/fees/feesApi';
+import selectStyles from '../../utilitis/selectStyles';
 
 const PreviousFees = () => {
   const [userId, setUserId] = useState('');
@@ -22,6 +23,7 @@ const PreviousFees = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
+  const [selectAll, setSelectAll] = useState(false); // State for Select All checkbox
   const dropdownRef = useRef(null);
 
   // API Queries
@@ -62,6 +64,12 @@ const PreviousFees = () => {
       setSelectedStudent(null);
     }
   }, [studentData, userId]);
+
+  // Reset selectAll when feesData changes
+  useEffect(() => {
+    setSelectAll(false);
+    setSelectedFees([]);
+  }, [feesData]);
 
   // Calculate payable amount with waiver
   const calculatePayableAmount = (fee, waivers) => {
@@ -127,6 +135,32 @@ const PreviousFees = () => {
         : [...prev, feeId]
     );
   };
+
+  // Handle Select All checkbox
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedFees([]);
+      setSelectAll(false);
+    } else {
+      const selectableFees = filteredFees
+        .filter((fee) => getFeeStatus(fee).status !== 'PAID')
+        .map((fee) => fee.id);
+      setSelectedFees(selectableFees);
+      setSelectAll(true);
+    }
+  };
+
+  // Update selectAll state based on selectedFees
+  useEffect(() => {
+    const selectableFees = filteredFees
+      .filter((fee) => getFeeStatus(fee).status !== 'PAID')
+      .map((fee) => fee.id);
+    if (selectableFees.length > 0 && selectedFees.length === selectableFees.length) {
+      setSelectAll(true);
+    } else {
+      setSelectAll(false);
+    }
+  }, [selectedFees, filteredFees]);
 
   // Validate form
   const validateForm = () => {
@@ -214,6 +248,7 @@ const PreviousFees = () => {
         setSelectedFees([]);
         setPaymentInputs({});
         setDiscountInputs({});
+        setSelectAll(false); // Reset Select All after submission
         refetchFees();
       } else if (modalAction === 'update') {
         await updateFee(modalData).unwrap();
@@ -257,59 +292,6 @@ const PreviousFees = () => {
     value: fund.id,
     label: fund.name,
   })) || [];
-
-  // Custom styles for react-select
-  const selectStyles = {
-    control: (base) => ({
-      ...base,
-      background: 'transparent',
-      borderColor: '#9d9087',
-      borderRadius: '8px',
-      paddingLeft: '0.75rem',
-      padding: '3px',
-      color: '#441a05',
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-      transition: 'all 0.3s ease',
-      '&:hover': { borderColor: '#441a05' },
-      '&:focus': { outline: 'none', boxShadow: 'none' },
-    }),
-    placeholder: (base) => ({
-      ...base,
-      color: '#441a05',
-      opacity: 0.7,
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-    }),
-    singleValue: (base) => ({
-      ...base,
-      color: '#441a05',
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-    }),
-    menu: (base) => ({
-      ...base,
-      backgroundColor: 'rgba(0, 0, 0, 0.1)',
-      backdropFilter: 'blur(10px)',
-      border: '1px solid rgba(255, 255, 255, 0.2)',
-      borderRadius: '8px',
-      zIndex: 9999,
-      marginTop: '4px',
-    }),
-    menuPortal: (base) => ({
-      ...base,
-      zIndex: 9999,
-    }),
-    option: (base, { isFocused, isSelected }) => ({
-      ...base,
-      color: '#441a05',
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-      backgroundColor: isSelected ? '#DB9E30' : isFocused ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-      cursor: 'pointer',
-      '&:active': { backgroundColor: '#DB9E30' },
-    }),
-  };
 
   return (
     <div className="py-8">
@@ -385,31 +367,6 @@ const PreviousFees = () => {
                 aria-label="ইউজার আইডি"
                 title="ইউজার আইডি / User ID"
               />
-              {/* {isUserDropdownOpen && userId && (
-                <div className="absolute z-[10000] mt-1 w-full bg-black/10 backdrop-blur-sm border border-white/20 rounded-lg shadow-lg max-h-60 overflow-auto">
-                  {studentLoading ? (
-                    <p className="px-4 py-2 text-sm text-[#441a05]/70">লোড হচ্ছে...</p>
-                  ) : studentError ? (
-                    <p className="px-4 py-2 text-sm text-red-400">ছাত্রের তথ্য লোড করতে ত্রুটি</p>
-                  ) : studentData?.length > 0 ? (
-                    studentData.map((student) => (
-                      <div
-                        key={student.id}
-                        onClick={() => {
-                          setSelectedStudent(student);
-                          setUserId(student.user_id.toString());
-                          setIsUserDropdownOpen(false);
-                        }}
-                        className="px-4 py-2 hover:bg-white/10 cursor-pointer text-sm text-[#441a05]"
-                      >
-                        {student.name} ({student.user_id})
-                      </div>
-                    ))
-                  ) : (
-                    <p className="px-4 py-2 text-sm text-[#441a05]/70">কোনো ছাত্র পাওয়া যায়নি</p>
-                  )}
-                </div>
-              )} */}
             </div>
             <div>
               <label className="block text-sm font-medium text-[#441a05] mb-1">একাডেমিক বছর</label>
@@ -501,7 +458,38 @@ const PreviousFees = () => {
                         স্থিতি
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                        নির্বাচন
+                        <label className="inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectAll}
+                            onChange={handleSelectAll}
+                            disabled={isCreating || isUpdating || filteredFees.every(fee => getFeeStatus(fee).status === 'PAID')}
+                            className="hidden"
+                            aria-label="সব ফি নির্বাচন করুন"
+                            title="সব ফি নির্বাচন করুন / Select all fees"
+                          />
+                          <span
+                            className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${selectAll ? 'bg-[#DB9E30] border-[#DB9E30]' : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'}`}
+                          >
+                            {selectAll && (
+                              <svg
+                                className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            )}
+                          </span>
+                          <span className="ml-2 text-[#441a05]/70 text-nowrap">সব নির্বাচন</span>
+                        </label>
                       </th>
                     </tr>
                   </thead>
@@ -749,7 +737,7 @@ const PreviousFees = () => {
               >
                 {isDeleting
                   ? 'ফি মুছে ফেলা হচ্ছে...'
-                  : 'ফি আপডেট করা হচ্ছে...'}
+                  : 'ফি আপডেট করা হচ্�ছে...'}
               </div>
             )}
           </div>

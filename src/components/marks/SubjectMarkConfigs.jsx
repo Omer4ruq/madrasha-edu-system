@@ -488,7 +488,7 @@ const SubjectMarkConfigs = () => {
                         {markTypes.map((markType, idx) => (
                           <div key={markType.id} className={`rounded-lg p-4 ${markType.name === 'MCQ' ? 'bg-blue-50/10' : 'bg-green-50/10'} animate-fadeIn`} style={{ animationDelay: `${idx * 0.1}s` }}>
                             <div className="flex items-center mb-2">
-                              <span className={`font-medium text-sm ${markType.name === 'MCQ' ? 'text-blue-600' : 'text-green-600'}`}>
+                              <span className={`font-medium text-sm ${markType.name === 'MCQ' ? 'text-[#441a05]' : 'text-[#441a05]'}`}>
                                 {markType.name === 'MCQ' ? '📝' : '✍️'} {markType.name}
                               </span>
                             </div>
@@ -498,7 +498,7 @@ const SubjectMarkConfigs = () => {
                                   type="number"
                                   value={getMarkConfigValue(subject.id, markType.name, 'max_mark')}
                                   onChange={(e) => handleInputChange(subject.id, 'max_mark', e.target.value, markType.name)}
-                                  className={`w-full p-2 border ${markType.name === 'MCQ' ? 'border-blue-200' : 'border-green-200'} rounded-md focus:ring-2 focus:ring-${markType.name === 'MCQ' ? 'blue' : 'green'}-500 focus:border-${markType.name === 'MCQ' ? 'blue' : 'green'}-500 text-sm bg-white/10 text-[#441a05] animate-scaleIn tick-glow`}
+                                  className={`w-full p-2 border outline-none ${markType.name === 'MCQ' ? 'border-[#9d9087]' : 'border-[#9d9087]'} rounded-md focus:ring-2 focus:ring-${markType.name === 'MCQ' ? 'blue' : 'green'}-500 focus:border-${markType.name === 'MCQ' ? 'blue' : 'green'}-500 text-sm bg-white/10 text-[#441a05] animate-scaleIn tick-glow`}
                                   placeholder="সর্বোচ্চ মার্ক"
                                   min="0"
                                   aria-label={`সর্বোচ্চ মার্ক ${markType.name} ${subject.name}`}
@@ -510,7 +510,7 @@ const SubjectMarkConfigs = () => {
                                   type="number"
                                   value={getMarkConfigValue(subject.id, markType.name, 'pass_mark')}
                                   onChange={(e) => handleInputChange(subject.id, 'pass_mark', e.target.value, markType.name)}
-                                  className={`w-full p-2 border ${markType.name === 'MCQ' ? 'border-blue-200' : 'border-green-200'} rounded-md focus:ring-2 focus:ring-${markType.name === 'MCQ' ? 'blue' : 'green'}-500 focus:border-${markType.name === 'MCQ' ? 'blue' : 'green'}-500 text-sm bg-white/10 text-[#441a05] animate-scaleIn tick-glow`}
+                                  className={`w-full p-2 border outline-none ${markType.name === 'MCQ' ? 'border-[#9d9087]' : 'border-[#9d9087]'} rounded-md focus:ring-2 focus:ring-${markType.name === 'MCQ' ? 'blue' : 'green'}-500 focus:border-${markType.name === 'MCQ' ? 'blue' : 'green'}-500 text-sm bg-white/10 text-[#441a05] animate-scaleIn tick-glow`}
                                   placeholder="পাস মার্ক"
                                   min="0"
                                   aria-label={`পাস মার্ক ${markType.name} ${subject.name}`}

@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { FaSpinner, FaUser, FaEnvelope, FaPhone, FaHome, FaBriefcase, FaIdCard, FaCalendarAlt, FaVenusMars, FaHeart, FaMap, FaMapMarkerAlt, FaWheelchair, FaUserTag, FaChild, FaFileAlt, FaBuilding, FaBusinessTime, FaRing } from 'react-icons/fa';
+import { FaSpinner, FaUser, FaEnvelope, FaPhone, FaHome, FaBriefcase, FaIdCard, FaCalendarAlt, FaVenusMars, FaHeart, FaMap, FaMapMarkerAlt, FaWheelchair, FaUserTag, FaChild, FaFileAlt, FaBuilding, FaBusinessTime, FaRing, FaUpload, FaFileExcel } from 'react-icons/fa';
 import { IoAddCircleOutline } from 'react-icons/io5';
 import toast, { Toaster } from 'react-hot-toast';
+
+import * as XLSX from 'xlsx';
+import { useCreateStaffsBulkRegistrationApiMutation } from '../../../redux/features/api/staff/staffBulkRegisterApi';
 import { useCreateStaffRegistrationApiMutation } from '../../../redux/features/api/staff/staffRegistration';
 
 const StaffRegistrationForm = () => {
@@ -40,7 +43,10 @@ const StaffRegistrationForm = () => {
     department_id: '',
   });
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [file, setFile] = useState(null);
   const [createStaff, { isLoading, error }] = useCreateStaffRegistrationApiMutation();
+  const [createStaffsBulkRegistration, { isLoading: isBulkLoading, error: bulkError }] = useCreateStaffsBulkRegistrationApiMutation();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -123,6 +129,53 @@ const StaffRegistrationForm = () => {
     }
   };
 
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  const handleBulkSubmit = async (e) => {
+    e.preventDefault();
+    if (!file) {
+      toast.error('দয়া করে একটি Excel ফাইল আপলোড করুন।');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      await createStaffsBulkRegistration(formData).unwrap();
+      toast.success('স্টাফদের বাল্ক নিবন্ধন সফলভাবে সম্পন্ন হয়েছে!');
+      setFile(null);
+      setIsModalOpen(false);
+      e.target.reset();
+    } catch (err) {
+      console.error('Bulk Registration Error:', JSON.stringify(err, null, 2));
+      const errorMessage = err.data?.message || err.data?.error || err.data?.detail || err.status || 'অজানা ত্রুটি';
+      toast.error(`বাল্ক নিবন্ধন ব্যর্থ: ${errorMessage}`);
+    }
+  };
+
+  const downloadSampleExcel = () => {
+    const headers = [
+      'UserId',
+      'phone_number',
+      'name',
+      'rfid',
+      'gender',
+      'dob',
+      'blood_group',
+      'qualification',
+      'employee_type',
+      'designation',
+      'role',
+      'joining_date',
+    ];
+    const ws = XLSX.utils.json_to_sheet([{}], { header: headers });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    XLSX.writeFile(wb, 'sample_staff_import.xlsx');
+  };
+
   return (
     <div className="py-10 w-full min-h-screen">
       <Toaster position="top-right" reverseOrder={false} />
@@ -184,6 +237,33 @@ const StaffRegistrationForm = () => {
             background: #DB9E30;
             margin: 8px auto 0;
           }
+          .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+          }
+          .modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 100%;
+            position: relative;
+          }
+          .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+          }
           ::-webkit-scrollbar {
             width: 6px;
           }
@@ -202,11 +282,83 @@ const StaffRegistrationForm = () => {
 
       <div className="mx-auto">
         <div className="sticky top-0 z-10 mb-8 animate-fadeIn backdrop-blur-sm">
-          <div className="flex items-center justify-center space-x-3">
+          {/* <div className="flex items-center justify-center space-x-3">
             <IoAddCircleOutline className="text-4xl text-[#DB9E30] mb-3" />
             <h2 className="text-3xl font-bold text-[#441a05] title-underline">স্টাফ নিবন্ধন</h2>
+          </div> */}
+          <div className="flex justify-end mt-4">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="btn btn-ripple inline-flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-200 animate-scaleIn btn-glow"
+              title="বাল্ক স্টাফ নিবন্ধন"
+            >
+              <FaUpload className="text-lg" />
+              <span>বাল্ক স্টাফ নিবন্ধন</span>
+            </button>
           </div>
         </div>
+
+        {/* Bulk Registration Modal */}
+        {isModalOpen && (
+          <div className="modal-overlay">
+            <div className="modal-content animate-scaleIn">
+              <span className="modal-close" onClick={() => setIsModalOpen(false)}>&times;</span>
+              <h3 className="text-2xl font-semibold text-[#441a05] text-center mb-4">বাল্ক স্টাফ নিবন্ধন</h3>
+              <form onSubmit={handleBulkSubmit} className="space-y-4">
+                <div className="relative input-icon">
+                  <label htmlFor="file" className="block font-medium text-[#441a05]">
+                    Excel ফাইল আপলোড করুন <span className="text-[#DB9E30]">*</span>
+                  </label>
+                  <FaFileExcel className="absolute left-3 top-[43px] text-[#DB9E30]" />
+                  <input
+                    type="file"
+                    id="file"
+                    accept=".xlsx,.xls"
+                    onChange={handleFileChange}
+                    className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
+                    required
+                    aria-label="Excel ফাইল আপলোড করুন"
+                  />
+                </div>
+                <div className="flex justify-between">
+                  <button
+                    type="button"
+                    onClick={downloadSampleExcel}
+                    className="btn btn-ripple inline-flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium bg-gray-200 text-[#441a05] transition-all duration-200 animate-scaleIn btn-glow"
+                    title="নমুনা Excel ডাউনলোড করুন"
+                  >
+                    <FaFileExcel className="text-lg" />
+                    <span>নমুনা Excel ডাউনলোড</span>
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isBulkLoading}
+                    className={`btn btn-ripple inline-flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-200 animate-scaleIn ${isBulkLoading ? 'opacity-50 cursor-not-allowed' : 'btn-glow'}`}
+                    title="ফাইল আপলোড করুন"
+                  >
+                    {isBulkLoading ? (
+                      <span className="flex items-center gap-2">
+                        <FaSpinner className="animate-spin text-lg" />
+                        <span>আপলোড হচ্ছে...</span>
+                      </span>
+                    ) : (
+                      <span>ফাইল আপলোড করুন</span>
+                    )}
+                  </button>
+                </div>
+              </form>
+              {bulkError && (
+                <div
+                  id="bulk-error-message"
+                  className="text-red-600 bg-red-50 p-4 rounded-lg shadow-inner animate-fadeIn text-center mt-4"
+                  aria-describedby="bulk-error-message"
+                >
+                  ত্রুটি: {bulkError.data?.message || bulkError.data?.error || bulkError.data?.detail || bulkError.status || 'অজানা ত্রুটি'}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="rounded-2xl animate-fadeIn space-y-10">
           {/* ব্যক্তিগত তথ্য */}

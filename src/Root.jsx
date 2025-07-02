@@ -128,10 +128,7 @@ function Root() {
               path: "teacher-performance",
               element: <TeacherPerformance></TeacherPerformance>,
             },
-            {
-              path: "student-attendance",
-              element: <StudentAttendance></StudentAttendance>,
-            },
+            
           ],
         },
         {
@@ -236,6 +233,10 @@ function Root() {
               path: "exam-routine",
               element: <ExamRoutine></ExamRoutine>,
             },
+            {
+              path: "student-attendance",
+              element: <StudentAttendance></StudentAttendance>,
+            },
           ],
         },
         {
@@ -295,10 +296,10 @@ function Root() {
               path: "delete-fee",
               element: <DeleteStudentFees />,
             },
-               {
-              path: "boarding-fee",
-              element: <BoardingFees />,
-            },
+            // {
+            //   path: "boarding-fee",
+            //   element: <BoardingFees />,
+            // },
           ],
         },
         {
@@ -323,11 +324,15 @@ function Root() {
                   path: "meal-setup",
                   element: <MealSetup />,
                 },
-                {
-                  path: "meal-status",
-                  element: <MealStatus />,
-                },
               ],
+            },
+            {
+              path: "meal-status",
+              element: <MealStatus />,
+            },
+            {
+              path: "boarding-fee",
+              element: <BoardingFees />,
             },
           ],
         },

@@ -9,6 +9,8 @@ import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-ye
 import { useGetFundsQuery } from '../../redux/features/api/funds/fundsApi';
 import { useGetWaiversQuery } from '../../redux/features/api/waivers/waiversApi';
 import { useCreateFeeMutation, useDeleteFeeMutation, useUpdateFeeMutation } from '../../redux/features/api/fees/feesApi';
+import selectStyles from '../../utilitis/selectStyles';
+
 
 const CurrentFees = () => {
   const [userId, setUserId] = useState('');
@@ -22,6 +24,7 @@ const CurrentFees = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
+  const [selectAll, setSelectAll] = useState(false); // State for Select All checkbox
   const dropdownRef = useRef(null);
 
   // API Queries
@@ -62,6 +65,12 @@ const CurrentFees = () => {
       setSelectedStudent(null);
     }
   }, [studentData, userId]);
+
+  // Reset selectAll when feesData changes
+  useEffect(() => {
+    setSelectAll(false);
+    setSelectedFees([]);
+  }, [feesData]);
 
   // Calculate payable amount with waiver
   const calculatePayableAmount = (fee, waivers) => {
@@ -136,6 +145,32 @@ const CurrentFees = () => {
         : [...prev, feeId]
     );
   };
+
+  // Handle Select All checkbox
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedFees([]);
+      setSelectAll(false);
+    } else {
+      const selectableFees = filteredFees
+        .filter((fee) => getFeeStatus(fee).status !== 'PAID')
+        .map((fee) => fee.id);
+      setSelectedFees(selectableFees);
+      setSelectAll(true);
+    }
+  };
+
+  // Update selectAll state based on selectedFees
+  useEffect(() => {
+    const selectableFees = filteredFees
+      .filter((fee) => getFeeStatus(fee).status !== 'PAID')
+      .map((fee) => fee.id);
+    if (selectableFees.length > 0 && selectedFees.length === selectableFees.length) {
+      setSelectAll(true);
+    } else {
+      setSelectAll(false);
+    }
+  }, [selectedFees, filteredFees]);
 
   // Validate form
   const validateForm = () => {
@@ -227,6 +262,7 @@ const CurrentFees = () => {
         setSelectedFees([]);
         setPaymentInputs({});
         setDiscountInputs({});
+        setSelectAll(false); // Reset Select All after submission
         refetchFees();
       } else if (modalAction === 'update') {
         await updateFee(modalData).unwrap();
@@ -270,59 +306,6 @@ const CurrentFees = () => {
     value: fund.id,
     label: fund.name,
   })) || [];
-
-  // Custom styles for react-select
-  const selectStyles = {
-    control: (base) => ({
-      ...base,
-      background: 'transparent',
-      borderColor: '#9d9087',
-      borderRadius: '8px',
-      paddingLeft: '0.75rem',
-      padding: '3px',
-      color: '#441a05',
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-      transition: 'all 0.3s ease',
-      '&:hover': { borderColor: '#441a05' },
-      '&:focus': { outline: 'none', boxShadow: 'none' },
-    }),
-    placeholder: (base) => ({
-      ...base,
-      color: '#441a05',
-      opacity: 0.7,
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-    }),
-    singleValue: (base) => ({
-      ...base,
-      color: '#441a05',
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-    }),
-    menu: (base) => ({
-      ...base,
-      backgroundColor: 'rgba(0, 0, 0, 0.1)',
-      backdropFilter: 'blur(10px)',
-      border: '1px solid rgba(255, 255, 255, 0.2)',
-      borderRadius: '8px',
-      zIndex: 9999,
-      marginTop: '4px',
-    }),
-    menuPortal: (base) => ({
-      ...base,
-      zIndex: 9999,
-    }),
-    option: (base, { isFocused, isSelected }) => ({
-      ...base,
-      color: '#441a05',
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-      backgroundColor: isSelected ? '#DB9E30' : isFocused ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-      cursor: 'pointer',
-      '&:active': { backgroundColor: '#DB9E30' },
-    }),
-  };
 
   return (
     <div className="py-8">
@@ -376,20 +359,14 @@ const CurrentFees = () => {
       </style>
 
       <div>
-    
-
         {/* Student Search */}
-        <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-2xl mb-8 animate-fadeIn shadow-xl " ref={dropdownRef}>
-         <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-                
-            
-                 
-                      <IoAddCircle className="text-3xl text-[#441a05]" />
-           
-                    <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
-                      বর্তমান ফি
-                    </h3>
-                  </div>
+        <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-2xl mb-8 animate-fadeIn shadow-xl" ref={dropdownRef}>
+          <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
+            <IoAddCircle className="text-3xl text-[#441a05]" />
+            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
+              বর্তমান ফি
+            </h3>
+          </div>
           <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
             <div>
               <label className="block text-sm font-medium text-[#441a05] mb-1">ইউজার আইডি লিখুন</label>
@@ -405,34 +382,6 @@ const CurrentFees = () => {
                 title="ইউজার আইডি / User ID"
               />
             </div>
-            {/* {isUserDropdownOpen && userId && (
-            <div className="absolute z-[10000] mt-1 w-full bg-black/10 backdrop-blur-sm border border-white/20 rounded-lg shadow-lg max-h-60 overflow-auto">
-              {studentLoading ? (
-                <p className="px-4 py-2 text-sm text-[#441a05]/70">লোড হচ্ছে...</p>
-              ) : studentError ? (
-                <p className="px-4 py-2 text-sm text-red-400">ছাত্রের তথ্য লোড করতে ত্রুটি</p>
-              ) : studentData?.length > 0 ? (
-                studentData.map((student) => (
-                  <div
-                    key={student.id}
-                    onClick={() => {
-                      setSelectedStudent(student);
-                      setUserId(student.user_id.toString());
-                      setIsUserDropdownOpen(false);
-                    }}
-                    className="px-4 py-2 hover:bg-white/10 cursor-pointer text-sm text-[#441a05]"
-                  >
-                    {student.name} ({student.user_id})
-                  </div>
-                ))
-              ) : (
-                <p className="px-4 py-2 text-sm text-[#441a05]/70">কোনো ছাত্র পাওয়া যায়নি</p>
-              )}
-            </div>
-          )} */}
-
-
-
             <div>
               <label className="block text-sm font-medium text-[#441a05] mb-1">একাডেমিক বছর</label>
               <Select
@@ -470,8 +419,6 @@ const CurrentFees = () => {
               />
             </div>
           </div>
-
-
         </div>
 
         {/* Student Information */}
@@ -487,9 +434,6 @@ const CurrentFees = () => {
         {!selectedStudent && userId && !studentLoading && (
           <p className="text-red-400 mb-8 animate-fadeIn">ইউজার আইডি দিয়ে কোনো ছাত্র পাওয়া যায়নি: {userId}</p>
         )}
-
-        {/* Academic Year and Fund Selection */}
-
 
         {/* Current Fees Table */}
         {filteredFees.length > 0 && (
@@ -528,7 +472,38 @@ const CurrentFees = () => {
                         স্থিতি
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                        নির্বাচন
+                        <label className="inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectAll}
+                            onChange={handleSelectAll}
+                            disabled={isCreating || isUpdating || filteredFees.every(fee => getFeeStatus(fee).status === 'PAID')}
+                            className="hidden"
+                            aria-label="সব ফি নির্বাচন করুন"
+                            title="সব ফি নির্বাচন করুন / Select all fees"
+                          />
+                          <span
+                            className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${selectAll ? 'bg-[#DB9E30] border-[#DB9E30]' : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'}`}
+                          >
+                            {selectAll && (
+                              <svg
+                                className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            )}
+                          </span>
+                          <span className="ml-2 text-[#441a05]/70 text-nowrap">সব নির্বাচন</span>
+                        </label>
                       </th>
                     </tr>
                   </thead>

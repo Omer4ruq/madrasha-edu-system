@@ -40,7 +40,7 @@ const mainMenu = [
 
           {
             id: "04/01/03",
-            title: "পার্ফরমেন্স ধরন",
+            title: "শিক্ষকের পারফরমেন্সের ধরন",
             link: "/darul-iqam/settings/performance-type",
           },
         ],
@@ -65,11 +65,7 @@ const mainMenu = [
         title: "শিক্ষকের পারফরমেন্স",
         link: "/darul-iqam/teacher-performance",
       },
-      {
-        id: "04/06",
-        title: "ছাত্রের উপস্থিতি",
-        link: "/darul-iqam/student-attendance",
-      },
+      
     ],
   },
   {
@@ -175,7 +171,7 @@ const mainMenu = [
       },
       {
         id: "05/08",
-        title: "শিক্ষক",
+        title: "শিক্ষকের সাবজেক্ট",
         link: "/talimat/teacher-subject-assign",
         children: [
           {
@@ -204,6 +200,11 @@ const mainMenu = [
         id: "05/12",
         title: "পরীক্ষার রুটিন",
         link: "/talimat/exam-routine",
+      },
+      {
+        id: "04/06",
+        title: "ছাত্রের উপস্থিতি",
+        link: "/talimat/student-attendance",
       },
     ],
   },
@@ -285,11 +286,7 @@ const mainMenu = [
         title: "ডিলিট - ফি",
         link: "/accounts/delete-fee",
       },
-         {
-        id: "07/10",
-        title: "বোর্ডিং - ফি",
-        link: "/accounts/boarding-fee",
-      },
+        
     ],
   },
   {
@@ -407,12 +404,19 @@ const mainMenu = [
             title: "খাবারের সেটাপ",
             link: "/boarding/settings/meal-setup",
           },
-          {
-            id: "09/01/04",
-            title: "খাবারের স্ট্যাটাস",
-            link: "/boarding/settings/meal-status",
-          },
+
         ],
+        
+      },
+                {
+            id: "09/02",
+            title: "খাবারের স্ট্যাটাস",
+            link: "/boarding/meal-status",
+          },
+       {
+        id: "09/03",
+        title: "বোর্ডিং - ফি",
+        link: "/boarding/boarding-fee",
       },
     ],
   },

@@ -302,7 +302,6 @@ const AddBehaviorMarks = () => {
                             type="number"
                             min="0"
                             max={bt.obtain_mark}
-                            step="0.01"
                             value={behaviorReports[student.id]?.[bt.id] || ''}
                             onChange={(e) => handleMarkChange(student.id, bt.id, e.target.value)}
                             onKeyDown={(e) => handleKeyDown(e, student.id, bt.id, studentIndex, behaviorIndex)}
