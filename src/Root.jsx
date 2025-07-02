@@ -392,11 +392,13 @@ function Root() {
               children: [
                 {
                   index: true,
-                  element: <SentNotificationSMS />,
+                  // element: <SentNotificationSMS />,
+                  element: <SentSms />,
                 },
                 {
                   path: "sms-notification-template",
-                  element: <SmsNotificationTemplate />,
+                  // element: <SmsNotificationTemplate />,
+                   element: <SmsTemplate />,
                 },
               ],
             },
