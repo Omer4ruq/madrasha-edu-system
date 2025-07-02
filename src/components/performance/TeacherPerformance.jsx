@@ -1,31 +1,63 @@
 import React, { useState, useMemo } from 'react';
 import { useGetPerformanceApiQuery } from '../../redux/features/api/performance/performanceApi';
+
 import Select from 'react-select';
 import { FaSpinner } from 'react-icons/fa';
 import toast, { Toaster } from 'react-hot-toast';
 import { useGetRoleStaffProfileApiQuery } from '../../redux/features/api/roleStaffProfile/roleStaffProfileApi';
 import { useCreateTeacherPerformanceApiMutation, useGetTeacherPerformanceApiQuery, useUpdateTeacherPerformanceApiMutation } from '../../redux/features/api/performance/teacherPerformanceApi';
+import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
 
 const TeacherPerformance = () => {
   const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState(null);
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState(null);
 
   // API Hooks
   const { data: teachers = [], isLoading: isTeachersLoading, error: teachersError } = useGetRoleStaffProfileApiQuery();
   const { data: performanceMetrics = [], isLoading: isMetricsLoading, error: metricsError } = useGetPerformanceApiQuery();
   const { data: allPerformances = [], isLoading: isPerformanceLoading, error: performanceError } = useGetTeacherPerformanceApiQuery();
+  const { data: academicYears = [], isLoading: isAcademicYearsLoading, error: academicYearsError } = useGetAcademicYearApiQuery();
   const [createTeacherPerformance, { isLoading: isCreating }] = useCreateTeacherPerformanceApiMutation();
   const [patchTeacherPerformance, { isLoading: isUpdating }] = useUpdateTeacherPerformanceApiMutation();
 
-  // Filter performances for the selected teacher
+  // Month options
+  const monthOptions = [
+    { value: 'January', label: 'January' },
+    { value: 'February', label: 'February' },
+    { value: 'March', label: 'March' },
+    { value: 'April', label: 'April' },
+    { value: 'May', label: 'May' },
+    { value: 'June', label: 'June' },
+    { value: 'July', label: 'July' },
+    { value: 'August', label: 'August' },
+    { value: 'September', label: 'September' },
+    { value: 'October', label: 'October' },
+    { value: 'November', label: 'November' },
+    { value: 'December', label: 'December' },
+  ];
+
+  // Academic year options
+  const academicYearOptions = useMemo(() => academicYears.map((year) => ({
+    value: year.id,
+    label: year.name,
+  })), [academicYears]);
+
+  // Filter performances for the selected teacher, month, and academic year
   const teacherPerformances = useMemo(() => {
-    if (!selectedTeacher) return [];
-    return allPerformances.filter((perf) => perf.teacher_id === selectedTeacher.value);
-  }, [allPerformances, selectedTeacher]);
+    if (!selectedTeacher || !selectedMonth || !selectedAcademicYear) return [];
+    return allPerformances.filter(
+      (perf) =>
+        perf.teacher_id === selectedTeacher.value &&
+        perf.month === selectedMonth.value &&
+        perf.academic_year === selectedAcademicYear.value
+    );
+  }, [allPerformances, selectedTeacher, selectedMonth, selectedAcademicYear]);
 
   // Calculate performance data
   const performanceData = useMemo(() => {
     const map = {};
-    if (performanceMetrics.length === 0 || !selectedTeacher) return map;
+    if (performanceMetrics.length === 0 || !selectedTeacher || !selectedMonth || !selectedAcademicYear) return map;
 
     performanceMetrics.forEach((metric) => {
       const perf = teacherPerformances.find((p) => p.performance_name_id === metric.id);
@@ -33,7 +65,7 @@ const TeacherPerformance = () => {
     });
 
     return map;
-  }, [teacherPerformances, performanceMetrics, selectedTeacher]);
+  }, [teacherPerformances, performanceMetrics, selectedTeacher, selectedMonth, selectedAcademicYear]);
 
   // Transform teacher data for react-select
   const teacherOptions = useMemo(() => teachers.map((teacher) => ({
@@ -41,16 +73,24 @@ const TeacherPerformance = () => {
     label: teacher.name,
   })), [teachers]);
 
-  // Handle teacher selection
+  // Handle selections
   const handleTeacherSelect = (selectedOption) => {
     setSelectedTeacher(selectedOption);
+  };
+
+  const handleMonthSelect = (selectedOption) => {
+    setSelectedMonth(selectedOption);
+  };
+
+  const handleAcademicYearSelect = (selectedOption) => {
+    setSelectedAcademicYear(selectedOption);
   };
 
   // Handle checkbox change
   const handleCheckboxChange = async (metricName) => {
     const metricId = performanceMetrics.find((m) => m.name === metricName)?.id;
-    if (!metricId || !selectedTeacher) {
-      toast.error('শিক্ষক নির্বাচন করুন এবং মেট্রিক্স লোড হয়েছে তা নিশ্চিত করুন।');
+    if (!metricId || !selectedTeacher || !selectedMonth || !selectedAcademicYear) {
+      toast.error('শিক্ষক, মাস এবং শিক্ষাবর্ষ নির্বাচন করুন এবং মেট্রিক্স লোড হয়েছে তা নিশ্চিত করুন।');
       return;
     }
 
@@ -65,6 +105,8 @@ const TeacherPerformance = () => {
         performance_name_id: metricId,
         status: newStatus,
         comment: existingPerf?.comment || 'ডিফল্ট মন্তব্য',
+        month: selectedMonth.value,
+        academic_year: selectedAcademicYear.value,
       };
 
       if (existingPerf) {
@@ -120,7 +162,11 @@ const TeacherPerformance = () => {
 
   // Render performance table
   const renderPerformanceTable = () => {
-    if (!selectedTeacher) return <p className="p-4 text-[#441a05]/70 animate-fadeIn">শিক্ষক নির্বাচন করুন</p>;
+    if (!selectedTeacher || !selectedMonth || !selectedAcademicYear) return (
+      <p className="p-4 text-[#441a05]/70 animate-fadeIn">
+        শিক্ষক, মাস এবং শিক্ষাবর্ষ নির্বাচন করুন
+      </p>
+    );
     if (isMetricsLoading || isPerformanceLoading) return (
       <p className="p-4 text-[#441a05]/70 animate-fadeIn">
         <FaSpinner className="animate-spin text-lg mr-2" />
@@ -193,20 +239,6 @@ const TeacherPerformance = () => {
 
   return (
     <div className="py-8 w-full relative mx-auto">
-      {/* <Toaster
-        position="top-right"
-        toastOptions={{
-          style: {
-            background: 'rgba(0, 0, 0, 0.1)',
-            color: '#441a05',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '0.5rem',
-            backdropFilter: 'blur(4px)',
-          },
-          success: { style: { background: 'rgba(219, 158, 48, 0.1)', borderColor: '#DB9E30' } },
-          error: { style: { background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444' } },
-        }}
-      /> */}
       <style>
         {`
           @keyframes fadeIn {
@@ -257,17 +289,17 @@ const TeacherPerformance = () => {
 
       <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
         <h3 className="text-2xl font-bold text-[#441a05] tracking-tight mb-6">শিক্ষক কর্মক্ষমতা মূল্যায়ন</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl">
           <label className="flex items-center space-x-4 animate-fadeIn">
-            <span className="text-[#441a05] font-medium text-nowrap">শিক্ষক খুঁজুন:</span>
+            <span className="text-[#441a05] font-medium text-nowrap">মাস নির্বাচন করুন:</span>
             <div className="w-full">
               <Select
-                options={teacherOptions}
-                value={selectedTeacher}
-                onChange={handleTeacherSelect}
-                placeholder="শিক্ষকের নাম লিখুন"
-                isLoading={isTeachersLoading}
-                isDisabled={isTeachersLoading}
+                options={monthOptions}
+                value={selectedMonth}
+                onChange={handleMonthSelect}
+                placeholder="মাস নির্বাচন করুন"
+                isLoading={false}
+                isDisabled={isCreating || isUpdating}
                 styles={customStyles}
                 className="animate-scaleIn"
                 menuPortalTarget={document.body}
@@ -277,18 +309,67 @@ const TeacherPerformance = () => {
               />
             </div>
           </label>
-          {isTeachersLoading && (
-            <div className="flex items-center space-x-2 text-[#441a05]/70 animate-fadeIn">
-              <FaSpinner className="animate-spin text-lg" />
-              <span>শিক্ষক লোড হচ্ছে...</span>
+          <label className="flex items-center space-x-4 animate-fadeIn">
+            <span className="text-[#441a05] font-medium text-nowrap">শিক্ষাবর্ষ নির্বাচন করুন:</span>
+            <div className="w-full">
+              <Select
+                options={academicYearOptions}
+                value={selectedAcademicYear}
+                onChange={handleAcademicYearSelect}
+                placeholder="শিক্ষাবর্ষ নির্বাচন করুন"
+                isLoading={isAcademicYearsLoading}
+                isDisabled={isAcademicYearsLoading || isCreating || isUpdating}
+                styles={customStyles}
+                className="animate-scaleIn"
+                menuPortalTarget={document.body}
+                menuPosition="fixed"
+                isClearable
+                isSearchable
+              />
             </div>
-          )}
-          {teachersError && (
-            <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn" style={{ animationDelay: '0.4s' }}>
-              শিক্ষক ত্রুটি: {teachersError.status || 'অজানা'} - {JSON.stringify(teachersError.data || {})}
+          </label>
+          <label className="flex items-center space-x-4 animate-fadeIn">
+            <span className="text-[#441a05] font-medium text-nowrap">শিক্ষক খুঁজুন:</span>
+            <div className="w-full">
+              <Select
+                options={teacherOptions}
+                value={selectedTeacher}
+                onChange={handleTeacherSelect}
+                placeholder="শিক্ষকের নাম লিখুন"
+                isLoading={isTeachersLoading}
+                isDisabled={isTeachersLoading || isCreating || isUpdating}
+                styles={customStyles}
+                className="animate-scaleIn"
+                menuPortalTarget={document.body}
+                menuPosition="fixed"
+                isClearable
+                isSearchable
+              />
             </div>
-          )}
+          </label>
         </div>
+        {isTeachersLoading && (
+          <div className="flex items-center space-x-2 text-[#441a05]/70 animate-fadeIn mt-4">
+            <FaSpinner className="animate-spin text-lg" />
+            <span>শিক্ষক লোড হচ্ছে...</span>
+          </div>
+        )}
+        {isAcademicYearsLoading && (
+          <div className="flex items-center space-x-2 text-[#441a05]/70 animate-fadeIn mt-4">
+            <FaSpinner className="animate-spin text-lg" />
+            <span>শিক্ষাবর্ষ লোড হচ্ছে...</span>
+          </div>
+        )}
+        {teachersError && (
+          <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn" style={{ animationDelay: '0.4s' }}>
+            শিক্ষক ত্রুটি: {teachersError.status || 'অজানা'} - {JSON.stringify(teachersError.data || {})}
+          </div>
+        )}
+        {academicYearsError && (
+          <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn" style={{ animationDelay: '0.4s' }}>
+            শিক্ষাবর্ষ ত্রুটি: {academicYearsError.status || 'অজানা'} - {JSON.stringify(academicYearsError.data || {})}
+          </div>
+        )}
       </div>
 
       <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">

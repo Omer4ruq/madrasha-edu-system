@@ -19,21 +19,19 @@ export const examRoutineApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ['ExamSchedules'], // Consistent tag type
+  tagTypes: ['ExamSchedules'],
   endpoints: (builder) => ({
-    // GET: Fetch all exam schedules
     getExamSchedules: builder.query({
-      query: () => '/exam-schedules/',
+      query: ({ exam_name, class_name, academic_year }) => ({
+        url: '/exam-schedules/',
+        params: { exam_name, class_name, academic_year },
+      }),
       providesTags: ['ExamSchedules'],
     }),
-
-    // GET: Fetch a single exam schedule by ID
     getExamSchedulesById: builder.query({
       query: (id) => `/exam-schedules/${id}/`,
       providesTags: ['ExamSchedules'],
     }),
-
-    // POST: Create a new exam schedule
     createExamSchedules: builder.mutation({
       query: (routineData) => ({
         url: '/exam-schedules/',
@@ -42,8 +40,6 @@ export const examRoutineApi = createApi({
       }),
       invalidatesTags: ['ExamSchedules'],
     }),
-
-    // PUT: Update an existing exam schedule
     updateExamSchedules: builder.mutation({
       query: ({ id, ...routineData }) => ({
         url: `/exam-schedules/${id}/`,
@@ -52,8 +48,6 @@ export const examRoutineApi = createApi({
       }),
       invalidatesTags: ['ExamSchedules'],
     }),
-
-    // PATCH: Partially update exam schedule
     patchExamSchedules: builder.mutation({
       query: ({ id, ...routineData }) => ({
         url: `/exam-schedules/${id}/`,
@@ -62,8 +56,6 @@ export const examRoutineApi = createApi({
       }),
       invalidatesTags: ['ExamSchedules'],
     }),
-
-    // DELETE: Delete an exam schedule
     deleteExamSchedules: builder.mutation({
       query: (id) => ({
         url: `/exam-schedules/${id}/`,

@@ -5,8 +5,6 @@ import { useGetStudentActiveByClassQuery } from '../../redux/features/api/studen
 import { useGetBehaviorTypeApiQuery } from '../../redux/features/api/behavior/behaviorTypeApi';
 import { useCreateBehaviorReportApiMutation, useGetBehaviorReportApiQuery } from '../../redux/features/api/behavior/behaviorReportApi';
 
-// {cls.class_name} {cls.shift_name}
-
 const AddBehaviorMarks = () => {
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedExam, setSelectedExam] = useState('');
@@ -33,7 +31,7 @@ const AddBehaviorMarks = () => {
 
   // Initialize behavior reports state when students or behavior types change
   useEffect(() => {
-    if (students && activeBehaviorTypes.length > 0) {
+    if (students && activeBehaviorTypes.length > 0 && selectedClass && selectedExam) {
       const initialReports = {};
       const initialSavedMarks = {};
       students.forEach(student => {
@@ -46,21 +44,31 @@ const AddBehaviorMarks = () => {
       });
       setBehaviorReports(initialReports);
       setSavedMarks(initialSavedMarks);
+      // Clear other states when reinitializing
+      setInvalidMarks({});
+      setToastMessage('');
+    } else if (selectedClass === '' || selectedExam === '') {
+      // Clear states when selections are cleared
+      setBehaviorReports({});
+      setSavedMarks({});
+      setInvalidMarks({});
+      setToastMessage('');
     }
-  }, [students, activeBehaviorTypes]);
+  }, [students, activeBehaviorTypes, selectedClass, selectedExam]);
 
   // Update behavior reports with existing data
   useEffect(() => {
-    if (existingReports && students && activeBehaviorTypes.length > 0 && selectedExam) {
+    if (existingReports && students && activeBehaviorTypes.length > 0 && selectedExam && selectedClass && Object.keys(behaviorReports).length > 0) {
       const updatedReports = { ...behaviorReports };
       const updatedSavedMarks = { ...savedMarks };
+
       existingReports.forEach(report => {
         // Filter by selected exam
         if (report.exam_name_id === parseInt(selectedExam)) {
           report.behavior_marks.forEach(mark => {
             // Ensure student is in the selected class
             if (students.some(student => student.id === mark.student_id)) {
-              if (updatedReports[mark.student_id]) {
+              if (updatedReports[mark.student_id] && updatedReports[mark.student_id].hasOwnProperty(mark.behavior_type)) {
                 updatedReports[mark.student_id][mark.behavior_type] = mark.mark.toString();
                 updatedSavedMarks[mark.student_id][mark.behavior_type] = true;
               }
@@ -68,10 +76,18 @@ const AddBehaviorMarks = () => {
           });
         }
       });
+      
       setBehaviorReports(updatedReports);
       setSavedMarks(updatedSavedMarks);
     }
-  }, [existingReports, students, activeBehaviorTypes, selectedExam]);
+  }, [existingReports, students, activeBehaviorTypes, selectedExam, selectedClass]);
+
+  // Handle class change
+  const handleClassChange = (e) => {
+    setSelectedClass(e.target.value);
+    // Reset exam selection when class changes
+    setSelectedExam('');
+  };
 
   // Handle mark input change
   const handleMarkChange = (studentId, behaviorTypeId, value) => {
@@ -93,6 +109,15 @@ const AddBehaviorMarks = () => {
         [behaviorTypeId]: value
       }
     }));
+
+    // Reset saved status when user starts typing
+    setSavedMarks(prev => ({
+      ...prev,
+      [studentId]: {
+        ...prev[studentId],
+        [behaviorTypeId]: false
+      }
+    }));
   };
 
   // Handle mark submission
@@ -110,7 +135,7 @@ const AddBehaviorMarks = () => {
           ...prev,
           [studentId]: {
             ...prev[studentId],
-            [behaviorTypeId]: prev[studentId][behaviorTypeId] || ''
+            [behaviorTypeId]: ''
           }
         }));
         // Clear invalid marks message
@@ -125,19 +150,27 @@ const AddBehaviorMarks = () => {
     // Collect all valid marks for this student for the selected exam
     const behaviorMarks = [];
     activeBehaviorTypes.forEach(bt => {
-      const markValue = parseFloat(behaviorReports[studentId][bt.id]);
-      // Include marks that are valid and either saved or currently being submitted
-      if (
-        (bt.id === behaviorTypeId && !isNaN(mark) && mark >= 0 && mark <= bt.obtain_mark) ||
-        (savedMarks[studentId][bt.id] && !isNaN(markValue) && markValue >= 0 && markValue <= bt.obtain_mark)
-      ) {
+      let markValue;
+      if (bt.id === behaviorTypeId) {
+        markValue = mark; // Use the current mark being submitted
+      } else {
+        markValue = parseFloat(behaviorReports[studentId][bt.id]);
+      }
+      
+      // Include marks that are valid
+      if (!isNaN(markValue) && markValue >= 0 && markValue <= bt.obtain_mark) {
         behaviorMarks.push({
           student_id: parseInt(studentId),
           behavior_type: parseInt(bt.id),
-          mark: bt.id === behaviorTypeId ? mark : markValue
+          mark: markValue
         });
       }
     });
+
+    // Only proceed if there are marks to save
+    if (behaviorMarks.length === 0) {
+      return;
+    }
 
     // Prepare data for API
     const reportData = {
@@ -163,22 +196,17 @@ const AddBehaviorMarks = () => {
         [`${studentId}-${behaviorTypeId}`]: ''
       }));
       // Focus next input
-      const nextInput = document.getElementById(nextInputId);
-      if (nextInput) {
-        nextInput.focus();
+      if (nextInputId) {
+        const nextInput = document.getElementById(nextInputId);
+        if (nextInput) {
+          nextInput.focus();
+        }
       }
     } catch (error) {
       console.error('Failed to save behavior report:', error);
       setToastMessage('Failed to save mark');
       setTimeout(() => setToastMessage(''), 3000);
-      // Revert to previous valid value or empty string on error
-      setBehaviorReports(prev => ({
-        ...prev,
-        [studentId]: {
-          ...prev[studentId],
-          [behaviorTypeId]: prev[studentId][behaviorTypeId] || ''
-        }
-      }));
+      // Don't revert the value on error, let user try again
     }
   };
 
@@ -203,7 +231,7 @@ const AddBehaviorMarks = () => {
     <div className="p-6 max-w-7xl mx-auto">
       {/* Toast Message */}
       {toastMessage && (
-        <div className="fixed top-4 right-4 bg-red-500 text-white p-4 rounded-md shadow-lg">
+        <div className="fixed top-4 right-4 bg-red-500 text-white p-4 rounded-md shadow-lg z-50">
           {toastMessage}
         </div>
       )}
@@ -215,7 +243,7 @@ const AddBehaviorMarks = () => {
         <label className="mr-4 font-semibold">Class:</label>
         <select 
           value={selectedClass} 
-          onChange={(e) => setSelectedClass(e.target.value)}
+          onChange={handleClassChange}
           className="p-2 border rounded-md"
         >
           <option value="">Select Class</option>
@@ -231,7 +259,7 @@ const AddBehaviorMarks = () => {
         <select 
           value={selectedExam} 
           onChange={(e) => setSelectedExam(e.target.value)}
-          disabled={!selectedClass}
+          disabled={!selectedClass || selectedExam !== ''} // Disable if no class selected or an exam is already selected
           className="p-2 border rounded-md disabled:bg-gray-100"
         >
           <option value="">Select Exam</option>
@@ -274,11 +302,12 @@ const AddBehaviorMarks = () => {
                             type="number"
                             min="0"
                             max={bt.obtain_mark}
+                            step="0.01"
                             value={behaviorReports[student.id]?.[bt.id] || ''}
                             onChange={(e) => handleMarkChange(student.id, bt.id, e.target.value)}
                             onKeyDown={(e) => handleKeyDown(e, student.id, bt.id, studentIndex, behaviorIndex)}
                             onBlur={(e) => handleMarkSubmit(student.id, bt.id, e.target.value, nextInputId)}
-                            className="w-16 p-1 text-center border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className={`w-16 p-1 text-center border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${invalidMarks[`${student.id}-${bt.id}`] ? 'border-red-500' : ''}`}
                           />
                           {savedMarks[student.id]?.[bt.id] && (
                             <span className="ml-2 text-green-500">✔</span>
