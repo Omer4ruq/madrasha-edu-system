@@ -329,6 +329,11 @@ const mainMenu = [
           },
         ],
       },
+       {
+        id: "08/03",
+        title: "Role Permission",
+        link: "/users/role-permission",
+      },
     ],
   },
   // {

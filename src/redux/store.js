@@ -61,6 +61,9 @@ import { gsubjectApi } from "./features/api/class-subjects/gsubjectApi";
 import { gfeeSubheadsApi } from "./features/api/gfee-subheads/gfeeSubheadsApi";
 import { studentBulkRegisterApi } from "./features/api/student/studentBulkRegisterApi";
 import { staffBulkRegisterApi } from "./features/api/staff/staffBulkRegisterApi";
+import { groupListApi } from "./features/api/permissionRole/groupListApi";
+import { permissionListApi } from "./features/api/permissionRole/permissionListApi";
+import { groupsApi } from "./features/api/permissionRole/groupsApi";
 
 export const store = configureStore({
   reducer: {
@@ -123,6 +126,9 @@ export const store = configureStore({
     [teacherSubjectAssignsApi.reducerPath]: teacherSubjectAssignsApi.reducer,
     [eventApi.reducerPath]: eventApi.reducer,
     [routinesApi.reducerPath]: routinesApi.reducer,
+    [groupListApi.reducerPath]: groupListApi.reducer,
+    [permissionListApi.reducerPath]: permissionListApi.reducer,
+    [groupsApi.reducerPath]: groupsApi.reducer,
     [examRoutineApi.reducerPath]: examRoutineApi.reducer,
     [studentBulkRegisterApi.reducerPath]: studentBulkRegisterApi.reducer,
     [staffBulkRegisterApi.reducerPath]: staffBulkRegisterApi.reducer,
