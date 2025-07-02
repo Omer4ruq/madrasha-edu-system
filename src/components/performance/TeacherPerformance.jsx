@@ -289,7 +289,7 @@ const TeacherPerformance = () => {
 
       <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
         <h3 className="text-2xl font-bold text-[#441a05] tracking-tight mb-6">শিক্ষক কর্মক্ষমতা মূল্যায়ন</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <label className="flex items-center space-x-4 animate-fadeIn">
             <span className="text-[#441a05] font-medium text-nowrap">মাস নির্বাচন করুন:</span>
             <div className="w-full">

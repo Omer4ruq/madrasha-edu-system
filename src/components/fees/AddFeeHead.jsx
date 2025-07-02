@@ -288,7 +288,7 @@ const AddFeeHead = () => {
               <tbody className="divide-y divide-white/20">
                 {feeHeads.map((feeHead, index) => (
                   <tr key={feeHead.sl} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{feeHead.sl}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{index +1}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{feeHead.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <button

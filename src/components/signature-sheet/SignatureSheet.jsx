@@ -6,7 +6,7 @@ import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/re
 import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
 import { useGetExamApiQuery } from '../../redux/features/api/exam/examApi';
 import { useGetStudentActiveByClassQuery } from '../../redux/features/api/student/studentActiveApi';
-import { useGetSubjectAssignQuery } from '../../redux/features/api/subject-assign/subjectAssignApi';
+import { useGetClassSubjectsByClassIdQuery } from '../../redux/features/api/class-subjects/classSubjectsApi';
 
 // Register Noto Sans Bengali font from URL
 try {
@@ -148,19 +148,22 @@ const SignatureSheet = () => {
     isLoading: isStudentsLoading,
     error: studentsError,
   } = useGetStudentActiveByClassQuery(selectedClassId, { skip: !selectedClassId });
-  
-  // Fetch subject assignments for selected class
+
+  // Get class_id for subject query
+  const getClassId = classes?.find((classConfig) => classConfig?.id === parseInt(selectedClassId));
+
+  // Fetch subjects for selected class
   const {
-    data: subjectAssignData,
+    data: subjects = [],
     isLoading: isSubjectsLoading,
     error: subjectsError,
-  } = useGetSubjectAssignQuery({ class_id: selectedClassId }, { skip: !selectedClassId });
+  } = useGetClassSubjectsByClassIdQuery(getClassId?.class_id, { skip: !selectedClassId });
 
   // Filter active classes
   const activeClasses = classes.filter((cls) => cls.is_active);
 
   // Extract active subjects
-  const activeSubjects = subjectAssignData?.subjects[0]?.subject_details?.filter((subject) => subject.is_active) || [];
+  const activeSubjects = subjects.filter((subject) => subject.is_active) || [];
 
   // Get current date and time in Bangladesh format
   const currentDateTime = new Date().toLocaleString('bn-BD', {
@@ -330,7 +333,7 @@ const SignatureSheet = () => {
             ))}
           </select>
           <div className="flex space-x-4">
-            <button
+            {/* <button
               onClick={handlePrint}
               disabled={!selectedClassId || !selectedExamId || isStudentsLoading || isSubjectsLoading}
               className={`flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
@@ -341,11 +344,11 @@ const SignatureSheet = () => {
               title="প্রিন্ট করুন"
             >
               <FaPrint className="mr-2" /> প্রিন্ট
-            </button>
+            </button> */}
             <button
               onClick={handleGeneratePDF}
               disabled={!selectedClassId || !selectedExamId || isStudentsLoading || isSubjectsLoading}
-              className={`flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
+              className={`flex w-full items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
                 !selectedClassId || !selectedExamId || isStudentsLoading || isSubjectsLoading
                   ? 'cursor-not-allowed opacity-50'
                   : 'hover:text-white btn-glow'
