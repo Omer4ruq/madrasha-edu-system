@@ -3,7 +3,7 @@
 const getSubdomain = () => {
   const host = window.location.hostname;
   const parts = host.split(".");
-  return parts.length == 3 ? parts[0] : null;
+  return parts.length >= 3 ? parts[0] : null;
   // return parts[0] || null;
 };
 
