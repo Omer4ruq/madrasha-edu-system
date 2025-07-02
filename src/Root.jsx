@@ -63,351 +63,360 @@ import ExamRoutine from "./components/routine/exam-routine/ExamRoutine";
 import BoardingFees from "./components/fees/BoardingFees";
 import FeeSummary from "./components/fees/FeeSummary";
 import RolePermissions from "./components/permission/RolePermissions";
+import LoginPage from "./components/auth/LoginPage";
+
+// Simple authentication check
+const isAuthenticated = () => !!localStorage.getItem('token');
+
+// ProtectedRoute component to guard authenticated routes
+const ProtectedRoute = () => {
+  return isAuthenticated() ? <App /> : <Navigate to="/" replace />;
+};
+
+// LoginRoute to redirect authenticated users to dashboard
+const LoginRoute = () => {
+  return isAuthenticated() ? <Navigate to="/dashboard" replace /> : <LoginPage />;
+};
 
 function Root() {
   const router = createBrowserRouter([
     {
       path: "/",
-      element: <App />,
+      element: <LoginRoute />, // Show LoginPage at root if not authenticated
       errorElement: <Dummy />,
+    },
+    {
+      path: "/",
+      element: <ProtectedRoute />, // Protect all other routes
       children: [
         {
-          path: "/",
-          element: <Navigate to="/dashboard" replace />,
-        },
-        {
           path: "dashboard",
-          element: <Home />,
-        },
-        {
-          path: "institute-profile",
-          element: <InstituteProfile />,
-        },
-        {
-          path: "institute-profile/edit-info",
-          element: <EditInstituteInfo />,
-        },
-        {
-          path: "darul-iqam",
+          element: <App />,
           children: [
             {
-              path: "settings",
+              path: "",
+              element: <Home />,
+            },
+            {
+              path: "institute-profile",
+              element: <InstituteProfile />,
+            },
+            {
+              path: "institute-profile/edit-info",
+              element: <EditInstituteInfo />,
+            },
+            {
+              path: "darul-iqam",
               children: [
                 {
-                  index: true,
-                  element: <AddBehaviorType />,
+                  path: "settings",
+                  children: [
+                    {
+                      index: true,
+                      element: <AddBehaviorType />,
+                    },
+                    {
+                      path: "leave-type",
+                      element: <AddLeaveType />,
+                    },
+                    {
+                      path: "performance-type",
+                      element: <PerformanceType />,
+                    },
+                  ],
                 },
                 {
-                  path: "leave-type",
-                  element: <AddLeaveType />,
-                },
-
-                {
-                  path: "performance-type",
-                  element: <PerformanceType />,
+                  path: "behavior-marks",
+                  element: <AddBehaviorMarks />,
                 },
                 {
-                  path: "performance-type",
-                  element: <PerformanceType />,
+                  path: "clean-report",
+                  element: <CleanReport />,
+                },
+                {
+                  path: "leave-request",
+                  element: <AddLeaveRequest />,
+                },
+                {
+                  path: "teacher-performance",
+                  element: <TeacherPerformance />,
                 },
               ],
             },
             {
-              path: "behavior-marks",
-              element: <AddBehaviorMarks />,
-            },
-            {
-              path: "clean-report",
-              element: <CleanReport />,
-            },
-            {
-              path: "leave-request",
-              element: <AddLeaveRequest />,
-            },
-            {
-              path: "teacher-performance",
-              element: <TeacherPerformance></TeacherPerformance>,
-            },
-            
-          ],
-        },
-        {
-          path: "talimat",
-          children: [
-            {
-              path: "settings",
-              element: <ClassManagement />,
+              path: "talimat",
               children: [
                 {
-                  index: true,
-                  element: <AddClass />,
+                  path: "settings",
+                  element: <ClassManagement />,
+                  children: [
+                    {
+                      index: true,
+                      element: <AddClass />,
+                    },
+                    {
+                      path: "add-section",
+                      element: <AddSection />,
+                    },
+                    {
+                      path: "add-shift",
+                      element: <AddShift />,
+                    },
+                    {
+                      path: "add-config",
+                      element: <AddClassConfig />,
+                    },
+                    {
+                      path: "exam-type",
+                      element: <AddExamTypes />,
+                    },
+                    {
+                      path: "event-type",
+                      element: <AddEvent />,
+                    },
+                  ],
                 },
                 {
-                  path: "add-section",
-                  element: <AddSection />,
+                  path: "class-subject",
+                  children: [
+                    {
+                      index: true,
+                      element: <ClassSubject />,
+                    },
+                  ],
                 },
                 {
-                  path: "add-shift",
-                  element: <AddShift />,
+                  path: "marks-config",
+                  children: [
+                    {
+                      index: true,
+                      element: <SubjectMarkConfigs />,
+                    },
+                  ],
                 },
                 {
-                  path: "add-config",
-                  element: <AddClassConfig />,
+                  path: "admit-card",
+                  element: <AdmitCard />,
                 },
                 {
-                  path: "exam-type",
-                  element: <AddExamTypes />,
+                  path: "seat-plan",
+                  element: <SeatPlan />,
                 },
                 {
-                  path: "event-type",
-                  element: <AddEvent />,
+                  path: "marks-given",
+                  children: [
+                    {
+                      index: true,
+                      element: <SubjectMarks />,
+                    },
+                  ],
+                },
+                {
+                  path: "periods",
+                  children: [
+                    {
+                      index: true,
+                      element: <ClassPeriodSetup />,
+                    },
+                  ],
+                },
+                {
+                  path: "teacher-subject-assign",
+                  children: [
+                    {
+                      index: true,
+                      element: <TeacherSubjectAssign />,
+                    },
+                  ],
+                },
+                {
+                  path: "signature-sheet",
+                  element: <SignatureSheet />,
+                },
+                {
+                  path: "event",
+                  element: <Event />,
+                },
+                {
+                  path: "routine",
+                  element: <ClassRoutine />,
+                },
+                {
+                  path: "exam-routine",
+                  element: <ExamRoutine />,
+                },
+                {
+                  path: "student-attendance",
+                  element: <StudentAttendance />,
                 },
               ],
             },
             {
-              path: "class-subject",
+              path: "accounts",
               children: [
                 {
-                  index: true,
-                  element: <ClassSubject />,
+                  path: "settings",
+                  children: [
+                    {
+                      index: true,
+                      element: <AddFundsType />,
+                    },
+                    {
+                      path: "income-heads",
+                      element: <IncomeHead />,
+                    },
+                    {
+                      path: "expense-heads",
+                      element: <ExpenseHead />,
+                    },
+                    {
+                      path: "fee-heads",
+                      element: <AddFeeHead />,
+                    },
+                  ],
+                },
+                {
+                  path: "waivers",
+                  element: <AddWaivers />,
+                },
+                {
+                  path: "income-list",
+                  element: <IncomeItems />,
+                },
+                {
+                  path: "expense-list",
+                  element: <ExpenseItems />,
+                },
+                {
+                  path: "fee-packages",
+                  element: <AddFeePackages />,
+                },
+                {
+                  path: "fee-name",
+                  element: <AddFeesName />,
+                },
+                {
+                  path: "fee-summary",
+                  element: <FeeSummary />,
+                },
+                {
+                  path: "delete-fee",
+                  element: <DeleteStudentFees />,
+                },
+                {
+                  path: "boarding-fee",
+                  element: <BoardingFees />,
                 },
               ],
             },
             {
-              path: "marks-config",
+              path: "boarding",
               children: [
                 {
-                  index: true,
-                  element: <SubjectMarkConfigs />,
+                  path: "settings",
+                  children: [
+                    {
+                      index: true,
+                      element: <AddMealsType />,
+                    },
+                    {
+                      path: "meal-type",
+                      element: <AddMealsType />,
+                    },
+                    {
+                      path: "meal-items",
+                      element: <MealItems />,
+                    },
+                    {
+                      path: "meal-setup",
+                      element: <MealSetup />,
+                    },
+                  ],
+                },
+                {
+                  path: "meal-status",
+                  element: <MealStatus />,
+                },
+                {
+                  path: "boarding-fee",
+                  element: <BoardingFees />,
                 },
               ],
             },
             {
-              path: "admit-card",
-              element: <AdmitCard></AdmitCard>,
-            },
-            {
-              path: "seat-plan",
-              element: <SeatPlan></SeatPlan>,
-            },
-            {
-              path: "marks-given",
+              path: "users",
               children: [
                 {
-                  index: true,
-                  element: <SubjectMarks />,
+                  path: "student",
+                  children: [
+                    {
+                      index: true,
+                      element: <StudentRegistrationForm />,
+                    },
+                    {
+                      path: "student-list",
+                      element: <StudentList />,
+                    },
+                  ],
+                },
+                {
+                  path: "staff",
+                  children: [
+                    {
+                      index: true,
+                      element: <StaffRegistrationForm />,
+                    },
+                    {
+                      path: "staff-list",
+                      element: <StaffList />,
+                    },
+                  ],
+                },
+                {
+                  path: "role-permission",
+                  element: <RolePermissions />,
                 },
               ],
             },
             {
-              path: "periods",
+              path: "communication",
               children: [
                 {
-                  index: true,
-                  element: <ClassPeriodSetup />,
+                  path: "general-sms",
+                  children: [
+                    {
+                      index: true,
+                      element: <SentSms />,
+                    },
+                    {
+                      path: "sms-template",
+                      element: <SmsTemplate />,
+                    },
+                  ],
+                },
+                {
+                  path: "notification-sms",
+                  children: [
+                    {
+                      index: true,
+                      element: <SentNotificationSMS />,
+                    },
+                    {
+                      path: "sms-notification-template",
+                      element: <SmsNotificationTemplate />,
+                    },
+                  ],
                 },
               ],
             },
             {
-              path: "teacher-subject-assign",
+              path: "layout",
               children: [
                 {
-                  index: true,
-                  element: <TeacherSubjectAssign />,
+                  path: "attendance-sheet",
+                  element: <AttendanceSheet />,
                 },
               ],
-            },
-            {
-              path: "signature-sheet",
-              element: <SignatureSheet></SignatureSheet>,
-            },
-            {
-              path: "event",
-              element: <Event></Event>,
-            },
-            {
-              path: "routine",
-              element: <ClassRoutine></ClassRoutine>,
-            },
-            {
-              path: "exam-routine",
-              element: <ExamRoutine></ExamRoutine>,
-            },
-            {
-              path: "student-attendance",
-              element: <StudentAttendance></StudentAttendance>,
-            },
-          ],
-        },
-        {
-          path: "accounts",
-          children: [
-            {
-              path: "settings",
-              children: [
-                {
-                  index: true,
-                  element: <AddFundsType />,
-                },
-                {
-                  path: "income-heads",
-                  element: <IncomeHead></IncomeHead>,
-                },
-                {
-                  path: "expense-heads",
-                  element: <ExpenseHead />,
-                },
-                {
-                  path: "fee-heads",
-                  element: <AddFeeHead />,
-                },
-              ],
-            },
-            {
-              path: "waivers",
-              element: <AddWaivers></AddWaivers>,
-            },
-            {
-              path: "income-list",
-              element: <IncomeItems />,
-            },
-
-            {
-              path: "expense-list",
-              element: <ExpenseItems />,
-            },
-            {
-              path: "fee-packages",
-              element: <AddFeePackages />,
-            },
-            {
-              path: "fee-name",
-              element: <AddFeesName />,
-            },
-            {
-              path: "fee-summary",
-              element: <FeeSummary></FeeSummary>,
-            },
-            // {
-            //   path: "previous-fee",
-            //   element: <PreviousFees />,
-            // },
-            {
-              path: "delete-fee",
-              element: <DeleteStudentFees />,
-            },
-            // {
-            //   path: "boarding-fee",
-            //   element: <BoardingFees />,
-            // },
-          ],
-        },
-        {
-          path: "boarding",
-          children: [
-            {
-              path: "settings",
-              children: [
-                {
-                  index: true,
-                  element: <AddMealsType />,
-                },
-                {
-                  path: "meal-type",
-                  element: <AddMealsType />,
-                },
-                {
-                  path: "meal-items",
-                  element: <MealItems />,
-                },
-                {
-                  path: "meal-setup",
-                  element: <MealSetup />,
-                },
-              ],
-            },
-            {
-              path: "meal-status",
-              element: <MealStatus />,
-            },
-            {
-              path: "boarding-fee",
-              element: <BoardingFees />,
-            },
-          ],
-        },
-        {
-          path: "users",
-          children: [
-            {
-              path: "student",
-              children: [
-                {
-                  index: true,
-                  element: <StudentRegistrationForm />,
-                },
-                {
-                  path: "student-list",
-                  element: <StudentList />,
-                },
-              ],
-            },
-            {
-              path: "staff",
-              children: [
-                {
-                  index: true,
-                  element: <StaffRegistrationForm />,
-                },
-                {
-                  path: "staff-list",
-                  element: <StaffList />,
-                },
-              ],
-            },
-            {
-              path: "role-permission",
-              element: <RolePermissions />,
-            },
-          ],
-        },
-        {
-          path: "communication",
-          children: [
-            {
-              path: "general-sms",
-              children: [
-                {
-                  index: true,
-                  element: <SentSms />,
-                },
-                {
-                  path: "sms-template",
-                  element: <SmsTemplate />,
-                },
-              ],
-            },
-            {
-              path: "notification-sms",
-              children: [
-                {
-                  index: true,
-                  element: <SentNotificationSMS />,
-                },
-                {
-                  path: "sms-notification-template",
-                  element: <SmsNotificationTemplate />,
-                },
-              ],
-            },
-          ],
-        },
-        {
-          path: "layout",
-          children: [
-            {
-              path: "attendance-sheet",
-              element: <AttendanceSheet />,
             },
           ],
         },
