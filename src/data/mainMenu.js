@@ -249,6 +249,7 @@ const mainMenu = [
             title: "ফিসের ধরন",
             link: "/accounts/settings/fee-heads",
           },
+          
         ],
       },
       {
@@ -290,6 +291,18 @@ const mainMenu = [
         id: "07/09",
         title: "ডিলিট - ফি",
         link: "/accounts/delete-fee",
+      },
+       {
+        id: "07/10",
+        title: "রিপোর্ট",
+        link: "/accounts/expense-items-list",
+         children: [
+          {
+            id: "07/10/01",
+            title: "ব্যয়ের ধরন",
+            link: "/accounts/expense-items-list",
+          },
+        ]
       },
         
     ],

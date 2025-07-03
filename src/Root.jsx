@@ -64,6 +64,7 @@ import BoardingFees from "./components/fees/BoardingFees";
 import FeeSummary from "./components/fees/FeeSummary";
 import RolePermissions from "./components/permission/RolePermissions";
 import CleanType from "./components/clean/CleanType";
+import ExpenseItemsList from "./components/expense/ExpenseItemsList";
 
 function Root() {
   const router = createBrowserRouter([
@@ -301,6 +302,10 @@ function Root() {
             //   path: "boarding-fee",
             //   element: <BoardingFees />,
             // },
+              {
+              path: "expense-items-list",
+              element: <ExpenseItemsList />,
+            },
           ],
         },
         {
