@@ -1,5 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import BASE_URL from '../../../../utilitis/apiConfig';
+import BASE_URL2 from '../../../../utilitis/apiConfig2';
+// import BASE_URL from '../../../../utilitis/apiConfig';
+ 
 
 const getToken = () => {
   return localStorage.getItem('token');
@@ -8,7 +10,7 @@ const getToken = () => {
 export const classListApi = createApi({
   reducerPath: 'classListApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: BASE_URL,
+    baseUrl: BASE_URL2,
     prepareHeaders: (headers) => {
       const token = getToken();
       if (token) {
@@ -23,7 +25,7 @@ export const classListApi = createApi({
    
     // GET: Fetch all Class types
     getClassListApi: builder.query({
-      query: () => '/student-class/',
+      query: () => '/gstudentclass/',
       providesTags: ['ClassListApi'],
     }),
   }),

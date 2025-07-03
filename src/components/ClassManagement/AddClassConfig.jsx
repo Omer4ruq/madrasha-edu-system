@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useGetClassListApiQuery } from "../../redux/features/api/class/classListApi";
+// import { useGetStudentClassApIQuery } from "../../redux/features/api/class/classListApi";
 import { useGetStudentSectionApiQuery } from "../../redux/features/api/student/studentSectionApi";
 import { useGetStudentShiftApiQuery } from "../../redux/features/api/student/studentShiftApi";
 import { useGetStudentClassApIQuery } from "../../redux/features/api/student/studentClassApi";
@@ -28,7 +28,7 @@ const AddClassConfig = () => {
     data: classData,
     isLoading: classLoading,
     error: classError,
-  } = useGetClassListApiQuery();
+  } = useGetStudentClassApIQuery();
   const {
     data: sectionData,
     isLoading: sectionLoading,

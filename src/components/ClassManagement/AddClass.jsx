@@ -6,6 +6,7 @@ import { useGetClassListApiQuery } from "../../redux/features/api/class/classLis
 import {
   useCreateStudentClassApIMutation,
   useGetStudentClassApIQuery,
+
 } from "../../redux/features/api/student/studentClassApi";
 import { Toaster, toast } from "react-hot-toast";
 
@@ -18,6 +19,7 @@ const AddClass = () => {
     error: listError,
   } = useGetStudentClassApIQuery();
   console.log("নির্বাচিত ক্লাসের তালিকা", classList);
+  console.log("class data", classData)
   const [createClass, { isLoading: isCreating }] = useCreateStudentClassApIMutation();
   const [selectedClasses, setSelectedClasses] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,7 +44,7 @@ const AddClass = () => {
   const handleSubmit = async () => {
     setIsModalOpen(true);
   };
-
+console.log("selected class id", selectedClasses)
   const confirmSubmit = async () => {
     try {
       const existingClassIds = classList
@@ -198,7 +200,7 @@ const AddClass = () => {
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <span className="text-[#441a05] font-medium">
-                  {classItem.student_class.name}
+                  {classItem?.name}
                 </span>
                 <label className="flex items-center cursor-pointer">
                   <input
@@ -261,7 +263,7 @@ const AddClass = () => {
                       className="p-3 border border-white/30 rounded-lg flex items-center justify-between animate-scaleIn"
                     >
                       <span className="text-[#441a05] font-medium">
-                        {classItem.student_class.name}
+                        {classItem?.name}
                       </span>
                       <button
                         onClick={() => handleToggle(id)}

@@ -65,6 +65,7 @@ import { groupListApi } from "./features/api/permissionRole/groupListApi";
 import { permissionListApi } from "./features/api/permissionRole/permissionListApi";
 import { groupsApi } from "./features/api/permissionRole/groupsApi";
 import { loginApi } from "./features/api/auth/loginApi";
+import { cleanReportTypeApi } from "./features/api/clean/cleanReportTypeApi";
 
 export const store = configureStore({
   reducer: {
@@ -134,6 +135,7 @@ export const store = configureStore({
     [studentBulkRegisterApi.reducerPath]: studentBulkRegisterApi.reducer,
     [staffBulkRegisterApi.reducerPath]: staffBulkRegisterApi.reducer,
     [loginApi.reducerPath]: loginApi.reducer,
+    [cleanReportTypeApi.reducerPath]: cleanReportTypeApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -202,6 +204,7 @@ export const store = configureStore({
       .concat(groupListApi.middleware)
       .concat(permissionListApi.middleware)
       .concat(groupsApi.middleware)
+      .concat(cleanReportTypeApi.middleware)
 });
 
 // Enable refetchOnFocus/refetchOnReconnect behaviors

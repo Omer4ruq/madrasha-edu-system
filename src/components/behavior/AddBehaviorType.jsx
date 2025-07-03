@@ -270,7 +270,7 @@ const AddBehaviorType = () => {
               <FaEdit className="text-3xl text-[#441a05]" />
               <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">আচরণের ধরন সম্পাদনা করুন</h3>
             </div>
-            <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-3xl">
+            <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <input
                 type="text"
                 id="editBehaviorName"

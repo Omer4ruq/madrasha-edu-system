@@ -9,7 +9,8 @@ import {
   useDeleteClassSubjectMutation,
 } from "../../redux/features/api/class-subjects/classSubjectsApi";
 import { useGetGSubjectsByClassQuery } from "../../redux/features/api/class-subjects/gsubjectApi";
-import { useGetClassListApiQuery } from "../../redux/features/api/class/classListApi";
+import { useGetStudentClassApIQuery } from "../../redux/features/api/student/studentClassApi";
+// import { useGetStudentClassApIQuery } from "../../redux/features/api/class/classListApi";
 
 const ClassSubject = () => {
   const [selectedClassId, setSelectedClassId] = useState(null);
@@ -22,7 +23,7 @@ const ClassSubject = () => {
     data: classes = [],
     isLoading: classesLoading,
     error: classesError,
-  } = useGetClassListApiQuery();
+  } = useGetStudentClassApIQuery();
   const {
     data: classSubjects = [],
     isLoading: subjectsLoading,

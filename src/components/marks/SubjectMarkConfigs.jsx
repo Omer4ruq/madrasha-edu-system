@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { FaSpinner, FaTrash } from 'react-icons/fa';
 import { IoAddCircle } from 'react-icons/io5';
 import { Toaster, toast } from 'react-hot-toast';
-import {
-  useGetClassListApiQuery,
-} from '../../redux/features/api/class/classListApi';
+// import {
+//   useGetStudentClassApIQuery,
+// } from '../../redux/features/api/class/classListApi';
 import {
   useGetSubjectMarkConfigsQuery,
   useCreateSubjectMarkConfigMutation,
@@ -13,9 +13,10 @@ import {
 } from '../../redux/features/api/marks/subjectMarkConfigsApi';
 import { useGetGmarkTypesQuery } from '../../redux/features/api/marks/gmarktype';
 import { useGetClassSubjectsByClassIdQuery } from '../../redux/features/api/class-subjects/classSubjectsApi';
+import { useGetStudentClassApIQuery } from '../../redux/features/api/student/studentClassApi';
 
 const SubjectMarkConfigs = () => {
-  const { data: classes = [], isLoading: classesLoading } = useGetClassListApiQuery();
+  const { data: classes = [], isLoading: classesLoading } = useGetStudentClassApIQuery();
   const [selectedClassId, setSelectedClassId] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState(null);

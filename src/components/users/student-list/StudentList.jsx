@@ -8,10 +8,11 @@ import {
   useGetStudentListQuery,
   useUpdateStudentListMutation,
 } from '../../../redux/features/api/student/studentListApi';
-import { useGetClassListApiQuery } from '../../../redux/features/api/class/classListApi';
+// import { useGetStudentClassApIQuery } from '../../../redux/features/api/class/classListApi';
 import { useGetStudentSectionApiQuery } from '../../../redux/features/api/student/studentSectionApi';
 import { useGetStudentShiftApiQuery } from '../../../redux/features/api/student/studentShiftApi';
 import { useGetAcademicYearApiQuery } from '../../../redux/features/api/academic-year/academicYearApi';
+import { useGetStudentClassApIQuery } from '../../../redux/features/api/student/studentClassApi';
 
 
 const StudentList = () => {
@@ -53,7 +54,7 @@ const StudentList = () => {
   });
 
   // Fetch dropdown data
-  const { data: classes, isLoading: isClassesLoading } = useGetClassListApiQuery();
+  const { data: classes, isLoading: isClassesLoading } = useGetStudentClassApIQuery();
   const { data: sections, isLoading: isSectionsLoading } = useGetStudentSectionApiQuery();
   const { data: shifts, isLoading: isShiftsLoading } = useGetStudentShiftApiQuery();
   const { data: academicYears, isLoading: isAcademicYearsLoading } = useGetAcademicYearApiQuery();

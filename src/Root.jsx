@@ -63,6 +63,7 @@ import ExamRoutine from "./components/routine/exam-routine/ExamRoutine";
 import BoardingFees from "./components/fees/BoardingFees";
 import FeeSummary from "./components/fees/FeeSummary";
 import RolePermissions from "./components/permission/RolePermissions";
+import CleanType from "./components/clean/CleanType";
 import ExpenseItemsList from "./components/expense/ExpenseItemsList";
 import IncomeItemsList from "./components/income/IncomeItemsList";
 
@@ -109,8 +110,8 @@ function Root() {
                   element: <PerformanceType />,
                 },
                 {
-                  path: "performance-type",
-                  element: <PerformanceType />,
+                  path: "clean-type",
+                  element: <CleanType />,
                 },
               ],
             },

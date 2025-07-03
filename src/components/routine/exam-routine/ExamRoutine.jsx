@@ -5,7 +5,7 @@ import { IoAdd } from "react-icons/io5";
 import { Toaster, toast } from "react-hot-toast";
 import { useGetExamApiQuery } from "../../../redux/features/api/exam/examApi";
 import { useGetAcademicYearApiQuery } from "../../../redux/features/api/academic-year/academicYearApi";
-import { useGetClassListApiQuery } from "../../../redux/features/api/class/classListApi";
+// import { useGetStudentClassApIQuery } from "../../../redux/features/api/class/classListApi";
 import {
   useCreateExamSchedulesMutation,
   useDeleteExamSchedulesMutation,
@@ -14,6 +14,7 @@ import {
 } from "../../../redux/features/api/routines/examRoutineApi";
 import { useGetClassSubjectsByClassIdQuery } from "../../../redux/features/api/class-subjects/classSubjectsApi";
 import selectStyles from "../../../utilitis/selectStyles";
+import { useGetStudentClassApIQuery } from "../../../redux/features/api/student/studentClassApi";
 
 // Custom CSS for animations and styling
 const customStyles = `
@@ -68,7 +69,7 @@ const ExamRoutine = () => {
     data: classes = [],
     isLoading: isClassLoading,
     error: classError,
-  } = useGetClassListApiQuery();
+  } = useGetStudentClassApIQuery();
   const {
     data: subjects = [],
     isLoading: isSubjectsLoading,

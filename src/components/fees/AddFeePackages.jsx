@@ -10,8 +10,9 @@ import {
   useDeleteFeePackageMutation
 } from "../../redux/features/api/fee-packages/feePackagesApi";
 import { useGetFeeHeadsQuery } from "../../redux/features/api/fee-heads/feeHeadsApi";
-import { useGetClassListApiQuery } from "../../redux/features/api/class/classListApi";
+
 import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
+import { useGetStudentClassApIQuery } from "../../redux/features/api/student/studentClassApi";
 
 const AddFeePackages = () => {
   const [formData, setFormData] = useState({
@@ -27,12 +28,13 @@ const AddFeePackages = () => {
 
   const { data: feePackages = [], isLoading: isPackagesLoading, error: packagesError } = useGetFeePackagesQuery();
   const { data: feeHeads, isLoading: isHeadsLoading } = useGetFeeHeadsQuery();
-  const { data: studentClasses = [], isLoading: isClassesLoading } = useGetClassListApiQuery();
+  // const { data: studentClasses = [], isLoading: isClassesLoading } = useGetStudentClassApIQuery();
+  const { data: studentClasses = [], isLoading: isClassesLoading } = useGetStudentClassApIQuery();
   const { data: academicYears = [], isLoading: isYearsLoading } = useGetAcademicYearApiQuery();
   const [createFeePackage, { isLoading: isCreating, error: createError }] = useCreateFeePackageMutation();
   const [updateFeePackage, { isLoading: isUpdating, error: updateError }] = useUpdateFeePackageMutation();
   const [deleteFeePackage, { isLoading: isDeleting, error: deleteError }] = useDeleteFeePackageMutation();
-
+console.log(studentClasses)
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -248,7 +250,7 @@ const AddFeePackages = () => {
               aria-describedby={errors.student_class ? "student_class-error" : undefined}
             >
               <option value="" disabled>শ্রেণি নির্বাচন করুন</option>
-              {studentClasses.map((cls) => (
+              {studentClasses?.map((cls) => (
                 <option key={cls.id} value={cls.id}>{cls.student_class.name}</option>
               ))}
             </select>
@@ -363,7 +365,7 @@ const AddFeePackages = () => {
                       {feeHeads?.find((head) => head.id === item.fees_head_id)?.name || "অজানা"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {studentClasses.find((cls) => cls.id === item.student_class)?.student_class?.name || "অজানা"}
+                      {studentClasses?.find((cls) => cls.id === item.student_class)?.student_class?.name || "অজানা"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{item.amount}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">

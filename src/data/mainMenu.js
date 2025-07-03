@@ -43,6 +43,11 @@ const mainMenu = [
             title: "শিক্ষকের পারফরমেন্সের ধরন",
             link: "/darul-iqam/settings/performance-type",
           },
+          {
+            id: "04/01/04",
+            title: "পরিছন্নতার ধরন",
+            link: "/darul-iqam/settings/clean-type",
+          },
         ],
       },
       {
@@ -52,7 +57,7 @@ const mainMenu = [
       },
       {
         id: "04/03",
-        title: "ক্লিন রিপোর্ট",
+        title: "পরিছন্নতার রিপোর্ট",
         link: "/darul-iqam/clean-report",
       },
       {
@@ -354,48 +359,6 @@ const mainMenu = [
       },
     ],
   },
-  // {
-  //   id: "09",
-  //   title: "কমিউনিকেশন",
-  //   icon: "HiOutlineCalculator",
-  //   link: "/communication",
-  //   children: [
-  //     {
-  //       id: "09/01",
-  //       title: "জেনারেল এসএমএস",
-  //       link: "/communication/general-sms",
-  //       children: [
-  //         {
-  //           id: "09/01/01",
-  //           title: "এসএমএস পাঠান",
-  //           link: "/communication/general-sms",
-  //         },
-  //         {
-  //           id: "09/01/02",
-  //           title: "এসএমএস টেমপ্লেট",
-  //           link: "/communication/general-sms/sms-template",
-  //         },
-  //       ],
-  //     },
-  //     {
-  //       id: "09/02",
-  //       title: "বিজ্ঞপ্তি এসএমএস",
-  //       link: "/communication/notification-sms",
-  //       children: [
-  //         {
-  //           id: "09/02/01",
-  //           title: "বিজ্ঞপ্তি এসএমএস পাঠান",
-  //           link: "/communication/notification-sms",
-  //         },
-  //         {
-  //           id: "09/02/02",
-  //           title: "এসএমএস বিজ্ঞপ্তি টেমপ্লেট",
-  //           link: "/communication/notification-sms/sms-notification-template",
-  //         },
-  //       ],
-  //     },
-  //   ],
-  // },
   {
     id: "09",
     title: "বোর্ডিং",

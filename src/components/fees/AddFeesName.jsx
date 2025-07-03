@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import toast, { Toaster } from 'react-hot-toast';
 import { FaSpinner, FaCheckCircle } from 'react-icons/fa';
 import { IoAddCircle } from 'react-icons/io5';
-import { useGetClassListApiQuery } from '../../redux/features/api/class/classListApi';
+// import { useGetStudentClassApIQuery } from '../../redux/features/api/class/classListApi';
 import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
 import { useGetFeePackagesQuery } from '../../redux/features/api/fee-packages/feePackagesApi';
 
@@ -23,7 +23,7 @@ const AddFeesName = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // RTK Query hooks
-  const { data: classes, isLoading: classesLoading } = useGetClassListApiQuery();
+  const { data: classes, isLoading: classesLoading } = useGetStudentClassApIQuery();
   const { data: academicYears, isLoading: yearsLoading } = useGetAcademicYearApiQuery();
   const { data: feePackages, isLoading: packagesLoading } = useGetFeePackagesQuery();
   const { data: feeSubheads, isLoading: subheadsLoading } = useGetGfeeSubheadsQuery();
