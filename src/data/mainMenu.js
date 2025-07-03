@@ -296,7 +296,8 @@ const mainMenu = [
             id: "07/10/01",
             title: "ব্যয়ের ধরন",
             link: "/accounts/expense-items-list",
-          },,
+          },
+        ]
       },
         
     ],

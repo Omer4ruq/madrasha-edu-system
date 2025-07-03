@@ -62,7 +62,7 @@ export const groupsApi = createApi({
     updateGroupPermissions: builder.mutation({
       query: ({ groupId, permissions }) => ({
         url: `/groups/${groupId}/permissions/`,
-        method: 'PUT',
+        method: 'POST',
         body: permissions,
       }),
       invalidatesTags: ['GroupPermissions'],

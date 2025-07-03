@@ -199,6 +199,9 @@ export const store = configureStore({
       .concat(staffBulkRegisterApi.middleware)
       .concat(studentBulkRegisterApi.middleware)
       .concat(loginApi.middleware)
+      .concat(groupListApi.middleware)
+      .concat(permissionListApi.middleware)
+      .concat(groupsApi.middleware)
 });
 
 // Enable refetchOnFocus/refetchOnReconnect behaviors

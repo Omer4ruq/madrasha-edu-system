@@ -29,6 +29,7 @@ const SubjectMarks = () => {
     isLoading: configsLoading, 
     isFetching: configsFetching 
   } = useGetSubjectMarkConfigsByClassQuery(classId, { skip: !classId });
+  console.log("subjectMarkConfigs",subjectMarkConfigs)
   const { 
     data: subjectMarkConfigsBySubject, 
     isLoading: subjectConfigsLoading 
