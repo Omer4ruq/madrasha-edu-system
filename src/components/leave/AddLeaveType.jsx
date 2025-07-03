@@ -180,13 +180,13 @@ console.log("leave", leaveTypes)
             {editLeaveId ? (
               <FaEdit className="text-3xl text-[#441a05]" />
             ) : (
-              <IoAddCircle className="text-4xl text-[#441a05]" />
+              <IoAddCircle className="text-3xl text-[#441a05]" />
             )}
             <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
               {editLeaveId ? "ছুটির ধরন সম্পাদনা করুন" : "নতুন ছুটির ধরন যোগ করুন"}
             </h3>
           </div>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <input
               type="text"
               id="leaveName"
@@ -227,7 +227,7 @@ console.log("leave", leaveTypes)
                   setLeaveName("");
                 }}
                 title="সম্পাদনা বাতিল করুন / Cancel editing"
-                className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
+                className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-white hover:text-white transition-all duration-300 animate-scaleIn"
               >
                 বাতিল
               </button>
