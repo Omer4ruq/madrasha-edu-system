@@ -64,6 +64,7 @@ import BoardingFees from "./components/fees/BoardingFees";
 import FeeSummary from "./components/fees/FeeSummary";
 import RolePermissions from "./components/permission/RolePermissions";
 import ExpenseItemsList from "./components/expense/ExpenseItemsList";
+import IncomeItemsList from "./components/income/IncomeItemsList";
 
 function Root() {
   const router = createBrowserRouter([
@@ -304,6 +305,10 @@ function Root() {
               {
               path: "expense-items-list",
               element: <ExpenseItemsList />,
+            },
+               {
+              path: "income-items-list",
+              element: <IncomeItemsList />,
             },
           ],
         },

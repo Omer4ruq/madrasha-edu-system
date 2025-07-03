@@ -297,6 +297,11 @@ const mainMenu = [
             title: "ব্যয়ের ধরন",
             link: "/accounts/expense-items-list",
           },
+             {
+            id: "07/10/02",
+            title: "আয়ের ধরন",
+            link: "/accounts/income-items-list",
+          },
         ]
       },
         
@@ -344,7 +349,7 @@ const mainMenu = [
       },
        {
         id: "08/03",
-        title: "Role Permission",
+        title: "ভূমিকা-ভিত্তিক অনুমতি",
         link: "/users/role-permission",
       },
     ],

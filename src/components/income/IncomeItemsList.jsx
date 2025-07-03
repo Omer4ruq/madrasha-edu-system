@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import { FaEdit, FaSpinner, FaTrash } from "react-icons/fa";
 import toast, { Toaster } from "react-hot-toast";
 import {
-  useGetExpenseItemsQuery,
-  useGetAllExpenseItemsQuery,
-  useDeleteExpenseItemMutation,
-} from "../../redux/features/api/expense-items/expenseItemsApi";
+  useGetIncomeItemsQuery,
+  useGetAllIncomeItemsQuery,
+  useDeleteIncomeItemMutation,
+} from "../../redux/features/api/income-items/incomeItemsApi";
 import { useGetFundsQuery } from "../../redux/features/api/funds/fundsApi";
 import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
-import { useGetExpenseHeadsQuery } from "../../redux/features/api/expense-heads/expenseHeadsApi";
+import { useGetIncomeHeadsQuery } from "../../redux/features/api/income-heads/incomeHeadsApi";
 import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
 
 // Register Noto Sans Bengali font
@@ -116,13 +116,13 @@ const styles = StyleSheet.create({
 });
 
 // PDF Document Component
-const PDFDocument = ({ expenseItems, expenseTypes, fundTypes, academicYears, startDate, endDate }) => (
+const PDFDocument = ({ incomeItems, incomeTypes, fundTypes, academicYears, startDate, endDate }) => (
   <Document>
     <Page size="A4" orientation="landscape" style={styles.page}>
       <View style={styles.header}>
         <Text style={styles.schoolName}>আদর্শ বিদ্যালয়</Text>
         <Text style={styles.headerText}>ঢাকা, বাংলাদেশ</Text>
-        <Text style={styles.title}>ব্যয় আইটেম প্রতিবেদন</Text>
+        <Text style={styles.title}>আয় আইটেম প্রতিবেদন</Text>
         <View style={styles.metaContainer}>
           <Text style={styles.metaText}>
             তারিখ পরিসীমা: {startDate ? new Date(startDate).toLocaleDateString('bn-BD') : 'শুরু'} থেকে {endDate ? new Date(endDate).toLocaleDateString('bn-BD') : 'শেষ'}
@@ -135,7 +135,7 @@ const PDFDocument = ({ expenseItems, expenseTypes, fundTypes, academicYears, sta
       </View>
       <View style={styles.table}>
         <View style={styles.tableRow}>
-          <Text style={[styles.tableHeader, { flex: 1 }]}>ব্যয়ের ধরন</Text>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>আয়ের ধরন</Text>
           <Text style={[styles.tableHeader, { flex: 1 }]}>নাম</Text>
           <Text style={[styles.tableHeader, { flex: 1 }]}>ফান্ড</Text>
           <Text style={[styles.tableHeader, { flex: 1 }]}>লেনদেন নম্বর</Text>
@@ -144,10 +144,10 @@ const PDFDocument = ({ expenseItems, expenseTypes, fundTypes, academicYears, sta
           <Text style={[styles.tableHeader, { flex: 1 }]}>পরিমাণ</Text>
           <Text style={[styles.tableHeader, { flex: 1 }]}>শিক্ষাবর্ষ</Text>
         </View>
-        {expenseItems.map((item, index) => (
+        {incomeItems.map((item, index) => (
           <View key={item.id} style={[styles.tableRow, index % 2 === 1 && styles.tableRowAlternate]}>
             <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
-              {expenseTypes.find((type) => type.id === item.expensetype_id)?.expensetype || 'অজানা'}
+              {incomeTypes.find((type) => type.id === item.incometype_id)?.incometype || 'অজানা'}
             </Text>
             <Text style={[styles.tableCell, { flex: 1 }]}>{item.name || 'N/A'}</Text>
             <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
@@ -155,7 +155,7 @@ const PDFDocument = ({ expenseItems, expenseTypes, fundTypes, academicYears, sta
             </Text>
             <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{item.transaction_number || '-'}</Text>
             <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{item.employee_id || '-'}</Text>
-            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{item.expense_date || 'N/A'}</Text>
+            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{item.income_date || 'N/A'}</Text>
             <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{item.amount || '0'}</Text>
             <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
               {academicYears.find((year) => year.id === item.academic_year)?.name || 'অজানা'}
@@ -171,33 +171,33 @@ const PDFDocument = ({ expenseItems, expenseTypes, fundTypes, academicYears, sta
   </Document>
 );
 
-const ExpenseItemsList = ({ onEditClick }) => {
+const IncomeItemsList = ({ onEditClick }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState(null);
-  const [dateFilter, setDateFilter] = useState({ start_date: "", end_date: "", fund_id: "", expensetype_id: "" });
+  const [dateFilter, setDateFilter] = useState({ start_date: "", end_date: "", fund_id: "", incometype_id: "" });
   const itemsPerPage = 3;
 
-  const { data: expenseTypes = [], isLoading: isTypesLoading } = useGetExpenseHeadsQuery();
+  const { data: incomeTypes = [], isLoading: isTypesLoading } = useGetIncomeHeadsQuery();
   const { data: fundTypes = [], isLoading: isFundLoading, error: fundError } = useGetFundsQuery();
   const { data: academicYears = [], isLoading: isYearsLoading } = useGetAcademicYearApiQuery();
   const {
-    data: expenseData,
+    data: incomeData,
     isLoading: isItemsLoading,
     error: itemsError,
-  } = useGetExpenseItemsQuery({ page: currentPage, page_size: itemsPerPage });
+  } = useGetIncomeItemsQuery({ page: currentPage, page_size: itemsPerPage });
   const {
-    data: allExpenseData,
+    data: allIncomeData,
     isLoading: isAllItemsLoading,
     error: allItemsError,
-  } = useGetAllExpenseItemsQuery();
-  const [deleteExpenseItem, { isLoading: isDeleting, error: deleteError }] = useDeleteExpenseItemMutation();
+  } = useGetAllIncomeItemsQuery();
+  const [deleteIncomeItem, { isLoading: isDeleting, error: deleteError }] = useDeleteIncomeItemMutation();
 
-  const expenseItems = expenseData?.results || [];
-  const totalItems = expenseData?.count || 0;
+  const incomeItems = incomeData?.results || [];
+  const totalItems = incomeData?.count || 0;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const hasNext = !!expenseData?.next;
-  const hasPrevious = !!expenseData?.previous;
+  const hasNext = !!incomeData?.next;
+  const hasPrevious = !!incomeData?.previous;
 
   const handleDateFilterChange = (e) => {
     const { name, value } = e.target;
@@ -214,14 +214,14 @@ const ExpenseItemsList = ({ onEditClick }) => {
 
   const confirmDelete = async () => {
     try {
-      await deleteExpenseItem(deleteItemId).unwrap();
-      toast.success("ব্যয় আইটেম সফলভাবে মুছে ফেলা হয়েছে!");
+      await deleteIncomeItem(deleteItemId).unwrap();
+      toast.success("আয় আইটেম সফলভাবে মুছে ফেলা হয়েছে!");
       setIsModalOpen(false);
       setDeleteItemId(null);
       setCurrentPage(1);
     } catch (err) {
       console.error("Delete error:", err);
-      toast.error(`ব্যয় আইটেম মুছতে ব্যর্থ: ${err.status || "অজানা ত্রুটি"}`);
+      toast.error(`আয় আইটেম মুছতে ব্যর্থ: ${err.status || "অজানা ত্রুটি"}`);
       setIsModalOpen(false);
       setDeleteItemId(null);
     }
@@ -243,25 +243,25 @@ const ExpenseItemsList = ({ onEditClick }) => {
     }
 
     // Apply filters client-side
-    const filteredItems = allExpenseData?.results?.filter((item) => {
-      const itemDate = new Date(item.expense_date);
+    const filteredItems = allIncomeData?.results?.filter((item) => {
+      const itemDate = new Date(item.income_date);
       const startDate = new Date(dateFilter.start_date);
       const endDate = new Date(dateFilter.end_date);
       const withinDateRange = itemDate >= startDate && itemDate <= endDate;
       const matchesFund = dateFilter.fund_id ? item.fund_id === parseInt(dateFilter.fund_id) : true;
-      const matchesExpenseType = dateFilter.expensetype_id ? item.expensetype_id === parseInt(dateFilter.expensetype_id) : true;
-      return withinDateRange && matchesFund && matchesExpenseType;
+      const matchesIncomeType = dateFilter.incometype_id ? item.incometype_id === parseInt(dateFilter.incometype_id) : true;
+      return withinDateRange && matchesFund && matchesIncomeType;
     }) || [];
 
     if (!filteredItems.length) {
-      toast.error('নির্বাচিত ফিল্টারে কোনো ব্যয় আইটেম পাওয়া যায়নি।');
+      toast.error('নির্বাচিত ফিল্টারে কোনো আয় আইটেম পাওয়া যায়নি।');
       return;
     }
 
     try {
       const doc = <PDFDocument 
-        expenseItems={filteredItems}
-        expenseTypes={expenseTypes}
+        incomeItems={filteredItems}
+        incomeTypes={incomeTypes}
         fundTypes={fundTypes}
         academicYears={academicYears}
         startDate={dateFilter.start_date}
@@ -271,7 +271,7 @@ const ExpenseItemsList = ({ onEditClick }) => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `ব্যয়_প্রতিবেদন_${dateFilter.start_date}_থেকে_${dateFilter.end_date}_${new Date().toLocaleDateString('bn-BD')}.pdf`;
+      link.download = `আয়_প্রতিবেদন_${dateFilter.start_date}_থেকে_${dateFilter.end_date}_${new Date().toLocaleDateString('bn-BD')}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
       toast.success('প্রতিবেদন সফলভাবে ডাউনলোড হয়েছে!');
@@ -391,10 +391,10 @@ const ExpenseItemsList = ({ onEditClick }) => {
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
           <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
             <h3 className="text-lg font-semibold text-[#441a05] mb-4">
-              ব্যয় আইটেম মুছে ফেলা নিশ্চিত করুন
+              আয় আইটেম মুছে ফেলা নিশ্চিত করুন
             </h3>
             <p className="text-[#441a05] mb-6">
-              আপনি কি নিশ্চিত যে এই ব্যয় আইটেমটি মুছে ফেলতে চান?
+              আপনি কি নিশ্চিত যে এই আয় আইটেমটি মুছে ফেলতে চান?
             </p>
             <div className="flex justify-end space-x-4">
               <button
@@ -426,20 +426,20 @@ const ExpenseItemsList = ({ onEditClick }) => {
         </div>
       )}
 
-      {/* ব্যয় আইটেম তালিকা */}
+      {/* আয় আইটেম তালিকা */}
       <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn p-6">
         <div className="flex items-center justify-between p-4 border-b border-white/20">
-          <h3 className="text-lg font-semibold text-[#441a05]">ব্যয় আইটেম তালিকা</h3>
+          <h3 className="text-lg font-semibold text-[#441a05]">আয় আইটেম তালিকা</h3>
           <div className="flex items-center space-x-4">
             <select
-              name="expensetype_id"
-              value={dateFilter.expensetype_id}
+              name="incometype_id"
+              value={dateFilter.incometype_id}
               onChange={handleDateFilterChange}
               className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
             >
-              <option value="">সকল ব্যয়ের ধরন</option>
-              {expenseTypes.map((type) => (
-                <option key={type.id} value={type.id}>{type.expensetype}</option>
+              <option value="">সকল আয়ের ধরন</option>
+              {incomeTypes.map((type) => (
+                <option key={type.id} value={type.id}>{type.incometype}</option>
               ))}
             </select>
             <select
@@ -469,7 +469,7 @@ const ExpenseItemsList = ({ onEditClick }) => {
               className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
               placeholder="শেষ তারিখ"
             />
-            <button onClick={generatePDFReport} className="report-button" title="Download Expense Report">
+            <button onClick={generatePDFReport} className="report-button" title="Download Income Report">
               রিপোর্ট
             </button>
           </div>
@@ -483,8 +483,8 @@ const ExpenseItemsList = ({ onEditClick }) => {
           <p className="p-4 text-red-400 bg-red-500/10 rounded-lg">
             ত্রুটি: {itemsError?.status || fundError?.status || "অজানা"} - {JSON.stringify(itemsError?.data || fundError?.data || {})}
           </p>
-        ) : expenseItems.length === 0 ? (
-          <p className="p-4 text-[#441a05]/70 text-center">কোনো ব্যয় আইটেম পাওয়া যায়নি।</p>
+        ) : incomeItems.length === 0 ? (
+          <p className="p-4 text-[#441a05]/70 text-center">কোনো আয় আইটেম পাওয়া যায়নি।</p>
         ) : (
           <>
             <div className="table-container">
@@ -492,7 +492,7 @@ const ExpenseItemsList = ({ onEditClick }) => {
                 <thead className="bg-white/5 sticky top-0 z-10">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ব্যয়ের ধরন
+                      আয়ের ধরন
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       নাম
@@ -521,14 +521,14 @@ const ExpenseItemsList = ({ onEditClick }) => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/20">
-                  {expenseItems.map((item, index) => (
+                  {incomeItems.map((item, index) => (
                     <tr
                       key={item.id}
                       className="bg-white/5 animate-fadeIn"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                        {expenseTypes.find((type) => type.id === item.expensetype_id)?.expensetype || "অজানা"}
+                        {incomeTypes.find((type) => type.id === item.incometype_id)?.incometype || "অজানা"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
                         {item.name}
@@ -543,7 +543,7 @@ const ExpenseItemsList = ({ onEditClick }) => {
                         {item.employee_id || "-"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                        {item.expense_date}
+                        {item.income_date}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
                         {item.amount}
@@ -627,4 +627,4 @@ const ExpenseItemsList = ({ onEditClick }) => {
   );
 };
 
-export default ExpenseItemsList;
+export default IncomeItemsList;
