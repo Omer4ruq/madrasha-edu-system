@@ -6,7 +6,7 @@ export default function SchoolName() {
         <FaSchool className="w-4 sm:w-7 h-4 sm:h-7 text-[#441a05]  " />
       </div>
       <h3 className="text-[#441a05] font-bold text-base md:text-lg hidden sm:block">
-        Urban International International School and College
+        আল জামিয়াতুল ইসলামিয়া মাইজদী, নোয়াখালী বাংলাদেশ
       </h3>
     </div>
   );

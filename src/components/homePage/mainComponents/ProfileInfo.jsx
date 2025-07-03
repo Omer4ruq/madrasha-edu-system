@@ -1,53 +1,77 @@
-import { FaUserEdit } from "react-icons/fa";
+import React from 'react';
+import { FaUserEdit } from 'react-icons/fa';
 import profileImg from "/images/profile.jpg";
-import { useTranslation } from "react-i18next";
+
+
 
 export default function ProfileInfo() {
-  const {t} = useTranslation();
   const profile = [
     {
-      title: `${t('module.dashboard.reg_no')}`,
-      data: "1234667",
+      title: 'নিবন্ধন নম্বর',
+      data: 'মাদ্রাসা-২০২৩-০০১',
     },
     {
-      title: `${t('module.dashboard.user_type')}`,
-      data: "Admin",
+      title: 'ব্যবহারকারীর প্রকার',
+      data: 'মুহতামিম',
     },
     {
-      title: `${t('module.dashboard.designation')}`,
-      data: "Principal",
+      title: 'পদবী',
+      data: 'প্রধান শিক্ষক',
     },
     {
-      title: `${t('module.dashboard.mobile_no')}`,
-      data: "01234567891",
+      title: 'মোবাইল নম্বর',
+      data: '০১৭০৭-২৯২৮০৪',
     },
   ];
 
   return (
-    <div className="bg-white col-span-1 order-1 rounded-md px-2 sm:px-4 py-3 sm:py-6 space-y-2 relative">
-      {/* user image */}
+    <div className="bg-black/10 backdrop-blur-sm border border-white/20 col-span-1 order-1 rounded-2xl px-4 sm:px-6 py-6 sm:py-8 space-y-4 relative shadow-xl animate-fadeIn">
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes scaleIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 0.6s ease-out forwards;
+          }
+          .animate-scaleIn {
+            animation: scaleIn 0.4s ease-out forwards;
+          }
+          .btn-glow:hover {
+            box-shadow: 0 0 15px rgba(219, 158, 48, 0.3);
+          }
+        `}
+      </style>
+
+      {/* User image */}
       <div className="flex justify-center">
         <img
           src={profileImg}
-          alt=""
-          className="w-20 h-20 rounded-full border border-#DB9E30"
+          alt="প্রোফাইল ছবি"
+          className="w-20 h-20 rounded-full border-2 border-[#DB9E30] animate-scaleIn"
+          title="প্রোফাইল ছবি / Profile Image"
         />
       </div>
 
-      {/* user name */}
-      <h4 className="bg-#DB9E30 text-white text-center rounded p-1">
-        Salauddin Ahmed
+      {/* User name */}
+      <h4 className="text-[#441a05] bg-[#DB9E30] text-center rounded-lg p-2 font-bold text-lg animate-scaleIn">
+        আব্দুল্লাহ আল মামুন
       </h4>
 
-      {/* user data table */}
-      <table className="rounded bg-bgBlue w-full font-medium text-sm">
+      {/* User data table */}
+      <table className="min-w-full divide-y divide-white/20 bg-white/5 rounded-lg">
         <tbody>
           {profile.map((row, index) => (
-            <tr key={index}>
-              <td className="text-end px-2 py-[3px] border border-white text-#DB9E30 ">
-                {row.title}
+            <tr key={index} className="animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
+              <td className="text-end px-4 py-2 border border-white/30 text-[#DB9E30] font-medium text-sm">
+                {row.title} :
               </td>
-              <td className="text-start px-2 py-[3px] border border-white text-textGray">
+              <td className="text-start px-4 py-2 border border-white/30 text-[#441a05] font-medium text-sm">
                 {row.data}
               </td>
             </tr>
@@ -55,8 +79,13 @@ export default function ProfileInfo() {
         </tbody>
       </table>
 
-      {/* edit icon */}
-      <FaUserEdit className="w-8 h-8 p-1 text-[#c4c4c4] absolute top-1 right-3" />
+      {/* Edit icon */}
+      <button
+        title="প্রোফাইল সম্পাদনা করুন / Edit Profile"
+        className="absolute top-3 right-3 text-[#9d9087] hover:text-[#DB9E30] transition-colors duration-300 btn-glow"
+      >
+        <FaUserEdit className="w-6 h-6" />
+      </button>
     </div>
   );
 }

@@ -10,13 +10,13 @@ export default function SidebarHeader({searchTerm, setSearchTerm}) {
 
   return (
     <div className="text-center">
-      <h2 className="text-2xl font-semibold text-white p-4 pt-6">Dashboard</h2>
+      <h2 className="text-2xl font-semibold text-white px-4 pt-6">ড্যাশবোর্ড</h2>
       {/* show cover image or searchbar */}
-      {showSearchBar ? (
+      {/* {showSearchBar ? (
         <div className="flex gap-2 items-center justify-center bg-[#00000065] px-3 py-[9px] mx-6 rounded-md border border-transparent has-[:focus]:border-tertiary has-[:focus]:shadow-md duration-200">
           <input
             type="text"
-            placeholder="Search term"
+            placeholder="মেনু অনুসন্ধান"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="flex-1 bg-transparent text-white text-sm outline-none focus:text-sm"
@@ -40,7 +40,7 @@ export default function SidebarHeader({searchTerm, setSearchTerm}) {
           </div>
           <img src={sidebarCover} alt="" className="opacity-90" />
         </div>
-      )}
+      )} */}
     </div>
   );
 }

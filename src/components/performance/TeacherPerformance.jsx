@@ -7,6 +7,8 @@ import toast, { Toaster } from 'react-hot-toast';
 import { useGetRoleStaffProfileApiQuery } from '../../redux/features/api/roleStaffProfile/roleStaffProfileApi';
 import { useCreateTeacherPerformanceApiMutation, useGetTeacherPerformanceApiQuery, useUpdateTeacherPerformanceApiMutation } from '../../redux/features/api/performance/teacherPerformanceApi';
 import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
+import { IoAddCircle } from 'react-icons/io5';
+import selectStyles from '../../utilitis/selectStyles';
 
 const TeacherPerformance = () => {
   const [selectedTeacher, setSelectedTeacher] = useState(null);
@@ -123,42 +125,7 @@ const TeacherPerformance = () => {
     }
   };
 
-  const customStyles = {
-    control: (provided) => ({
-      ...provided,
-      background: "transparent",
-      borderColor: "#9d9087",
-      color: "#fff",
-      padding: "1px",
-      borderRadius: "0.5rem",
-      "&:hover": { borderColor: "#DB9E30" },
-    }),
-    singleValue: (provided) => ({ ...provided, color: "#441a05" }),
-    multiValue: (provided) => ({
-      ...provided,
-      background: "#DB9E30",
-      color: "#fff",
-    }),
-    multiValueLabel: (provided) => ({ ...provided, color: "#441a05" }),
-    multiValueRemove: (provided) => ({
-      ...provided,
-      color: "#441a05",
-      "&:hover": { background: "#441a05", color: "#DB9E30" },
-    }),
-    menu: (provided) => ({
-      ...provided,
-      background: "#fff",
-      color: "#441a05",
-      zIndex: 9999,
-    }),
-    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-    option: (provided, state) => ({
-      ...provided,
-      background: state.isSelected ? "#DB9E30" : "#fff",
-      color: "#441a05",
-      "&:hover": { background: "#DB9E30", color: "#441a05" },
-    }),
-  };
+ 
 
   // Render performance table
   const renderPerformanceTable = () => {
@@ -288,7 +255,10 @@ const TeacherPerformance = () => {
       </style>
 
       <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-        <h3 className="text-2xl font-bold text-[#441a05] tracking-tight mb-6">শিক্ষক কর্মক্ষমতা মূল্যায়ন</h3>
+         <div className="flex items-center space-x-2 mb-6">
+          <IoAddCircle className="text-4xl text-[#441a05]" />
+          <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">শিক্ষক কর্মক্ষমতা মূল্যায়ন</h3>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <label className="flex items-center space-x-4 animate-fadeIn">
             <span className="text-[#441a05] font-medium text-nowrap">মাস নির্বাচন করুন:</span>
@@ -300,7 +270,7 @@ const TeacherPerformance = () => {
                 placeholder="মাস নির্বাচন করুন"
                 isLoading={false}
                 isDisabled={isCreating || isUpdating}
-                styles={customStyles}
+                styles={selectStyles}
                 className="animate-scaleIn"
                 menuPortalTarget={document.body}
                 menuPosition="fixed"
@@ -319,7 +289,7 @@ const TeacherPerformance = () => {
                 placeholder="শিক্ষাবর্ষ নির্বাচন করুন"
                 isLoading={isAcademicYearsLoading}
                 isDisabled={isAcademicYearsLoading || isCreating || isUpdating}
-                styles={customStyles}
+                styles={selectStyles}
                 className="animate-scaleIn"
                 menuPortalTarget={document.body}
                 menuPosition="fixed"
@@ -338,7 +308,7 @@ const TeacherPerformance = () => {
                 placeholder="শিক্ষকের নাম লিখুন"
                 isLoading={isTeachersLoading}
                 isDisabled={isTeachersLoading || isCreating || isUpdating}
-                styles={customStyles}
+                styles={selectStyles}
                 className="animate-scaleIn"
                 menuPortalTarget={document.body}
                 menuPosition="fixed"

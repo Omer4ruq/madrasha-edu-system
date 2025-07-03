@@ -1,76 +1,91 @@
-import { useTranslation } from "react-i18next";
+import React from 'react';
 
 export default function PayStatTable() {
-  const {t} = useTranslation();
   const payInfo = [
     {
-      name: "Nursery",
-      section: "A",
-      totalStudents: 45,
-      paid: 32,
-      unpaid: 13,
+      name: 'নার্সারি',
+      section: 'ক',
+      totalStudents: '৪৫',
+      paid: '৩২',
+      unpaid: '১৩',
     },
     {
-      name: "Nursery",
-      section: "B",
-      totalStudents: 48,
-      paid: 38,
-      unpaid: 13,
+      name: 'নার্সারি',
+      section: 'খ',
+      totalStudents: '৪৮',
+      paid: '৩৮',
+      unpaid: '১০',
     },
     {
-      name: "Nursery",
-      section: "A",
-      totalStudents: 45,
-      paid: 32,
-      unpaid: 13,
+      name: '১ম শ্রেণি',
+      section: 'ক',
+      totalStudents: '৪০',
+      paid: '৩৫',
+      unpaid: '৫',
     },
     {
-      name: "Nursery",
-      section: "B",
-      totalStudents: 48,
-      paid: 38,
-      unpaid: 13,
+      name: '১ম শ্রেণি',
+      section: 'খ',
+      totalStudents: '৪২',
+      paid: '৩০',
+      unpaid: '১২',
     },
     {
-      name: "Nursery",
-      section: "A",
-      totalStudents: 45,
-      paid: 32,
-      unpaid: 13,
+      name: '২য় শ্রেণি',
+      section: 'ক',
+      totalStudents: '৪৫',
+      paid: '৪০',
+      unpaid: '৫',
     },
     {
-      name: "Nursery",
-      section: "B",
-      totalStudents: 48,
-      paid: 38,
-      unpaid: 13,
+      name: '২য় শ্রেণি',
+      section: 'খ',
+      totalStudents: '৪৮',
+      paid: '৪৫',
+      unpaid: '৩',
     },
   ];
+
   return (
-    <div className="mt-4">
-      <table className="w-full text-center">
-        <thead>
-          <tr className="bg-blue text-white font-medium">
-            <td className="w-[20%] py-2">{t('module.dashboard.class')}</td>
-            <td className="w-[20%] py-2">
-              
-            </td>
-            <td className="w-[20%] py-2">{t('module.dashboard.total_student')}</td>
-            <td className="w-[20%] py-2">{t('module.dashboard.paid')}</td>
-            <td className="w-[20%] py-2">{t('module.dashboard.unpaid')}</td>
-          </tr>
-        </thead>
-      </table>
-      <div className="h-40 overflow-y-auto bg-bgBlue scrollbar-table">
-        <table className="w-full text-center text-textGray divide-y">
+    <div className="mt-4 bg-white/5 backdrop-blur-sm border border-[#9d9087]/60 rounded-2xl p-4 animate-fadeIn">
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 0.6s ease-out forwards;
+          }
+        `}
+      </style>
+
+      <div className="max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-[#9d9087] scrollbar-track-transparent">
+        <table
+          className="w-full text-center divide-[#9d9087]"
+          aria-label="পেমেন্ট পরিসংখ্যান সারণী / Payment Statistics Table"
+        >
+          <thead>
+            <tr className="bg-[#DB9E30] text-[#441a05] font-bold text-xs">
+              <th className="w-[20%] py-2">শ্রেণি</th>
+              <th className="w-[20%] py-2">শাখা</th>
+              <th className="w-[20%] py-2">মোট শিক্ষার্থী</th>
+              <th className="w-[20%] py-2">পরিশোধিত</th>
+              <th className="w-[20%] py-2">অপরিশোধিত</th>
+            </tr>
+          </thead>
           <tbody>
             {payInfo.map((singleClass, index) => (
-              <tr key={index}>
-                <td className="w-[20%] py-1">{singleClass.name}</td>
-                <td className="w-[20%] py-1">{singleClass.section}</td>
-                <td className="w-[20%] py-1">{singleClass.totalStudents}</td>
-                <td className="w-[20%] py-1 text-green">{singleClass.paid}</td>
-                <td className="w-[20%] py-1 text-red">{singleClass.unpaid}</td>
+              <tr
+                key={index}
+                className="animate-fadeIn"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <td className="w-[20%] py-1 text-[#441a05]">{singleClass.name}</td>
+                <td className="w-[20%] py-1 text-[#441a05]">{singleClass.section}</td>
+                <td className="w-[20%] py-1 text-[#441a05]">{singleClass.totalStudents}</td>
+                <td className="w-[20%] py-1 text-[#DB9E30]">{singleClass.paid}</td>
+                <td className="w-[20%] py-1 text-[#9d9087]">{singleClass.unpaid}</td>
               </tr>
             ))}
           </tbody>

@@ -100,10 +100,9 @@ const CleanType = () => {
 
   return (
     <div className="py-8 w-full relative">
-      <Toaster position="顶-right" reverseOrder={false} />
+
       <style>
-        {`
-遭到@keyframes fadeIn {
+        {`@keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
           }
