@@ -21,6 +21,7 @@ const TeacherSubjectAssign = () => {
 
   // Fetch data
   const { data: teachers, isLoading: teachersLoading } = useGetTeacherStaffProfilesQuery();
+  console.log("teachers", teachers)
   const { data: classes, isLoading: classesLoading } = useGetclassConfigApiQuery();
   const { data: classSubjects = [], isLoading: subjectsLoading } = useGetClassSubjectsQuery();
   const { data: academicYears, isLoading: yearsLoading } = useGetAcademicYearApiQuery();

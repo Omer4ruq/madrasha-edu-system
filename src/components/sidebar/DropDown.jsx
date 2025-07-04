@@ -21,9 +21,11 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
     });
   };
 
-  const isActive = data.link === location.pathname || isChildActive(data.children);
+  const isActive =
+    data.link === location.pathname || isChildActive(data.children);
 
-  const childrenToShow = data.children?.filter(child => !child.children) || [];
+  const childrenToShow =
+    data.children?.filter((child) => !child.children) || [];
 
   useEffect(() => {
     if (isActive && !isOpen && childrenToShow.length > 0) {
@@ -47,7 +49,7 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
 
   function handleDropdownClick() {
     if (childrenToShow.length > 0) {
-      setIsOpen(prev => !prev);
+      setIsOpen((prev) => !prev);
       setDDId(data.id);
       setItemId(data.parent.id);
       setSelectedMenuItem({ ...data.parent, activeChild: data });
@@ -64,10 +66,14 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
         {`
           @keyframes dropdownSlide {
             from { max-height: 0; opacity: 0; transform: translateY(-10px); }
-            to { max-height: ${contentHeight + 20}px; opacity: 1; transform: translateY(0); }
+            to { max-height: ${
+              contentHeight + 20
+            }px; opacity: 1; transform: translateY(0); }
           }
           @keyframes dropdownSlideUp {
-            from { max-height: ${contentHeight + 20}px; opacity: 1; transform: translateY(0); }
+            from { max-height: ${
+              contentHeight + 20
+            }px; opacity: 1; transform: translateY(0); }
             to { max-height: 0; opacity: 0; transform: translateY(-10px); }
           }
           .dropdown-open {
@@ -81,26 +87,33 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
 
       {/* Dropdown Parent */}
 
-        <Link
-          to={data.link || "#"}
-          onClick={() => {
-            setSelectedMenuItem({ ...data.parent, activeChild: data });
-            setItemId(data.parent.id);
-          }}
-        >
-          <div className="flex items-center gap-2 pl-12 pr-6 hover:bg-[#00000010] hover:text-white duration-300">
-            <span
-              className={`w-[5px] h-[5px] rounded-full absolute top-4 left-7 duration-150 ${
-                isActive ? "w-[7px] h-[7px] bg-[#ffffff90]" : "bg-[#441a05] group-hover/dd:bg-[#ffffff90]"
-              }`}
-            ></span>
-            <h5 className={`flex-1 ${isActive ? "text-white font-semibold" : ""}`}>
-              {t(data.title)}
-            </h5>
-          </div>
-        </Link>
-
-
+      <Link
+        to={data.link || "#"}
+        onClick={() => {
+          setSelectedMenuItem({ ...data.parent, activeChild: data });
+          setItemId(data.parent.id);
+        }}
+      >
+        <div className="flex items-center gap-2 pl-12 pr-6 hover:bg-[#00000010] hover:text-white duration-300">
+          <span
+            className={`w-[5px] h-[5px] rounded-full absolute top-4 left-7 duration-150 ${
+              isActive
+                ? "w-[7px] h-[7px] bg-[#ffffff90]"
+                : "bg-[#441a05] group-hover/dd:bg-[#ffffff90]"
+            }`}
+          ></span>
+          <h5
+            className={`flex-1 ${isActive ? "text-white font-semibold" : ""}`}
+          >
+            {data.title}
+          </h5>
+          
+        </div>
+         {data?.children?.map((item) => {
+        <li>{item?.title}</li>;
+      })}
+      </Link>
+     
     </li>
   );
 }

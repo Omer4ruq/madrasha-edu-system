@@ -129,7 +129,7 @@ export default function App() {
             )}
             <Outlet />
           </div>
-          <Footer />
+          {/* <Footer /> */}
         </div>
         <Toaster position="top-right" reverseOrder={false} />
       </div>

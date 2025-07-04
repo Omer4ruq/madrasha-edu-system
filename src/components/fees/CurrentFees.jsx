@@ -42,7 +42,8 @@ const CurrentFees = () => {
   const [createFee, { isLoading: isCreating }] = useCreateFeeMutation();
   const [updateFee, { isLoading: isUpdating }] = useUpdateFeeMutation();
   const [deleteFee, { isLoading: isDeleting }] = useDeleteFeeMutation();
-
+console.log("feesData",feesData)
+console.log("waivers",waivers)
   // Handle clicks outside dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {

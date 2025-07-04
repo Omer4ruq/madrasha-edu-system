@@ -29,6 +29,7 @@ import {
 import { IoAddCircleOutline } from "react-icons/io5";
 import toast, { Toaster } from "react-hot-toast";
 import * as XLSX from "xlsx";
+import { useGetAcademicYearApiQuery } from "../../../redux/features/api/academic-year/academicYearApi";
 
 const StudentRegistrationForm = () => {
   const {
@@ -49,7 +50,12 @@ const StudentRegistrationForm = () => {
   ] = useCreateStudentBulkRegistrationApiMutation();
   const [file, setFile] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const {
+    data: academicYears = [],
+    isLoading: isYearLoading,
+    error: yearError,
+  } = useGetAcademicYearApiQuery();
+  console.log(academicYears);
   const [formData, setFormData] = useState({
     name: "",
     password: "",
@@ -442,7 +448,7 @@ const StudentRegistrationForm = () => {
                 </div>
                 <div className="text-center mt-6 flex  justify-between gap-5">
                   <button
-                  type="button"
+                    type="button"
                     onClick={downloadSampleExcel}
                     className="btn btn-ripple inline-flex items-center gap-2 px-6 py-2.5 rounded-lg hover:text-white font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-200 animate-scaleIn btn-glow"
                     title="স্যাম্পল এক্সেল ডাউনলোড করুন"
@@ -915,9 +921,16 @@ const StudentRegistrationForm = () => {
                   required
                   aria-label="ভর্তি বছর"
                 >
-                  <option value="">ভর্তি বছর নির্বাচন করুন</option>
+                  <option value="" disabled>
+                    ভর্তি বছর নির্বাচন করুন
+                  </option>
+                {academicYears?.map((year) => (
+  <option key={year?.id} value={year?.id}>{year?.name}</option>
+))}
+
+                  {/* 
                   <option value="1">২০২৪</option>
-                  <option value="2">২০২৫</option>
+                  <option value="2">২০২৫</option> */}
                 </select>
               </div>
               <div className="relative input-icon">

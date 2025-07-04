@@ -65,6 +65,8 @@ import FeeSummary from "./components/fees/FeeSummary";
 import RolePermissions from "./components/permission/RolePermissions";
 import CleanType from "./components/clean/CleanType";
 import ExpenseItemsList from "./components/expense/ExpenseItemsList";
+import Login from "./components/Login/Login";
+
 import IncomeItemsList from "./components/income/IncomeItemsList";
 
 function Root() {
@@ -74,10 +76,12 @@ function Root() {
       element: <App />,
       errorElement: <Dummy />,
       children: [
+        
         {
           path: "/",
-          element: <Navigate to="/dashboard" replace />,
+          element: <Navigate to="/login" replace />,
         },
+       
         {
           path: "dashboard",
           element: <Home />,
@@ -131,7 +135,6 @@ function Root() {
               path: "teacher-performance",
               element: <TeacherPerformance></TeacherPerformance>,
             },
-            
           ],
         },
         {
@@ -303,7 +306,7 @@ function Root() {
             //   path: "boarding-fee",
             //   element: <BoardingFees />,
             // },
-              {
+            {
               path: "expense-items-list",
               element: <ExpenseItemsList />,
             },
@@ -409,7 +412,7 @@ function Root() {
                 {
                   path: "sms-notification-template",
                   // element: <SmsNotificationTemplate />,
-                   element: <SmsTemplate />,
+                  element: <SmsTemplate />,
                 },
               ],
             },
@@ -426,6 +429,10 @@ function Root() {
         },
       ],
     },
+     {
+          path: "login",
+          element: <Login />,
+        },
   ]);
 
   return <RouterProvider router={router} />;

@@ -10,6 +10,7 @@ import { useGetFeePackagesQuery } from '../../redux/features/api/fee-packages/fe
 import { useGetFeeHeadsQuery } from '../../redux/features/api/fee-heads/feeHeadsApi';
 import { useCreateFeesNameMutation } from '../../redux/features/api/fees-name/feesName';
 import { useGetGfeeSubheadsQuery } from '../../redux/features/api/gfee-subheads/gfeeSubheadsApi';
+import { useGetStudentClassApIQuery } from '../../redux/features/api/student/studentClassApi';
 
 const AddFeesName = () => {
   const [selectedClass, setSelectedClass] = useState(null);

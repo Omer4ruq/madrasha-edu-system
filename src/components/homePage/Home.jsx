@@ -40,19 +40,19 @@ export default function Home() {
       </div>
 
       {/* Events and gender wise teacher and student info */}
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+      {/* <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         <Events />
         <GenderWise />
       </div>
 
       {/* expense nad fund info */}
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+      {/* <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         <ExpenseInfo />
         <FundInfo />
-      </div>
+      </div> */}
 
       {/* support token and ads */}
-      <SupportToken />
+      {/* <SupportToken /> */}
     </div> 
   );
 }

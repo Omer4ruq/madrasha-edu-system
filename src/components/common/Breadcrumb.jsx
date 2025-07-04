@@ -177,7 +177,7 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
         )}
 
         {/* First-Level Tabs (Top-Right) */}
-        {firstLevelTabs.length > 0 && (
+        {/* {firstLevelTabs.length > 0 && (
           <div className="relative w-full md:w-1/2 flex items-center justify-end">
             {isOverflowing && (
               <button
@@ -238,7 +238,7 @@ export default function Breadcrumb({ module, route, nestedRoute }) {
               </button>
             )}
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Second-Level Tabs (Content Area) */}

@@ -64,7 +64,7 @@ export default function SidebarSearchMenuItem({ item, searchTerm }) {
             isOpen && "text-[#fff]"
           }`}
         >
-          {t(show.title)}
+          {show.title}
         </h4>
         {show?.children && (
           <FaAngleDown
