@@ -357,6 +357,11 @@ const mainMenu = [
         title: "ভূমিকা-ভিত্তিক অনুমতি",
         link: "/users/role-permission",
       },
+      {
+        id: "08/04",
+        title: "ভূমিকা সংযোজন",
+        link: "/users/role-types",
+      },
     ],
   },
   {

@@ -68,6 +68,7 @@ import ExpenseItemsList from "./components/expense/ExpenseItemsList";
 import Login from "./components/Login/Login";
 
 import IncomeItemsList from "./components/income/IncomeItemsList";
+import AddRoleTypes from "./components/Roles/AddRoleTypes";
 
 function Root() {
   const router = createBrowserRouter([
@@ -382,6 +383,10 @@ function Root() {
             {
               path: "role-permission",
               element: <RolePermissions />,
+            },
+              {
+              path: "role-types",
+              element: <AddRoleTypes />,
             },
           ],
         },
