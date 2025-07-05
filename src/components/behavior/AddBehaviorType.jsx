@@ -13,11 +13,10 @@ const AddBehaviorType = () => {
   const [behavior, setBehavior] = useState("");
   const [marks, setMarks] = useState("");
   const [editBehaviorId, setEditBehaviorId] = useState(null);
-  const [editBehaviorName, setEditBehaviorName] = useState("");
-  const [editMarks, setEditMarks] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0); // For forced re-rendering
 
   // API hooks
   const {
@@ -36,10 +35,11 @@ const AddBehaviorType = () => {
     return !isNaN(num) && num >= 0 && num <= 100;
   };
 
-  // Handle form submission for adding new behavior
-  const handleSubmitBehavior = async (e) => {
+  // Handle form submission for adding or updating behavior
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!behavior.trim() || !marks.trim()) {
+    const name = behavior.trim();
+    if (!name || !marks.trim()) {
       toast.error("অনুগ্রহ করে আচরণের ধরন এবং নম্বর উভয়ই লিখুন");
       return;
     }
@@ -47,16 +47,23 @@ const AddBehaviorType = () => {
       toast.error("নম্বর ০ থেকে ১০০ এর মধ্যে হতে হবে");
       return;
     }
-    if (behaviorTypes?.some((bt) => bt.name.toLowerCase() === behavior.toLowerCase())) {
+    if (
+      behaviorTypes?.some(
+        (bt) => bt.name.toLowerCase() === name.toLowerCase() && bt.id !== editBehaviorId
+      )
+    ) {
       toast.error("এই আচরণের ধরন ইতিমধ্যে বিদ্যমান!");
       return;
     }
 
-    setModalAction("create");
+    setModalAction(editBehaviorId ? "update" : "create");
     setModalData({
-      name: behavior.trim(),
+      id: editBehaviorId,
+      name,
       obtain_mark: Number(marks),
-      is_active: true,
+      is_active: editBehaviorId
+        ? behaviorTypes.find((bt) => bt.id === editBehaviorId)?.is_active || true
+        : true,
     });
     setIsModalOpen(true);
   };
@@ -64,30 +71,8 @@ const AddBehaviorType = () => {
   // Handle edit button click
   const handleEditClick = (behavior) => {
     setEditBehaviorId(behavior.id);
-    setEditBehaviorName(behavior.name);
-    setEditMarks(behavior.obtain_mark.toString());
-  };
-
-  // Handle update behavior
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    if (!editBehaviorName.trim() || !editMarks.trim()) {
-      toast.error("অনুগ্রহ করে আচরণের ধরন এবং নম্বর উভয়ই লিখুন");
-      return;
-    }
-    if (!validateMarks(editMarks)) {
-      toast.error("নম্বর ০ থেকে ১০০ এর মধ্যে হতে হবে");
-      return;
-    }
-
-    setModalAction("update");
-    setModalData({
-      id: editBehaviorId,
-      name: editBehaviorName.trim(),
-      obtain_mark: Number(editMarks),
-      is_active: behaviorTypes.find((bt) => bt.id === editBehaviorId)?.is_active || true,
-    });
-    setIsModalOpen(true);
+    setBehavior(behavior.name);
+    setMarks(behavior.obtain_mark.toString());
   };
 
   // Handle toggle active status
@@ -121,8 +106,8 @@ const AddBehaviorType = () => {
         await updateBehavior(modalData).unwrap();
         toast.success("আচরণের ধরন সফলভাবে আপডেট করা হয়েছে!");
         setEditBehaviorId(null);
-        setEditBehaviorName("");
-        setEditMarks("");
+        setBehavior("");
+        setMarks("");
       } else if (modalAction === "delete") {
         await deleteBehavior(modalData.id).unwrap();
         toast.success("আচরণের ধরন সফলভাবে মুছে ফেলা হয়েছে!");
@@ -130,10 +115,16 @@ const AddBehaviorType = () => {
         await updateBehavior(modalData).unwrap();
         toast.success(`আচরণ ${modalData.name} এখন ${modalData.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"}!`);
       }
-      refetch(); // Refresh data after successful action
+      refetch();
+      setRefreshKey((prev) => prev + 1); // Force table re-render
     } catch (err) {
-      console.error(`ত্রুটি ${modalAction === "create" ? "তৈরি করা" : modalAction === "update" ? "আপডেট" : modalAction === "delete" ? "মুছে ফেলা" : "টগল করা"}:`, err);
-      toast.error(`আচরণ ${modalAction === "create" ? "তৈরি" : modalAction === "update" ? "আপডেট" : modalAction === "delete" ? "মুছে ফেলা" : "টগল করা"} ব্যর্থ: ${err.status || "অজানা"} - ${JSON.stringify(err.data || {})}`);
+      console.error(
+        `ত্রুটি ${modalAction === "create" ? "তৈরি করা" : modalAction === "update" ? "আপডেট" : modalAction === "delete" ? "মুছে ফেলা" : "টগল করা"}:`,
+        err
+      );
+      toast.error(
+        `আচরণ ${modalAction === "create" ? "তৈরি" : modalAction === "update" ? "আপডেট" : modalAction === "delete" ? "মুছে ফেলা" : "টগল করা"} ব্যর্থ: ${err.status || "অজানা"} - ${JSON.stringify(err.data || {})}`
+      );
     } finally {
       setIsModalOpen(false);
       setModalAction(null);
@@ -176,9 +167,7 @@ const AddBehaviorType = () => {
           }
           .tick-glow {
             transition: all 0.3s ease;
-          }
-          .tick-glow:checked + span {
-            box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+            box-shadow: 0 0 10px rgba(219, 158, 48, 0.4); /* Match #DB9E30 */
           }
           .btn-glow:hover {
             box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
@@ -199,14 +188,20 @@ const AddBehaviorType = () => {
         `}
       </style>
 
-      <div className="">
-        {/* Form to Add Behavior Type */}
+      <div>
+        {/* Add/Edit Behavior Form */}
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
           <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-            <IoAddCircle className="text-4xl text-[#441a05]" />
-            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">নতুন আচরণের ধরন যোগ করুন</h3>
+            {editBehaviorId ? (
+              <FaEdit className="text-4xl text-[#441a05]" />
+            ) : (
+              <IoAddCircle className="text-4xl text-[#441a05]" />
+            )}
+            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
+              {editBehaviorId ? "আচরণের ধরন সম্পাদনা করুন" : "নতুন আচরণের ধরন যোগ করুন"}
+            </h3>
           </div>
-          <form onSubmit={handleSubmitBehavior} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <input
               type="text"
               id="behaviorName"
@@ -214,10 +209,10 @@ const AddBehaviorType = () => {
               onChange={(e) => setBehavior(e.target.value)}
               className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
               placeholder="আচরণের ধরন"
-              disabled={isCreating}
+              disabled={isCreating || isUpdating}
               aria-label="আচরণের ধরন"
-              title="আচরণের ধরন / Enter behavior type (e.g., Punctuality)"
-              aria-describedby={createError ? "behavior-error" : undefined}
+              title="আচরণের ধরন লিখুন (উদাহরণ: সময়ানুবর্তিতা)"
+              aria-describedby={createError || updateError ? "behavior-error" : undefined}
             />
             <input
               type="number"
@@ -226,116 +221,56 @@ const AddBehaviorType = () => {
               onChange={(e) => setMarks(e.target.value)}
               className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
               placeholder="নম্বর লিখুন"
-              disabled={isCreating}
+              disabled={isCreating || isUpdating}
               aria-label="নম্বর"
-              title="নম্বর লিখুন"
-              aria-describedby={createError ? "behavior-error" : undefined}
+              title="নম্বর লিখুন (উদাহরণ: ১০)"
+              aria-describedby={createError || updateError ? "behavior-error" : undefined}
             />
             <button
               type="submit"
-              disabled={isCreating}
-              title="নতুন আচরণের ধরন তৈরি করুন / Create a new behavior type"
+              disabled={isCreating || isUpdating}
+              title={editBehaviorId ? "আচরণের ধরন আপডেট করুন" : "নতুন আচরণের ধরন তৈরি করুন"}
               className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                isCreating ? "cursor-not-allowed" : "hover:text-white hover:shadow-md"
+                isCreating || isUpdating ? "cursor-not-allowed" : "hover:text-white hover:shadow-md"
               }`}
             >
-              {isCreating ? (
+              {(isCreating || isUpdating) ? (
                 <span className="flex items-center space-x-3">
                   <FaSpinner className="animate-spin text-lg" />
-                  <span>তৈরি করা হচ্ছে...</span>
+                  <span>{editBehaviorId ? "আপডেট করা হচ্ছে..." : "তৈরি করা হচ্ছে..."}</span>
                 </span>
               ) : (
                 <span className="flex items-center space-x-2">
-                  <IoAdd className="w-5 h-5" />
-                  <span>আচরণ তৈরি করুন</span>
+                  {editBehaviorId ? <FaEdit className="w-5 h-5" /> : <IoAdd className="w-5 h-5" />}
+                  <span>{editBehaviorId ? "আচরণ আপডেট করুন" : "আচরণ তৈরি করুন"}</span>
                 </span>
               )}
             </button>
+            {editBehaviorId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditBehaviorId(null);
+                  setBehavior("");
+                  setMarks("");
+                }}
+                title="সম্পাদনা বাতিল করুন"
+                className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-white transition-all duration-300 animate-scaleIn"
+              >
+                বাতিল
+              </button>
+            )}
           </form>
-          {createError && (
+          {(createError || updateError) && (
             <div
               id="behavior-error"
               className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
               style={{ animationDelay: "0.4s" }}
             >
-              ত্রুটি: {createError.status || "অজানা"} - {JSON.stringify(createError.data || {})}
+              ত্রুটি: {(createError || updateError).status || "অজানা"} - {JSON.stringify((createError || updateError).data || {})}
             </div>
           )}
         </div>
-
-        {/* Edit Behavior Form */}
-        {editBehaviorId && (
-          <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-            <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-              <FaEdit className="text-3xl text-[#441a05]" />
-              <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">আচরণের ধরন সম্পাদনা করুন</h3>
-            </div>
-            <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <input
-                type="text"
-                id="editBehaviorName"
-                value={editBehaviorName}
-                onChange={(e) => setEditBehaviorName(e.target.value)}
-                className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
-                placeholder="আচরণের ধরন সম্পাদনা করুন (যেমন, সময়ানুবর্তিতা)"
-                disabled={isUpdating}
-                aria-label="আচরণের ধরন সম্পাদনা"
-                title="আচরণের ধরন সম্পাদনা করুন (উদাহরণ: সময়ানুবর্তিতা) / Edit behavior type (e.g., Punctuality)"
-                aria-describedby="edit-behavior-error"
-              />
-              <input
-                type="number"
-                id="editMarks"
-                value={editMarks}
-                onChange={(e) => setEditMarks(e.target.value)}
-                className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
-                placeholder="নম্বর সম্পাদনা করুন (যেমন, ১০)"
-                disabled={isUpdating}
-                aria-label="নম্বর সম্পাদনা"
-                title="নম্বর সম্পাদনা করুন (উদাহরণ: ১০) / Edit marks (e.g., 10)"
-                aria-describedby="edit-behavior-error"
-              />
-              <button
-                type="submit"
-                disabled={isUpdating}
-                title="আচরণের ধরন আপডেট করুন / Update behavior type"
-                className={`relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                  isUpdating ? "cursor-not-allowed" : "hover:text-white hover:shadow-md"
-                }`}
-              >
-                {isUpdating ? (
-                  <span className="flex items-center space-x-2">
-                    <FaSpinner className="animate-spin text-lg" />
-                    <span>আপডেট করা হচ্ছে...</span>
-                  </span>
-                ) : (
-                  <span>আচরণ আপডেট করুন</span>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEditBehaviorId(null);
-                  setEditBehaviorName("");
-                  setEditMarks("");
-                }}
-                title="সম্পাদনা বাতিল করুন / Cancel editing"
-                className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
-              >
-                বাতিল
-              </button>
-            </form>
-            {updateError && (
-              <div
-                id="edit-behavior-error"
-                className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
-                style={{ animationDelay: "0.4s" }}
-              >
-                ত্রুটি: {updateError.status || "অজানা"} - {JSON.stringify(updateError.data || {})}
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Behavior Types Table */}
         <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
@@ -344,13 +279,12 @@ const AddBehaviorType = () => {
             <p className="p-4 text-[#441a05]/70">আচরণের ধরন লোড হচ্ছে...</p>
           ) : behaviorError ? (
             <p className="p-4 text-red-400">
-              আচরণের ধরন লোড করতে ত্রুটি: {behaviorError.status || "অজানা"} -{" "}
-              {JSON.stringify(behaviorError.data || {})}
+              আচরণের ধরন লোড করতে ত্রুটি: {behaviorError.status || "অজানা"} - {JSON.stringify(behaviorError.data || {})}
             </p>
           ) : behaviorTypes?.length === 0 ? (
             <p className="p-4 text-[#441a05]/70">কোনো আচরণের ধরন উপলব্ধ নেই।</p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" key={refreshKey}>
               <table className="min-w-full divide-y divide-white/20">
                 <thead className="bg-white/5">
                   <tr>
@@ -396,15 +330,15 @@ const AddBehaviorType = () => {
                             className="hidden"
                           />
                           <span
-                            className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn ${
+                            className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 ${
                               behavior.is_active
-                                ? "bg-[#DB9E30] border-[#DB9E30]"
+                                ? "bg-[#DB9E30] border-[#DB9E30] tick-glow"
                                 : "bg-white/10 border-[#9d9087] hover:border-[#441a05]"
                             }`}
                           >
                             {behavior.is_active && (
                               <svg
-                                className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                                className="w-4 h-4 text-[#441a05]"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -430,14 +364,14 @@ const AddBehaviorType = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           onClick={() => handleEditClick(behavior)}
-                          title="আচরণের ধরন সম্পাদনা করুন / Edit behavior type"
+                          title="আচরণের ধরন সম্পাদনা করুন"
                           className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
                         >
                           <FaEdit className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleDelete(behavior.id)}
-                          title="আচরণের ধরন মুছুন / Delete behavior type"
+                          title="আচরণের ধরন মুছুন"
                           className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
                         >
                           <FaTrash className="w-5 h-5" />
@@ -456,9 +390,7 @@ const AddBehaviorType = () => {
             >
               {isDeleting
                 ? "আচরণের ধরন মুছে ফেলা হচ্ছে..."
-                : `আচরণ মুছে ফেলতে ত্রুটি: ${deleteError?.status || "অজানা"} - ${JSON.stringify(
-                    deleteError?.data || {}
-                  )}`}
+                : `আচরণ মুছে ফেলতে ত্রুটি: ${deleteError?.status || "অজানা"} - ${JSON.stringify(deleteError?.data || {})}`}
             </div>
           )}
         </div>
@@ -467,7 +399,7 @@ const AddBehaviorType = () => {
         {isModalOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
             <div
-              className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"
+              className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border-t border-white/20 animate-slideUp"
             >
               <h3 className="text-lg font-semibold text-[#441a05] mb-4">
                 {modalAction === "create" && "নতুন আচরণের ধরন নিশ্চিত করুন"}
@@ -485,14 +417,14 @@ const AddBehaviorType = () => {
                 <button
                   onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
-                  title="বাতিল করুন / Cancel"
+                  title="বাতিল করুন"
                 >
                   বাতিল
                 </button>
                 <button
                   onClick={confirmAction}
                   className="px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white transition-colors duration-300 btn-glow"
-                  title="নিশ্চিত করুন / Confirm"
+                  title="নিশ্চিত করুন"
                 >
                   নিশ্চিত করুন
                 </button>

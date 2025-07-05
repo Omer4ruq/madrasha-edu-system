@@ -154,9 +154,9 @@ const CleanType = () => {
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
           <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
             {editingId ? (
-              <FaEdit className="text-3xl text-[#441a05]" />
+              <FaEdit className="text-4xl text-[#441a05]" />
             ) : (
-              <IoAddCircle className="text-3xl text-[#441a05]" />
+              <IoAddCircle className="text-4xl text-[#441a05]" />
             )}
             <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
               {editingId ? 'পরিচ্ছন্নতার ধরন সম্পাদনা করুন' : 'নতুন পরিচ্ছন্নতার ধরন যোগ করুন'}
