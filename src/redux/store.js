@@ -67,9 +67,14 @@ import { groupsApi } from "./features/api/permissionRole/groupsApi";
 import { loginApi } from "./features/api/auth/loginApi";
 import { cleanReportTypeApi } from "./features/api/clean/cleanReportTypeApi";
 import { roleTypesApi } from "./features/api/roleType/roleTypesApi";
+import authReducer from './features/slice/authSlice';
 
 export const store = configureStore({
   reducer: {
+
+
+    auth: authReducer,
+
 
     [instituteApi.reducerPath]: instituteApi.reducer,
     [instituteTypeApi.reducerPath]: instituteTypeApi.reducer,

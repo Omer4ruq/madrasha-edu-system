@@ -1,57 +1,63 @@
-import React, { useState, useEffect } from "react";
-import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
+import React, { useState } from 'react';
 
-// Login Component
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { useLoginUserMutation } from '../../redux/features/api/auth/loginApi';
+import { setCredentials } from '../../redux/features/slice/authSlice';
+
+
 const Login = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+ const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const [loginUser] = useLoginUserMutation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  // Static credentials
-  const STATIC_USERNAME = "admin";
-  const STATIC_PASSWORD = "password123";
-
-  // Check localStorage for authentication on component mount
-  useEffect(() => {
-    const isAuthenticated = localStorage.getItem("isAuthenticated");
-    if (isAuthenticated === "true") {
-      navigate("/dashboard");
-    }
-  }, [navigate]);
-
-  // Handle login form submission
-  const handleLogin = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (username === STATIC_USERNAME && password === STATIC_PASSWORD) {
-      localStorage.setItem("isAuthenticated", "true");
-      setError("");
-      navigate("/dashboard");
-    } else {
-      setError("Invalid username or password");
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await loginUser({
+        username,
+        password,
+      }).unwrap();
+
+      // ইউজার ইনফো এবং টোকেন Redux স্টোরে সেভ করা
+      dispatch(setCredentials({
+        user: result.user_data,
+        profile : result.profile_data,
+        role: result.role,
+        token: result.access_token,
+      }));
+
+      // ড্যাশবোর্ডে রিডাইরেক্ট
+      navigate('/dashboard');
+    } catch (err) {
+      setError('লগইন ব্যর্থ! ব্যবহারকারীর নাম বা পাসওয়ার্ড ভুল হতে পারে।');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Handle logout
-  const handleLogout = () => {
-    localStorage.removeItem("isAuthenticated");
-    navigate("/login");
-  };
 
   return (
     <div className="min-h-screen bg-[#DB9E30] flex items-center justify-center p-4 w-screen h-screen top-0">
-      {/* Login Card */}
       <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
-          Qawmi Talim
+          কওমী তালীম
         </h2>
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form className="space-y-6" onSubmit={handleSubmit}>
           <div>
             <label
               htmlFor="username"
               className="block text-sm font-medium text-gray-700"
             >
-              Username
+              ব্যবহারকারীর নাম
             </label>
             <input
               id="username"
@@ -59,7 +65,7 @@ const Login = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition duration-200"
-              placeholder="Enter username"
+              placeholder="ব্যবহারকারীর নাম লিখুন"
               required
             />
           </div>
@@ -68,7 +74,7 @@ const Login = () => {
               htmlFor="password"
               className="block text-sm font-medium text-gray-700"
             >
-              Password
+              পাসওয়ার্ড
             </label>
             <input
               id="password"
@@ -76,16 +82,17 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition duration-200"
-              placeholder="Enter password"
+              placeholder="পাসওয়ার্ড লিখুন"
               required
             />
           </div>
-          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+          {error && <p className="text-red-500 text-sm">{error}</p>}
           <button
             type="submit"
-            className="w-full bg-[#441a05] text-white py-3 rounded-lg transition duration-300 font-semibold shadow-md"
+            disabled={loading}
+            className="w-full bg-[#441a05] text-white py-3 rounded-lg transition duration-300 font-semibold shadow-md disabled:opacity-50"
           >
-            Login
+            {loading ? 'লোড হচ্ছে...' : 'লগইন করুন'}
           </button>
         </form>
       </div>

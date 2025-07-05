@@ -77,12 +77,12 @@ function Root() {
       element: <App />,
       errorElement: <Dummy />,
       children: [
-        
+
         {
           path: "/",
           element: <Navigate to="/login" replace />,
         },
-       
+
         {
           path: "dashboard",
           element: <Home />,
@@ -311,7 +311,7 @@ function Root() {
               path: "expense-items-list",
               element: <ExpenseItemsList />,
             },
-               {
+            {
               path: "income-items-list",
               element: <IncomeItemsList />,
             },
@@ -384,7 +384,7 @@ function Root() {
               path: "role-permission",
               element: <RolePermissions />,
             },
-              {
+            {
               path: "role-types",
               element: <AddRoleTypes />,
             },
@@ -434,10 +434,10 @@ function Root() {
         },
       ],
     },
-     {
-          path: "login",
-          element: <Login />,
-        },
+    {
+      path: "login",
+      element: <Login />,
+    },
   ]);
 
   return <RouterProvider router={router} />;
