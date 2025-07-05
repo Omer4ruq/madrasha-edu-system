@@ -1,44 +1,64 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-// sessionStorage থেকে ডাটা লোড করা
+// loadState for user info etc (excluding token)
 const loadState = () => {
-    try {
-        const serializedState = sessionStorage.getItem('authState');
-        if (serializedState === null) {
-            return { user: null, role: null, token: null, profile: null };
-        }
-        return JSON.parse(serializedState);
-    } catch (err) {
-        return { user: null, role: null, token: null, profile: null };
+  try {
+    const serializedState = localStorage.getItem('authState');
+    if (!serializedState) {
+      return { user: null, role: null, profile: null };
     }
+    return JSON.parse(serializedState);
+  } catch {
+    return { user: null, role: null, profile: null };
+  }
+};
+
+// load token separately
+const loadToken = () => {
+  try {
+    const token = localStorage.getItem('token');
+    return token ? token : null;
+  } catch {
+    return null;
+  }
 };
 
 const authSlice = createSlice({
-    name: 'auth',
-    initialState: loadState(),
-    reducers: {
-        setCredentials: (state, action) => {
-            state.user = action.payload.user;
-            state.profile = action.payload.profile;
-            state.role = action.payload.role;
-            state.token = action.payload.token;
-            // sessionStorage-এ ডাটা সেভ করা
-            sessionStorage.setItem('authState', JSON.stringify({
-                user: state.user,
-                profile: state.profile,
-                role: state.role,
-                token: state.token,
-            }));
-        },
-        logout: (state) => {
-            state.user = null;
-            state.profile = null;
-            state.role = null;
-            state.token = null;
-            // sessionStorage ক্লিয়ার করা
-            sessionStorage.removeItem('authState');
-        },
+  name: 'auth',
+  initialState: {
+    ...loadState(),
+    token: loadToken(),
+  },
+  reducers: {
+    setCredentials: (state, action) => {
+      const { user, role, profile, token } = action.payload;
+
+      state.user = user;
+      state.role = role;
+      state.profile = profile;
+      state.token = token;
+
+      // Save user info in one key
+      localStorage.setItem(
+        'authState',
+        JSON.stringify({ user, role, profile })
+      );
+
+      // Save token separately
+      localStorage.setItem('token', token);
     },
+
+    logout: (state) => {
+      state.user = null;
+      state.role = null;
+      state.profile = null;
+      state.token = null;
+
+      // Remove all keys separately
+      localStorage.removeItem('authState');
+      localStorage.removeItem('token');
+    },
+  },
 });
 
 export const { setCredentials, logout } = authSlice.actions;
