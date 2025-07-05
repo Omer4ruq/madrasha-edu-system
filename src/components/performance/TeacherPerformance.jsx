@@ -256,18 +256,18 @@ const TeacherPerformance = () => {
 
       <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
          <div className="flex items-center space-x-2 mb-6">
-          <IoAddCircle className="text-4xl text-[#441a05]" />
-          <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">শিক্ষক কর্মক্ষমতা মূল্যায়ন</h3>
+          <IoAddCircle className="text-3xl text-[#441a05]" />
+          <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">শিক্ষক কর্মক্ষমতা মূল্যায়ন</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <label className="flex items-center space-x-4 animate-fadeIn">
-            <span className="text-[#441a05] font-medium text-nowrap">মাস নির্বাচন করুন:</span>
+            <span className="text-[#441a05] sm:text-base text-xs font-medium text-nowrap">মাস নির্বাচন:</span>
             <div className="w-full">
               <Select
                 options={monthOptions}
                 value={selectedMonth}
                 onChange={handleMonthSelect}
-                placeholder="মাস নির্বাচন করুন"
+                placeholder="মাস নির্বাচন"
                 isLoading={false}
                 isDisabled={isCreating || isUpdating}
                 styles={selectStyles}
@@ -280,13 +280,13 @@ const TeacherPerformance = () => {
             </div>
           </label>
           <label className="flex items-center space-x-4 animate-fadeIn">
-            <span className="text-[#441a05] font-medium text-nowrap">শিক্ষাবর্ষ নির্বাচন করুন:</span>
+            <span className="text-[#441a05] sm:text-base text-xs font-medium text-nowrap">শিক্ষাবর্ষ নির্বাচন:</span>
             <div className="w-full">
               <Select
                 options={academicYearOptions}
                 value={selectedAcademicYear}
                 onChange={handleAcademicYearSelect}
-                placeholder="শিক্ষাবর্ষ নির্বাচন করুন"
+                placeholder="শিক্ষাবর্ষ নির্বাচন"
                 isLoading={isAcademicYearsLoading}
                 isDisabled={isAcademicYearsLoading || isCreating || isUpdating}
                 styles={selectStyles}
@@ -299,13 +299,13 @@ const TeacherPerformance = () => {
             </div>
           </label>
           <label className="flex items-center space-x-4 animate-fadeIn">
-            <span className="text-[#441a05] font-medium text-nowrap">শিক্ষক খুঁজুন:</span>
+            <span className="text-[#441a05] sm:text-base text-xs font-medium text-nowrap">শিক্ষক খুঁজুন:</span>
             <div className="w-full">
               <Select
                 options={teacherOptions}
                 value={selectedTeacher}
                 onChange={handleTeacherSelect}
-                placeholder="শিক্ষকের নাম লিখুন"
+                placeholder="শিক্ষকের নাম"
                 isLoading={isTeachersLoading}
                 isDisabled={isTeachersLoading || isCreating || isUpdating}
                 styles={selectStyles}

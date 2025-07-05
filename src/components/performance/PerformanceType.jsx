@@ -194,7 +194,7 @@ const PerformanceType = () => {
             ) : (
               <IoAddCircle className="text-3xl text-[#441a05]" />
             )}
-            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
+            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
               {editPerformanceId ? 'পারফরম্যান্সের ধরন সম্পাদনা করুন' : 'নতুন পারফরম্যান্সের ধরন যোগ করুন'}
             </h3>
           </div>
@@ -204,8 +204,8 @@ const PerformanceType = () => {
               id="performanceName"
               value={performanceName}
               onChange={(e) => setPerformanceName(e.target.value)}
-              className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-              placeholder="পারফরম্যান্সের ধরন লিখুন (যেমন, সময়ানুবর্তিতা)"
+              className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
+              placeholder="পারফরম্যান্সের ধরন"
               disabled={isCreating || isUpdating}
               aria-label="পারফরম্যান্সের ধরন"
               title="পারফরম্যান্সের ধরন লিখুন (উদাহরণ: সময়ানুবর্তিতা) / Enter performance type (e.g., Punctuality)"

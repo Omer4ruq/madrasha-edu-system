@@ -300,7 +300,7 @@ const SignatureSheet = () => {
       </style>
 
       <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-        <h3 className="text-2xl font-bold text-[#441a05] tracking-tight mb-6 animate-fadeIn">
+        <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight mb-6 animate-fadeIn">
           স্বাক্ষর শীট তৈরি করুন
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 no-print">

@@ -504,212 +504,192 @@ const StudentRegistrationForm = () => {
             <h3 className="text-2xl font-semibold text-[#441a05] text-center">
               ব্যক্তিগত তথ্য
             </h3>
-            <div className="border-t border-[#9d9087]/50 mt-4 pt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="relative input-icon">
-                <label
-                  htmlFor="name"
-                  className="block text-lg font-medium text-[#441a05]"
-                >
-                  পূর্ণ নাম <span className="text-[#DB9E30]">*</span>
-                </label>
-                <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="পূর্ণ নাম লিখুন"
-                  required
-                  aria-label="পূর্ণ নাম"
-                />
-              </div>
-              <div className="relative input-icon">
-                <label
-                  htmlFor="password"
-                  className="block text-lg font-medium text-[#441a05]"
-                >
-                  পাসওয়ার্ড
-                </label>
-                <FaLock className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="পাসওয়ার্ড লিখুন (ঐচ্ছিক)"
-                  aria-label="পাসওয়ার্ড"
-                />
-              </div>
-              <div className="relative input-icon">
-                <label
-                  htmlFor="user_id"
-                  className="block text-lg font-medium text-[#441a05]"
-                >
-                  ইউজার আইডি <span className="text-[#DB9E30]">*</span>
-                </label>
-                <FaIdCard className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <input
-                  type="number"
-                  id="user_id"
-                  name="user_id"
-                  value={formData.user_id}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="ইউজার আইডি লিখুন"
-                  required
-                  aria-label="ইউজার আইডি"
-                />
-              </div>
-              <div className="relative input-icon">
-                <label
-                  htmlFor="gender"
-                  className="block text-lg font-medium text-[#441a05]"
-                >
-                  লিঙ্গ
-                </label>
-                <FaVenusMars className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <select
-                  id="gender"
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  aria-label="লিঙ্গ"
-                >
-                  <option value="">লিঙ্গ নির্বাচন করুন</option>
-                  <option value="Male">পুরুষ</option>
-                  <option value="Female">নারী</option>
-                  <option value="Other">অন্যান্য</option>
-                </select>
-              </div>
-              <div className="relative input-icon">
-                <label
-                  htmlFor="dob"
-                  className="block text-lg font-medium text-[#441a05]"
-                >
-                  জন্ম তারিখ
-                </label>
-                <FaCalendarAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <input
-                  type="date"
-                  id="dob"
-                  name="dob"
-                  value={formData.dob}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  aria-label="জন্ম তারিখ"
-                />
-              </div>
-              <div className="relative input-icon">
-                <label
-                  htmlFor="blood_group"
-                  className="block text-lg font-medium text-[#441a05]"
-                >
-                  রক্তের গ্রুপ
-                </label>
-                <FaHeart className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <select
-                  id="blood_group"
-                  name="blood_group"
-                  value={formData.blood_group}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  aria-label="রক্তের গ্রুপ"
-                >
-                  <option value="">রক্তের গ্রুপ নির্বাচন করুন</option>
-                  <option value="A+">A+</option>
-                  <option value="A-">A-</option>
-                  <option value="B+">B+</option>
-                  <option value="B-">B-</option>
-                  <option value="AB+">AB+</option>
-                  <option value="AB-">AB-</option>
-                  <option value="O+">O+</option>
-                  <option value="O-">O-</option>
-                </select>
-              </div>
-              <div className="relative input-icon">
-                <label
-                  htmlFor="nationality"
-                  className="block text-lg font-medium text-[#441a05]"
-                >
-                  জাতীয়তা
-                </label>
-                <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <input
-                  type="text"
-                  id="nationality"
-                  name="nationality"
-                  value={formData.nationality}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="জাতীয়তা লিখুন"
-                  aria-label="জাতীয়তা"
-                />
-              </div>
-              <div className="relative input-icon">
-                <label
-                  htmlFor="birth_certificate_no"
-                  className="block text-lg font-medium text-[#441a05]"
-                >
-                  জন্ম সনদ নম্বর
-                </label>
-                <FaIdCard className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <input
-                  type="text"
-                  id="birth_certificate_no"
-                  name="birth_certificate_no"
-                  value={formData.birth_certificate_no}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="জন্ম সনদ নম্বর লিখুন"
-                  aria-label="জন্ম সনদ নম্বর"
-                />
-              </div>
-              <div className="relative input-icon">
-                <label
-                  htmlFor="status"
-                  className="block text-lg font-medium text-[#441a05]"
-                >
-                  স্থিতি
-                </label>
-                <FaUserGraduate className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <select
-                  id="status"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  aria-label="স্থিতি"
-                >
-                  <option value="">স্থিতি নির্বাচন করুন</option>
-                  <option value="Online">অনলাইন</option>
-                  <option value="Offline">অফলাইন</option>
-                </select>
-              </div>
-              <div className="relative input-icon col-span-3">
-                <label
-                  htmlFor="disability_info"
-                  className="block text-lg font-medium text-[#441a05]"
-                >
-                  প্রতিবন্ধকতার তথ্য
-                </label>
-                <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <textarea
-                  id="disability_info"
-                  name="disability_info"
-                  value={formData.disability_info}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="প্রতিবন্ধকতার তথ্য লিখুন (ঐচ্ছিক)"
-                  rows="3"
-                  aria-label="প্রতিবন্ধকতার তথ্য"
-                />
-              </div>
-            </div>
+           <div className="border-t border-[#9d9087]/50 mt-4 pt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+  {/* পূর্ণ নাম */}
+  <div className="relative">
+    <label htmlFor="name" className="block text-lg font-medium text-[#441a05]">
+      পূর্ণ নাম <span className="text-[#DB9E30]">*</span>
+    </label>
+    <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
+    <input
+      type="text"
+      id="name"
+      name="name"
+      value={formData.name}
+      onChange={handleChange}
+      className="mt-1 w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30] transition-all duration-300"
+      placeholder="পূর্ণ নাম লিখুন"
+      required
+    />
+  </div>
+
+  {/* পাসওয়ার্ড */}
+  <div className="relative">
+    <label htmlFor="password" className="block text-lg font-medium text-[#441a05]">
+      পাসওয়ার্ড
+    </label>
+    <FaLock className="absolute left-3 top-[50px] text-[#DB9E30]" />
+    <input
+      type="password"
+      id="password"
+      name="password"
+      value={formData.password}
+      onChange={handleChange}
+      className="mt-1 w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30] transition-all duration-300"
+      placeholder="পাসওয়ার্ড লিখুন (ঐচ্ছিক)"
+    />
+  </div>
+
+  {/* ইউজার আইডি */}
+  <div className="relative">
+    <label htmlFor="user_id" className="block text-lg font-medium text-[#441a05]">
+      ইউজার আইডি <span className="text-[#DB9E30]">*</span>
+    </label>
+    <FaIdCard className="absolute left-3 top-[50px] text-[#DB9E30]" />
+    <input
+      type="number"
+      id="user_id"
+      name="user_id"
+      value={formData.user_id}
+      onChange={handleChange}
+      className="mt-1 w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30] transition-all duration-300"
+      placeholder="ইউজার আইডি লিখুন"
+      required
+    />
+  </div>
+
+  {/* লিঙ্গ */}
+  <div className="relative">
+    <label htmlFor="gender" className="block text-lg font-medium text-[#441a05]">
+      লিঙ্গ
+    </label>
+    <FaVenusMars className="absolute left-3 top-[50px] text-[#DB9E30]" />
+    <select
+      id="gender"
+      name="gender"
+      value={formData.gender}
+      onChange={handleChange}
+      className="mt-1 w-full bg-white/10 text-[#441a05] pl-10 py-3.5 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30] transition-all duration-300"
+    >
+      <option value="">লিঙ্গ নির্বাচন করুন</option>
+      <option value="Male">পুরুষ</option>
+      <option value="Female">নারী</option>
+      <option value="Other">অন্যান্য</option>
+    </select>
+  </div>
+
+  {/* জন্ম তারিখ */}
+  <div className="relative">
+    <label htmlFor="dob" className="block text-lg font-medium text-[#441a05]">
+      জন্ম তারিখ
+    </label>
+    <FaCalendarAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
+    <input
+      type="date"
+      id="dob"
+      name="dob"
+      value={formData.dob}
+      onChange={handleChange}
+      className="mt-1 w-full bg-white/10 text-[#441a05] pl-10 py-3.5 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30] transition-all duration-300"
+    />
+  </div>
+
+  {/* রক্তের গ্রুপ */}
+  <div className="relative">
+    <label htmlFor="blood_group" className="block text-lg font-medium text-[#441a05]">
+      রক্তের গ্রুপ
+    </label>
+    <FaHeart className="absolute left-3 top-[50px] text-[#DB9E30]" />
+    <select
+      id="blood_group"
+      name="blood_group"
+      value={formData.blood_group}
+      onChange={handleChange}
+      className="mt-1 w-full bg-white/10 text-[#441a05] pl-10 py-3.5 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30] transition-all duration-300"
+    >
+      <option value="">রক্তের গ্রুপ নির্বাচন করুন</option>
+      <option value="A+">A+</option>
+      <option value="A-">A-</option>
+      <option value="B+">B+</option>
+      <option value="B-">B-</option>
+      <option value="AB+">AB+</option>
+      <option value="AB-">AB-</option>
+      <option value="O+">O+</option>
+      <option value="O-">O-</option>
+    </select>
+  </div>
+
+  {/* জাতীয়তা */}
+  <div className="relative">
+    <label htmlFor="nationality" className="block text-lg font-medium text-[#441a05]">
+      জাতীয়তা
+    </label>
+    <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
+    <input
+      type="text"
+      id="nationality"
+      name="nationality"
+      value={formData.nationality}
+      onChange={handleChange}
+      className="mt-1 w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30] transition-all duration-300"
+      placeholder="জাতীয়তা লিখুন"
+    />
+  </div>
+
+  {/* জন্ম সনদ নম্বর */}
+  <div className="relative">
+    <label htmlFor="birth_certificate_no" className="block text-lg font-medium text-[#441a05]">
+      জন্ম সনদ নম্বর
+    </label>
+    <FaIdCard className="absolute left-3 top-[50px] text-[#DB9E30]" />
+    <input
+      type="text"
+      id="birth_certificate_no"
+      name="birth_certificate_no"
+      value={formData.birth_certificate_no}
+      onChange={handleChange}
+      className="mt-1 w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30] transition-all duration-300"
+      placeholder="জন্ম সনদ নম্বর লিখুন"
+    />
+  </div>
+
+  {/* স্থিতি */}
+  <div className="relative">
+    <label htmlFor="status" className="block text-lg font-medium text-[#441a05]">
+      স্থিতি
+    </label>
+    <FaUserGraduate className="absolute left-3 top-[50px] text-[#DB9E30]" />
+    <select
+      id="status"
+      name="status"
+      value={formData.status}
+      onChange={handleChange}
+      className="mt-1 w-full bg-white/10 text-[#441a05] pl-10 py-3.5 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30] transition-all duration-300"
+    >
+      <option value="">স্থিতি নির্বাচন করুন</option>
+      <option value="Online">অনলাইন</option>
+      <option value="Offline">অফলাইন</option>
+    </select>
+  </div>
+
+  {/* প্রতিবন্ধকতার তথ্য (Full width) */}
+  <div className="relative col-span-1 sm:col-span-2 md:col-span-3">
+    <label htmlFor="disability_info" className="block text-lg font-medium text-[#441a05]">
+      প্রতিবন্ধকতার তথ্য
+    </label>
+    <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
+    <textarea
+      id="disability_info"
+      name="disability_info"
+      value={formData.disability_info}
+      onChange={handleChange}
+      className="mt-1 w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30] transition-all duration-300"
+      placeholder="প্রতিবন্ধকতার তথ্য লিখুন (ঐচ্ছিক)"
+      rows="3"
+    />
+  </div>
+</div>
+
           </div>
 
           {/* যোগাযোগের তথ্য */}
@@ -903,204 +883,172 @@ const StudentRegistrationForm = () => {
             <h3 className="text-2xl font-semibold text-[#441a05] text-center">
               শিক্ষাগত তথ্য
             </h3>
-            <div className="border-t border-[#9d9087]/50 mt-4 pt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="relative input-icon">
-                <label
-                  htmlFor="admission_year_id"
-                  className="block text-lg font-medium text-[#441a05]"
-                >
-                  ভর্তি বছর <span className="text-[#DB9E30]">*</span>
-                </label>
-                <FaCalendarAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <select
-                  id="admission_year_id"
-                  name="admission_year_id"
-                  value={formData.admission_year_id}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  required
-                  aria-label="ভর্তি বছর"
-                >
-                  <option value="" disabled>
-                    ভর্তি বছর নির্বাচন করুন
-                  </option>
-                {academicYears?.map((year) => (
-  <option key={year?.id} value={year?.id}>{year?.name}</option>
-))}
+         <div className="border-t border-[#9d9087]/50 mt-4 pt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+  {/* ভর্তি বছর */}
+  <div className="relative">
+    <label htmlFor="admission_year_id" className="block text-lg font-medium text-[#441a05]">
+      ভর্তি বছর <span className="text-[#DB9E30]">*</span>
+    </label>
+    <FaCalendarAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
+    <select
+      id="admission_year_id"
+      name="admission_year_id"
+      value={formData.admission_year_id}
+      onChange={handleChange}
+      className="mt-1 w-full bg-white/10 text-[#441a05] pl-10 py-3.5 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30] transition-all duration-300"
+      required
+    >
+      <option value="" disabled>ভর্তি বছর নির্বাচন করুন</option>
+      {academicYears?.map((year) => (
+        <option key={year?.id} value={year?.id}>{year?.name}</option>
+      ))}
+    </select>
+  </div>
 
-                  {/* 
-                  <option value="1">২০২৪</option>
-                  <option value="2">২০২৫</option> */}
-                </select>
-              </div>
-              <div className="relative input-icon">
-                <label
-                  htmlFor="class_id"
-                  className="block text-lg font-medium text-[#441a05]"
-                >
-                  ক্লাস <span className="text-[#DB9E30]">*</span>
-                </label>
-                <FaSchool className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <select
-                  id="class_id"
-                  name="class_id"
-                  value={formData.class_id}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  required
-                  aria-label="ক্লাস"
-                >
-                  <option value="">ক্লাস নির্বাচন করুন</option>
-                  {classConfig?.map((cls) => (
-                    <option key={cls.id} value={cls.id}>
-                      {cls?.class_name || "N/A"} {cls?.section_name}{" "}
-                      {cls?.shift_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="relative input-icon">
-                <label
-                  htmlFor="roll_no"
-                  className="block text-lg font-medium text-[#441a05]"
-                >
-                  রোল নম্বর
-                </label>
-                <FaIdCard className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <input
-                  type="number"
-                  id="roll_no"
-                  name="roll_no"
-                  value={formData.roll_no}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="রোল নম্বর লিখুন"
-                  aria-label="রোল নম্বর"
-                />
-              </div>
-              <div className="relative input-icon">
-                <label
-                  htmlFor="admission_date"
-                  className="block text-lg font-medium text-[#441a05]"
-                >
-                  ভর্তি তারিখ
-                </label>
-                <FaCalendarAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <input
-                  type="date"
-                  id="admission_date"
-                  name="admission_date"
-                  value={formData.admission_date}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  aria-label="ভর্তি তারিখ"
-                />
-              </div>
-              <div className="relative input-icon">
-                <label
-                  htmlFor="name_tag"
-                  className="block text-lg font-medium text-[#441a05]"
-                >
-                  নাম ট্যাগ
-                </label>
-                <FaUserTag className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <input
-                  type="text"
-                  id="name_tag"
-                  name="name_tag"
-                  value={formData.name_tag}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="নাম ট্যাগ লিখুন (যেমন: মেধা)"
-                  aria-label="নাম ট্যাগ"
-                />
-              </div>
-              <div className="relative input-icon">
-                <label
-                  htmlFor="tc_no"
-                  className="block text-lg font-medium text-[#441a05]"
-                >
-                  স্থানান্তর সনদ নম্বর
-                </label>
-                <FaFileAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <input
-                  type="text"
-                  id="tc_no"
-                  name="tc_no"
-                  value={formData.tc_no}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="স্থানান্তর সনদ নম্বর লিখুন (ঐচ্ছিক)"
-                  aria-label="স্থানান্তর সনদ নম্বর"
-                />
-              </div>
-              <div className="relative input-icon col-span-3">
-                <label className="block text-lg font-medium text-[#441a05]">
-                  আবাসিক অবস্থা
-                </label>
-                <div className="mt-4 relative input-icon col-span-3 animate-scaleIn">
-                  <label className="block text-lg font-medium text-[#441a05]">
-                    আবাসিক অবস্থা
-                  </label>
-                  <div className="mt-3 flex space-x-6">
-                    <label className="inline-flex items-center group cursor-pointer">
-                      <input
-                        type="radio"
-                        name="residential_status"
-                        value="Residential"
-                        checked={formData.residential_status === "Residential"}
-                        onChange={() =>
-                          setFormData({
-                            ...formData,
-                            residential_status: "Residential",
-                          })
-                        }
-                        className="hidden"
-                        aria-label="আবাসিক"
-                      />
-                      <span className="relative flex items-center">
-                        <span className="w-5 h-5 rounded-full border-2 border-[#9d9087] bg-white/10 group-hover:border-[#DB9E30] transition-all duration-300 flex items-center justify-center">
-                          {formData.residential_status === "Residential" && (
-                            <span className="w-3 h-3 rounded-full bg-[#DB9E30] scale-100 transition-transform duration-200"></span>
-                          )}
-                        </span>
-                        <span className="ml-3 text-[#441a05] font-medium group-hover:text-[#DB9E30] transition-colors duration-300">
-                          আবাসিক
-                        </span>
-                      </span>
-                    </label>
-                    <label className="inline-flex items-center group cursor-pointer">
-                      <input
-                        type="radio"
-                        name="residential_status"
-                        value="NonResidential"
-                        checked={
-                          formData.residential_status === "NonResidential"
-                        }
-                        onChange={() =>
-                          setFormData({
-                            ...formData,
-                            residential_status: "NonResidential",
-                          })
-                        }
-                        className="hidden"
-                        aria-label="অ-আবাসিক"
-                      />
-                      <span className="relative flex items-center">
-                        <span className="w-5 h-5 rounded-full border-2 border-[#9d9087] bg-white/10 group-hover:border-[#DB9E30] transition-all duration-300 flex items-center justify-center">
-                          {formData.residential_status === "NonResidential" && (
-                            <span className="w-3 h-3 rounded-full bg-[#DB9E30] scale-100 transition-transform duration-200"></span>
-                          )}
-                        </span>
-                        <span className="ml-3 text-[#441a05] font-medium group-hover:text-[#DB9E30] transition-colors duration-300">
-                          অ-আবাসিক
-                        </span>
-                      </span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
+  {/* ক্লাস */}
+  <div className="relative">
+    <label htmlFor="class_id" className="block text-lg font-medium text-[#441a05]">
+      ক্লাস <span className="text-[#DB9E30]">*</span>
+    </label>
+    <FaSchool className="absolute left-3 top-[50px] text-[#DB9E30]" />
+    <select
+      id="class_id"
+      name="class_id"
+      value={formData.class_id}
+      onChange={handleChange}
+      className="mt-1 w-full bg-white/10 text-[#441a05] pl-10 py-3.5 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30] transition-all duration-300"
+      required
+    >
+      <option value="">ক্লাস নির্বাচন করুন</option>
+      {classConfig?.map((cls) => (
+        <option key={cls.id} value={cls.id}>
+          {cls?.class_name || "N/A"} {cls?.section_name} {cls?.shift_name}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  {/* রোল নম্বর */}
+  <div className="relative">
+    <label htmlFor="roll_no" className="block text-lg font-medium text-[#441a05]">
+      রোল নম্বর
+    </label>
+    <FaIdCard className="absolute left-3 top-[50px] text-[#DB9E30]" />
+    <input
+      type="number"
+      id="roll_no"
+      name="roll_no"
+      value={formData.roll_no}
+      onChange={handleChange}
+      className="mt-1 w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30] transition-all duration-300"
+      placeholder="রোল নম্বর লিখুন"
+    />
+  </div>
+
+  {/* ভর্তি তারিখ */}
+  <div className="relative">
+    <label htmlFor="admission_date" className="block text-lg font-medium text-[#441a05]">
+      ভর্তি তারিখ
+    </label>
+    <FaCalendarAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
+    <input
+      type="date"
+      id="admission_date"
+      name="admission_date"
+      value={formData.admission_date}
+      onChange={handleChange}
+      className="mt-1 w-full bg-white/10 text-[#441a05] pl-10 py-3.5 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30] transition-all duration-300"
+    />
+  </div>
+
+  {/* নাম ট্যাগ */}
+  <div className="relative">
+    <label htmlFor="name_tag" className="block text-lg font-medium text-[#441a05]">
+      নাম ট্যাগ
+    </label>
+    <FaUserTag className="absolute left-3 top-[50px] text-[#DB9E30]" />
+    <input
+      type="text"
+      id="name_tag"
+      name="name_tag"
+      value={formData.name_tag}
+      onChange={handleChange}
+      className="mt-1 w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30] transition-all duration-300"
+      placeholder="নাম ট্যাগ লিখুন (যেমন: মেধা)"
+    />
+  </div>
+
+  {/* স্থানান্তর সনদ নম্বর */}
+  <div className="relative">
+    <label htmlFor="tc_no" className="block text-lg font-medium text-[#441a05]">
+      স্থানান্তর সনদ নম্বর
+    </label>
+    <FaFileAlt className="absolute left-3 top-[50px] text-[#DB9E30]" />
+    <input
+      type="text"
+      id="tc_no"
+      name="tc_no"
+      value={formData.tc_no}
+      onChange={handleChange}
+      className="mt-1 w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30] transition-all duration-300"
+      placeholder="স্থানান্তর সনদ নম্বর লিখুন (ঐচ্ছিক)"
+    />
+  </div>
+
+  {/* আবাসিক অবস্থা (Full width) */}
+  <div className="col-span-1 sm:col-span-2 md:col-span-3">
+    <label className="block text-lg font-medium text-[#441a05] mb-2">
+      আবাসিক অবস্থা
+    </label>
+    <div className="flex flex-wrap gap-6">
+      <label className="inline-flex items-center group cursor-pointer">
+        <input
+          type="radio"
+          name="residential_status"
+          value="Residential"
+          checked={formData.residential_status === "Residential"}
+          onChange={() =>
+            setFormData({ ...formData, residential_status: "Residential" })
+          }
+          className="hidden"
+        />
+        <span className="relative flex items-center">
+          <span className="w-5 h-5 rounded-full border-2 border-[#9d9087] bg-white/10 group-hover:border-[#DB9E30] transition-all duration-300 flex items-center justify-center">
+            {formData.residential_status === "Residential" && (
+              <span className="w-3 h-3 rounded-full bg-[#DB9E30] scale-100 transition-transform duration-200"></span>
+            )}
+          </span>
+          <span className="ml-3 text-[#441a05] font-medium group-hover:text-[#DB9E30] transition-colors duration-300">
+            আবাসিক
+          </span>
+        </span>
+      </label>
+      <label className="inline-flex items-center group cursor-pointer">
+        <input
+          type="radio"
+          name="residential_status"
+          value="NonResidential"
+          checked={formData.residential_status === "NonResidential"}
+          onChange={() =>
+            setFormData({ ...formData, residential_status: "NonResidential" })
+          }
+          className="hidden"
+        />
+        <span className="relative flex items-center">
+          <span className="w-5 h-5 rounded-full border-2 border-[#9d9087] bg-white/10 group-hover:border-[#DB9E30] transition-all duration-300 flex items-center justify-center">
+            {formData.residential_status === "NonResidential" && (
+              <span className="w-3 h-3 rounded-full bg-[#DB9E30] scale-100 transition-transform duration-200"></span>
+            )}
+          </span>
+          <span className="ml-3 text-[#441a05] font-medium group-hover:text-[#DB9E30] transition-colors duration-300">
+            অ-আবাসিক
+          </span>
+        </span>
+      </label>
+    </div>
+  </div>
+</div>
+
           </div>
 
           {/* অভিভাবকের তথ্য */}

@@ -405,9 +405,8 @@ const ExpenseItemsList = ({ onEditClick }) => {
               <button
                 onClick={confirmDelete}
                 disabled={isDeleting}
-                className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg transition-colors duration-300 btn-glow ${
-                  isDeleting ? "cursor-not-allowed opacity-60" : "hover:text-white"
-                }`}
+                className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg transition-colors duration-300 btn-glow ${isDeleting ? "cursor-not-allowed opacity-60" : "hover:text-white"
+                  }`}
                 aria-label="নিশ্চিত করুন"
               >
                 {isDeleting ? (
@@ -426,11 +425,12 @@ const ExpenseItemsList = ({ onEditClick }) => {
 
       {/* Expense Items List */}
       <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn p-6">
-        <div className="flex items-center justify-between p-4 border-b border-white/20">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 border-b border-white/20">
           <h3 className="text-lg font-semibold text-[#441a05]">ব্যয় আইটেম তালিকা</h3>
-          <div className="flex items-center space-x-4">
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 w-full md:w-auto">
             {/* Tabs */}
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setActiveTab("all")}
                 className={`tab ${activeTab === "all" ? "tab-active" : "tab-inactive"}`}
@@ -456,58 +456,70 @@ const ExpenseItemsList = ({ onEditClick }) => {
                 তারিখ
               </button>
             </div>
-            {/* Filter Inputs */}
-            {activeTab === "expenseType" && (
-              <select
-                name="expensetype_id"
-                value={dateFilter.expensetype_id}
-                onChange={handleDateFilterChange}
-                className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
-              >
-                <option value="">ব্যয়ের ধরন নির্বাচন করুন</option>
-                {expenseTypes.map((type) => (
-                  <option key={type.id} value={type.id}>{type.expensetype}</option>
-                ))}
-              </select>
-            )}
-            {activeTab === "fund" && (
-              <select
-                name="fund_id"
-                value={dateFilter.fund_id}
-                onChange={handleDateFilterChange}
-                className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
-              >
-                <option value="">ফান্ড নির্বাচন করুন</option>
-                {fundTypes.map((fund) => (
-                  <option key={fund.id} value={fund.id}>{fund.name}</option>
-                ))}
-              </select>
-            )}
-            {activeTab === "date" && (
-              <>
-                <input
-                  type="date"
-                  name="start_date"
-                  value={dateFilter.start_date}
+
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              {activeTab === "expenseType" && (
+                <select
+                  name="expensetype_id"
+                  value={dateFilter.expensetype_id}
                   onChange={handleDateFilterChange}
-                  className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
-                  placeholder="শুরু তারিখ"
-                />
-                <input
-                  type="date"
-                  name="end_date"
-                  value={dateFilter.end_date}
+                  className="bg-transparent min-w-[150px] text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg w-full sm:w-auto"
+                >
+                  <option value="">ব্যয়ের ধরন</option>
+                  {expenseTypes.map((type) => (
+                    <option key={type.id} value={type.id}>{type.expensetype}</option>
+                  ))}
+                </select>
+              )}
+
+              {activeTab === "fund" && (
+                <select
+                  name="fund_id"
+                  value={dateFilter.fund_id}
                   onChange={handleDateFilterChange}
-                  className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300"
-                  placeholder="শেষ তারিখ"
-                />
-              </>
-            )}
-            <button onClick={generatePDFReport} className="report-button" title="Download Expense Report">
+                  className="bg-transparent min-w-[150px] text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg w-full sm:w-auto"
+                >
+                  <option value="">ফান্ড নির্বাচন</option>
+                  {fundTypes.map((fund) => (
+                    <option key={fund.id} value={fund.id}>{fund.name}</option>
+                  ))}
+                </select>
+              )}
+
+              {activeTab === "date" && (
+                <>
+                  <input
+                    type="date"
+                    name="start_date"
+                    value={dateFilter.start_date}
+                    onChange={handleDateFilterChange}
+                    className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg w-full sm:w-auto"
+                    placeholder="শুরু তারিখ"
+                  />
+                  <input
+                    type="date"
+                    name="end_date"
+                    value={dateFilter.end_date}
+                    onChange={handleDateFilterChange}
+                    className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg w-full sm:w-auto"
+                    placeholder="শেষ তারিখ"
+                  />
+                </>
+              )}
+            </div>
+
+            {/* Report Button */}
+            <button
+              onClick={generatePDFReport}
+              className="report-button w-full sm:w-auto"
+              title="Download Expense Report"
+            >
               রিপোর্ট
             </button>
           </div>
         </div>
+
         {isAllItemsLoading || isTypesLoading || isFundLoading || isYearsLoading ? (
           <div className="p-4 flex items-center justify-center">
             <FaSpinner className="animate-spin text-[#441a05] text-2xl mr-2" />

@@ -222,8 +222,8 @@ const ClassPeriodSetup = () => {
       <div className="">
         {/* Header */}
         <div className="flex items-center space-x-4 mb-6 animate-fadeIn ml-5">
-          <IoAddCircle className="text-3xl text-[#441a05]" />
-          <h1 className="text-2xl font-bold text-[#441a05] tracking-tight">
+          <IoAddCircle className="text-4xl text-[#441a05]" />
+          <h1 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
             ক্লাস পিরিয়ড সেটআপ
           </h1>
         </div>

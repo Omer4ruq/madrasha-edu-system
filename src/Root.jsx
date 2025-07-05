@@ -327,10 +327,10 @@ function Root() {
                   index: true,
                   element: <AddMealsType />,
                 },
-                {
-                  path: "meal-type",
-                  element: <AddMealsType />,
-                },
+                // {
+                //   path: "meal-type",
+                //   element: <AddMealsType />,
+                // },
                 {
                   path: "meal-items",
                   element: <MealItems />,

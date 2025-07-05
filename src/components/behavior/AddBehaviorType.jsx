@@ -204,7 +204,7 @@ const AddBehaviorType = () => {
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
           <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
             <IoAddCircle className="text-4xl text-[#441a05]" />
-            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">নতুন আচরণের ধরন যোগ করুন</h3>
+            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">নতুন আচরণের ধরন যোগ করুন</h3>
           </div>
           <form onSubmit={handleSubmitBehavior} className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <input
@@ -212,11 +212,11 @@ const AddBehaviorType = () => {
               id="behaviorName"
               value={behavior}
               onChange={(e) => setBehavior(e.target.value)}
-              className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-              placeholder="আচরণের ধরন লিখুন (যেমন, সময়ানুবর্তিতা)"
+              className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
+              placeholder="আচরণের ধরন"
               disabled={isCreating}
               aria-label="আচরণের ধরন"
-              title="আচরণের ধরন লিখুন (উদাহরণ: সময়ানুবর্তিতা) / Enter behavior type (e.g., Punctuality)"
+              title="আচরণের ধরন / Enter behavior type (e.g., Punctuality)"
               aria-describedby={createError ? "behavior-error" : undefined}
             />
             <input
@@ -224,11 +224,11 @@ const AddBehaviorType = () => {
               id="marks"
               value={marks}
               onChange={(e) => setMarks(e.target.value)}
-              className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-              placeholder="নম্বর লিখুন (যেমন, ১০)"
+              className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
+              placeholder="নম্বর লিখুন"
               disabled={isCreating}
               aria-label="নম্বর"
-              title="নম্বর লিখুন (উদাহরণ: ১০) / Enter marks (e.g., 10)"
+              title="নম্বর লিখুন"
               aria-describedby={createError ? "behavior-error" : undefined}
             />
             <button

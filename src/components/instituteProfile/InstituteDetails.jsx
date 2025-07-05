@@ -80,7 +80,7 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
   return (
     <div className="mx-auto py-8">
       <style>{customStyles}</style>
-      <h1 className="text-3xl md:text-4xl font-extrabold mb-8 text-center text-[#441a05] title-underline animate-fadeIn">
+      <h1 className="sm:text-3xl text-2xl md:text-4xl font-extrabold mb-8 text-center text-[#441a05] title-underline animate-fadeIn">
         প্রতিষ্ঠানের প্রোফাইল
       </h1>
       {institutes.map((institute) => {
@@ -92,13 +92,13 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
             className="bg-black/10 backdrop-blur-sm border border-white/20 rounded-xl shadow-md mb-10 overflow-hidden relative animate-fadeIn"
           >
             {/* Profile Header */}
-            <div className="relative flex items-center justify-between p-6 bg-[#441a05]/10">
+            <div className="relative sm:flex items-center justify-between p-6 bg-[#441a05]/10">
               <div className="flex items-center space-x-4">
-                <div className="bg-white/20 border-4 border-white rounded-full p-4 shadow-md animate-scaleIn">
-                  <FaBuilding className="text-[#DB9E30] text-4xl" />
+                <div className="bg-white/20 border-4 border-white rounded-full sm:p-4 p-2 shadow-md animate-scaleIn">
+                  <FaBuilding className="text-[#DB9E30] sm:text-4xl text-xl" />
                 </div>
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-[#441a05]">{institute.institute_name}</h2>
+                  <h2 className="md:text-3xl font-bold text-[#441a05]">{institute.institute_name}</h2>
                   <p className="text-sm text-[#9d9087]">
                     {institute.institute_type?.name || 'অজানা'} • {institute.institute_address || 'অজানা'}
                   </p>
@@ -110,7 +110,7 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
                 className="edit-icon text-[#9d9087] p-2 rounded-full transition-all duration-300 btn-ripple"
                 title="প্রোফাইল সম্পাদনা করুন"
               >
-                <FaEdit className="text-xl" />
+                <FaEdit className="sm:text-xl" />
               </button>
             </div>
 

@@ -158,7 +158,7 @@ const CleanType = () => {
             ) : (
               <IoAddCircle className="text-3xl text-[#441a05]" />
             )}
-            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
+            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
               {editingId ? 'পরিচ্ছন্নতার ধরন সম্পাদনা করুন' : 'নতুন পরিচ্ছন্নতার ধরন যোগ করুন'}
             </h3>
           </div>
@@ -168,8 +168,8 @@ const CleanType = () => {
               id="cleanReportTypeName"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-              placeholder="যেমন, দৈনিক পরিচ্ছন্নতা"
+              className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
+              placeholder="পরিচ্ছন্নতার ধরন"
               disabled={isCreating || isUpdating}
               aria-label="পরিচ্ছন্নতা রিপোর্টের ধরন"
               title="পরিচ্ছন্নতা রিপোর্টের ধরন লিখুন (উদাহরণ: দৈনিক পরিচ্ছন্নতা) / Enter clean report type (e.g., Daily Cleaning)"

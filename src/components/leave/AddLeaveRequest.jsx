@@ -235,8 +235,8 @@ const AddLeaveRequest = () => {
       {/* Form to Add Leave Request */}
       <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
         <div className="flex items-center space-x-4 mb-6">
-          <IoAddCircle className="text-4xl text-[#441a05]" />
-          <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">নতুন ছুটির আবেদন যোগ</h3>
+          <IoAddCircle className="text-3xl text-[#441a05]" />
+          <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">নতুন ছুটির আবেদন যোগ</h3>
         </div>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div>

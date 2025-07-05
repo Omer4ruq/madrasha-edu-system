@@ -117,7 +117,7 @@ const IncomeHead = () => {
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
           <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
             <IoAddCircle className="text-4xl text-[#441a05]" />
-            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">নতুন আয়ের শিরোনাম যোগ করুন</h3>
+            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">নতুন আয়ের শিরোনাম যোগ করুন</h3>
           </div>
           <form onSubmit={handleSubmitIncomeHead} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
             <input
@@ -125,8 +125,8 @@ const IncomeHead = () => {
               id="incomeHeadName"
               value={incomeHeadName}
               onChange={(e) => setIncomeHeadName(e.target.value)}
-              className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-              placeholder="আয়ের শিরোনাম লিখুন (যেমন: বিক্রয় আয়)"
+              className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
+              placeholder="আয়ের শিরোনাম"
               disabled={isCreating}
               aria-describedby={createError ? "income-head-error" : undefined}
             />
@@ -146,7 +146,7 @@ const IncomeHead = () => {
               ) : (
                 <span className="flex items-center space-x-2">
                   <IoAdd className="w-5 h-5" />
-                  <span>আয়ের শিরোনাম তৈরি করুন</span>
+                  <span>আয়ের শিরোনাম তৈরি</span>
                 </span>
               )}
             </button>

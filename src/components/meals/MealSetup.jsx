@@ -304,11 +304,11 @@ const MealSetup = () => {
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
           <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
             {editingId ? (
-              <FaEdit className="text-3xl text-[#441a05]" />
+              <FaEdit className="text-4xl text-[#441a05]" />
             ) : (
-              <IoAddCircle className="text-3xl text-[#441a05]" />
+              <IoAddCircle className="text-4xl text-[#441a05]" />
             )}
-            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
+            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
               {editingId ? 'খাবার সেটআপ সম্পাদনা করুন' : 'নতুন খাবার সেটআপ যোগ করুন'}
             </h3>
           </div>
@@ -352,14 +352,14 @@ const MealSetup = () => {
                 value={days.find((day) => day.value === formData.day) || null}
                 onChange={(selected) => handleInputChange('day', selected ? selected.value : 'SUN')}
                 isDisabled={isCreating || isUpdating}
-                placeholder="সপ্তাহের দিন নির্বাচন করুন"
+                placeholder="সপ্তাহের দিন নির্বাচন"
                 className="react-select-container w-full"
                 classNamePrefix="react-select"
                 menuPortalTarget={document.body}
                 menuPosition="fixed"
                 isSearchable={false}
                 aria-label="সপ্তাহের দিন"
-                title="সপ্তাহের দিন নির্বাচন করুন / Select day of the week"
+                title="সপ্তাহের দিন নির্বাচন "
                 styles={selectStyles}
               />
             </div>
@@ -373,14 +373,14 @@ const MealSetup = () => {
                 }
                 onChange={(selected) => handleInputChange('meal_name', selected ? selected.value : '')}
                 isDisabled={isCreating || isUpdating || namesLoading}
-                placeholder="খাবারের ধরন নির্বাচন করুন"
+                placeholder="খাবারের ধরন নির্বাচন"
                 className="react-select-container"
                 classNamePrefix="react-select"
                 menuPortalTarget={document.body}
                 menuPosition="fixed"
                 isSearchable={false}
                 aria-label="খাবারের ধরন"
-                title="খাবারের ধরন নির্বাচন করুন / Select meal name"
+                title="খাবারের ধরন"
                 styles={selectStyles}
               />
             </div>
@@ -392,7 +392,7 @@ const MealSetup = () => {
               onChange={(selected) => handleInputChange('meal_item', selected ? selected.map(opt => Number(opt.value)) : [])}
               isDisabled={isCreating || isUpdating || itemsLoading}
               isMulti
-              placeholder="খাবারের আইটেম নির্বাচন করুন"
+              placeholder="খাবারের আইটেম নির্বাচন"
               className="react-select-container"
               classNamePrefix="react-select"
               menuPortalTarget={document.body}
