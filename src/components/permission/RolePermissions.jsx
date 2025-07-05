@@ -20,7 +20,7 @@ const RolePermissions = () => {
   const { data: groupPermissions } = useGetGroupPermissionsQuery(selectedGroup?.id, {
     skip: !selectedGroup,
   });
-
+console.log("groupPermissions", groupPermissions)
   // Mutation to update group permissions
   const [updateGroupPermissions] = useUpdateGroupPermissionsMutation();
 
@@ -185,7 +185,7 @@ const RolePermissions = () => {
                 <h3 className="text-lg font-medium text-gray-800 mb-4 capitalize">
                   {appLabel.replace('_', ' ')}
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {groupedPermissions[appLabel].map((permission) => (
                     <label
                       key={permission.id}
