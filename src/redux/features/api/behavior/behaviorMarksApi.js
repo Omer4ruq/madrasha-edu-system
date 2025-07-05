@@ -9,6 +9,7 @@ const getToken = () => {
   return localStorage.getItem('token'); 
 };
 
+
 export const behaviorMarksApi = createApi({
   reducerPath: 'behaviorMarksApi',
   baseQuery: fetchBaseQuery({
