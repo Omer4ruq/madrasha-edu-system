@@ -1,10 +1,11 @@
 import React from 'react';
 import { FaUserEdit } from 'react-icons/fa';
 import profileImg from "/images/profile.jpg";
-
+import { useSelector } from 'react-redux';
 
 
 export default function ProfileInfo() {
+  const { user, role, profile : details } = useSelector((state) => state.auth);
   const profile = [
     {
       title: 'নিবন্ধন নম্বর',
@@ -60,7 +61,7 @@ export default function ProfileInfo() {
 
       {/* User name */}
       <h4 className="text-[#441a05] bg-[#DB9E30] text-center rounded-lg p-2 font-bold text-lg animate-scaleIn">
-        আব্দুল্লাহ আল মামুন
+        {user?.name}
       </h4>
 
       {/* User data table */}

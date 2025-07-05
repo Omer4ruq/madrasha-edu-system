@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
 import { useLoginUserMutation } from '../../redux/features/api/auth/loginApi';
 import { setCredentials } from '../../redux/features/slice/authSlice';
-
+import { useSelector, useDispatch } from 'react-redux';
+import { toast } from 'react-hot-toast';
 
 const Login = () => {
- const [username, setUsername] = useState('');
+  const { user, role, profile } = useSelector((state) => state.auth);
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -15,6 +15,13 @@ const Login = () => {
   const [loginUser] = useLoginUserMutation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  // 🔁 যদি user আগেই লগইন করা থাকে, রিডাইরেক্ট করো
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,15 +34,14 @@ const Login = () => {
         password,
       }).unwrap();
 
-      // ইউজার ইনফো এবং টোকেন Redux স্টোরে সেভ করা
       dispatch(setCredentials({
         user: result.user_data,
-        profile : result.profile_data,
+        profile: result.profile_data,
         role: result.role,
         token: result.access_token,
       }));
 
-      // ড্যাশবোর্ডে রিডাইরেক্ট
+      toast.success('সফলভাবে লগইন হয়েছে!');
       navigate('/dashboard');
     } catch (err) {
       setError('লগইন ব্যর্থ! ব্যবহারকারীর নাম বা পাসওয়ার্ড ভুল হতে পারে।');
@@ -43,7 +49,6 @@ const Login = () => {
       setLoading(false);
     }
   };
-
 
   return (
     <div className="min-h-screen bg-[#DB9E30] flex items-center justify-center p-4 w-screen h-screen top-0">
@@ -53,10 +58,7 @@ const Login = () => {
         </h2>
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div>
-            <label
-              htmlFor="username"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
               ব্যবহারকারীর নাম
             </label>
             <input
@@ -70,10 +72,7 @@ const Login = () => {
             />
           </div>
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               পাসওয়ার্ড
             </label>
             <input

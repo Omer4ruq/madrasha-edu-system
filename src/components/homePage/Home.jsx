@@ -13,36 +13,15 @@ import PaymentStat from "./mainComponents/PaymentStat";
 import ProfileInfo from "./mainComponents/ProfileInfo";
 import SearchPayslip from "./mainComponents/SearchPayslip";
 import SupportToken from "./mainComponents/SupportToken";
-import { useSelector, useDispatch } from 'react-redux';
-import { logout } from "../../redux/features/slice/authSlice";
+
 
 export default function Home() {
 
-  const { user, role, profile } = useSelector((state) => state.auth);
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/');
-  };
-
-  console.log(user, role, profile);
 
 
   return (
     <div className="space-y-5 mt-4">
-      <div className={`${user ? "" : "hidden"}`}>
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-4">
-          স্বাগতম, {user?.name || 'ব্যবহারকারী'}, {user?.user_id}, {role}
-        </h2>
-        <button
-          onClick={handleLogout}
-          className="w-full bg-red-500 text-white py-3 rounded-lg transition duration-300 font-semibold shadow-md"
-        >
-          লগআউট করুন
-        </button>
-      </div>
       <Overview />
       {/* profile info, attendace info, notices */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
