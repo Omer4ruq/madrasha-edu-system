@@ -196,8 +196,8 @@ const ClassSubject = () => {
         <div className="mb-6">
           <div className="border-b border-white/20 bg-black/10 backdrop-blur-sm rounded-2xl p-2">
             <div className="flex items-center space-x-4 m-6 animate-fadeIn">
-              <IoAddCircle className="text-3xl text-[#441a05]" />
-              <h1 className="text-2xl font-bold text-[#441a05] tracking-tight">
+              <IoAddCircle className="text-4xl text-[#441a05]" />
+              <h1 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
                 ক্লাস বিষয় ব্যবস্থাপনা
               </h1>
             </div>

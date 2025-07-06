@@ -240,12 +240,12 @@ const CleanReport = () => {
 
       <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
         <div className="flex items-center space-x-2 mb-6">
-          <IoAddCircle className="text-4xl text-[#441a05]" />
-          <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">পরিচ্ছন্নতার রিপোর্ট</h3>
+          <IoAddCircle className="text-3xl text-[#441a05]" />
+          <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">পরিচ্ছন্নতার রিপোর্ট</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <label className="flex items-center space-x-4 animate-fadeIn">
-            <span className="text-[#441a05] font-medium text-nowrap">তারিখ নির্বাচন করুন:</span>
+            <span className="text-[#441a05] sm:text-base text-xs font-medium text-nowrap">তারিখ নির্বাচন করুন:</span>
             <div className="w-full">
               <input
                 type="date"
@@ -260,17 +260,17 @@ const CleanReport = () => {
             </div>
           </label>
           <label className="flex items-center space-x-4 animate-fadeIn">
-            <span className="text-[#441a05] font-medium text-nowrap">ক্লাস নির্বাচন করুন:</span>
+            <span className="text-[#441a05] sm:text-base text-xs font-medium text-nowrap">ক্লাস নির্বাচন করুন:</span>
             <div className="w-full">
               <Select
                 options={classOptions}
                 value={selectedClass}
                 onChange={handleClassSelect}
-                placeholder="ক্লাস নির্বাচন করুন"
+                placeholder="ক্লাস নির্বাচন"
                 isLoading={isClassesLoading}
                 isDisabled={isClassesLoading || isCreating || isUpdating}
                 styles={selectStyles}
-                className="animate-scaleIn"
+                className="animate-scaleIn "
                 menuPortalTarget={document.body}
                 menuPosition="fixed"
                 isClearable

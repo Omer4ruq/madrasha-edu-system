@@ -10,7 +10,7 @@ export default function SidebarHeader({searchTerm, setSearchTerm}) {
 
   return (
     <div className="text-center">
-      <h2 className="text-2xl font-semibold text-white px-4 pt-6">ড্যাশবোর্ড</h2>
+      <h2 className="text-2xl font-semibold text-white px-4 pt-6">কওমী তালীম</h2>
       {/* show cover image or searchbar */}
       {/* {showSearchBar ? (
         <div className="flex gap-2 items-center justify-center bg-[#00000065] px-3 py-[9px] mx-6 rounded-md border border-transparent has-[:focus]:border-tertiary has-[:focus]:shadow-md duration-200">

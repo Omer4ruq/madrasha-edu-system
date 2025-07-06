@@ -207,9 +207,14 @@ const mainMenu = [
         link: "/talimat/exam-routine",
       },
       {
-        id: "04/06",
+        id: "05/13",
         title: "ছাত্রের উপস্থিতি",
         link: "/talimat/student-attendance",
+      },
+      {
+        id: "05/14",
+        title: "প্রত্যয়ন পত্র",
+        link: "/talimat/testimonial",
       },
     ],
   },

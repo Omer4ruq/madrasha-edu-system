@@ -286,7 +286,7 @@ const AddEvent = () => {
         <div ref={formRef} className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl w-full">
           <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
             <IoAddCircle className="text-4xl text-[#441a05]" />
-            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
+            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
               ইভেন্ট যোগ করুন
             </h3>
           </div>
@@ -304,7 +304,7 @@ const AddEvent = () => {
                   setNewEvent({ ...newEvent, title: e.target.value })
                 }
                 className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
-                placeholder="ইভেন্ট শিরোনাম (যেমন, ঈদুল ফিতর)"
+                placeholder="ইভেন্ট শিরোনাম"
                 disabled={isCreating || isUpdating}
                 aria-label="ইভেন্ট শিরোনাম লিখুন"
                 title="ইভেন্ট শিরোনাম লিখুন / Enter event title"

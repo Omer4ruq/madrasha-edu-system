@@ -459,9 +459,9 @@ const AddBehaviorMarks = () => {
       <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
         <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
           <IoAddCircle className="text-4xl text-[#441a05]" />
-          <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">শ্রেণি এবং পরীক্ষা নির্বাচন করুন</h3>
+          <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">শ্রেণি এবং পরীক্ষা নির্বাচন করুন</h3>
         </div>
-        <div className="flex space-x-4 max-w-2xl">
+        <div className="sm:flex-row flex flex-col gap-5">
           <div className="flex-1">
             <select
               value={selectedClass}
@@ -469,7 +469,7 @@ const AddBehaviorMarks = () => {
               className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-1 focus:ring-[#441a05]"
               disabled={classesLoading}
             >
-              <option value="">শ্রেণি নির্বাচন করুন</option>
+              <option value="" disabled>শ্রেণি নির্বাচন</option>
               {classes?.map(cls => (
                 <option key={cls.id} value={cls.id}>{cls.class_name} {cls.shift_name} {cls.section_name}</option>
               ))}
@@ -497,7 +497,7 @@ const AddBehaviorMarks = () => {
               className={`w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-1 focus:ring-[#441a05] ${isExamLocked ? 'disabled-select' : ''}`}
               disabled={!selectedClass || examsLoading || isExamLocked}
             >
-              <option value="">পরীক্ষা নির্বাচন করুন</option>
+              <option value="" disabled>পরীক্ষা নির্বাচন</option>
               {exams?.map(exam => (
                 <option key={exam.id} value={exam.id}>{exam.name}</option>
               ))}
@@ -512,7 +512,7 @@ const AddBehaviorMarks = () => {
         <div className="flex items-center justify-between p-4 border-b border-white/20">
           <h3 className="text-lg font-semibold text-[#441a05]">ছাত্রদের মার্কস</h3>
           <div className="text-sm text-[#441a05]/70">
-            <span className="bg-blue-100 px-2 py-1 rounded mr-2">💡 Enter বা বাইরে ক্লিক করে সংরক্ষণ করুন</span>
+            
             <button onClick={generatePDFReport} className="report-button" title="Download Behavior Report">রিপোর্ট</button>
           </div>
         </div>

@@ -264,8 +264,8 @@ const TeacherSubjectAssign = () => {
         {/* Header and Form */}
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-2xl mb-8 animate-fadeIn shadow-xl">
           <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-            <IoAddCircle className="text-3xl text-[#441a05]" />
-            <h2 className="text-2xl font-bold text-[#441a05] tracking-tight">
+            <IoAddCircle className="text-4xl text-[#441a05]" />
+            <h2 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
               শিক্ষকের জন্য বিষয় অ্যাসাইনমেন্ট
             </h2>
           </div>

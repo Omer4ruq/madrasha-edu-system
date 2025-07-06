@@ -660,56 +660,62 @@ const StaffRegistrationForm = () => {
               <FaHome className="text-3xl text-[#DB9E30]" />
             </div>
             <h3 className="text-2xl font-semibold text-[#441a05] text-center">পারিবারিক তথ্য</h3>
-            <div className="border-t border-[#9d9087]/50 mt-4 pt-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div className="relative input-icon">
-                <label htmlFor="spouse_name" className="block text-lg font-medium text-[#441a05]">
-                  স্ত্রী/স্বামীর নাম
-                </label>
-                <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <input
-                  type="text"
-                  id="spouse_name"
-                  name="spouse_name"
-                  value={formData.spouse_name}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="স্ত্রী/স্বামীর নাম লিখুন"
-                  aria-label="স্ত্রী/স্বামীর নাম"
-                />
-              </div>
-              <div className="relative input-icon">
-                <label htmlFor="spouse_phone_number" className="block text-lg font-medium text-[#441a05]">
-                  স্ত্রী/স্বামীর ফোন নম্বর
-                </label>
-                <FaPhone className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <input
-                  type="text"
-                  id="spouse_phone_number"
-                  name="spouse_phone_number"
-                  value={formData.spouse_phone_number}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="স্ত্রী/স্বামীর ফোন নম্বর লিখুন"
-                  aria-label="স্ত্রী/স্বামীর ফোন নম্বর"
-                />
-              </div>
-              <div className="relative input-icon">
-                <label htmlFor="children_no" className="block text-lg font-medium text-[#441a05]">
-                  সন্তানের সংখ্যা
-                </label>
-                <FaChild className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                <input
-                  type="number"
-                  id="children_no"
-                  name="children_no"
-                  value={formData.children_no}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                  placeholder="সন্তানের সংখ্যা লিখুন"
-                  aria-label="সন্তানের সংখ্যা"
-                />
-              </div>
-            </div>
+            <div className="border-t border-[#9d9087]/50 mt-4 pt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+  {/* Spouse Name */}
+  <div className="relative">
+    <label htmlFor="spouse_name" className="block text-lg font-medium text-[#441a05]">
+      স্ত্রী/স্বামীর নাম
+    </label>
+    <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
+    <input
+      type="text"
+      id="spouse_name"
+      name="spouse_name"
+      value={formData.spouse_name}
+      onChange={handleChange}
+      className="mt-1 w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30] transition-all duration-300"
+      placeholder="স্ত্রী/স্বামীর নাম লিখুন"
+      aria-label="স্ত্রী/স্বামীর নাম"
+    />
+  </div>
+
+  {/* Spouse Phone Number */}
+  <div className="relative">
+    <label htmlFor="spouse_phone_number" className="block text-lg font-medium text-[#441a05]">
+      স্ত্রী/স্বামীর ফোন নম্বর
+    </label>
+    <FaPhone className="absolute left-3 top-[50px] text-[#DB9E30]" />
+    <input
+      type="text"
+      id="spouse_phone_number"
+      name="spouse_phone_number"
+      value={formData.spouse_phone_number}
+      onChange={handleChange}
+      className="mt-1 w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30] transition-all duration-300"
+      placeholder="স্ত্রী/স্বামীর ফোন নম্বর লিখুন"
+      aria-label="স্ত্রী/স্বামীর ফোন নম্বর"
+    />
+  </div>
+
+  {/* Number of Children */}
+  <div className="relative">
+    <label htmlFor="children_no" className="block text-lg font-medium text-[#441a05]">
+      সন্তানের সংখ্যা
+    </label>
+    <FaChild className="absolute left-3 top-[50px] text-[#DB9E30]" />
+    <input
+      type="number"
+      id="children_no"
+      name="children_no"
+      value={formData.children_no}
+      onChange={handleChange}
+      className="mt-1 w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30] transition-all duration-300"
+      placeholder="সন্তানের সংখ্যা লিখুন"
+      aria-label="সন্তানের সংখ্যা"
+    />
+  </div>
+</div>
+
           </div>
 
           {/* কর্মসংস্থানের তথ্য */}

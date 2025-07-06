@@ -337,7 +337,7 @@ const ExamRoutine = () => {
         {/* Header */}
         <div className="flex items-center space-x-4 mb-6 animate-fadeIn ml-2">
           <FaCalendarAlt className="text-3xl text-[#441a05]" />
-          <h2 className="text-2xl font-bold text-[#441a05] tracking-tight">
+          <h2 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
             পরীক্ষার রুটিন
           </h2>
         </div>

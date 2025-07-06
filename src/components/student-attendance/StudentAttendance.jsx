@@ -296,9 +296,8 @@ const StudentAttendance = () => {
         {/* Tabs */}
         <div className="flex border-b border-white/20 mb-6 animate-fadeIn">
           <button
-            className={`flex-1 py-3 px-6 text-lg font-medium rounded-t-lg transition-all duration-300 ${
-              tabValue === 0 ? "tab-active" : "tab-inactive"
-            }`}
+            className={`flex-1 py-3 px-6 sm:text-lg font-medium rounded-t-lg text-sm transition-all duration-300 ${tabValue === 0 ? "tab-active" : "tab-inactive"
+              }`}
             onClick={() => {
               setTabValue(0);
               setMonth("");
@@ -316,9 +315,8 @@ const StudentAttendance = () => {
             ক্লাস অনুযায়ী উপস্থিতি
           </button>
           <button
-            className={`flex-1 py-3 px-6 text-lg font-medium rounded-t-lg transition-all duration-300 ${
-              tabValue === 1 ? "tab-active" : "tab-inactive"
-            }`}
+            className={`flex-1 py-3 px-6 lg:text-lg text-sm font-medium rounded-t-lg transition-all duration-300 ${tabValue === 1 ? "tab-active" : "tab-inactive"
+              }`}
             onClick={() => {
               setTabValue(1);
               setStudentSearch("");
@@ -337,7 +335,7 @@ const StudentAttendance = () => {
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
           <div className="flex items-center space-x-4 mb-6">
             <FaCalendarAlt className="text-3xl text-[#441a05]" />
-            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
+            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
               {tabValue === 0
                 ? "ক্লাস অনুযায়ী উপস্থিতি দেখুন"
                 : "তারিখ/মাস অনুযায়ী উপস্থিতি দেখুন"}
@@ -348,13 +346,10 @@ const StudentAttendance = () => {
             onSubmit={handleSubmit}
             className="grid grid-cols-1 md:grid-cols-2 gap-6"
           >
-            {/* Class Selection */}
+            {/* ক্লাস নির্বাচন */}
             <div className="relative">
-              <label
-                className="block font-medium text-[#441a05]"
-                htmlFor="classSelect"
-              >
-                ক্লাস নির্বাচন করুন <span className="text-red-600">*</span>
+              <label htmlFor="classSelect" className="block font-medium text-[#441a05]">
+                ক্লাস নির্বাচন <span className="text-red-600">*</span>
               </label>
               <Select
                 id="classSelect"
@@ -362,9 +357,9 @@ const StudentAttendance = () => {
                 value={selectedClass}
                 onChange={(option) => {
                   setSelectedClass(option);
-                  setSelectedStudent(null); // Clear student selection when class changes
+                  setSelectedStudent(null); // reset student if class changes
                 }}
-                placeholder="ক্লাস নির্বাচন করুন"
+                placeholder="ক্লাস নির্বাচন"
                 classNamePrefix="react-select"
                 className="mt-1"
                 isClearable
@@ -373,17 +368,14 @@ const StudentAttendance = () => {
                 menuPortalTarget={document.body}
                 menuPosition="fixed"
                 aria-label="ক্লাস নির্বাচন"
-                title="ক্লাস নির্বাচন করুন / Select class"
               />
             </div>
 
+            {/* তারিখ নির্বাচন */}
             {tabValue === 0 && (
               <div className="relative input-icon">
-                <label
-                  className="block font-medium text-[#441a05]"
-                  htmlFor="classDate"
-                >
-                  তারিখ নির্বাচন করুন <span className="text-red-600">*</span>
+                <label htmlFor="classDate" className="block font-medium text-[#441a05]">
+                  তারিখ নির্বাচন <span className="text-red-600">*</span>
                 </label>
                 <input
                   id="classDate"
@@ -391,35 +383,29 @@ const StudentAttendance = () => {
                   value={classDate}
                   onChange={(e) => setClassDate(e.target.value)}
                   onClick={handleDateClick}
-                  className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
-                  placeholder="তারিখ নির্বাচন করুন"
-                  disabled={isLoading}
+                  className="mt-1 block w-full bg-transparent text-[#441a05] pl-10 py-2 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#441a05] focus:ring-[#441a05] transition-all duration-300"
                   required
+                  disabled={isLoading}
                   aria-label="তারিখ নির্বাচন"
-                  title="তারিখ নির্বাচন করুন / Select date"
                 />
                 <FaCalendarAlt className="absolute left-3 top-[42px] text-[#DB9E30]" />
               </div>
             )}
 
+            {/* ছাত্র নির্বাচন ও ফিল্টার */}
             {tabValue === 1 && (
               <>
-                {/* Student Selection */}
+                {/* ছাত্র নির্বাচন */}
                 <div className="relative">
-                  <label
-                    className="block font-medium text-[#441a05]"
-                    htmlFor="studentSelect"
-                  >
-                    ছাত্র নির্বাচন করুন
+                  <label htmlFor="studentSelect" className="block font-medium text-[#441a05]">
+                    ছাত্র নির্বাচন
                   </label>
                   <Select
                     id="studentSelect"
                     options={studentOptions}
-                    value={studentOptions.find(
-                      (option) => option.value === selectedStudent?.id
-                    )}
+                    value={studentOptions.find((option) => option.value === selectedStudent?.id)}
                     onChange={(option) => setSelectedStudent(option?.student || null)}
-                    placeholder="ছাত্র নির্বাচন করুন"
+                    placeholder="ছাত্র নির্বাচন"
                     classNamePrefix="react-select"
                     className="mt-1"
                     isClearable
@@ -427,21 +413,17 @@ const StudentAttendance = () => {
                     styles={selectStyles}
                     menuPortalTarget={document.body}
                     menuPosition="fixed"
-                    aria-label="ছাত্র নির্বাচন"
-                    title="ছাত্র নির্বাচন করুন / Select student"
                     isSearchable
                     filterOption={(option, inputValue) =>
                       option.label.toLowerCase().includes(inputValue.toLowerCase())
                     }
+                    aria-label="ছাত্র নির্বাচন"
                   />
                 </div>
 
-                {/* Filter Type Selection */}
+                {/* ফিল্টার প্রকার */}
                 <div className="relative input-icon col-span-2">
-                  <label
-                    className="block font-medium text-[#441a05]"
-                    htmlFor="filterType"
-                  >
+                  <label htmlFor="filterType" className="block font-medium text-[#441a05]">
                     ফিল্টার প্রকার
                   </label>
                   <select
@@ -453,10 +435,9 @@ const StudentAttendance = () => {
                       setStartDate("");
                       setEndDate("");
                     }}
-                    className="mt-1 block w-full bg-transparent text-[#441a05] pl-10 py-2.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
+                    className="mt-1 block w-full bg-transparent text-[#441a05] pl-10 py-2.5 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#441a05] focus:ring-[#441a05] transition-all duration-300"
                     disabled={isLoading}
                     aria-label="ফিল্টার প্রকার"
-                    title="ফিল্টার প্রকার নির্বাচন করুন / Select filter type"
                   >
                     <option value="dateRange">তারিখের পরিসীমা</option>
                     <option value="month">মাস</option>
@@ -464,12 +445,9 @@ const StudentAttendance = () => {
                   <FaCalendarAlt className="absolute left-3 top-[42px] text-[#DB9E30]" />
                 </div>
 
-                {/* Conditional Month or Date Range Inputs */}
+                {/* তারিখ পরিসীমা / মাস ইনপুট */}
                 <div className="relative input-icon col-span-2">
-                  <label
-                    className="block font-medium text-[#441a05]"
-                    htmlFor={filterType === "month" ? "monthPicker" : "dateRangePicker"}
-                  >
+                  <label className="block font-medium text-[#441a05]">
                     {filterType === "month" ? "মাস নির্বাচন করুন" : "তারিখের পরিসীমা"}
                   </label>
                   {filterType === "month" ? (
@@ -483,14 +461,12 @@ const StudentAttendance = () => {
                         setEndDate("");
                       }}
                       onClick={handleDateClick}
-                      className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
-                      placeholder="মাস নির্বাচন করুন"
+                      className="mt-1 block w-full bg-transparent text-[#441a05] pl-10 py-2 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#441a05] focus:ring-[#441a05] transition-all duration-300"
                       disabled={isLoading}
                       aria-label="মাস নির্বাচন"
-                      title="মাস নির্বাচন করুন / Select month"
                     />
                   ) : (
-                    <div className="flex gap-4">
+                    <div className="flex flex-col sm:flex-row gap-4">
                       <input
                         id="startDatePicker"
                         type="date"
@@ -500,11 +476,8 @@ const StudentAttendance = () => {
                           setMonth("");
                         }}
                         onClick={handleDateClick}
-                        className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
-                        placeholder="শুরুর তারিখ"
-                        disabled={isLoading}
+                        className="block w-full bg-transparent text-[#441a05] pl-10 py-2 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#441a05] focus:ring-[#441a05] transition-all duration-300"
                         aria-label="শুরুর তারিখ"
-                        title="শুরুর তারিখ নির্বাচন করুন / Select start date"
                       />
                       <input
                         id="endDatePicker"
@@ -515,26 +488,22 @@ const StudentAttendance = () => {
                           setMonth("");
                         }}
                         onClick={handleDateClick}
-                        className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
-                        placeholder="শেষের তারিখ"
-                        disabled={isLoading}
+                        className="block w-full bg-transparent text-[#441a05] pl-10 py-2 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#441a05] focus:ring-[#441a05] transition-all duration-300"
                         aria-label="শেষের তারিখ"
-                        title="শেষের তারিখ নির্বাচন করুন / Select end date"
                       />
                     </div>
                   )}
                   <FaCalendarAlt className="absolute left-3 top-[42px] text-[#DB9E30]" />
                 </div>
 
-                <div className="flex items-end">
+                {/* সাবমিট বাটন */}
+                <div className="sm:flex items-end">
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className={`flex items-center justify-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn btn-ripple ${
-                      isLoading ? "cursor-not-allowed opacity-70" : "hover:text-white btn-glow"
-                    }`}
+                    className={`flex items-center text-nowrap justify-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn btn-ripple ${isLoading ? "cursor-not-allowed opacity-70" : "hover:text-white btn-glow"
+                      }`}
                     aria-label="উপস্থিতি দেখুন"
-                    title="উপস্থিতি দেখুন / View attendance"
                   >
                     {isLoading ? (
                       <>
@@ -552,6 +521,7 @@ const StudentAttendance = () => {
               </>
             )}
           </form>
+
         </div>
 
         {/* Attendance Table */}
@@ -691,8 +661,8 @@ const StudentAttendance = () => {
                                 {attendance?.status === "PRESENT"
                                   ? "✅ উপস্থিত"
                                   : attendance?.status === "ABSENT"
-                                  ? "❌ অনুপস্থিত"
-                                  : "N/A"}
+                                    ? "❌ অনুপস্থিত"
+                                    : "N/A"}
                               </span>
                             </Tooltip>
                           </td>
@@ -770,8 +740,8 @@ const StudentAttendance = () => {
                                 {attendance?.status === "PRESENT"
                                   ? "✅ উপস্থিত"
                                   : attendance?.status === "ABSENT"
-                                  ? "❌ অনুপস্থিত"
-                                  : "N/A"}
+                                    ? "❌ অনুপস্থিত"
+                                    : "N/A"}
                               </span>
                             </Tooltip>
                           </td>
@@ -871,8 +841,8 @@ const StudentAttendance = () => {
                                 {attendance?.status === "PRESENT"
                                   ? "✅ উপস্থিত"
                                   : attendance?.status === "ABSENT"
-                                  ? "❌ অনুপস্থিত"
-                                  : "N/A"}
+                                    ? "❌ অনুপস্থিত"
+                                    : "N/A"}
                               </span>
                             </Tooltip>
                           </td>

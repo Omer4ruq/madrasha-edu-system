@@ -10,9 +10,10 @@ import { useCreateFeesNameMutation, useGetFeesNamesQuery, useUpdateFeesNameMutat
 import { useGetGfeeSubheadsQuery } from '../../redux/features/api/gfee-subheads/gfeeSubheadsApi';
 import { useGetStudentClassApIQuery } from '../../redux/features/api/student/studentClassApi';
 import { useSelector, useDispatch } from 'react-redux';
+import { group } from '@infinite-table/infinite-react';
 
 const AddFeesName = () => {
-  const { user, role, profile } = useSelector((state) => state.auth);
+  const { user, group_id, role, profile, group_name } = useSelector((state) => state.auth);
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [isBoarding, setIsBoarding] = useState(false);
@@ -32,9 +33,11 @@ const AddFeesName = () => {
     is_boarding: false,
     status: 'ACTIVE',
   });
-console.log(user)
-console.log(role)
-console.log(profile)
+console.log("user",user)
+console.log("role",role)
+console.log("profile", profile)
+console.log("group_id", group_id)
+console.log("group_name", group_name)
   // RTK Query hooks
   const { data: classes, isLoading: classesLoading } = useGetStudentClassApIQuery();
   const { data: academicYears, isLoading: yearsLoading } = useGetAcademicYearApiQuery();

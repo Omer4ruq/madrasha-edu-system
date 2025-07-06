@@ -12,7 +12,7 @@ const RolePermissions = () => {
 
   // Fetch groups
   const { data: groups, isLoading: isGroupsLoading } = useGetGroupListQuery();
-  
+  console.log("groups",groups)
   // Fetch all permissions
   const { data: permissions, isLoading: isPermissionsLoading } = useGetPermissionListQuery();
   
@@ -21,6 +21,7 @@ const RolePermissions = () => {
     skip: !selectedGroup,
   });
 console.log("groupPermissions", groupPermissions)
+console.log("selectedGroup", selectedGroup)
   // Mutation to update group permissions
   const [updateGroupPermissions] = useUpdateGroupPermissionsMutation();
 

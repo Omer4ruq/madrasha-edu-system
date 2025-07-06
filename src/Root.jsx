@@ -69,6 +69,8 @@ import Login from "./components/Login/Login";
 
 import IncomeItemsList from "./components/income/IncomeItemsList";
 import AddRoleTypes from "./components/Roles/AddRoleTypes";
+import Testimonial from "./components/testimonial/Testimonial";
+
 
 function Root() {
   const router = createBrowserRouter([
@@ -244,6 +246,10 @@ function Root() {
               path: "student-attendance",
               element: <StudentAttendance></StudentAttendance>,
             },
+            {
+              path: "testimonial",
+              element: <Testimonial></Testimonial>
+            },
           ],
         },
         {
@@ -327,10 +333,10 @@ function Root() {
                   index: true,
                   element: <AddMealsType />,
                 },
-                {
-                  path: "meal-type",
-                  element: <AddMealsType />,
-                },
+                // {
+                //   path: "meal-type",
+                //   element: <AddMealsType />,
+                // },
                 {
                   path: "meal-items",
                   element: <MealItems />,
