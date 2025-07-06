@@ -5,7 +5,10 @@ import { useSelector } from 'react-redux';
 
 
 export default function ProfileInfo() {
-  const { user, role, profile : details } = useSelector((state) => state.auth);
+  const { user, role, profile : details, token, refresh_token, group_id, group_name, role_id, username } = useSelector((state) => state.auth);
+
+console.log(user, role, details, token, refresh_token, group_id, group_name, role_id, username);
+
   const profile = [
     {
       title: 'নিবন্ধন নম্বর',
