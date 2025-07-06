@@ -9,8 +9,10 @@ import { useGetFeeHeadsQuery } from '../../redux/features/api/fee-heads/feeHeads
 import { useCreateFeesNameMutation, useGetFeesNamesQuery, useUpdateFeesNameMutation, useDeleteFeesNameMutation } from '../../redux/features/api/fees-name/feesName';
 import { useGetGfeeSubheadsQuery } from '../../redux/features/api/gfee-subheads/gfeeSubheadsApi';
 import { useGetStudentClassApIQuery } from '../../redux/features/api/student/studentClassApi';
+import { useSelector, useDispatch } from 'react-redux';
 
 const AddFeesName = () => {
+  const { user, role, profile } = useSelector((state) => state.auth);
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [isBoarding, setIsBoarding] = useState(false);
@@ -30,7 +32,9 @@ const AddFeesName = () => {
     is_boarding: false,
     status: 'ACTIVE',
   });
-
+console.log(user)
+console.log(role)
+console.log(profile)
   // RTK Query hooks
   const { data: classes, isLoading: classesLoading } = useGetStudentClassApIQuery();
   const { data: academicYears, isLoading: yearsLoading } = useGetAcademicYearApiQuery();
@@ -592,7 +596,7 @@ const AddFeesName = () => {
                     {feeSubheads?.length === 0 ? (
                       <p className="text-[#441a05]/70">কোনো ফি সাবহেড পাওয়া যায়নি।</p>
                     ) : (
-                      feeSubheads.map((sub) => (
+                      feeSubheads?.map((sub) => (
                         <div key={sub.id} className="flex items-center mb-3 gap-2">
                           <label className="flex items-center cursor-pointer">
                             <input

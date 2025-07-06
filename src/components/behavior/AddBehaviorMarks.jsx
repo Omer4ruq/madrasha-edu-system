@@ -8,6 +8,7 @@ import { FaSpinner, FaCheck, FaTimes } from 'react-icons/fa';
 import { IoAddCircle } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
+import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
 
 // Register Noto Sans Bengali font
 try {
@@ -185,6 +186,7 @@ const PDFDocument = ({ students, behaviorTypes, behaviorReports, localBehaviorRe
 const AddBehaviorMarks = () => {
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedExam, setSelectedExam] = useState('');
+  const [selectedYear, setSelectedYear] = useState('');
   const [isExamLocked, setIsExamLocked] = useState(false);
   const [behaviorReports, setBehaviorReports] = useState({});
   const [invalidMarks, setInvalidMarks] = useState({});
@@ -193,6 +195,7 @@ const AddBehaviorMarks = () => {
   const inputRefs = useRef({});
 
   // Fetch data
+  const { data: academicYears = [], isLoading: isYearsLoading, error: yearError } = useGetAcademicYearApiQuery();
   const { data: classes, isLoading: classesLoading, error: classError } = useGetclassConfigApiQuery();
   const { data: exams, isLoading: examsLoading, error: examError } = useGetExamApiQuery();
   const { data: students, isLoading: studentsLoading, error: studentError } = useGetStudentActiveByClassQuery(selectedClass, { skip: !selectedClass });
@@ -263,6 +266,13 @@ const AddBehaviorMarks = () => {
     if (!isExamLocked) {
       setSelectedExam(e.target.value);
       setIsExamLocked(true);
+    }
+  };
+    // Handle year change
+  const handleYearChange = (e) => {
+    if (!isExamLocked) {
+      setSelectedYear(e.target.value);
+    
     }
   };
 
@@ -341,6 +351,7 @@ const AddBehaviorMarks = () => {
 
     const reportData = {
       exam_name_id: parseInt(selectedExam),
+      academic_year: parseInt(selectedYear),
       student_id: parseInt(studentId),
       behavior_marks: behaviorMarks
     };
@@ -467,6 +478,20 @@ const AddBehaviorMarks = () => {
           </div>
           <div className="flex-1">
             <select
+              value={selectedYear}
+              onChange={handleYearChange}
+              className={`w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-1 focus:ring-[#441a05] ${isExamLocked ? 'disabled-select' : ''}`}
+              disabled={!selectedClass || examsLoading || isExamLocked}
+            >
+              <option value="">শিক্ষাবর্ষ নির্বাচন করুন</option>
+              {academicYears?.map(year => (
+                <option key={year.id} value={year.id}>{year.name}</option>
+              ))}
+            </select>
+            {yearError && <div className="mt-2 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">শিক্ষাবর্ষ লোড করতে ত্রুটি: {examError.status || 'অজানা'}</div>}
+          </div>
+          <div className="flex-1">
+            <select
               value={selectedExam}
               onChange={handleExamChange}
               className={`w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-1 focus:ring-[#441a05] ${isExamLocked ? 'disabled-select' : ''}`}
@@ -479,6 +504,7 @@ const AddBehaviorMarks = () => {
             </select>
             {examError && <div className="mt-2 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">পরীক্ষা লোড করতে ত্রুটি: {examError.status || 'অজানা'}</div>}
           </div>
+               
         </div>
         {reportError && <div className="mt-2 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">মার্কস লোড করতে ত্রুটি: {reportError.status || 'অজানা'}</div>}
       </div>
@@ -501,10 +527,10 @@ const AddBehaviorMarks = () => {
           if (!students?.length) return <p className="p-4 text-yellow-400 bg-yellow-500/10 rounded-lg">নির্বাচিত শ্রেণির জন্য কোনো ছাত্র নেই। (শ্রেণি: {selectedClass})</p>;
           return (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-white/20 table-fixed">
-                <thead className="bg-white/5">
+              <table className="min-w-full divide-y divide-white/20 table-fixed ">
+                <thead className="bg-white/5 ">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider sticky-col sticky-col-first" style={{ minWidth: '200px' }}>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider bg-blue-100 sticky-col sticky-col-first" style={{ minWidth: '200px' }}>
                       ছাত্রের নাম
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider sticky-col sticky-col-second" style={{ minWidth: '100px' }}>
