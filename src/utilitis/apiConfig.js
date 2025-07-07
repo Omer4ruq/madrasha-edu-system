@@ -10,7 +10,6 @@ const subdomain = getSubdomain();
 
 let BASE_URL = "";
 
-// ✅ BASE_URL access করার আগে এটা async validate করে ফেলবে
 const validateTenant = async () => {
   if (subdomain == 'localhost') {
     showNoSubdomainScreen();
@@ -103,8 +102,7 @@ export default BASE_URL;
 // const getSubdomain = () => {
 //   const host = window.location.hostname;
 //   const parts = host.split(".");
-//   return parts.length >= 3 ? parts[0] : null;
-//   // return parts[0] || null;
+//   return parts.length == 3 ? parts[0] : null;
 // };
 
 // const subdomain = getSubdomain();
@@ -113,7 +111,6 @@ export default BASE_URL;
 
 // let BASE_URL = "";
 
-// // ✅ BASE_URL access করার আগে এটা async validate করে ফেলবে
 // const validateTenant = async () => {
 //   if (!subdomain) {
 //     showNoSubdomainScreen();
