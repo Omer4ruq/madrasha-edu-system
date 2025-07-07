@@ -298,10 +298,10 @@ const Testimonial = () => {
             ভর্তি রেজিস্ট্রি নম্বর:
             <textarea
               onInput={autoGrow}
-              value={selectedStudent?.username || "১১১"}
-              className="w-24 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              // value={selectedStudent?.username || "১১১"}
+              className="w-40 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
-              readOnly
+              // readOnly
             />
             এবং জন্ম তারিখ:
             <textarea
@@ -317,39 +317,39 @@ const Testimonial = () => {
             সে অত্র মাদরাসায়
             <textarea
               onInput={autoGrow}
-              value={selectedStudent?.class_name || "দ্বিতীয়"}
+              // value={selectedStudent?.class_name || "দ্বিতীয়"}
               className="w-40 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
-              readOnly
+              // readOnly
             />
             হতে
             <textarea
               onInput={autoGrow}
-              value={selectedStudent?.class_name || "পঞ্চম"}
+              // value={selectedStudent?.class_name || "পঞ্চম"}
               className="w-40 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
-              readOnly
+              // readOnly
             />
             পর্যন্ত অধ্যয়ন করতঃ বিগত
             <textarea
               onInput={autoGrow}
-              value={selectedYear?.label || "২০২৪"}
+              // value={selectedYear?.label || "২০২৪"}
               className="w-20 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
-              readOnly
+              // readOnly
             />
             শিক্ষাবর্ষে
             <textarea
               onInput={autoGrow}
-              value={selectedYear?.label || "২০২৪"}
+              // value={selectedYear?.label || "২০২৪"}
               className="w-20 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
-              readOnly
+              // readOnly
             />
             বোর্ড পরীক্ষায় অংশগ্রহণ করে মোট নাম্বার
             <textarea
               onInput={autoGrow}
-              defaultValue="৭৬৫"
+              // defaultValue="৭৬৫"
               className="w-24 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
             />
@@ -357,7 +357,7 @@ const Testimonial = () => {
             <textarea
               onInput={autoGrow}
               placeholder="বিভাগ"
-              className="w-36 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              className="w-72 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
             />
             বিভাগে উত্তীর্ণ হয়েছে।
