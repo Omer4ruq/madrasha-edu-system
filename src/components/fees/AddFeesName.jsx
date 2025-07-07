@@ -9,8 +9,11 @@ import { useGetFeeHeadsQuery } from '../../redux/features/api/fee-heads/feeHeads
 import { useCreateFeesNameMutation, useGetFeesNamesQuery, useUpdateFeesNameMutation, useDeleteFeesNameMutation } from '../../redux/features/api/fees-name/feesName';
 import { useGetGfeeSubheadsQuery } from '../../redux/features/api/gfee-subheads/gfeeSubheadsApi';
 import { useGetStudentClassApIQuery } from '../../redux/features/api/student/studentClassApi';
+import { useSelector } from 'react-redux';
+import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi';
 
 const AddFeesName = () => {
+  const { user, group_id } = useSelector((state) => state.auth);
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [isBoarding, setIsBoarding] = useState(false);
@@ -31,6 +34,17 @@ const AddFeesName = () => {
     status: 'ACTIVE',
   });
 
+  // Fetch group permissions
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Check permissions
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_fees') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_fees') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_fees') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_fees') || false;
+
   // RTK Query hooks
   const { data: classes, isLoading: classesLoading } = useGetStudentClassApIQuery();
   const { data: academicYears, isLoading: yearsLoading } = useGetAcademicYearApiQuery();
@@ -44,6 +58,10 @@ const AddFeesName = () => {
 
   // Handle fee package checkbox
   const handleFeePackageChange = (packageId) => {
+    if (!hasAddPermission) {
+      toast.error('ফি প্যাকেজ নির্বাচন করার অনুমতি নেই।');
+      return;
+    }
     setSelectedFeePackages((prev) =>
       prev.includes(packageId)
         ? prev.filter((id) => id !== packageId)
@@ -54,6 +72,10 @@ const AddFeesName = () => {
 
   // Handle fee subhead checkbox
   const handleFeeSubheadChange = (subheadId) => {
+    if (!hasAddPermission) {
+      toast.error('ফি সাবহেড নির্বাচন করার অনুমতি নেই।');
+      return;
+    }
     setSelectedFeeSubheads((prev) =>
       prev.includes(subheadId)
         ? prev.filter((id) => id !== subheadId)
@@ -86,6 +108,10 @@ const AddFeesName = () => {
 
   // Add selected configuration
   const addConfiguration = () => {
+    if (!hasAddPermission) {
+      toast.error('কনফিগারেশন যোগ করার অনুমতি নেই।');
+      return;
+    }
     const validationErrors = validateForm();
     if (validationErrors) {
       setErrors(validationErrors);
@@ -123,6 +149,10 @@ const AddFeesName = () => {
 
   // Update date for a specific configuration
   const updateConfigDate = (index, field, value) => {
+    if (!hasAddPermission && !hasChangePermission) {
+      toast.error('কনফিগারেশন আপডেট করার অনুমতি নেই।');
+      return;
+    }
     setConfigurations((prev) =>
       prev.map((config, i) =>
         i === index ? { ...config, [field]: value } : config
@@ -132,6 +162,10 @@ const AddFeesName = () => {
 
   // Open confirmation modal for create
   const handleOpenModal = () => {
+    if (!hasAddPermission) {
+      toast.error('ফি কনফিগারেশন জমা দেওয়ার অনুমতি নেই।');
+      return;
+    }
     if (configurations.length === 0) {
       toast.error('জমা দেওয়ার জন্য কোনো কনফিগারেশন নেই।');
       return;
@@ -144,11 +178,15 @@ const AddFeesName = () => {
 
   // Submit configurations to API (Create)
   const handleSubmit = async () => {
+    if (!hasAddPermission) {
+      toast.error('ফি কনফিগারেশন জমা দেওয়ার অনুমতি নেই।');
+      return;
+    }
     setIsSubmitting(true);
     try {
       for (const config of configurations) {
         const academicYearName = academicYears?.find((y) => y.id === parseInt(config.academicYear))?.name || 'Unknown';
-        const feesTitle = `${config.packageName} ${config.subheadName} ${academicYearName}`.replace(/[\s]/g, ' ');
+        const feesTitle = `${config.packageName} ${config.subheadName} ${academicYearName}`.replace(/\s+/g, ' ').trim();
         const payload = {
           id: 0,
           fees_title: feesTitle,
@@ -164,7 +202,6 @@ const AddFeesName = () => {
           fee_amount_id: config.packageId,
           is_boarding: config.isBoarding,
         };
-        console.log('Submitting create payload:', payload);
         await createFeesName(payload).unwrap();
       }
       toast.success('ফি কনফিগারেশন সফলভাবে সংরক্ষিত হয়েছে!');
@@ -175,7 +212,6 @@ const AddFeesName = () => {
       setErrors({});
       setIsModalOpen(false);
     } catch (error) {
-      console.error('Create submission error:', error);
       toast.error(`সংরক্ষণ ব্যর্থ: ${error?.status || 'অজানা ত্রুটি'}`);
     } finally {
       setIsSubmitting(false);
@@ -184,6 +220,10 @@ const AddFeesName = () => {
 
   // Open update modal
   const handleOpenUpdateModal = (fee) => {
+    if (!hasChangePermission) {
+      toast.error('ফি কনফিগারেশন আপডেট করার অনুমতি নেই।');
+      return;
+    }
     setSelectedFee(fee);
     setUpdateForm({
       fees_title: fee.fees_title,
@@ -197,6 +237,10 @@ const AddFeesName = () => {
 
   // Handle update form change
   const handleUpdateFormChange = (field, value) => {
+    if (!hasChangePermission) {
+      toast.error('ফি কনফিগারেশন আপডেট করার অনুমতি নেই।');
+      return;
+    }
     setUpdateForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -211,6 +255,10 @@ const AddFeesName = () => {
 
   // Submit update to API
   const handleUpdateSubmit = async () => {
+    if (!hasChangePermission) {
+      toast.error('ফি কনফিগারেশন আপডেট করার অনুমতি নেই।');
+      return;
+    }
     const validationErrors = validateUpdateForm();
     if (validationErrors) {
       setErrors(validationErrors);
@@ -232,10 +280,9 @@ const AddFeesName = () => {
         academic_year: selectedFee.academic_year,
         created_by: selectedFee.created_by,
         updated_by: 1,
-        fee_amount: selectedFee.fee_amount_id,
+        fee_amount_id: selectedFee.fee_amount_id,
         is_boarding: updateForm.is_boarding,
       };
-      console.log('Submitting update payload:', payload);
       await updateFeesName(payload).unwrap();
       toast.success('ফি কনফিগারেশন সফলভাবে আপডেট হয়েছে!');
       setIsUpdateModalOpen(false);
@@ -249,7 +296,6 @@ const AddFeesName = () => {
       });
       setErrors({});
     } catch (error) {
-      console.error('Update submission error:', error);
       toast.error(`আপডেট ব্যর্থ: ${error?.status || 'অজানা ত্রুটি'}`);
     } finally {
       setIsSubmitting(false);
@@ -258,12 +304,20 @@ const AddFeesName = () => {
 
   // Open delete confirmation modal
   const handleOpenDeleteModal = (fee) => {
+    if (!hasDeletePermission) {
+      toast.error('ফি কনফিগারেশন মুছে ফেলার অনুমতি নেই।');
+      return;
+    }
     setSelectedFee(fee);
     setIsDeleteModalOpen(true);
   };
 
   // Submit delete to API
   const handleDeleteSubmit = async () => {
+    if (!hasDeletePermission) {
+      toast.error('ফি কনফিগারেশন মুছে ফেলার অনুমতি নেই।');
+      return;
+    }
     setIsSubmitting(true);
     try {
       await deleteFeesName(selectedFee.id).unwrap();
@@ -271,7 +325,6 @@ const AddFeesName = () => {
       setIsDeleteModalOpen(false);
       setSelectedFee(null);
     } catch (error) {
-      console.error('Delete submission error:', error);
       toast.error(`মুছে ফেলা ব্যর্থ: ${error?.status || 'অজানা ত্রুটি'}`);
     } finally {
       setIsSubmitting(false);
@@ -283,33 +336,123 @@ const AddFeesName = () => {
     pkg.student_class === selectedClass || !selectedClass
   ) || [];
 
-  if (classesLoading || yearsLoading || packagesLoading || subheadsLoading || headsLoading || feesLoading) {
+  // If user only has view permission and no other permissions, restrict to view-only
+  if (hasViewPermission && !hasAddPermission && !hasChangePermission && !hasDeletePermission) {
+    return (
+      <div className="py-8 w-full relative">
+        <Toaster position="top-right" toastOptions={{ style: { background: '#DB9E30', color: '#441a05' } }} />
+        <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl animate-fadeIn shadow-xl">
+          <h2 className="text-2xl font-bold text-[#441a05] tracking-tight mb-6">ফি কনফিগারেশন</h2>
+          {feesName?.length === 0 ? (
+            <p className="p-4 text-[#441a05]/70">কোনো ফি কনফিগারেশন পাওয়া যায়নি।</p>
+          ) : (
+            <div className="mb-6 bg-white/5 rounded-lg overflow-x-auto">
+              <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">সকল ফি কনফিগারেশন</h3>
+              <table className="w-full border-collapse">
+                <thead className="bg-white/10">
+                  <tr>
+                    <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ফি টাইটেল</th>
+                    <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শ্রেণি</th>
+                    <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শিক্ষাবর্ষ</th>
+                    <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ফি সাবহেড</th>
+                    <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শুরুর তারিখ</th>
+                    <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শেষের তারিখ</th>
+                    <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">বোর্ডিং</th>
+                    <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">স্ট্যাটাস</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/20">
+                  {feesName?.map((fee, index) => {
+                    const className = classes?.find((c) => c.id === feePackages?.find((p) => p.id === fee.fee_amount_id)?.student_class)?.student_class.name || 'অজানা';
+                    const subheadName = feeSubheads?.find((s) => s.id === fee.fees_sub_type)?.name || 'অজানা';
+                    const academicYearName = academicYears?.find((y) => y.id === fee.academic_year)?.name || 'অজানা';
+                    return (
+                      <tr key={index} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
+                        <td className="border border-white/20 p-3 text-sm text-[#441a05]">{fee.fees_title}</td>
+                        <td className="border border-white/20 p-3 text-sm text-[#441a05]">{className}</td>
+                        <td className="border border-white/20 p-3 text-sm text-[#441a05]">{academicYearName}</td>
+                        <td className="border border-white/20 p-3 text-sm text-[#441a05]">{subheadName}</td>
+                        <td className="border border-white/20 p-3 text-sm text-[#441a05]">{format(new Date(fee.startdate), 'dd-MM-yyyy')}</td>
+                        <td className="border border-white/20 p-3 text-sm text-[#441a05]">{format(new Date(fee.enddate), 'dd-MM-yyyy')}</td>
+                        <td className="border border-white/20 p-3 text-sm text-[#441a05]">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${fee.is_boarding ? 'bg-[#DB9E30] text-[#441a05]' : 'bg-gray-500/20 text-[#441a05]'}`}
+                          >
+                            {fee.is_boarding ? 'বোর্ডিং' : 'নন-বোর্ডিং'}
+                          </span>
+                        </td>
+                        <td className="border border-white/20 p-3 text-sm text-[#441a05]">{fee.status === 'ACTIVE' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (permissionsLoading || classesLoading || yearsLoading || packagesLoading || subheadsLoading || headsLoading || feesLoading) {
     return <div className="p-4 text-[#441a05]/70 animate-fadeIn">লোড হচ্ছে...</div>;
+  }
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-red-400 animate-fadeIn">এই পৃষ্ঠাটি দেখার অনুমতি নেই।</div>;
   }
 
   return (
     <div className="py-8 w-full relative">
       <Toaster position="top-right" toastOptions={{ style: { background: '#DB9E30', color: '#441a05' } }} />
-      <style>
-        {`
-          @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-          @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-          @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-          .animate-fadeIn { animation: fadeIn 0.6s ease-out forwards; }
-          .animate-scaleIn { animation: scaleIn 0.4s ease-out forwards; }
-          .animate-slideUp { animation: slideUp 0.4s ease-out forwards; }
-          .btn-glow:hover { box-shadow: 0 0 15px rgba(37, 99, 235, 0.3); }
-          .toggle-bg { background: #9d9087; }
-          .toggle-bg-checked { background: #DB9E30; }
-          ::-webkit-scrollbar { width: 8px; }
-          ::-webkit-scrollbar-track { background: transparent; }
-          ::-webkit-scrollbar-thumb { background: rgba(22, 31, 48, 0.26); border-radius: 10px; }
-          ::-webkit-scrollbar-thumb:hover { background: rgba(10, 13, 21, 0.44); }
-        `}
-      </style>
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scaleIn {
+          from { transform: scale(0.95); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { transform: translateY(100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.6s ease-out forwards;
+        }
+        .animate-scaleIn {
+          animation: scaleIn 0.4s ease-out forwards;
+        }
+        .animate-slideUp {
+          animation: slideUp 0.4s ease-out forwards;
+        }
+        .btn-glow:hover {
+          box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
+        }
+        .toggle-bg {
+          background: #9d9087;
+        }
+        .toggle-bg-checked {
+          background: #DB9E30;
+        }
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(22, 31, 48, 0.26);
+          border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(10, 13, 21, 0.44);
+        }
+      `}</style>
 
       {/* Create Confirmation Modal */}
-      {isModalOpen && (
+      {hasAddPermission && isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
           <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
             <h3 className="text-lg font-semibold text-[#441a05] mb-4">ফি কনফিগারেশন জমা নিশ্চিত করুন</h3>
@@ -341,7 +484,7 @@ const AddFeesName = () => {
       )}
 
       {/* Update Modal */}
-      {isUpdateModalOpen && (
+      {hasChangePermission && isUpdateModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
           <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
             <h3 className="text-lg font-semibold text-[#441a05] mb-4">ফি কনফিগারেশন আপডেট করুন</h3>
@@ -431,7 +574,7 @@ const AddFeesName = () => {
       )}
 
       {/* Delete Confirmation Modal */}
-      {isDeleteModalOpen && (
+      {hasDeletePermission && isDeleteModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
           <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
             <h3 className="text-lg font-semibold text-[#441a05] mb-4">ফি কনফিগারেশন মুছে ফেলুন</h3>
@@ -462,344 +605,372 @@ const AddFeesName = () => {
         </div>
       )}
 
-      {/* Main Content */}
       <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl animate-fadeIn shadow-xl">
-        <div className="flex items-center space-x-4 mb-6">
-          <IoAddCircle className="text-4xl text-[#441a05]" />
-          <h2 className="text-2xl font-bold text-[#441a05] tracking-tight">ফি কনফিগারেশন যোগ করুন</h2>
-        </div>
-
-        {/* Boarding Toggle */}
-        <div className="mb-6">
-          <label className="flex items-center cursor-pointer">
-            <div className="relative">
-              <input
-                type="checkbox"
-                checked={isBoarding}
-                onChange={() => setIsBoarding(!isBoarding)}
-                className="sr-only"
-              />
-              <div className={`w-12 h-6 rounded-full transition-all duration-300 ${isBoarding ? 'toggle-bg-checked' : 'toggle-bg'}`}>
-                <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${isBoarding ? 'translate-x-6' : 'translate-x-0'}`} />
-              </div>
+        {(hasAddPermission || hasChangePermission) && (
+          <div>
+            <div className="flex items-center space-x-4 mb-6">
+              <IoAddCircle className="text-4xl text-[#441a05]" />
+              <h2 className="text-2xl font-bold text-[#441a05] tracking-tight">ফি কনফিগারেশন যোগ করুন</h2>
             </div>
-            <span className="ml-3 text-[#441a05] font-medium">{isBoarding ? 'বোর্ডিং' : 'নন-বোর্ডিং'}</span>
-          </label>
-        </div>
 
-        {/* Class Tabs */}
-        <div className="mb-6 flex flex-wrap gap-2">
-          {classes?.map((cls) => (
-            <button
-              key={cls.id}
-              className={`px-4 py-2 rounded-lg transition-all duration-300 ${selectedClass === cls.id ? 'bg-[#DB9E30] text-white' : 'bg-gray-500/20 text-[#441a05] hover:bg-gray-500/30'}`}
-              onClick={() => {
-                setSelectedClass(cls.id);
-                setErrors((prev) => ({ ...prev, class: null }));
-              }}
-              aria-label={`শ্রেণি নির্বাচন করুন ${cls.student_class.name}`}
-            >
-              {cls.student_class?.name}
-            </button>
-          ))}
-          {errors.class && <p className="text-red-400 text-sm mt-2">{errors.class}</p>}
-        </div>
+            {/* Boarding Toggle */}
+            {hasAddPermission && (
+              <div className="mb-6">
+                <label className="flex items-center cursor-pointer">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={isBoarding}
+                      onChange={() => setIsBoarding(!isBoarding)}
+                      className="sr-only"
+                    />
+                    <div className={`w-12 h-6 rounded-full transition-all duration-300 ${isBoarding ? 'toggle-bg-checked' : 'toggle-bg'}`}>
+                      <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${isBoarding ? 'translate-x-6' : 'translate-x-0'}`} />
+                    </div>
+                  </div>
+                  <span className="ml-3 text-[#441a05] font-medium">{isBoarding ? 'বোর্ডিং' : 'নন-বোর্ডিং'}</span>
+                </label>
+              </div>
+            )}
 
-        {/* Academic Year Select */}
-        <div className="mb-6">
-          <select
-            value={selectedAcademicYear}
-            onChange={(e) => {
-              setSelectedAcademicYear(e.target.value);
-              setErrors((prev) => ({ ...prev, academicYear: null }));
-            }}
-            className="w-full max-w-xs bg-transparent text-[#441a05] pl-3 py-2 border outline-none border-[#9d9087] rounded-lg transition-all duration-300"
-            aria-describedby={errors.academicYear ? 'academicYear-error' : undefined}
-          >
-            <option value="" disabled>শিক্ষাবর্ষ নির্বাচন করুন</option>
-            {academicYears?.map((year) => (
-              <option key={year.id} value={year.id}>{year.name}</option>
-            ))}
-          </select>
-          {errors.academicYear && (
-            <p id="academicYear-error" className="text-red-400 text-sm mt-2">{errors.academicYear}</p>
-          )}
-        </div>
-
-        {/* Fee Packages and Subheads Table */}
-        <div className="mb-6">
-          <div className="bg-white/5 rounded-lg overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead className="bg-white/10">
-                <tr>
-                  <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ফি প্যাকেজ</th>
-                  <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ফি সাবহেড</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="border border-white/20 p-3 align-top">
-                    {filteredFeePackages.length === 0 ? (
-                      <p className="text-[#441a05]/70">কোনো ফি প্যাকেজ পাওয়া যায়নি।</p>
-                    ) : (
-                      filteredFeePackages.map((pkg) => {
-                        const className = classes?.find((c) => c.id === pkg.student_class)?.student_class.name || 'অজানা';
-                        const feeHeadName = feeHeads?.find((h) => h.id === pkg.fees_head_id)?.name || 'অজানা';
-                        return (
-                          <div key={pkg.id} className="flex items-center mb-3 gap-2">
-                            <label className="flex items-center cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={selectedFeePackages.includes(pkg.id)}
-                                onChange={() => handleFeePackageChange(pkg.id)}
-                                className="hidden"
-                                aria-label={`ফি প্যাকেজ নির্বাচন করুন ${className} - ${feeHeadName}`}
-                              />
-                              <span
-                                className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 ${selectedFeePackages.includes(pkg.id)
-                                  ? "bg-[#DB9E30] border-[#DB9E30]"
-                                  : "bg-white/10 border-[#9d9087] hover:border-[#441a05]"
-                                  }`}
-                              >
-                                {selectedFeePackages.includes(pkg.id) && (
-                                  <svg
-                                    className="w-4 h-4 text-[#441a05] animate-scaleIn"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth="2"
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                )}
-                              </span>
-                            </label>
-                            <span className="text-[#441a05]">{`${className} - ${feeHeadName}`}</span>
-                          </div>
-                        );
-                      })
-                    )}
-                    {errors.feePackages && (
-                      <p className="text-red-400 text-sm mt-2">{errors.feePackages}</p>
-                    )}
-                  </td>
-                  <td className="border border-white/20 p-3 align-top grid grid-cols-3">
-                    {feeSubheads?.length === 0 ? (
-                      <p className="text-[#441a05]/70">কোনো ফি সাবহেড পাওয়া যায়নি।</p>
-                    ) : (
-                      feeSubheads.map((sub) => (
-                        <div key={sub.id} className="flex items-center mb-3 gap-2">
-                          <label className="flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={selectedFeeSubheads.includes(sub.id)}
-                              onChange={() => handleFeeSubheadChange(sub.id)}
-                              className="hidden"
-                              aria-label={`ফি সাবহেড নির্বাচন করুন ${sub.name}`}
-                            />
-                            <span
-                              className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 ${selectedFeeSubheads.includes(sub.id)
-                                ? "bg-[#DB9E30] border-[#DB9E30]"
-                                : "bg-white/10 border-[#9d9087] hover:border-[#441a05]"
-                                }`}
-                            >
-                              {selectedFeeSubheads.includes(sub.id) && (
-                                <svg
-                                  className="w-4 h-4 text-[#441a05] animate-scaleIn"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M5 13l4 4L19 7"
-                                  />
-                                </svg>
-                              )}
-                            </span>
-                          </label>
-                          <span className="text-[#441a05]">{sub.name}</span>
-                        </div>
-                      ))
-                    )}
-                    {errors.feeSubheads && (
-                      <p className="text-red-400 text-sm mt-2">{errors.feeSubheads}</p>
-                    )}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Configuration Add Button */}
-        <div className="mb-6">
-          <button
-            onClick={addConfiguration}
-            className={`flex items-center w-full max-w-xs px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${!selectedClass || !selectedAcademicYear || selectedFeePackages.length === 0 || selectedFeeSubheads.length === 0
-              ? 'cursor-not-allowed opacity-70'
-              : 'hover:text-white btn-glow'
-              }`}
-            disabled={!selectedClass || !selectedAcademicYear || selectedFeePackages.length === 0 || selectedFeeSubheads.length === 0}
-          >
-            <FaCheckCircle className="w-5 h-5 mr-2" />
-            কনফিগারেশন যোগ করুন
-          </button>
-        </div>
-
-        {/* Configurations Table */}
-        {configurations.length > 0 && (
-          <div className="mb-6 bg-white/5 rounded-lg overflow-x-auto">
-            <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">নির্বাচিত কনফিগারেশন</h3>
-            <table className="w-full border-collapse">
-              <thead className="bg-white/10">
-                <tr>
-                  <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শ্রেণি</th>
-                  <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ফি প্যাকেজ</th>
-                  <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ফি সাবহেড</th>
-                  <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শিক্ষাবর্ষ</th>
-                  <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">বোর্ডিং</th>
-                  <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শুরুর তারিখ</th>
-                  <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শেষের তারিখ</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/20">
-                {configurations.map((config, index) => (
-                  <tr key={index} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
-                    <td className="border border-white/20 p-3 text-sm text-[#441a05]">{config.className}</td>
-                    <td className="border border-white/20 p-3 text-sm text-[#441a05]">{config.packageName}</td>
-                    <td className="border border-white/20 p-3 text-sm text-[#441a05]">{config.subheadName}</td>
-                    <td className="border border-white/20 p-3 text-sm text-[#441a05]">
-                      {academicYears?.find((y) => y.id === parseInt(config.academicYear))?.name || config.academicYear}
-                    </td>
-                    <td className="border border-white/20 p-3 text-sm text-[#441a05]">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${config.isBoarding ? 'bg-[#DB9E30] text-[#441a05]' : 'bg-gray-500/20 text-[#441a05]'}`}
-                      >
-                        {config.isBoarding ? 'বোর্ডিং' : 'নন-বোর্ডিং'}
-                      </span>
-                    </td>
-                    <td className="border border-white/20 p-3 text-sm text-[#441a05]">
-                      <input
-                        type="date"
-                        value={config.startDate}
-                        onChange={(e) => updateConfigDate(index, 'startDate', e.target.value)}
-                        className="w-full bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg"
-                      />
-                    </td>
-                    <td className="border border-white/20 p-3 text-sm text-[#441a05]">
-                      <input
-                        type="date"
-                        value={config.endDate}
-                        onChange={(e) => updateConfigDate(index, 'endDate', e.target.value)}
-                        className="w-full bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg"
-                      />
-                    </td>
-                  </tr>
+            {/* Class Tabs */}
+            {hasAddPermission && (
+              <div className="mb-6 flex flex-wrap gap-2">
+                {classes?.map((cls) => (
+                  <button
+                    key={cls.id}
+                    className={`px-4 py-2 rounded-lg transition-all duration-300 ${selectedClass === cls.id ? 'bg-[#DB9E30] text-white' : 'bg-gray-500/20 text-[#441a05] hover:bg-gray-500/30'}`}
+                    onClick={() => {
+                      setSelectedClass(cls.id);
+                      setErrors((prev) => ({ ...prev, class: null }));
+                    }}
+                    aria-label={`শ্রেণি নির্বাচন করুন ${cls.student_class.name}`}
+                  >
+                    {cls.student_class?.name}
+                  </button>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                {errors.class && <p className="text-red-400 text-sm mt-2">{errors.class}</p>}
+              </div>
+            )}
 
-        {/* Fees Table from useGetFeesNamesQuery */}
-        <div className="mb-6 bg-white/5 rounded-lg overflow-x-auto">
-          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">সকল ফি কনফিগারেশন</h3>
-          {feesName?.length === 0 ? (
-            <p className="p-4 text-[#441a05]/70">কোনো ফি কনফিগারেশন পাওয়া যায়নি।</p>
-          ) : (
-            <table className="w-full border-collapse">
-              <thead className="bg-white/10">
-                <tr>
-                  <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ফি টাইটেল</th>
-                  <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শ্রেণি</th>
-                  <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শিক্ষাবর্ষ</th>
-                  <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ফি সাবহেড</th>
-                  <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শুরুর তারিখ</th>
-                  <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শেষের তারিখ</th>
-                  <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">বোর্ডিং</th>
-                  <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">স্ট্যাটাস</th>
-                  <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ক্রিয়া</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/20">
-                {feesName?.map((fee, index) => {
-                  const className = classes?.find((c) => c.id === feePackages?.find((p) => p.id === fee.fee_amount_id)?.student_class)?.student_class.name || 'অজানা';
-                  const subheadName = feeSubheads?.find((s) => s.id === fee.fees_sub_type)?.name || 'অজানা';
-                  const academicYearName = academicYears?.find((y) => y.id === fee.academic_year)?.name || 'অজানা';
-                  return (
-                    <tr key={index} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
-                      <td className="border border-white/20 p-3 text-sm text-[#441a05]">{fee.fees_title}</td>
-                      <td className="border border-white/20 p-3 text-sm text-[#441a05]">{className}</td>
-                      <td className="border border-white/20 p-3 text-sm text-[#441a05]">{academicYearName}</td>
-                      <td className="border border-white/20 p-3 text-sm text-[#441a05]">{subheadName}</td>
-                      <td className="border border-white/20 p-3 text-sm text-[#441a05]">{format(new Date(fee.startdate), 'dd-MM-yyyy')}</td>
-                      <td className="border border-white/20 p-3 text-sm text-[#441a05]">{format(new Date(fee.enddate), 'dd-MM-yyyy')}</td>
-                      <td className="border border-white/20 p-3 text-sm text-[#441a05]">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${fee.is_boarding ? 'bg-[#DB9E30] text-[#441a05]' : 'bg-gray-500/20 text-[#441a05]'}`}
-                        >
-                          {fee.is_boarding ? 'বোর্ডিং' : 'নন-বোর্ডিং'}
-                        </span>
-                      </td>
-                      <td className="border border-white/20 p-3 text-sm text-[#441a05]">{fee.status === 'ACTIVE' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</td>
-                      <td className="border border-white/20 p-3 text-sm text-[#441a05]">
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleOpenUpdateModal(fee)}
-                            className="p-2 bg-blue-500/20 text-blue-500 rounded-lg hover:bg-blue-500/30 transition-colors duration-300"
-                            aria-label={`আপডেট করুন ${fee.fees_title}`}
-                          >
-                            <FaEdit />
-                          </button>
-                          <button
-                            onClick={() => handleOpenDeleteModal(fee)}
-                            className="p-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-colors duration-300"
-                            aria-label={`মুছে ফেলুন ${fee.fees_title}`}
-                          >
-                            <FaTrash />
-                          </button>
-                        </div>
-                      </td>
+            {/* Academic Year Select */}
+            {hasAddPermission && (
+              <div className="mb-6">
+                <select
+                  value={selectedAcademicYear}
+                  onChange={(e) => {
+                    setSelectedAcademicYear(e.target.value);
+                    setErrors((prev) => ({ ...prev, academicYear: null }));
+                  }}
+                  className="w-full max-w-xs bg-transparent text-[#441a05] pl-3 py-2 border outline-none border-[#9d9087] rounded-lg transition-all duration-300"
+                  aria-describedby={errors.academicYear ? 'academicYear-error' : undefined}
+                >
+                  <option value="" disabled>শিক্ষাবর্ষ নির্বাচন করুন</option>
+                  {academicYears?.map((year) => (
+                    <option key={year.id} value={year.id}>{year.name}</option>
+                  ))}
+                </select>
+                {errors.academicYear && (
+                  <p id="academicYear-error" className="text-red-400 text-sm mt-2">{errors.academicYear}</p>
+                )}
+              </div>
+            )}
+
+            {/* Fee Packages and Subheads Table */}
+            {hasAddPermission && (
+              <div className="mb-6">
+                <div className="bg-white/5 rounded-lg overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead className="bg-white/10">
+                      <tr>
+                        <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ফি প্যাকেজ</th>
+                        <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ফি সাবহেড</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="border border-white/20 p-3 align-top">
+                          {filteredFeePackages.length === 0 ? (
+                            <p className="text-[#441a05]/70">কোনো ফি প্যাকেজ পাওয়া যায়নি।</p>
+                          ) : (
+                            filteredFeePackages.map((pkg) => {
+                              const className = classes?.find((c) => c.id === pkg.student_class)?.student_class.name || 'অজানা';
+                              const feeHeadName = feeHeads?.find((h) => h.id === pkg.fees_head_id)?.name || 'অজানা';
+                              return (
+                                <div key={pkg.id} className="flex items-center mb-3 gap-2">
+                                  <label className="flex items-center cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedFeePackages.includes(pkg.id)}
+                                      onChange={() => handleFeePackageChange(pkg.id)}
+                                      className="hidden"
+                                      aria-label={`ফি প্যাকেজ নির্বাচন করুন ${className} - ${feeHeadName}`}
+                                    />
+                                    <span
+                                      className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 ${
+                                        selectedFeePackages.includes(pkg.id)
+                                          ? 'bg-[#DB9E30] border-[#DB9E30]'
+                                          : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
+                                      }`}
+                                    >
+                                      {selectedFeePackages.includes(pkg.id) && (
+                                        <svg
+                                          className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                          xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M5 13l4 4L19 7"
+                                          />
+                                        </svg>
+                                      )}
+                                    </span>
+                                  </label>
+                                  <span className="text-[#441a05]">{`${className} - ${feeHeadName}`}</span>
+                                </div>
+                              );
+                            })
+                          )}
+                          {errors.feePackages && (
+                            <p className="text-red-400 text-sm mt-2">{errors.feePackages}</p>
+                          )}
+                        </td>
+                        <td className="border border-white/20 p-3 align-top grid grid-cols-3">
+                          {feeSubheads?.length === 0 ? (
+                            <p className="text-[#441a05]/70">কোনো ফি সাবহেড পাওয়া যায়নি।</p>
+                          ) : (
+                            feeSubheads?.map((sub) => (
+                              <div key={sub.id} className="flex items-center mb-3 gap-2">
+                                <label className="flex items-center cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedFeeSubheads.includes(sub.id)}
+                                    onChange={() => handleFeeSubheadChange(sub.id)}
+                                    className="hidden"
+                                    aria-label={`ফি সাবহেড নির্বাচন করুন ${sub.name}`}
+                                  />
+                                  <span
+                                    className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 ${
+                                      selectedFeeSubheads.includes(sub.id)
+                                        ? 'bg-[#DB9E30] border-[#DB9E30]'
+                                        : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
+                                    }`}
+                                  >
+                                    {selectedFeeSubheads.includes(sub.id) && (
+                                      <svg
+                                        className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth="2"
+                                          d="M5 13l4 4L19 7"
+                                        />
+                                      </svg>
+                                    )}
+                                  </span>
+                                </label>
+                                <span className="text-[#441a05]">{sub.name}</span>
+                              </div>
+                            ))
+                          )}
+                          {errors.feeSubheads && (
+                            <p className="text-red-400 text-sm mt-2">{errors.feeSubheads}</p>
+                          )}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Configuration Add Button */}
+            {hasAddPermission && (
+              <div className="mb-6">
+                <button
+                  onClick={addConfiguration}
+                  className={`flex items-center w-full max-w-xs px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
+                    !selectedClass || !selectedAcademicYear || selectedFeePackages.length === 0 || selectedFeeSubheads.length === 0
+                      ? 'cursor-not-allowed opacity-70'
+                      : 'hover:text-white btn-glow'
+                  }`}
+                  disabled={!selectedClass || !selectedAcademicYear || selectedFeePackages.length === 0 || selectedFeeSubheads.length === 0}
+                >
+                  <FaCheckCircle className="w-5 h-5 mr-2" />
+                  কনফিগারেশন যোগ করুন
+                </button>
+              </div>
+            )}
+
+            {/* Configurations Table */}
+            {(hasAddPermission || hasChangePermission) && configurations.length > 0 && (
+              <div className="mb-6 bg-white/5 rounded-lg overflow-x-auto">
+                <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">নির্বাচিত কনফিগারেশন</h3>
+                <table className="w-full border-collapse">
+                  <thead className="bg-white/10">
+                    <tr>
+                      <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শ্রেণি</th>
+                      <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ফি প্যাকেজ</th>
+                      <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ফি সাবহেড</th>
+                      <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শিক্ষাবর্ষ</th>
+                      <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">বোর্ডিং</th>
+                      <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শুরুর তারিখ</th>
+                      <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শেষের তারিখ</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
+                  </thead>
+                  <tbody className="divide-y divide-white/20">
+                    {configurations.map((config, index) => (
+                      <tr key={index} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
+                        <td className="border border-white/20 p-3 text-sm text-[#441a05]">{config.className}</td>
+                        <td className="border border-white/20 p-3 text-sm text-[#441a05]">{config.packageName}</td>
+                        <td className="border border-white/20 p-3 text-sm text-[#441a05]">{config.subheadName}</td>
+                        <td className="border border-white/20 p-3 text-sm text-[#441a05]">
+                          {academicYears?.find((y) => y.id === parseInt(config.academicYear))?.name || config.academicYear}
+                        </td>
+                        <td className="border border-white/20 p-3 text-sm text-[#441a05]">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${config.isBoarding ? 'bg-[#DB9E30] text-[#441a05]' : 'bg-gray-500/20 text-[#441a05]'}`}
+                          >
+                            {config.isBoarding ? 'বোর্ডিং' : 'নন-বোর্ডিং'}
+                          </span>
+                        </td>
+                        <td className="border border-white/20 p-3 text-sm text-[#441a05]">
+                          <input
+                            type="date"
+                            value={config.startDate}
+                            onChange={(e) => updateConfigDate(index, 'startDate', e.target.value)}
+                            className="w-full bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg"
+                          />
+                        </td>
+                        <td className="border border-white/20 p-3 text-sm text-[#441a05]">
+                          <input
+                            type="date"
+                            value={config.endDate}
+                            onChange={(e) => updateConfigDate(index, 'endDate', e.target.value)}
+                            className="w-full bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
-        {/* Submit Button */}
-        <button
-          onClick={handleOpenModal}
-          className={`${configurations.length === 0 ? "hidden" : ""} flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${configurations.length === 0 || isSubmitting ? 'cursor-not-allowed opacity-70' : 'hover:text-white btn-glow'}`}
-          disabled={configurations.length === 0 || isSubmitting}
-        >
-          {isSubmitting ? (
-            <>
-              <FaSpinner className="animate-spin text-lg mr-2" />
-              জমা হচ্ছে...
-            </>
-          ) : (
-            <>
-              <FaCheckCircle className="w-5 h-5 mr-2" />
-              জমা দিন
-            </>
-          )}
-        </button>
+            {/* Fees Table from useGetFeesNamesQuery */}
+            <div className="mb-6 bg-white/5 rounded-lg overflow-x-auto">
+              <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">সকল ফি কনফিগারেশন</h3>
+              {feesName?.length === 0 ? (
+                <p className="p-4 text-[#441a05]/70">কোনো ফি কনফিগারেশন পাওয়া যায়নি।</p>
+              ) : (
+                <table className="w-full border-collapse">
+                  <thead className="bg-white/10">
+                    <tr>
+                      <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ফি টাইটেল</th>
+                      <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শ্রেণি</th>
+                      <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শিক্ষাবর্ষ</th>
+                      <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ফি সাবহেড</th>
+                      <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শুরুর তারিখ</th>
+                      <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শেষের তারিখ</th>
+                      <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">বোর্ডিং</th>
+                      <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">স্ট্যাটাস</th>
+                      {(hasChangePermission || hasDeletePermission) && (
+                        <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ক্রিয়া</th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/20">
+                    {feesName?.map((fee, index) => {
+                      const className = classes?.find((c) => c.id === feePackages?.find((p) => p.id === fee.fee_amount_id)?.student_class)?.student_class.name || 'অজানা';
+                      const subheadName = feeSubheads?.find((s) => s.id === fee.fees_sub_type)?.name || 'অজানা';
+                      const academicYearName = academicYears?.find((y) => y.id === fee.academic_year)?.name || 'অজানা';
+                      return (
+                        <tr key={index} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
+                          <td className="border border-white/20 p-3 text-sm text-[#441a05]">{fee.fees_title}</td>
+                          <td className="border border-white/20 p-3 text-sm text-[#441a05]">{className}</td>
+                          <td className="border border-white/20 p-3 text-sm text-[#441a05]">{academicYearName}</td>
+                          <td className="border border-white/20 p-3 text-sm text-[#441a05]">{subheadName}</td>
+                          <td className="border border-white/20 p-3 text-sm text-[#441a05]">{format(new Date(fee.startdate), 'dd-MM-yyyy')}</td>
+                          <td className="border border-white/20 p-3 text-sm text-[#441a05]">{format(new Date(fee.enddate), 'dd-MM-yyyy')}</td>
+                          <td className="border border-white/20 p-3 text-sm text-[#441a05]">
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${fee.is_boarding ? 'bg-[#DB9E30] text-[#441a05]' : 'bg-gray-500/20 text-[#441a05]'}`}
+                            >
+                              {fee.is_boarding ? 'বোর্ডিং' : 'নন-বোর্ডিং'}
+                            </span>
+                          </td>
+                          <td className="border border-white/20 p-3 text-sm text-[#441a05]">{fee.status === 'ACTIVE' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</td>
+                          {(hasChangePermission || hasDeletePermission) && (
+                            <td className="border border-white/20 p-3 text-sm text-[#441a05]">
+                              <div className="flex space-x-2">
+                                {hasChangePermission && (
+                                  <button
+                                    onClick={() => handleOpenUpdateModal(fee)}
+                                    className="p-2 bg-blue-500/20 text-blue-500 rounded-lg hover:bg-blue-500/30 transition-colors duration-300"
+                                    aria-label={`আপডেট করুন ${fee.fees_title}`}
+                                  >
+                                    <FaEdit />
+                                  </button>
+                                )}
+                                {hasDeletePermission && (
+                                  <button
+                                    onClick={() => handleOpenDeleteModal(fee)}
+                                    className="p-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-colors duration-300"
+                                    aria-label={`মুছে ফেলুন ${fee.fees_title}`}
+                                  >
+                                    <FaTrash />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
 
-        {/* Error Display */}
-        {(submitError || updateError || deleteError) && (
-          <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
-            ত্রুটি: {(submitError || updateError || deleteError)?.status || 'অজানা'} - {JSON.stringify((submitError || updateError || deleteError)?.data || {})}
+            {/* Submit Button */}
+            {hasAddPermission && configurations.length > 0 && (
+              <div className="mb-6">
+                <button
+                  onClick={handleOpenModal}
+                  className={`flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${isSubmitting ? 'cursor-not-allowed opacity-70' : 'hover:text-white btn-glow'}`}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <FaSpinner className="animate-spin text-lg mr-2" />
+                      জমা হচ্ছে...
+                    </>
+                  ) : (
+                    <>
+                      <FaCheckCircle className="w-5 h-5 mr-2" />
+                      জমা দিন
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* Error Display */}
+            {(submitError || updateError || deleteError) && (
+              <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
+                ত্রুটি: {(submitError || updateError || deleteError)?.status || 'অজানা'} - {JSON.stringify((submitError || updateError || deleteError)?.data || {})}
+              </div>
+            )}
           </div>
         )}
       </div>

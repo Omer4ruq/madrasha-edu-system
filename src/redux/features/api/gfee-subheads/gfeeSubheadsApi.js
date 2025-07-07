@@ -12,9 +12,9 @@ export const gfeeSubheadsApi = createApi({
     baseUrl: BASE_URL2,
     prepareHeaders: (headers) => {
       const token = getToken();
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
+      // if (token) {
+      //   headers.set('Authorization', `Bearer ${token}`);
+      // }
       headers.set('Content-Type', 'application/json');
       return headers;
     },
