@@ -188,9 +188,16 @@ const Testimonial = () => {
 
         {/* Header */}
         <div className="text-center mt-[10px]">
-          <h1 className="text-3xl font-bold text-[#441a05]">
+          <h1
+            className={`font-bold text-[#441a05] ${
+              (instituteData?.institute_name || "আল ফারুক মাদ্রাসা").length > 30
+                ? "text-2xl"
+                : "text-3xl"
+            }`}
+          >
             {instituteData?.institute_name || "আল ফারুক মাদ্রাসা"}
           </h1>
+
           <p className="text-xl mt-3">
             {instituteData?.institute_address || "কালিগঞ্জ, গাজীপুর"}
           </p>
