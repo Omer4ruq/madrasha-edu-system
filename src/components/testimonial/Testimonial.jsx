@@ -8,6 +8,7 @@ import { useGetStudentActiveApiQuery } from "../../redux/features/api/student/st
 import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
 import { useGetInstituteLatestQuery } from "../../redux/features/api/institute/instituteLatestApi";
 import selectStyles from "../../utilitis/selectStyles";
+import frame from "../../../public/images/frame.jpg";
 
 const Testimonial = () => {
   const printRef = useRef();
@@ -71,8 +72,8 @@ const Testimonial = () => {
             backgroundColor: null,
           },
           jsPDF: {
-            unit: "px",
-            format: [1123, 794],
+            unit: "mm",
+            format: "a4",
             orientation: "landscape",
           },
         })
@@ -158,93 +159,86 @@ const Testimonial = () => {
       year: "numeric",
     });
 
-    // 🔸 Textarea height auto grow function
-    const autoGrow = (e) => {
-      e.target.style.height = "auto";
-      e.target.style.height = `${e.target.scrollHeight}px`;
-    };
-
     return (
       <div
         ref={printRef}
-        className="relative mx-auto print:bg-[url('https://i.postimg.cc/MGJSHC9D/IMG-20250705-210734.jpg')]"
+        className="relative mx-auto print:bg-[url('/images/frame.jpg')]"
         style={{
-          backgroundImage:
-            "url('https://i.postimg.cc/MGJSHC9D/IMG-20250705-210734.jpg')",
+          backgroundImage: `url(${frame})`,
           backgroundSize: "100% 100%",
           backgroundRepeat: "no-repeat",
-          width: "1123px",
-          height: "794px",
+          width: "297mm", // A4 landscape width
+          height: "210mm", // A4 landscape height
           boxSizing: "border-box",
-          padding: "60px 70px",
+          padding: "20mm 30mm", // Adjusted margins for A4
+          fontFamily: "'Noto Sans Bengali', sans-serif",
         }}
       >
         {/* Logo */}
-        {/* <img
+        <img
           src={instituteData?.institute_logo || "/logo.png"}
           alt="Logo"
-          className="absolute top-[50px] left-[60px] w-14 h-14 object-contain"
-        /> */}
+          className="absolute top-[20mm] left-[25mm] w-[30mm] h-[30mm] object-contain"
+        />
 
         {/* Header */}
-        <div className="text-center mt-[10px]">
+        <div className="text-center mt-[3mm]">
           <h1
             className={`font-bold text-[#441a05] ${
               (instituteData?.institute_name || "আল ফারুক মাদ্রাসা").length > 30
-                ? "text-2xl"
-                : "text-3xl"
+                ? "text-[8mm]"
+                : "text-[10mm]"
             }`}
           >
             {instituteData?.institute_name || "আল ফারুক মাদ্রাসা"}
           </h1>
-
-          <p className="text-xl mt-3">
+          <p className="text-[6mm] mt-[3mm]">
             {instituteData?.institute_address || "কালিগঞ্জ, গাজীপুর"}
           </p>
-          <p className="text-base my-2">
+          <p className="text-[5mm] my-[2mm]">
             {instituteData?.headmaster_mobile || "০১৭১২৩৪৫৬৭৮"}
           </p>
-          <h1 className="bg-[#441a05] text-white px-5 mt-3 w-fit mx-auto text-2xl py-2 rounded-3xl">
-            <span className="translate-y-[-10px]">প্রত্যয়ন পত্র</span>
+          <h1 className="bg-[#441a05] text-white px-[10mm] mt-[3mm] w-fit mx-auto text-[6mm] py-[2mm] rounded-[10mm]">
+            <span className="translate-y-[-12px]">প্রত্যয়ন পত্র</span>
           </h1>
         </div>
 
         {/* Serial and Date */}
-        <div className="flex justify-between mt-6 text-lg text-[#441a05]">
+        <div className="flex justify-between mt-[0mm] text-[5mm] text-[#441a05]">
           <div>
             ক্রমিকঃ{" "}
             <input
-              className="border-b border-[#441a05] w-16 text-center bg-transparent"
+              className="border-b border-[#441a05] w-[20mm] text-center bg-transparent"
               defaultValue="১"
             />
           </div>
           <div>
             তারিখঃ{" "}
             <input
-              className="w-32 text-center bg-transparent border-b border-[#441a05]"
+              className="w-[30mm] text-center bg-transparent border-b border-[#441a05]"
               defaultValue={formattedDate}
             />
           </div>
         </div>
 
         {/* Certificate Body */}
-        <div className="mt-6 space-y-4 text-lg text-[#441a05] leading-relaxed">
-          <p className="flex gap-2 flex-wrap">
+        <div className="mt-[8mm] space-y-[4mm] text-[5mm] text-[#441a05] leading-relaxed">
+          <p className="flex gap-[2mm] flex-wrap">
             এই মর্মে প্রত্যয়ন করা যাচ্ছে যে,
             <textarea
               onInput={autoGrow}
               value={selectedStudent?.name || "মোঃ আব্দুল করিম"}
-              className="w-96 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              className="w-[80mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               readOnly
             />
           </p>
-          <p className="flex gap-2 flex-wrap">
+          <p className="flex gap-[2mm] flex-wrap">
             পিতা:
             <textarea
               onInput={autoGrow}
               value={selectedStudent?.father_name || "মোঃ রফিকুল ইসলাম"}
-              className="w-80 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              className="w-[60mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               readOnly
             />
@@ -252,18 +246,18 @@ const Testimonial = () => {
             <textarea
               onInput={autoGrow}
               value={selectedStudent?.mother_name || "মোছাঃ রাবেয়া খাতুন"}
-              className="w-80 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              className="w-[60mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               readOnly
             />
             ।
           </p>
-          <p className="flex gap-2 flex-wrap">
+          <p className="flex gap-[2mm] flex-wrap">
             গ্রাম:
             <textarea
               onInput={autoGrow}
               value={selectedStudent?.village || "আউটপাড়া"}
-              className="w-40 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              className="w-[30mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               readOnly
             />
@@ -271,7 +265,7 @@ const Testimonial = () => {
             <textarea
               onInput={autoGrow}
               value={selectedStudent?.post_office || "মাওনা"}
-              className="w-40 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              className="w-[30mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               readOnly
             />
@@ -279,7 +273,7 @@ const Testimonial = () => {
             <textarea
               onInput={autoGrow}
               value={selectedStudent?.ps_or_upazilla || "সদর"}
-              className="w-40 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              className="w-[30mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               readOnly
             />
@@ -287,18 +281,18 @@ const Testimonial = () => {
             <textarea
               onInput={autoGrow}
               value={selectedStudent?.ps_or_upazilla || "সদর"}
-              className="w-40 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              className="w-[30mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               readOnly
             />
             ।
           </p>
-          <p className="flex gap-2 flex-wrap">
+          <p className="flex gap-[2mm] flex-wrap">
             জেলা:
             <textarea
               onInput={autoGrow}
               value={selectedStudent?.district || "গাজীপুর"}
-              className="w-40 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              className="w-[30mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               readOnly
             />
@@ -306,7 +300,7 @@ const Testimonial = () => {
             <textarea
               onInput={autoGrow}
               // value={selectedStudent?.username || "১১১"}
-              className="w-40 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              className="w-[30mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               // readOnly
             />
@@ -314,18 +308,18 @@ const Testimonial = () => {
             <textarea
               onInput={autoGrow}
               value={selectedStudent?.dob || "১৫/০৫/১৯৮৮"}
-              className="w-32 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              className="w-[25mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               readOnly
             />
             ।
           </p>
-          <p className="flex gap-2 flex-wrap">
+          <p className="flex gap-[2mm] flex-wrap">
             সে অত্র মাদরাসায়
             <textarea
               onInput={autoGrow}
               // value={selectedStudent?.class_name || "দ্বিতীয়"}
-              className="w-40 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              className="w-[30mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               // readOnly
             />
@@ -333,7 +327,7 @@ const Testimonial = () => {
             <textarea
               onInput={autoGrow}
               // value={selectedStudent?.class_name || "পঞ্চম"}
-              className="w-40 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              className="w-[30mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               // readOnly
             />
@@ -341,7 +335,7 @@ const Testimonial = () => {
             <textarea
               onInput={autoGrow}
               // value={selectedYear?.label || "২০২৪"}
-              className="w-20 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              className="w-[20mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               // readOnly
             />
@@ -349,22 +343,22 @@ const Testimonial = () => {
             <textarea
               onInput={autoGrow}
               // value={selectedYear?.label || "২০২৪"}
-              className="w-20 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              className="w-[20mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               // readOnly
             />
             বোর্ড পরীক্ষায় অংশগ্রহণ করে মোট নাম্বার
             <textarea
               onInput={autoGrow}
-              // defaultValue="৭৬৫"
-              className="w-24 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              defaultValue="৭৬৫"
+              className="w-[20mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
             />
             এবং
             <textarea
               onInput={autoGrow}
               placeholder="বিভাগ"
-              className="w-72 border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              className="w-[40mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
               rows={1}
             />
             বিভাগে উত্তীর্ণ হয়েছে।
@@ -372,17 +366,17 @@ const Testimonial = () => {
         </div>
 
         {/* Signatures */}
-        <div className="absolute bottom-[100px] left-[120px] text-center">
-          <div className="border-t border-dotted border-[#441a05] w-[100px] mx-auto"></div>
-          <div className="text-[#441a05] mt-1">সীল</div>
+        <div className="absolute bottom-[25mm] left-[30mm] text-center">
+          <div className="border-t border-dotted border-[#441a05] w-[25mm] mx-auto"></div>
+          <div className="text-[#441a05] mt-[1mm] text-[5mm]">সীল</div>
         </div>
-        <div className="absolute bottom-[100px] left-1/2 -translate-x-1/2 text-center">
-          <div className="border-t border-dotted border-[#441a05] w-[100px] mx-auto"></div>
-          <div className="text-[#441a05] mt-1">নাজেম</div>
+        <div className="absolute bottom-[25mm] left-1/2 -translate-x-1/2 text-center">
+          <div className="border-t border-dotted border-[#441a05] w-[25mm] mx-auto"></div>
+          <div className="text-[#441a05] mt-[1mm] text-[5mm]">নাজেম</div>
         </div>
-        <div className="absolute bottom-[100px] right-[120px] text-center">
-          <div className="border-t border-dotted border-[#441a05] w-[100px] mx-auto"></div>
-          <div className="text-[#441a05] mt-1">মুহতামিম</div>
+        <div className="absolute bottom-[25mm] right-[30mm] text-center">
+          <div className="border-t border-dotted border-[#441a05] w-[25mm] mx-auto"></div>
+          <div className="text-[#441a05] mt-[1mm] text-[5mm]">মুহতামিম</div>
         </div>
       </div>
     );
@@ -408,12 +402,7 @@ const Testimonial = () => {
             animation: fadeIn 0.6s ease-out forwards;
           }
           .animate-scaleIn {
-            animation: scaleIn 0.4s
-
- ease-out forwards;
-          }
-          .animate-slideUp {
-            animation: slideUp 0.4s ease-out forwards;
+            animation: scaleIn 0.4s ease-out forwards;
           }
           .btn-glow:hover {
             box-shadow: 0 0 15px rgba(219, 158, 48, 0.3);
@@ -430,6 +419,15 @@ const Testimonial = () => {
           }
           ::-webkit-scrollbar-thumb:hover {
             background: rgba(10, 13, 21, 0.44);
+          }
+          @media print {
+            @page {
+              size: A4 landscape;
+              margin: 0;
+            }
+            body {
+              margin: 0;
+            }
           }
         `}
       </style>
@@ -536,11 +534,6 @@ const Testimonial = () => {
           </button>
         </div>
       )}
-      {/* {selectedStudent && selectedYear && (
-        <p className="text-sm text-[#441a05]/70 mt-2 print:hidden">
-          ⚠️ প্রিন্ট করার আগে ব্রাউজারে "Print background graphics" চালু করুন।
-        </p>
-      )} */}
     </div>
   );
 };

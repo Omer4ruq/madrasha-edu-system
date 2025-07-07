@@ -142,7 +142,7 @@ const AddEvent = () => {
         setNewEvent({ title: "", start: "", end: "", academic_year: "" });
       } else if (modalAction === "delete") {
         await deleteEvent(modalData.id).unwrap();
-        toast.success("ইভেন্ট সফলভাবে মুছে ফেলা হয়েছে!");
+        toast.success("ইভেনट সফলভাবে মুছে ফেলা হয়েছে!");
       }
       refetch();
     } catch (err) {
@@ -265,7 +265,7 @@ const AddEvent = () => {
             border-radius: 0.5rem !important;
             color: #441a05 !important;
             font-family: 'Noto Sans Bengali', sans-serif !important;
-            z-index: 10010 !important; /* Increased z-index */
+            z-index: 10010 !important;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
             max-height: 80vh !important;
             overflow-y: auto !important;
@@ -277,6 +277,28 @@ const AddEvent = () => {
           .react-calendar__tile--active {
             background: #441a05 !important;
             color: white !important;
+          }
+          .react-datetime-picker__clock {
+            background: white !important;
+            color: #441a05 !important;
+            padding: 1rem !important;
+          }
+          .react-clock__face {
+            background: white !important;
+            border: 1px solid #9d9087 !important;
+          }
+          .react-clock__hand__body {
+            background: #441a05 !important;
+          }
+          .react-clock__mark__body {
+            background: #441a05 !important;
+          }
+          .react-clock__mark__number {
+            color: #441a05 !important;
+            font-family: 'Noto Sans Bengali', sans-serif !important;
+          }
+          .react-clock__second-hand__body {
+            background: #DB9E30 !important;
           }
         `}
       </style>
