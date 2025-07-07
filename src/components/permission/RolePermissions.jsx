@@ -243,7 +243,7 @@ const RolePermissions = () => {
                 className={`px-4 py-2 rounded-lg font-medium transition-colors duration-300 animate-scaleIn ${
                   selectedGroup?.id === group.id
                     ? "bg-[#DB9E30] text-[#441a05]"
-                    : "bg-gray-200 text-[#441a05] hover:bg-gray-300"
+                    : "bg-gray-100 text-[#441a05] hover:bg-gray-300"
                 }`}
                 style={{ animationDelay: `${index * 0.1}s` }}
                 disabled={isGroupsLoading}
