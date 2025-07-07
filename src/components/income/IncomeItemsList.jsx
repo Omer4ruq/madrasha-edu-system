@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import { FaEdit, FaSpinner, FaTrash } from "react-icons/fa";
 import toast, { Toaster } from "react-hot-toast";
 import {
-  useGetIncomeItemsQuery,
   useGetAllIncomeItemsQuery,
   useDeleteIncomeItemMutation,
 } from "../../redux/features/api/income-items/incomeItemsApi";
 import { useGetFundsQuery } from "../../redux/features/api/funds/fundsApi";
 import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
 import { useGetIncomeHeadsQuery } from "../../redux/features/api/income-heads/incomeHeadsApi";
+import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi";
+import { useSelector } from "react-redux";
 import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
 
 // Register Noto Sans Bengali font
@@ -25,7 +26,7 @@ try {
   });
 }
 
-// PDF styles (unchanged)
+// PDF styles
 const styles = StyleSheet.create({
   page: {
     padding: 40,
@@ -115,7 +116,7 @@ const styles = StyleSheet.create({
   },
 });
 
-// PDF Document Component (unchanged)
+// PDF Document Component
 const PDFDocument = ({ incomeItems, incomeTypes, fundTypes, academicYears, startDate, endDate }) => (
   <Document>
     <Page size="A4" orientation="landscape" style={styles.page}>
@@ -137,9 +138,9 @@ const PDFDocument = ({ incomeItems, incomeTypes, fundTypes, academicYears, start
         <View style={styles.tableRow}>
           <Text style={[styles.tableHeader, { flex: 1 }]}>আয়ের ধরন</Text>
           <Text style={[styles.tableHeader, { flex: 1 }]}>নাম</Text>
-          <Text style={[styles.tableHeader, { flex: 1 }]}>ফান্ড</Text>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>তহবিল</Text>
           <Text style={[styles.tableHeader, { flex: 1 }]}>লেনদেন নম্বর</Text>
-          <Text style={[styles.tableHeader, { flex: 1 }]}>কর্মচারী আইডি</Text>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>ইনভয়েস নম্বর</Text>
           <Text style={[styles.tableHeader, { flex: 1 }]}>তারিখ</Text>
           <Text style={[styles.tableHeader, { flex: 1 }]}>পরিমাণ</Text>
           <Text style={[styles.tableHeader, { flex: 1 }]}>শিক্ষাবর্ষ</Text>
@@ -154,7 +155,7 @@ const PDFDocument = ({ incomeItems, incomeTypes, fundTypes, academicYears, start
               {fundTypes.find((fund) => fund.id === item.fund_id)?.name || 'অজানা'}
             </Text>
             <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{item.transaction_number || '-'}</Text>
-            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{item.employee_id || '-'}</Text>
+            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{item.invoice_number || '-'}</Text>
             <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{item.income_date || 'N/A'}</Text>
             <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{item.amount || '0'}</Text>
             <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
@@ -171,8 +172,9 @@ const PDFDocument = ({ incomeItems, incomeTypes, fundTypes, academicYears, start
   </Document>
 );
 
-const IncomeItemsList = ({ onEditClick }) => {
-  const [activeTab, setActiveTab] = useState("all"); // Track active tab: 'all', 'incomeType', 'fund', 'date'
+const IncomeItemsList = ({ onEditClick, onDelete }) => {
+  const { group_id } = useSelector((state) => state.auth);
+  const [activeTab, setActiveTab] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState(null);
   const [dateFilter, setDateFilter] = useState({ start_date: "", end_date: "", fund_id: "", incometype_id: "" });
@@ -186,6 +188,14 @@ const IncomeItemsList = ({ onEditClick }) => {
     error: allItemsError,
   } = useGetAllIncomeItemsQuery();
   const [deleteIncomeItem, { isLoading: isDeleting, error: deleteError }] = useDeleteIncomeItemMutation();
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Check permissions
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_incomeitemlist') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_incomeitemlist') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_incomeitemlist') || false;
 
   // Filter items based on active tab and filter selections
   const filteredItems = allIncomeData?.results?.filter((item) => {
@@ -214,19 +224,28 @@ const IncomeItemsList = ({ onEditClick }) => {
   };
 
   const handleDelete = (id) => {
+    if (!hasDeletePermission) {
+      toast.error('আয় আইটেম মুছে ফেলার অনুমতি নেই।');
+      return;
+    }
     setDeleteItemId(id);
     setIsModalOpen(true);
   };
 
   const confirmDelete = async () => {
+    if (!hasDeletePermission) {
+      toast.error('আয় আইটেম মুছে ফেলার অনুমতি নেই।');
+      return;
+    }
+    const toastId = toast.loading("আয় আইটেম মুছে ফেলা হচ্ছে...");
     try {
       await deleteIncomeItem(deleteItemId).unwrap();
-      toast.success("আয় আইটেম সফলভাবে মুছে ফেলা হয়েছে!");
+      toast.success("আয় আইটেম সফলভাবে মুছে ফেলা হয়েছে!", { id: toastId });
       setIsModalOpen(false);
       setDeleteItemId(null);
     } catch (err) {
       console.error("Delete error:", err);
-      toast.error(`আয় আইটেম মুছতে ব্যর্থ: ${err.status || "অজানা ত্রুটি"}`);
+      toast.error(`আয় আইটেম মুছতে ব্যর্থ: ${err.status || "অজানা ত্রুটি"}`, { id: toastId });
       setIsModalOpen(false);
       setDeleteItemId(null);
     }
@@ -234,6 +253,10 @@ const IncomeItemsList = ({ onEditClick }) => {
 
   // Generate PDF report with filtered data
   const generatePDFReport = async () => {
+    if (!hasViewPermission) {
+      toast.error('আয় আইটেম প্রতিবেদন দেখার অনুমতি নেই।');
+      return;
+    }
     if (activeTab === "date" && (!dateFilter.start_date || !dateFilter.end_date)) {
       toast.error('অনুগ্রহ করে শুরু এবং শেষ তারিখ নির্বাচন করুন।');
       return;
@@ -243,7 +266,7 @@ const IncomeItemsList = ({ onEditClick }) => {
       return;
     }
     if (activeTab === "fund" && !dateFilter.fund_id) {
-      toast.error('অনুগ্রহ করে ফান্ড নির্বাচন করুন।');
+      toast.error('অনুগ্রহ করে তহবিল নির্বাচন করুন।');
       return;
     }
     if (isAllItemsLoading) {
@@ -254,12 +277,10 @@ const IncomeItemsList = ({ onEditClick }) => {
       toast.error(`তথ্য লোড করতে ত্রুটি: ${allItemsError.status || 'অজানা ত্রুটি'}`);
       return;
     }
-
     if (!filteredItems.length) {
       toast.error('নির্বাচিত ফিল্টারে কোনো আয় আইটেম পাওয়া যায়নি।');
       return;
     }
-
     try {
       const doc = <PDFDocument
         incomeItems={filteredItems}
@@ -279,9 +300,204 @@ const IncomeItemsList = ({ onEditClick }) => {
       toast.success('প্রতিবেদন সফলভাবে ডাউনলোড হয়েছে!');
     } catch (error) {
       console.error('PDF generation error:', error);
-      toast.error(`প্রতিবেদন তৈরিতে ত্রুট lenta: ${error.message || 'অজানা ত্রুটি'}`);
+      toast.error(`প্রতিবেদন তৈরিতে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
     }
   };
+
+  // View-only mode for users with only view permission
+  if (hasViewPermission && !hasChangePermission && !hasDeletePermission) {
+    return (
+      <div className="py-8 w-full relative">
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: "rgba(0, 0, 0, 0.1)",
+              color: "#441a05",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              borderRadius: "0.5rem",
+              backdropFilter: "blur(4px)",
+            },
+            success: { style: { background: "rgba(219, 158, 48, 0.1)", borderColor: "#DB9E30" } },
+            error: { style: { background: "rgba(239, 68, 68, 0.1)", borderColor: "#ef4444" } },
+          }}
+        />
+        <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn p-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 border-b border-white/20">
+            <h3 className="text-lg font-semibold text-[#441a05]">আয় আইটেম তালিকা</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 w-full md:w-auto">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setActiveTab("all")}
+                  className={`tab ${activeTab === "all" ? "tab-active" : "tab-inactive"}`}
+                >
+                  সকল
+                </button>
+                <button
+                  onClick={() => setActiveTab("incomeType")}
+                  className={`tab ${activeTab === "incomeType" ? "tab-active" : "tab-inactive"}`}
+                >
+                  আয়ের ধরন
+                </button>
+                <button
+                  onClick={() => setActiveTab("fund")}
+                  className={`tab ${activeTab === "fund" ? "tab-active" : "tab-inactive"}`}
+                >
+                  তহবিল
+                </button>
+                <button
+                  onClick={() => setActiveTab("date")}
+                  className={`tab ${activeTab === "date" ? "tab-active" : "tab-inactive"}`}
+                >
+                  তারিখ
+                </button>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                {activeTab === "incomeType" && (
+                  <select
+                    name="incometype_id"
+                    value={dateFilter.incometype_id}
+                    onChange={handleDateFilterChange}
+                    className="bg-transparent min-w-[150px] text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg sm:w-auto"
+                  >
+                    <option value="">আয়ের ধরন</option>
+                    {incomeTypes.map((type) => (
+                      <option key={type.id} value={type.id}>{type.incometype}</option>
+                    ))}
+                  </select>
+                )}
+                {activeTab === "fund" && (
+                  <select
+                    name="fund_id"
+                    value={dateFilter.fund_id}
+                    onChange={handleDateFilterChange}
+                    className="bg-transparent min-w-[150px] text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg w-full sm:w-auto"
+                  >
+                    <option value="">তহবিল নির্বাচন</option>
+                    {fundTypes.map((fund) => (
+                      <option key={fund.id} value={fund.id}>{fund.name}</option>
+                    ))}
+                  </select>
+                )}
+                {activeTab === "date" && (
+                  <>
+                    <input
+                      type="date"
+                      name="start_date"
+                      value={dateFilter.start_date}
+                      onChange={handleDateFilterChange}
+                      className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg w-full sm:w-auto"
+                    />
+                    <input
+                      type="date"
+                      name="end_date"
+                      value={dateFilter.end_date}
+                      onChange={handleDateFilterChange}
+                      className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg w-full sm:w-auto"
+                    />
+                  </>
+                )}
+              </div>
+              <button
+                onClick={generatePDFReport}
+                className="report-button w-full sm:w-auto"
+                title="Download Income Report"
+              >
+                রিপোর্ট
+              </button>
+            </div>
+          </div>
+          {isAllItemsLoading || isTypesLoading || isFundLoading || isYearsLoading ? (
+            <div className="p-4 flex items-center justify-center">
+              <FaSpinner className="animate-spin text-[#441a05] text-2xl mr-2" />
+              <p className="text-[#441a05]/70">লোড হচ্ছে...</p>
+            </div>
+          ) : allItemsError || fundError ? (
+            <p className="p-4 text-red-400 bg-red-500/10 rounded-lg">
+              ত্রুটি: {allItemsError?.status || fundError?.status || "অজানা"} - {JSON.stringify(allItemsError?.data || fundError?.data || {})}
+            </p>
+          ) : filteredItems.length === 0 ? (
+            <p className="p-4 text-[#441a05]/70 text-center">কোনো আয় আইটেম পাওয়া যায়নি।</p>
+          ) : (
+            <div className="table-container">
+              <table className="min-w-full divide-y divide-white/20">
+                <thead className="bg-white/5 sticky top-0 z-10">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      আয়ের ধরন
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      নাম
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      তহবিল
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      লেনদেন নম্বর
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      ইনভয়েস নম্বর
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      তারিখ
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      পরিমাণ
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      শিক্ষাবর্ষ
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/20">
+                  {filteredItems.map((item, index) => (
+                    <tr
+                      key={item.id}
+                      className="bg-white/5 animate-fadeIn"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {incomeTypes.find((type) => type.id === item.incometype_id)?.incometype || "অজানা"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {item.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {fundTypes.find((fund) => fund.id === item.fund_id)?.name || item.fund_id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {item.transaction_number || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {item.invoice_number || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {item.income_date}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {item.amount}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {academicYears.find((year) => year.id === item.academic_year)?.name || item.academic_year}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (permissionsLoading) {
+    return <div className="p-4 text-[#441a05]/70 animate-fadeIn">লোড হচ্ছে...</div>;
+  }
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-red-400 animate-fadeIn">এই পৃষ্ঠাটি দেখার অনুমতি নেই।</div>;
+  }
 
   return (
     <div className="py-8 w-full relative">
@@ -383,8 +599,8 @@ const IncomeItemsList = ({ onEditClick }) => {
         `}
       </style>
 
-      {/* Modal (unchanged) */}
-      {isModalOpen && (
+      {/* Modal */}
+      {(hasDeletePermission) && isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
           <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
             <h3 className="text-lg font-semibold text-[#441a05] mb-4">
@@ -404,8 +620,7 @@ const IncomeItemsList = ({ onEditClick }) => {
               <button
                 onClick={confirmDelete}
                 disabled={isDeleting}
-                className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg transition-colors duration-300 btn-glow ${isDeleting ? "cursor-not-allowed opacity-60" : "hover:text-white"
-                  }`}
+                className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg transition-colors duration-300 btn-glow ${isDeleting ? "cursor-not-allowed opacity-60" : "hover:text-white"}`}
                 aria-label="নিশ্চিত করুন"
               >
                 {isDeleting ? (
@@ -426,7 +641,6 @@ const IncomeItemsList = ({ onEditClick }) => {
       <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn p-6">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 border-b border-white/20">
           <h3 className="text-lg font-semibold text-[#441a05]">আয় আইটেম তালিকা</h3>
-
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 w-full md:w-auto">
             {/* Tabs */}
             <div className="flex flex-wrap gap-2">
@@ -446,7 +660,7 @@ const IncomeItemsList = ({ onEditClick }) => {
                 onClick={() => setActiveTab("fund")}
                 className={`tab ${activeTab === "fund" ? "tab-active" : "tab-inactive"}`}
               >
-                ফান্ড
+                তহবিল
               </button>
               <button
                 onClick={() => setActiveTab("date")}
@@ -455,7 +669,6 @@ const IncomeItemsList = ({ onEditClick }) => {
                 তারিখ
               </button>
             </div>
-
             {/* Filters */}
             <div className="flex flex-col sm:flex-row gap-3">
               {activeTab === "incomeType" && (
@@ -478,7 +691,7 @@ const IncomeItemsList = ({ onEditClick }) => {
                   onChange={handleDateFilterChange}
                   className="bg-transparent min-w-[150px] text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg w-full sm:w-auto"
                 >
-                  <option value="">ফান্ড নির্বাচন</option>
+                  <option value="">তহবিল নির্বাচন</option>
                   {fundTypes.map((fund) => (
                     <option key={fund.id} value={fund.id}>{fund.name}</option>
                   ))}
@@ -503,7 +716,6 @@ const IncomeItemsList = ({ onEditClick }) => {
                 </>
               )}
             </div>
-
             {/* Report Button */}
             <button
               onClick={generatePDFReport}
@@ -514,7 +726,6 @@ const IncomeItemsList = ({ onEditClick }) => {
             </button>
           </div>
         </div>
-
         {isAllItemsLoading || isTypesLoading || isFundLoading || isYearsLoading ? (
           <div className="p-4 flex items-center justify-center">
             <FaSpinner className="animate-spin text-[#441a05] text-2xl mr-2" />
@@ -538,13 +749,13 @@ const IncomeItemsList = ({ onEditClick }) => {
                     নাম
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    ফান্ড
+                    তহবিল
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                     লেনদেন নম্বর
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    কর্মচারী আইডি
+                    ইনভয়েস নম্বর
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                     তারিখ
@@ -555,9 +766,11 @@ const IncomeItemsList = ({ onEditClick }) => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                     শিক্ষাবর্ষ
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    অ্যাকশন
-                  </th>
+                  {(hasChangePermission || hasDeletePermission) && (
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      অ্যাকশন
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/20">
@@ -580,7 +793,7 @@ const IncomeItemsList = ({ onEditClick }) => {
                       {item.transaction_number || "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {item.employee_id || "-"}
+                      {item.invoice_number || "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
                       {item.income_date}
@@ -591,22 +804,28 @@ const IncomeItemsList = ({ onEditClick }) => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
                       {academicYears.find((year) => year.id === item.academic_year)?.name || item.academic_year}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button
-                        onClick={() => onEditClick(item)}
-                        className="text-[#441a05] hover:text-blue-500 mr-4 transition-all duration-300"
-                        aria-label={`সম্পাদনা ${item.name}`}
-                      >
-                        <FaEdit className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="text-[#441a05] hover:text-red-500 transition-all duration-300"
-                        aria-label={`মুছুন ${item.name}`}
-                      >
-                        <FaTrash className="w-5 h-5" />
-                      </button>
-                    </td>
+                    {(hasChangePermission || hasDeletePermission) && (
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {hasChangePermission && (
+                          <button
+                            onClick={() => onEditClick(item)}
+                            className="text-[#441a05] hover:text-blue-500 mr-4 transition-all duration-300"
+                            aria-label={`সম্পাদনা ${item.name}`}
+                          >
+                            <FaEdit className="w-5 h-5" />
+                          </button>
+                        )}
+                        {hasDeletePermission && (
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="text-[#441a05] hover:text-red-500 transition-all duration-300"
+                            aria-label={`মুছুন ${item.name}`}
+                          >
+                            <FaTrash className="w-5 h-5" />
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
