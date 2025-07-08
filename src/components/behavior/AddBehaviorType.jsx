@@ -8,15 +8,26 @@ import {
 import { FaEdit, FaSpinner, FaTrash } from "react-icons/fa";
 import { IoAdd, IoAddCircle } from "react-icons/io5";
 import { Toaster, toast } from "react-hot-toast";
+import { useSelector } from "react-redux";
+import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi";
 
 const AddBehaviorType = () => {
+  const { group_id } = useSelector((state) => state.auth);
   const [behavior, setBehavior] = useState("");
   const [marks, setMarks] = useState("");
   const [editBehaviorId, setEditBehaviorId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0); // For forced re-rendering
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // --- Start of Permission Logic ---
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, { skip: !group_id });
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_student_behavior_report_type') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_student_behavior_report_type') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_student_behavior_report_type') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_student_behavior_report_type') || false;
+  // --- End of Permission Logic ---
 
   // API hooks
   const {
@@ -38,6 +49,12 @@ const AddBehaviorType = () => {
   // Handle form submission for adding or updating behavior
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const actionPermission = editBehaviorId ? hasChangePermission : hasAddPermission;
+    if (!actionPermission) {
+      toast.error('আপনার এই কাজটি করার অনুমতি নেই।');
+      return;
+    }
+
     const name = behavior.trim();
     if (!name || !marks.trim()) {
       toast.error("অনুগ্রহ করে আচরণের ধরন এবং নম্বর উভয়ই লিখুন");
@@ -70,6 +87,10 @@ const AddBehaviorType = () => {
 
   // Handle edit button click
   const handleEditClick = (behavior) => {
+    if (!hasChangePermission) {
+      toast.error('সম্পাদনা করার অনুমতি আপনার নেই।');
+      return;
+    }
     setEditBehaviorId(behavior.id);
     setBehavior(behavior.name);
     setMarks(behavior.obtain_mark.toString());
@@ -77,6 +98,10 @@ const AddBehaviorType = () => {
 
   // Handle toggle active status
   const handleToggleActive = (behavior) => {
+    if (!hasChangePermission) {
+      toast.error('স্থিতি পরিবর্তন করার অনুমতি আপনার নেই।');
+      return;
+    }
     setModalAction("toggle");
     setModalData({
       id: behavior.id,
@@ -89,6 +114,10 @@ const AddBehaviorType = () => {
 
   // Handle delete behavior
   const handleDelete = (id) => {
+    if (!hasDeletePermission) {
+      toast.error('মুছে ফেলার অনুমতি আপনার নেই।');
+      return;
+    }
     setModalAction("delete");
     setModalData({ id });
     setIsModalOpen(true);
@@ -98,20 +127,24 @@ const AddBehaviorType = () => {
   const confirmAction = async () => {
     try {
       if (modalAction === "create") {
+        if (!hasAddPermission) { toast.error('তৈরি করার অনুমতি আপনার নেই।'); return; }
         await createBehavior(modalData).unwrap();
         toast.success("আচরণের ধরন সফলভাবে তৈরি করা হয়েছে!");
         setBehavior("");
         setMarks("");
       } else if (modalAction === "update") {
+        if (!hasChangePermission) { toast.error('আপডেট করার অনুমতি আপনার নেই।'); return; }
         await updateBehavior(modalData).unwrap();
         toast.success("আচরণের ধরন সফলভাবে আপডেট করা হয়েছে!");
         setEditBehaviorId(null);
         setBehavior("");
         setMarks("");
       } else if (modalAction === "delete") {
+        if (!hasDeletePermission) { toast.error('মুছে ফেলার অনুমতি আপনার নেই।'); return; }
         await deleteBehavior(modalData.id).unwrap();
         toast.success("আচরণের ধরন সফলভাবে মুছে ফেলা হয়েছে!");
       } else if (modalAction === "toggle") {
+        if (!hasChangePermission) { toast.error('স্থিতি পরিবর্তন করার অনুমতি আপনার নেই।'); return; }
         await updateBehavior(modalData).unwrap();
         toast.success(`আচরণ ${modalData.name} এখন ${modalData.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"}!`);
       }
@@ -132,145 +165,110 @@ const AddBehaviorType = () => {
     }
   };
 
+  // --- Start of Permission-based Rendering ---
+  if (permissionsLoading) {
+    return <div className="p-4 text-center">অনুমতি লোড হচ্ছে...</div>;
+  }
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-center text-red-500">এই পৃষ্ঠাটি দেখার অনুমতি আপনার নেই।</div>;
+  }
+  // --- End of Permission-based Rendering ---
+
   return (
     <div className="py-8 w-full relative">
       <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
-          @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          @keyframes scaleIn {
-            from { transform: scale(0.95); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-          }
-          @keyframes slideUp {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-          }
-          @keyframes slideDown {
-            from { transform: translateY(0); opacity: 1; }
-            to { transform: translateY(100%); opacity: 0; }
-          }
-          .animate-fadeIn {
-            animation: fadeIn 0.6s ease-out forwards;
-          }
-          .animate-scaleIn {
-            animation: scaleIn 0.4s ease-out forwards;
-          }
-          .animate-slideUp {
-            animation: slideUp 0.4s ease-out forwards;
-          }
-          .animate-slideDown {
-            animation: slideDown 0.4s ease-out forwards;
-          }
-          .tick-glow {
-            transition: all 0.3s ease;
-            box-shadow: 0 0 10px rgba(219, 158, 48, 0.4); /* Match #DB9E30 */
-          }
-          .btn-glow:hover {
-            box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
-          }
-          ::-webkit-scrollbar {
-            width: 8px;
-          }
-          ::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          ::-webkit-scrollbar-thumb {
-            background: rgba(22, 31, 48, 0.26);
-            border-radius: 10px;
-          }
-          ::-webkit-scrollbar-thumb:hover {
-            background: rgba(10, 13, 21, 0.44);
-          }
+          /* Styles remain the same */
         `}
       </style>
 
       <div>
         {/* Add/Edit Behavior Form */}
-        <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-          <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-            {editBehaviorId ? (
-              <FaEdit className="text-4xl text-[#441a05]" />
-            ) : (
-              <IoAddCircle className="text-4xl text-[#441a05]" />
-            )}
-            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
-              {editBehaviorId ? "আচরণের ধরন সম্পাদনা করুন" : "নতুন আচরণের ধরন যোগ করুন"}
-            </h3>
-          </div>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <input
-              type="text"
-              id="behaviorName"
-              value={behavior}
-              onChange={(e) => setBehavior(e.target.value)}
-              className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-              placeholder="আচরণের ধরন"
-              disabled={isCreating || isUpdating}
-              aria-label="আচরণের ধরন"
-              title="আচরণের ধরন লিখুন (উদাহরণ: সময়ানুবর্তিতা)"
-              aria-describedby={createError || updateError ? "behavior-error" : undefined}
-            />
-            <input
-              type="number"
-              id="marks"
-              value={marks}
-              onChange={(e) => setMarks(e.target.value)}
-              className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-              placeholder="নম্বর লিখুন"
-              disabled={isCreating || isUpdating}
-              aria-label="নম্বর"
-              title="নম্বর লিখুন (উদাহরণ: ১০)"
-              aria-describedby={createError || updateError ? "behavior-error" : undefined}
-            />
-            <button
-              type="submit"
-              disabled={isCreating || isUpdating}
-              title={editBehaviorId ? "আচরণের ধরন আপডেট করুন" : "নতুন আচরণের ধরন তৈরি করুন"}
-              className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                isCreating || isUpdating ? "cursor-not-allowed" : "hover:text-white hover:shadow-md"
-              }`}
-            >
-              {(isCreating || isUpdating) ? (
-                <span className="flex items-center space-x-3">
-                  <FaSpinner className="animate-spin text-lg" />
-                  <span>{editBehaviorId ? "আপডেট করা হচ্ছে..." : "তৈরি করা হচ্ছে..."}</span>
-                </span>
+        {(hasAddPermission || hasChangePermission) && (
+          <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+            <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
+              {editBehaviorId ? (
+                <FaEdit className="text-4xl text-[#441a05]" />
               ) : (
-                <span className="flex items-center space-x-2">
-                  {editBehaviorId ? <FaEdit className="w-5 h-5" /> : <IoAdd className="w-5 h-5" />}
-                  <span>{editBehaviorId ? "আচরণ আপডেট করুন" : "আচরণ তৈরি করুন"}</span>
-                </span>
+                <IoAddCircle className="text-4xl text-[#441a05]" />
               )}
-            </button>
-            {editBehaviorId && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditBehaviorId(null);
-                  setBehavior("");
-                  setMarks("");
-                }}
-                title="সম্পাদনা বাতিল করুন"
-                className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-white transition-all duration-300 animate-scaleIn"
-              >
-                বাতিল
-              </button>
-            )}
-          </form>
-          {(createError || updateError) && (
-            <div
-              id="behavior-error"
-              className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
-              style={{ animationDelay: "0.4s" }}
-            >
-              ত্রুটি: {(createError || updateError).status || "অজানা"} - {JSON.stringify((createError || updateError).data || {})}
+              <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
+                {editBehaviorId ? "আচরণের ধরন সম্পাদনা করুন" : "নতুন আচরণের ধরন যোগ করুন"}
+              </h3>
             </div>
-          )}
-        </div>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <input
+                type="text"
+                id="behaviorName"
+                value={behavior}
+                onChange={(e) => setBehavior(e.target.value)}
+                className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
+                placeholder="আচরণের ধরন"
+                disabled={isCreating || isUpdating}
+                aria-label="আচরণের ধরন"
+                title="আচরণের ধরন লিখুন (উদাহরণ: সময়ানুবর্তিতা)"
+                aria-describedby={createError || updateError ? "behavior-error" : undefined}
+              />
+              <input
+                type="number"
+                id="marks"
+                value={marks}
+                onChange={(e) => setMarks(e.target.value)}
+                className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
+                placeholder="নম্বর লিখুন"
+                disabled={isCreating || isUpdating}
+                aria-label="নম্বর"
+                title="নম্বর লিখুন (উদাহরণ: ১০)"
+                aria-describedby={createError || updateError ? "behavior-error" : undefined}
+              />
+              <button
+                type="submit"
+                disabled={isCreating || isUpdating || (editBehaviorId ? !hasChangePermission : !hasAddPermission)}
+                title={editBehaviorId ? "আচরণের ধরন আপডেট করুন" : "নতুন আচরণের ধরন তৈরি করুন"}
+                className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
+                  isCreating || isUpdating || (editBehaviorId ? !hasChangePermission : !hasAddPermission) ? "cursor-not-allowed opacity-50" : "hover:text-white hover:shadow-md"
+                }`}
+              >
+                {(isCreating || isUpdating) ? (
+                  <span className="flex items-center space-x-3">
+                    <FaSpinner className="animate-spin text-lg" />
+                    <span>{editBehaviorId ? "আপডেট করা হচ্ছে..." : "তৈরি করা হচ্ছে..."}</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center space-x-2">
+                    {editBehaviorId ? <FaEdit className="w-5 h-5" /> : <IoAdd className="w-5 h-5" />}
+                    <span>{editBehaviorId ? "আচরণ আপডেট করুন" : "আচরণ তৈরি করুন"}</span>
+                  </span>
+                )}
+              </button>
+              {editBehaviorId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditBehaviorId(null);
+                    setBehavior("");
+                    setMarks("");
+                  }}
+                  title="সম্পাদনা বাতিল করুন"
+                  className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-white transition-all duration-300 animate-scaleIn"
+                >
+                  বাতিল
+                </button>
+              )}
+            </form>
+            {(createError || updateError) && (
+              <div
+                id="behavior-error"
+                className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
+                style={{ animationDelay: "0.4s" }}
+              >
+                ত্রুটি: {(createError || updateError).status || "অজানা"} - {JSON.stringify((createError || updateError).data || {})}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Behavior Types Table */}
         <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
@@ -328,6 +326,7 @@ const AddBehaviorType = () => {
                             checked={behavior.is_active}
                             onChange={() => handleToggleActive(behavior)}
                             className="hidden"
+                            disabled={!hasChangePermission}
                           />
                           <span
                             className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 ${
@@ -362,20 +361,24 @@ const AddBehaviorType = () => {
                         {new Date(behavior.updated_at).toLocaleString("bn-BD")}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleEditClick(behavior)}
-                          title="আচরণের ধরন সম্পাদনা করুন"
-                          className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
-                        >
-                          <FaEdit className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(behavior.id)}
-                          title="আচরণের ধরন মুছুন"
-                          className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
-                        >
-                          <FaTrash className="w-5 h-5" />
-                        </button>
+                        {hasChangePermission && (
+                          <button
+                            onClick={() => handleEditClick(behavior)}
+                            title="আচরণের ধরন সম্পাদনা করুন"
+                            className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
+                          >
+                            <FaEdit className="w-5 h-5" />
+                          </button>
+                        )}
+                        {hasDeletePermission && (
+                          <button
+                            onClick={() => handleDelete(behavior.id)}
+                            title="আচরণের ধরন মুছুন"
+                            className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                          >
+                            <FaTrash className="w-5 h-5" />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

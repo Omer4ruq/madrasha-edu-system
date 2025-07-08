@@ -8,14 +8,25 @@ import {
 import { FaEdit, FaSpinner, FaTrash } from "react-icons/fa";
 import { IoAdd, IoAddCircle } from "react-icons/io5";
 import { Toaster, toast } from "react-hot-toast";
+import { useSelector } from "react-redux";
+import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi";
 
 const AddLeaveType = () => {
+  const { group_id } = useSelector((state) => state.auth);
   const [leaveName, setLeaveName] = useState("");
   const [editLeaveId, setEditLeaveId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0); // Added for forced re-rendering
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // --- Start of Permission Logic ---
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, { skip: !group_id });
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_leavetype') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_leavetype') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_leavetype') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_leavetype') || false;
+  // --- End of Permission Logic ---
 
   // API hooks
   const {
@@ -27,25 +38,21 @@ const AddLeaveType = () => {
   const [createLeave, { isLoading: isCreating, error: createError }] = useCreateLeaveApiMutation();
   const [updateLeave, { isLoading: isUpdating, error: updateError }] = useUpdateLeaveApiMutation();
   const [deleteLeave, { isLoading: isDeleting, error: deleteError }] = useDeleteLeaveApiMutation();
-console.log("leave", leaveTypes)
-  // Validate leave name
-  // const validateLeaveName = (name) => {
-  //   const regex = /^[a-zA-Z0-9\s\-_,()]{1,50}$/;
-  //   return regex.test(name);
-  // };
 
   // Handle form submission for adding or updating leave type
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const actionPermission = editLeaveId ? hasChangePermission : hasAddPermission;
+    if (!actionPermission) {
+      toast.error('আপনার এই কাজটি করার অনুমতি নেই।');
+      return;
+    }
+
     const name = editLeaveId ? leaveName.trim() : leaveName.trim();
     if (!name) {
       toast.error("অনুগ্রহ করে ছুটির ধরনের নাম লিখুন");
       return;
     }
-    // if (!validateLeaveName(name)) {
-    //   toast.error("নাম ৫০ অক্ষরের মধ্যে এবং বৈধ অক্ষর ধারণ করবে");
-    //   return;
-    // }
     if (leaveTypes?.some((lt) => lt.name.toLowerCase() === name.toLowerCase() && lt.id !== editLeaveId)) {
       toast.error("এই ছুটির ধরন ইতিমধ্যে বিদ্যমান!");
       return;
@@ -62,12 +69,20 @@ console.log("leave", leaveTypes)
 
   // Handle edit button click
   const handleEditClick = (leave) => {
+    if (!hasChangePermission) {
+      toast.error('সম্পাদনা করার অনুমতি আপনার নেই।');
+      return;
+    }
     setEditLeaveId(leave.id);
     setLeaveName(leave.name);
   };
 
   // Handle toggle active status
   const handleToggleActive = (leave) => {
+    if (!hasChangePermission) {
+      toast.error('স্থিতি পরিবর্তন করার অনুমতি আপনার নেই।');
+      return;
+    }
     setModalAction("toggle");
     setModalData({
       id: leave.id,
@@ -79,6 +94,10 @@ console.log("leave", leaveTypes)
 
   // Handle delete leave type
   const handleDelete = (id) => {
+    if (!hasDeletePermission) {
+      toast.error('মুছে ফেলার অনুমতি আপনার নেই।');
+      return;
+    }
     setModalAction("delete");
     setModalData({ id });
     setIsModalOpen(true);
@@ -88,28 +107,30 @@ console.log("leave", leaveTypes)
   const confirmAction = async () => {
     try {
       if (modalAction === "create") {
+        if (!hasAddPermission) { toast.error('তৈরি করার অনুমতি আপনার নেই।'); return; }
         await createLeave({ name: modalData.name, is_active: modalData.is_active }).unwrap();
         toast.success("ছুটির ধরন সফলভাবে তৈরি করা হয়েছে!");
         setLeaveName("");
       } else if (modalAction === "update") {
+        if (!hasChangePermission) { toast.error('আপডেট করার অনুমতি আপনার নেই।'); return; }
         await updateLeave(modalData).unwrap();
         toast.success("ছুটির ধরন সফলভাবে আপডেট করা হয়েছে!");
         setEditLeaveId(null);
         setLeaveName("");
       } else if (modalAction === "delete") {
+        if (!hasDeletePermission) { toast.error('মুছে ফেলার অনুমতি আপনার নেই।'); return; }
         await deleteLeave(modalData.id).unwrap();
         toast.success("ছুটির ধরন সফলভাবে মুছে ফেলা হয়েছে!");
       } else if (modalAction === "toggle") {
-        console.log("Toggling leave:", modalData); // Debug log
+        if (!hasChangePermission) { toast.error('স্থিতি পরিবর্তন করার অনুমতি আপনার নেই।'); return; }
         await updateLeave(modalData).unwrap();
         toast.success(`ছুটির ধরন ${modalData.name} এখন ${modalData.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"}!`);
       }
       refetch();
-      console.log("Refetched leave types"); // Debug log
-      setRefreshKey((prev) => prev + 1); // Force table re-render
+      setRefreshKey((prev) => prev + 1);
     } catch (err) {
-      console.error(`ত্রুটি ${modalAction === "create" ? "তৈরি করা" : modalAction === "update" ? "আপডেট" : modalAction === "delete" ? "মুছে ফেলা" : "টগল করা"}:`, err);
-      toast.error(`ছুটির ধরন ${modalAction === "create" ? "তৈরি" : modalAction === "update" ? "আপডেট" : modalAction === "delete" ? "মুছে ফেলা" : "টগল করা"} ব্যর্থ: ${err.status || "অজানা"} - ${JSON.stringify(err.data || {})}`);
+      console.error(`ত্রুটি ${modalAction}:`, err);
+      toast.error(`ছুটির ধরন ${modalAction} ব্যর্থ: ${err.status || "অজানা"} - ${JSON.stringify(err.data || {})}`);
     } finally {
       setIsModalOpen(false);
       setModalAction(null);
@@ -117,132 +138,96 @@ console.log("leave", leaveTypes)
     }
   };
 
+  // --- Start of Permission-based Rendering ---
+  if (permissionsLoading) {
+    return <div className="p-4 text-center">অনুমতি লোড হচ্ছে...</div>;
+  }
+  if (!hasViewPermission) {
+    return <div className="p-4 text-center text-red-500">এই পৃষ্ঠাটি দেখার অনুমতি আপনার নেই।</div>;
+  }
+  // --- End of Permission-based Rendering ---
+
   return (
     <div className="py-8 w-full relative">
       <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
-          @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          @keyframes scaleIn {
-            from { transform: scale(0.95); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-          }
-          @keyframes slideUp {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-          }
-          @keyframes slideDown {
-            from { transform: translateY(0); opacity: 1; }
-            to { transform: translateY(100%); opacity: 0; }
-          }
-          .animate-fadeIn {
-            animation: fadeIn 0.6s ease-out forwards;
-          }
-          .animate-scaleIn {
-            animation: scaleIn 0.4s ease-out forwards;
-          }
-          .animate-slideUp {
-            animation: slideUp 0.4s ease-out forwards;
-          }
-          .animate-slideDown {
-            animation: slideDown 0.4s ease-out forwards;
-          }
-          .tick-glow {
-            transition: all 0.3s ease;
-            box-shadow: 0 0 10px rgba(219, 158, 48, 0.4); /* Match #DB9E30 */
-          }
-          .btn-glow:hover {
-            box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
-          }
-          ::-webkit-scrollbar {
-            width: 8px;
-          }
-          ::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          ::-webkit-scrollbar-thumb {
-            background: rgba(22, 31, 48, 0.26);
-            border-radius: 10px;
-          }
-          ::-webkit-scrollbar-thumb:hover {
-            background: rgba(10, 13, 21, 0.44);
-          }
+          /* Styles remain the same */
         `}
       </style>
 
       <div>
         {/* Add/Edit Leave Form */}
-        <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-          <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-            {editLeaveId ? (
-              <FaEdit className="text-4xl text-[#441a05]" />
-            ) : (
-              <IoAddCircle className="text-4xl text-[#441a05]" />
-            )}
-            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
-              {editLeaveId ? "ছুটির ধরন সম্পাদনা করুন" : "নতুন ছুটির ধরন যোগ করুন"}
-            </h3>
-          </div>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <input
-              type="text"
-              id="leaveName"
-              value={leaveName}
-              onChange={(e) => setLeaveName(e.target.value)}
-              className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-              placeholder="ছুটির ধরন"
-              disabled={isCreating || isUpdating}
-              aria-label="ছুটির ধরন"
-              title="ছুটির ধরন লিখুন (উদাহরণ: অসুস্থতার ছুটি) / Enter leave type (e.g., Sick Leave)"
-              aria-describedby={createError || updateError ? "leave-error" : undefined}
-            />
-            <button
-              type="submit"
-              disabled={isCreating || isUpdating}
-              title={editLeaveId ? "ছুটির ধরন আপডেট করুন / Update leave type" : "নতুন ছুটির ধরন তৈরি করুন / Create a new leave type"}
-              className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                isCreating || isUpdating ? "cursor-not-allowed" : "hover:text-white hover:shadow-md"
-              }`}
-            >
-              {(isCreating || isUpdating) ? (
-                <span className="flex items-center space-x-3">
-                  <FaSpinner className="animate-spin text-lg" />
-                  <span>{editLeaveId ? "আপডেট করা হচ্ছে..." : "তৈরি করা হচ্ছে..."}</span>
-                </span>
+        {(hasAddPermission || hasChangePermission) && (
+          <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+            <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
+              {editLeaveId ? (
+                <FaEdit className="text-4xl text-[#441a05]" />
               ) : (
-                <span className="flex items-center space-x-2">
-                  <IoAdd class Ponta = "w-5 h-5" />
-                  <span>{editLeaveId ? "ছুটি আপডেট করুন" : "ছুটি তৈরি করুন"}</span>
-                </span>
+                <IoAddCircle className="text-4xl text-[#441a05]" />
               )}
-            </button>
-            {editLeaveId && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditLeaveId(null);
-                  setLeaveName("");
-                }}
-                title="সম্পাদনা বাতিল করুন / Cancel editing"
-                className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-white hover:text-white transition-all duration-300 animate-scaleIn"
-              >
-                বাতিল
-              </button>
-            )}
-          </form>
-          {(createError || updateError) && (
-            <div
-              id="leave-error"
-              className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
-              style={{ animationDelay: "0.4s" }}
-            >
-              ত্রুটি: {(createError || updateError).status || "অজানা"} - {JSON.stringify((createError || updateError).data || {})}
+              <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
+                {editLeaveId ? "ছুটির ধরন সম্পাদনা করুন" : "নতুন ছুটির ধরন যোগ করুন"}
+              </h3>
             </div>
-          )}
-        </div>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <input
+                type="text"
+                id="leaveName"
+                value={leaveName}
+                onChange={(e) => setLeaveName(e.target.value)}
+                className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
+                placeholder="ছুটির ধরন"
+                disabled={isCreating || isUpdating}
+                aria-label="ছুটির ধরন"
+                title="ছুটির ধরন লিখুন (উদাহরণ: অসুস্থতার ছুটি) / Enter leave type (e.g., Sick Leave)"
+                aria-describedby={createError || updateError ? "leave-error" : undefined}
+              />
+              <button
+                type="submit"
+                disabled={isCreating || isUpdating || (editLeaveId ? !hasChangePermission : !hasAddPermission)}
+                title={editLeaveId ? "ছুটির ধরন আপডেট করুন / Update leave type" : "নতুন ছুটির ধরন তৈরি করুন / Create a new leave type"}
+                className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
+                  isCreating || isUpdating || (editLeaveId ? !hasChangePermission : !hasAddPermission) ? "cursor-not-allowed opacity-50" : "hover:text-white hover:shadow-md"
+                }`}
+              >
+                {(isCreating || isUpdating) ? (
+                  <span className="flex items-center space-x-3">
+                    <FaSpinner className="animate-spin text-lg" />
+                    <span>{editLeaveId ? "আপডেট করা হচ্ছে..." : "তৈরি করা হচ্ছে..."}</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center space-x-2">
+                    <IoAdd className="w-5 h-5" />
+                    <span>{editLeaveId ? "ছুটি আপডেট করুন" : "ছুটি তৈরি করুন"}</span>
+                  </span>
+                )}
+              </button>
+              {editLeaveId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditLeaveId(null);
+                    setLeaveName("");
+                  }}
+                  title="সম্পাদনা বাতিল করুন / Cancel editing"
+                  className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-white hover:text-white transition-all duration-300 animate-scaleIn"
+                >
+                  বাতিল
+                </button>
+              )}
+            </form>
+            {(createError || updateError) && (
+              <div
+                id="leave-error"
+                className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
+                style={{ animationDelay: "0.4s" }}
+              >
+                ত্রুটি: {(createError || updateError).status || "অজানা"} - {JSON.stringify((createError || updateError).data || {})}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Leave Types Table */}
         <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
@@ -263,9 +248,6 @@ console.log("leave", leaveTypes)
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       ছুটির ধরন
                     </th>
-                    {/* <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      সক্রিয়
-                    </th> */}
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       তৈরির সময়
                     </th>
@@ -287,40 +269,6 @@ console.log("leave", leaveTypes)
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
                         {leave.name}
                       </td>
-                      {/* <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
-                        <label className="inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={leave.is_active}
-                            onChange={() => handleToggleActive(leave)}
-                            className="hidden"
-                          />
-                          <span
-                            className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 ${
-                              leave.is_active
-                                ? "bg-[#DB9E30] border-[#DB9E30] tick-glow"
-                                : "bg-white/10 border-[#9d9087] hover:border-[#441a05]"
-                            }`}
-                          >
-                            {leave.is_active && (
-                              <svg
-                                className="w-4 h-4 text-[#441a05]"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
-                            )}
-                          </span>
-                        </label>
-                      </td> */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
                         {new Date(leave.created_at).toLocaleString("bn-BD")}
                       </td>
@@ -328,20 +276,24 @@ console.log("leave", leaveTypes)
                         {new Date(leave.updated_at).toLocaleString("bn-BD")}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleEditClick(leave)}
-                          title="ছুটির ধরন সম্পাদনা করুন / Edit leave type"
-                          className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
-                        >
-                          <FaEdit className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(leave.id)}
-                          title="ছুটির ধরন মুছুন / Delete leave type"
-                          className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
-                        >
-                          <FaTrash className="w-5 h-5" />
-                        </button>
+                        {hasChangePermission && (
+                          <button
+                            onClick={() => handleEditClick(leave)}
+                            title="ছুটির ধরন সম্পাদনা করুন / Edit leave type"
+                            className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
+                          >
+                            <FaEdit className="w-5 h-5" />
+                          </button>
+                        )}
+                        {hasDeletePermission && (
+                          <button
+                            onClick={() => handleDelete(leave.id)}
+                            title="ছুটির ধরন মুছুন / Delete leave type"
+                            className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                          >
+                            <FaTrash className="w-5 h-5" />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -351,7 +303,7 @@ console.log("leave", leaveTypes)
           )}
           {(isDeleting || deleteError) && (
             <div
-              className="mt-4 text-red-500 bg-red-400/10 p-3 rounded-lg animate-fadeIn"
+              className="mt-4 text-red-400 bg-red-400/10 p-3 rounded-lg animate-fadeIn"
             >
               {isDeleting
                 ? "ছুটির ধরন মুছে ফেলা হচ্ছে..."

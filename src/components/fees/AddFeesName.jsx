@@ -40,10 +40,10 @@ const AddFeesName = () => {
   });
 
   // Check permissions
-  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_fees') || false;
-  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_fees') || false;
-  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_fees') || false;
-  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_fees') || false;
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_fees_name') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_fees_name') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_fees_name') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_fees_name') || false;
 
   // RTK Query hooks
   const { data: classes, isLoading: classesLoading } = useGetStudentClassApIQuery();

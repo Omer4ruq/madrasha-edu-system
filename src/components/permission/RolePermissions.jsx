@@ -86,7 +86,9 @@ const RolePermissions = () => {
       );
     }
   };
-
+console.log("groups",groups)
+  console.log("groupPermissions", groupPermissions)
+console.log("selectedGroup", selectedGroup)
   // Handle group selection
   const handleGroupSelect = (group) => {
     setSelectedGroup(group);

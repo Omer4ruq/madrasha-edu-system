@@ -10,9 +10,11 @@ import { useGetFundsQuery } from '../../redux/features/api/funds/fundsApi';
 import { useGetWaiversQuery } from '../../redux/features/api/waivers/waiversApi';
 import { useCreateFeeMutation, useDeleteFeeMutation, useUpdateFeeMutation } from '../../redux/features/api/fees/feesApi';
 import selectStyles from '../../utilitis/selectStyles';
-
+import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi';
+import { useSelector } from 'react-redux';
 
 const CurrentFees = () => {
+  const { group_id } = useSelector((state) => state.auth);
   const [userId, setUserId] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
@@ -24,7 +26,7 @@ const CurrentFees = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
-  const [selectAll, setSelectAll] = useState(false); // State for Select All checkbox
+  const [selectAll, setSelectAll] = useState(false);
   const dropdownRef = useRef(null);
 
   // API Queries
@@ -42,8 +44,16 @@ const CurrentFees = () => {
   const [createFee, { isLoading: isCreating }] = useCreateFeeMutation();
   const [updateFee, { isLoading: isUpdating }] = useUpdateFeeMutation();
   const [deleteFee, { isLoading: isDeleting }] = useDeleteFeeMutation();
-console.log("feesData",feesData)
-console.log("waivers",waivers)
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Check permissions
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_fees') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_fees') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_fees') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_fees') || false;
+
   // Handle clicks outside dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -149,6 +159,10 @@ console.log("waivers",waivers)
 
   // Handle Select All checkbox
   const handleSelectAll = () => {
+    if (!hasAddPermission && !hasChangePermission) {
+      toast.error('ফি নির্বাচন করার অনুমতি নেই।');
+      return;
+    }
     if (selectAll) {
       setSelectedFees([]);
       setSelectAll(false);
@@ -175,6 +189,10 @@ console.log("waivers",waivers)
 
   // Validate form
   const validateForm = () => {
+    if (!hasAddPermission) {
+      toast.error('ফি যোগ করার অনুমতি নেই।');
+      return false;
+    }
     if (!selectedAcademicYear) {
       toast.error('অনুগ্রহ করে একাডেমিক বছর নির্বাচন করুন');
       return false;
@@ -197,6 +215,10 @@ console.log("waivers",waivers)
   // Handle submit
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!hasAddPermission) {
+      toast.error('ফি জমা দেওয়ার অনুমতি নেই।');
+      return;
+    }
     if (!validateForm()) return;
 
     setModalAction('submit');
@@ -208,6 +230,10 @@ console.log("waivers",waivers)
   const confirmAction = async () => {
     try {
       if (modalAction === 'submit') {
+        if (!hasAddPermission) {
+          toast.error('ফি জমা দেওয়ার অনুমতি নেই।');
+          return;
+        }
         const promises = modalData.fees.map(async (feeId) => {
           const fee = filteredFees.find((f) => f.id === feeId);
           const { waiverAmount, payableAfterWaiver } = calculatePayableAmount(fee, waivers);
@@ -252,6 +278,10 @@ console.log("waivers",waivers)
           );
 
           if (existingFeeRecord) {
+            if (!hasChangePermission) {
+              toast.error('ফি আপডেট করার অনুমতি নেই।');
+              return;
+            }
             return updateFee({ id: existingFeeRecord.id, ...feeData }).unwrap();
           } else {
             return createFee(feeData).unwrap();
@@ -263,13 +293,21 @@ console.log("waivers",waivers)
         setSelectedFees([]);
         setPaymentInputs({});
         setDiscountInputs({});
-        setSelectAll(false); // Reset Select All after submission
+        setSelectAll(false);
         refetchFees();
       } else if (modalAction === 'update') {
+        if (!hasChangePermission) {
+          toast.error('ফি আপডেট করার অনুমতি নেই।');
+          return;
+        }
         await updateFee(modalData).unwrap();
         toast.success('ফি সফলভাবে আপডেট করা হয়েছে!');
         refetchFees();
       } else if (modalAction === 'delete') {
+        if (!hasDeletePermission) {
+          toast.error('ফি মুছে ফেলার অনুমতি নেই।');
+          return;
+        }
         await deleteFee(modalData.id).unwrap();
         toast.success('ফি সফলভাবে মুছে ফেলা হয়েছে!');
         refetchFees();
@@ -286,6 +324,10 @@ console.log("waivers",waivers)
 
   // Handle fee update
   const handleUpdateFee = (feeId, updatedData) => {
+    if (!hasChangePermission) {
+      toast.error('ফি আপডেট করার অনুমতি নেই।');
+      return;
+    }
     setModalAction('update');
     setModalData({ id: feeId, ...updatedData });
     setIsModalOpen(true);
@@ -293,6 +335,10 @@ console.log("waivers",waivers)
 
   // Handle fee deletion
   const handleDeleteFee = (feeId) => {
+    if (!hasDeletePermission) {
+      toast.error('ফি মুছে ফেলার অনুমতি নেই।');
+      return;
+    }
     setModalAction('delete');
     setModalData({ id: feeId });
     setIsModalOpen(true);
@@ -307,6 +353,116 @@ console.log("waivers",waivers)
     value: fund.id,
     label: fund.name,
   })) || [];
+
+  // View-only mode for users with only view permission
+  if (hasViewPermission && !hasAddPermission && !hasChangePermission && !hasDeletePermission) {
+    return (
+      <div className="py-8">
+        <Toaster position="top-right" reverseOrder={false} />
+        <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
+          <h2 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">বর্তমান ফি</h2>
+          {studentLoading ? (
+            <p className="p-4 text-[#441a05]/70">লোড হচ্ছে...</p>
+          ) : studentError ? (
+            <p className="p-4 text-red-400">ত্রুটি: {studentError.status || "অজানা"} - {JSON.stringify(studentError.data || {})}</p>
+          ) : !selectedStudent ? (
+            <p className="p-4 text-[#441a05]/70">কোনো ছাত্র নির্বাচিত নয়।</p>
+          ) : filteredFees.length === 0 ? (
+            <p className="p-4 text-[#441a05]/70">এই ছাত্রের জন্য কোনো বর্তমান ফি উপলব্ধ নেই।</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-white/20">
+                <thead className="bg-white/5">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ফি শিরোনাম</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">পরিমাণ</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ওয়েভার পরিমাণ</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ডিসকাউন্ট</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">পেয়েবল পরিমাণ</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ইতিমধ্যে প্রদান</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">বাকি পরিমাণ</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">স্থিতি</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/20">
+                  {filteredFees.map((fee, index) => {
+                    const { waiverAmount, payableAfterWaiver } = calculatePayableAmount(fee, waivers);
+                    const { status, storedDiscountAmount, totalPaidAmount } = getFeeStatus(fee);
+                    const finalPayableAmount = parseFloat(payableAfterWaiver) - parseFloat(storedDiscountAmount || 0);
+                    const dueAmount = Math.max(0, finalPayableAmount - parseFloat(totalPaidAmount || 0)).toFixed(2);
+                    const rowClass = status === 'PAID' ? 'bg-green-50/10' : status === 'PARTIAL' ? 'bg-yellow-50/10' : '';
+
+                    return (
+                      <tr key={fee.id} className={`bg-white/5 animate-fadeIn ${rowClass}`} style={{ animationDelay: `${index * 0.1}s` }}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">{fee.fees_title}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">{fee.amount}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">{waiverAmount}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">{storedDiscountAmount}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">{finalPayableAmount.toFixed(2)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">{totalPaidAmount}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-800">{dueAmount}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${status === 'PAID' ? 'text-[#441a05] bg-[#DB9E30]' : status === 'PARTIAL' ? 'text-yellow-800' : 'text-red-800'}`}>
+                            {status === 'PAID' ? 'প্রদান' : status === 'PARTIAL' ? 'আংশিক' : 'অপ্রদান'}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {feesData?.fees_records?.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">ফি ইতিহাস</h2>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-white/20">
+                  <thead className="bg-white/5">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ফি প্রকার</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">মোট প্রদান পরিমাণ</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ওয়েভার পরিমাণ</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ডিসকাউন্ট পরিমাণ</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">স্থিতি</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/20">
+                    {feesData.fees_records.map((fee, index) => {
+                      const feeNameRecord = feesData.fees_name_records?.find((f) => f.id === fee.feetype_id);
+                      const waiverAmount = feeNameRecord ? calculatePayableAmount(feeNameRecord, waivers).waiverAmount : '0.00';
+
+                      return (
+                        <tr key={fee.id} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">{fee.feetype_name}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">{fee.amount}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">{fee.waiver_amount || waiverAmount}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">{fee.discount_amount}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${fee.status === 'PAID' ? 'text-[#441a05] bg-[#DB9E30]' : fee.status === 'PARTIAL' ? 'text-yellow-800 bg-yellow-100/50' : 'text-red-800 bg-red-100/50'}`}>
+                              {fee.status === 'PAID' ? 'প্রদান' : fee.status === 'PARTIAL' ? 'আংশিক' : 'অপ্রদান'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (permissionsLoading) {
+    return <div className="p-4 text-[#441a05]/70 animate-fadeIn">লোড হচ্ছে...</div>;
+  }
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-red-400 animate-fadeIn">এই পৃষ্ঠাটি দেখার অনুমতি নেই।</div>;
+  }
 
   return (
     <div className="py-8">
@@ -361,66 +517,68 @@ console.log("waivers",waivers)
 
       <div>
         {/* Student Search */}
-        <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-2xl mb-8 animate-fadeIn shadow-xl" ref={dropdownRef}>
-          <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-            <IoAddCircle className="text-3xl text-[#441a05]" />
-            <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
-              বর্তমান ফি
-            </h3>
+        {(hasAddPermission || hasChangePermission || hasDeletePermission) && (
+          <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-2xl mb-8 animate-fadeIn shadow-xl" ref={dropdownRef}>
+            <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
+              <IoAddCircle className="text-3xl text-[#441a05]" />
+              <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
+                বর্তমান ফি
+              </h3>
+            </div>
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+              <div>
+                <label className="block text-sm font-medium text-[#441a05] mb-1">ইউজার আইডি লিখুন</label>
+                <input
+                  type="text"
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
+                  onFocus={() => setIsUserDropdownOpen(true)}
+                  placeholder="ইউজার আইডি লিখুন"
+                  className="w-full bg-transparent p-2 text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+                  disabled={isCreating || isUpdating}
+                  aria-label="ইউজার আইডি"
+                  title="ইউজার আইডি / User ID"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#441a05] mb-1">একাডেমিক বছর</label>
+                <Select
+                  options={academicYearOptions}
+                  value={academicYearOptions.find((opt) => opt.value === selectedAcademicYear) || null}
+                  onChange={(selected) => setSelectedAcademicYear(selected ? selected.value : '')}
+                  isDisabled={isCreating || isUpdating}
+                  placeholder="একাডেমিক বছর নির্বাচন করুন"
+                  className="react-select-container"
+                  classNamePrefix="react-select"
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                  isSearchable={false}
+                  aria-label="একাডেমিক বছর"
+                  title="একাডেমিক বছর নির্বাচন করুন / Select academic year"
+                  styles={selectStyles}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#441a05] mb-1">ফান্ড</label>
+                <Select
+                  options={fundOptions}
+                  value={fundOptions.find((opt) => opt.value === selectedFund) || null}
+                  onChange={(selected) => setSelectedFund(selected ? selected.value : '')}
+                  isDisabled={isCreating || isUpdating}
+                  placeholder="ফান্ড নির্বাচন করুন"
+                  className="react-select-container"
+                  classNamePrefix="react-select"
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                  isSearchable={false}
+                  aria-label="ফান্ড"
+                  title="ফান্ড নির্বাচন করুন / Select fund"
+                  styles={selectStyles}
+                />
+              </div>
+            </div>
           </div>
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-            <div>
-              <label className="block text-sm font-medium text-[#441a05] mb-1">ইউজার আইডি লিখুন</label>
-              <input
-                type="text"
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
-                onFocus={() => setIsUserDropdownOpen(true)}
-                placeholder="ইউজার আইডি লিখুন"
-                className="w-full bg-transparent p-2 text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
-                disabled={isCreating || isUpdating}
-                aria-label="ইউজার আইডি"
-                title="ইউজার আইডি / User ID"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#441a05] mb-1">একাডেমিক বছর</label>
-              <Select
-                options={academicYearOptions}
-                value={academicYearOptions.find((opt) => opt.value === selectedAcademicYear) || null}
-                onChange={(selected) => setSelectedAcademicYear(selected ? selected.value : '')}
-                isDisabled={isCreating || isUpdating}
-                placeholder="একাডেমিক বছর নির্বাচন করুন"
-                className="react-select-container"
-                classNamePrefix="react-select"
-                menuPortalTarget={document.body}
-                menuPosition="fixed"
-                isSearchable={false}
-                aria-label="একাডেমিক বছর"
-                title="একাডেমিক বছর নির্বাচন করুন / Select academic year"
-                styles={selectStyles}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#441a05] mb-1">ফান্ড</label>
-              <Select
-                options={fundOptions}
-                value={fundOptions.find((opt) => opt.value === selectedFund) || null}
-                onChange={(selected) => setSelectedFund(selected ? selected.value : '')}
-                isDisabled={isCreating || isUpdating}
-                placeholder="ফান্ড নির্বাচন করুন"
-                className="react-select-container"
-                classNamePrefix="react-select"
-                menuPortalTarget={document.body}
-                menuPosition="fixed"
-                isSearchable={false}
-                aria-label="ফান্ড"
-                title="ফান্ড নির্বাচন করুন / Select fund"
-                styles={selectStyles}
-              />
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* Student Information */}
         {selectedStudent && (
@@ -437,7 +595,7 @@ console.log("waivers",waivers)
         )}
 
         {/* Current Fees Table */}
-        {filteredFees.length > 0 && (
+        {(hasAddPermission || hasChangePermission) && filteredFees.length > 0 && (
           <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6 mb-8">
             <h2 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">বর্তমান ফি</h2>
             <form onSubmit={handleSubmit}>
@@ -666,12 +824,12 @@ console.log("waivers",waivers)
             </form>
           </div>
         )}
-        {filteredFees.length === 0 && selectedStudent && (
+        {(hasAddPermission || hasChangePermission) && filteredFees.length === 0 && selectedStudent && (
           <p className="text-[#441a05]/70 mb-8 animate-fadeIn">এই ছাত্রের জন্য কোনো বর্তমান ফি উপলব্ধ নেই।</p>
         )}
 
         {/* Fee History Table */}
-        {feesData?.fees_records?.length > 0 && (
+        {(hasChangePermission || hasDeletePermission) && feesData?.fees_records?.length > 0 && (
           <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
             <h2 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">ফি ইতিহাস</h2>
             <div className="overflow-x-auto">
@@ -738,27 +896,31 @@ console.log("waivers",waivers)
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button
-                            onClick={() =>
-                              handleUpdateFee(fee.id, {
-                                amount: fee.amount,
-                                discount_amount: fee.discount_amount,
-                                status: fee.status,
-                                waiver_amount: fee.waiver_amount || waiverAmount,
-                              })
-                            }
-                            title="ফি আপডেট করুন / Update fee"
-                            className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
-                          >
-                            <FaEdit className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteFee(fee.id)}
-                            title="ফি মুছুন / Delete fee"
-                            className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
-                          >
-                            <FaTrash className="w-5 h-5" />
-                          </button>
+                          {hasChangePermission && (
+                            <button
+                              onClick={() =>
+                                handleUpdateFee(fee.id, {
+                                  amount: fee.amount,
+                                  discount_amount: fee.discount_amount,
+                                  status: fee.status,
+                                  waiver_amount: fee.waiver_amount || waiverAmount,
+                                })
+                              }
+                              title="ফি আপডেট করুন / Update fee"
+                              className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
+                            >
+                              <FaEdit className="w-5 h-5" />
+                            </button>
+                          )}
+                          {hasDeletePermission && (
+                            <button
+                              onClick={() => handleDeleteFee(fee.id)}
+                              title="ফি মুছুন / Delete fee"
+                              className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                            >
+                              <FaTrash className="w-5 h-5" />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     );
@@ -778,12 +940,12 @@ console.log("waivers",waivers)
             )}
           </div>
         )}
-        {feesData?.fees_records?.length === 0 && selectedStudent && (
+        {(hasChangePermission || hasDeletePermission) && feesData?.fees_records?.length === 0 && selectedStudent && (
           <p className="text-[#441a05]/70 animate-fadeIn">এই ছাত্রের জন্য কোনো ফি ইতিহাস উপলব্ধ নেই।</p>
         )}
 
         {/* Confirmation Modal */}
-        {isModalOpen && (
+        {(hasAddPermission || hasChangePermission || hasDeletePermission) && isModalOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[10000]">
             <div
               className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"
