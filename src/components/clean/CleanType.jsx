@@ -2,16 +2,26 @@ import React, { useState } from 'react';
 import { FaEdit, FaSpinner, FaTrash } from 'react-icons/fa';
 import { IoAdd, IoAddCircle } from 'react-icons/io5';
 import { Toaster, toast } from 'react-hot-toast';
+import { useSelector } from 'react-redux';
+import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi';
 import { useCreateCleanReportTypeApiMutation, useDeleteCleanReportTypeApiMutation, useGetCleanReportTypeApiQuery, useUpdateCleanReportTypeApiMutation } from '../../redux/features/api/clean/cleanReportTypeApi';
 
 const CleanType = () => {
-  // State for form input, editing, and modal
+  const { group_id } = useSelector((state) => state.auth);
   const [name, setName] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0); // For forced re-rendering
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // --- Start of Permission Logic ---
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, { skip: !group_id });
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_clean_report') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_clean_report') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_clean_report') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_clean_report') || false;
+  // --- End of Permission Logic ---
 
   // RTK Query hooks
   const {
@@ -30,6 +40,12 @@ const CleanType = () => {
   // Handle form submission for create/update
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const actionPermission = editingId ? hasChangePermission : hasAddPermission;
+    if (!actionPermission) {
+      toast.error('আপনার এই কাজটি করার অনুমতি নেই।');
+      return;
+    }
+
     const trimmedName = name.trim();
     if (!trimmedName) {
       toast.error('অনুগ্রহ করে পরিচ্ছন্নতা রিপোর্টের ধরনের নাম লিখুন');
@@ -51,12 +67,20 @@ const CleanType = () => {
 
   // Handle edit button click
   const handleEditClick = (item) => {
+    if (!hasChangePermission) {
+      toast.error('সম্পাদনা করার অনুমতি আপনার নেই।');
+      return;
+    }
     setEditingId(item.id);
     setName(item.name);
   };
 
   // Handle delete button click
   const handleDelete = (id) => {
+    if (!hasDeletePermission) {
+      toast.error('মুছে ফেলার অনুমতি আপনার নেই।');
+      return;
+    }
     setModalAction('delete');
     setModalData({ id });
     setIsModalOpen(true);
@@ -66,15 +90,27 @@ const CleanType = () => {
   const confirmAction = async () => {
     try {
       if (modalAction === 'create') {
+        if (!hasAddPermission) {
+          toast.error('তৈরি করার অনুমতি আপনার নেই।');
+          return;
+        }
         await createCleanReportType({ name: modalData.name }).unwrap();
         toast.success('পরিচ্ছন্নতা রিপোর্টের ধরন সফলভাবে তৈরি করা হয়েছে!');
         setName('');
       } else if (modalAction === 'update') {
+        if (!hasChangePermission) {
+          toast.error('আপডেট করার অনুমতি আপনার নেই।');
+          return;
+        }
         await updateCleanReportType({ id: modalData.id, name: modalData.name }).unwrap();
         toast.success('পরিচ্ছন্নতা রিপোর্টের ধরন সফলভাবে আপডেট করা হয়েছে!');
         setEditingId(null);
         setName('');
       } else if (modalAction === 'delete') {
+        if (!hasDeletePermission) {
+          toast.error('মুছে ফেলার অনুমতি আপনার নেই।');
+          return;
+        }
         await deleteCleanReportType(modalData.id).unwrap();
         toast.success('পরিচ্ছন্নতা রিপোর্টের ধরন সফলভাবে মুছে ফেলা হয়েছে!');
       }
@@ -98,9 +134,19 @@ const CleanType = () => {
     setName('');
   };
 
+  // --- Start of Permission-based Rendering ---
+  if (permissionsLoading) {
+    return <div className="p-4 text-center">অনুমতি লোড হচ্ছে...</div>;
+  }
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-center text-red-500">এই পৃষ্ঠাটি দেখার অনুমতি আপনার নেই।</div>;
+  }
+  // --- End of Permission-based Rendering ---
+
   return (
     <div className="py-8 w-full relative">
-
+      <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`@keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
@@ -151,76 +197,78 @@ const CleanType = () => {
 
       <div>
         {/* Add/Edit Clean Report Type Form */}
-        <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-          <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-            {editingId ? (
-              <FaEdit className="text-4xl text-[#441a05]" />
-            ) : (
-              <IoAddCircle className="text-4xl text-[#441a05]" />
-            )}
-            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
-              {editingId ? 'পরিচ্ছন্নতার ধরন সম্পাদনা করুন' : 'নতুন পরিচ্ছন্নতার ধরন যোগ করুন'}
-            </h3>
-          </div>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <input
-              type="text"
-              id="cleanReportTypeName"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-              placeholder="পরিচ্ছন্নতার ধরন"
-              disabled={isCreating || isUpdating}
-              aria-label="পরিচ্ছন্নতা রিপোর্টের ধরন"
-              title="পরিচ্ছন্নতা রিপোর্টের ধরন লিখুন (উদাহরণ: দৈনিক পরিচ্ছন্নতা) / Enter clean report type (e.g., Daily Cleaning)"
-              aria-describedby={createError || updateError ? 'clean-report-error' : undefined}
-            />
-            <button
-              type="submit"
-              disabled={isCreating || isUpdating}
-              title={
-                editingId
-                  ? 'পরিচ্ছন্নতা রিপোর্টের ধরন আপডেট করুন / Update clean report type'
-                  : 'নতুন পরিচ্ছন্নতা রিপোর্টের ধরন তৈরি করুন / Create a new clean report type'
-              }
-              className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                isCreating || isUpdating ? 'cursor-not-allowed' : 'hover:text-white hover:shadow-md'
-              }`}
-            >
-              {(isCreating || isUpdating) ? (
-                <span className="flex items-center space-x-3">
-                  <FaSpinner className="animate-spin text-lg" />
-                  <span>{editingId ? 'আপডেট করা হচ্ছে...' : 'তৈরি করা হচ্ছে...'}</span>
-                </span>
+        {(hasAddPermission || hasChangePermission) && (
+          <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+            <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
+              {editingId ? (
+                <FaEdit className="text-4xl text-[#441a05]" />
               ) : (
-                <span className="flex items-center space-x-2">
-                  <IoAdd className="w-5 h-5" />
-                  <span>{editingId ? 'রিপোর্ট আপডেট করুন' : 'রিপোর্ট তৈরি করুন'}</span>
-                </span>
+                <IoAddCircle className="text-4xl text-[#441a05]" />
               )}
-            </button>
-            {editingId && (
-              <button
-                type="button"
-                onClick={handleCancel}
-                title="সম্পাদনা বাতিল করুন / Cancel editing"
-                className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-white hover:text-white transition-all duration-300 animate-scaleIn"
-              >
-                বাতিল
-              </button>
-            )}
-          </form>
-          {(createError || updateError) && (
-            <div
-              id="clean-report-error"
-              className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
-              style={{ animationDelay: '0.4s' }}
-            >
-              ত্রুটি: {(createError || updateError).status || 'অজানা'} -{' '}
-              {JSON.stringify((createError || updateError).data || {})}
+              <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
+                {editingId ? 'পরিচ্ছন্নতার ধরন সম্পাদনা করুন' : 'নতুন পরিচ্ছন্নতার ধরন যোগ করুন'}
+              </h3>
             </div>
-          )}
-        </div>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <input
+                type="text"
+                id="cleanReportTypeName"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
+                placeholder="পরিচ্ছন্নতার ধরন"
+                disabled={isCreating || isUpdating}
+                aria-label="পরিচ্ছন্নতা রিপোর্টের ধরন"
+                title="পরিচ্ছন্নতা রিপোর্টের ধরন লিখুন (উদাহরণ: দৈনিক পরিচ্ছন্নতা) / Enter clean report type (e.g., Daily Cleaning)"
+                aria-describedby={createError || updateError ? 'clean-report-error' : undefined}
+              />
+              <button
+                type="submit"
+                disabled={isCreating || isUpdating || (editingId ? !hasChangePermission : !hasAddPermission)}
+                title={
+                  editingId
+                    ? 'পরিচ্ছন্নতা রিপোর্টের ধরন আপডেট করুন / Update clean report type'
+                    : 'নতুন পরিচ্ছন্নতা রিপোর্টের ধরন তৈরি করুন / Create a new clean report type'
+                }
+                className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
+                  isCreating || isUpdating || (editingId ? !hasChangePermission : !hasAddPermission) ? 'cursor-not-allowed opacity-50' : 'hover:text-white hover:shadow-md'
+                }`}
+              >
+                {(isCreating || isUpdating) ? (
+                  <span className="flex items-center space-x-3">
+                    <FaSpinner className="animate-spin text-lg" />
+                    <span>{editingId ? 'আপডেট করা হচ্ছে...' : 'তৈরি করা হচ্ছে...'}</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center space-x-2">
+                    <IoAdd className="w-5 h-5" />
+                    <span>{editingId ? 'রিপোর্ট আপডেট করুন' : 'রিপোর্ট তৈরি করুন'}</span>
+                  </span>
+                )}
+              </button>
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  title="সম্পাদনা বাতিল করুন / Cancel editing"
+                  className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-white hover:text-white transition-all duration-300 animate-scaleIn"
+                >
+                  বাতিল
+                </button>
+              )}
+            </form>
+            {(createError || updateError) && (
+              <div
+                id="clean-report-error"
+                className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
+                style={{ animationDelay: '0.4s' }}
+              >
+                ত্রুটি: {(createError || updateError).status || 'অজানা'} -{' '}
+                {JSON.stringify((createError || updateError).data || {})}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Clean Report Types Table */}
         <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
@@ -260,20 +308,24 @@ const CleanType = () => {
                         {item.name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleEditClick(item)}
-                          title="পরিচ্ছন্নতা রিপোর্টের ধরন সম্পাদনা করুন / Edit clean report type"
-                          className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
-                        >
-                          <FaEdit className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          title="পরিচ্ছন্নতা রিপোর্টের ধরন মুছুন / Delete clean report type"
-                          className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
-                        >
-                          <FaTrash className="w-5 h-5" />
-                        </button>
+                        {hasChangePermission && (
+                          <button
+                            onClick={() => handleEditClick(item)}
+                            title="পরিচ্ছন্নতা রিপোর্টের ধরন সম্পাদনা করুন / Edit clean report type"
+                            className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
+                          >
+                            <FaEdit className="w-5 h-5" />
+                          </button>
+                        )}
+                        {hasDeletePermission && (
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            title="পরিচ্ছন্নতা রিপোর্টের ধরন মুছুন / Delete clean report type"
+                            className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                          >
+                            <FaTrash className="w-5 h-5" />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

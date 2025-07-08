@@ -21,7 +21,7 @@ export const gfeeSubheadsApi = createApi({
   }),
   tagTypes: ['GfeeSubheads'],
   endpoints: (builder) => ({
-    // GET: Fetch all gfee subheads
+    // GET: Fetch all gfee subheads 
     getGfeeSubheads: builder.query({
       query: () => '/gfee-subheads/',
       providesTags: ['GfeeSubheads'],
