@@ -13,7 +13,7 @@ const mainMenu = [
   {
     id: "03",
     title: "প্রতিষ্ঠানের তথ্য",
-    icon: "HiOutlineBuildingStorefront", 
+    icon: "HiOutlineBuildingStorefront",
     link: "/institute-profile",
   },
   {
@@ -70,7 +70,6 @@ const mainMenu = [
         title: "শিক্ষকের পারফরমেন্স",
         link: "/darul-iqam/teacher-performance",
       },
-      
     ],
   },
   {
@@ -196,12 +195,12 @@ const mainMenu = [
         title: "ইভেন্ট ক্যালেন্ডার",
         link: "/talimat/event",
       },
-        {
+      {
         id: "05/11",
         title: "রুটিন",
         link: "/talimat/routine",
       },
-        {
+      {
         id: "05/12",
         title: "পরীক্ষার রুটিন",
         link: "/talimat/exam-routine",
@@ -215,6 +214,33 @@ const mainMenu = [
         id: "05/14",
         title: "প্রত্যয়ন পত্র",
         link: "/talimat/testimonial",
+      },
+      {
+        id: "05/15",
+        title: "রেজাল্ট",
+        link: "/talimat/result",
+        children: [
+          {
+            id: "05/15/01",
+            title: "ফলাফল পত্র",
+            link: "/talimat/result",
+          },
+          {
+            id: "05/15/02",
+            title: "নম্বরপত্র",
+            link: "/talimat/result/mark-sheet",
+          },
+          {
+            id: "05/15/03",
+            title: "ব্যক্তিগত নম্বরপত্র",
+            link: "/talimat/result/personal-mark-sheet",
+          },
+          {
+            id: "05/15/04",
+            title: "মেধা স্থান",
+            link: "/talimat/result/merit-list",
+          },
+        ],
       },
     ],
   },
@@ -254,7 +280,6 @@ const mainMenu = [
             title: "ফিসের ধরন",
             link: "/accounts/settings/fee-heads",
           },
-          
         ],
       },
       {
@@ -297,24 +322,23 @@ const mainMenu = [
         title: "ডিলিট - ফি",
         link: "/accounts/delete-fee",
       },
-       {
+      {
         id: "07/10",
         title: "রিপোর্ট",
         link: "/accounts/expense-items-list",
-         children: [
+        children: [
           {
             id: "07/10/01",
             title: "ব্যয়ের ধরন",
             link: "/accounts/expense-items-list",
           },
-             {
+          {
             id: "07/10/02",
             title: "আয়ের ধরন",
             link: "/accounts/income-items-list",
           },
-        ]
+        ],
       },
-        
     ],
   },
   {
@@ -357,7 +381,7 @@ const mainMenu = [
           },
         ],
       },
-       {
+      {
         id: "08/03",
         title: "ভূমিকা-ভিত্তিক অনুমতি",
         link: "/users/role-permission",
@@ -395,16 +419,14 @@ const mainMenu = [
             title: "খাবারের সেটাপ",
             link: "/boarding/settings/meal-setup",
           },
-
         ],
-        
       },
-                {
-            id: "09/02",
-            title: "খাবারের স্ট্যাটাস",
-            link: "/boarding/meal-status",
-          },
-       {
+      {
+        id: "09/02",
+        title: "খাবারের স্ট্যাটাস",
+        link: "/boarding/meal-status",
+      },
+      {
         id: "09/03",
         title: "বোর্ডিং - ফি",
         link: "/boarding/boarding-fee",

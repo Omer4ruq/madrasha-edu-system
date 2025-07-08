@@ -66,11 +66,13 @@ import RolePermissions from "./components/permission/RolePermissions";
 import CleanType from "./components/clean/CleanType";
 import ExpenseItemsList from "./components/expense/ExpenseItemsList";
 import Login from "./components/Login/Login";
-
 import IncomeItemsList from "./components/income/IncomeItemsList";
 import AddRoleTypes from "./components/Roles/AddRoleTypes";
 import Testimonial from "./components/testimonial/Testimonial";
-
+import ResultSheet from "./components/results/ResultSheet";
+import MarkSheet from "./components/results/MarkSheet";
+import PersonalMarkSheet from "./components/results/PersonalMarkSheet";
+import MeritList from "./components/results/MeritList";
 
 function Root() {
   const router = createBrowserRouter([
@@ -79,7 +81,6 @@ function Root() {
       element: <App />,
       errorElement: <Dummy />,
       children: [
-
         {
           path: "/",
           element: <Navigate to="/login" replace />,
@@ -248,7 +249,28 @@ function Root() {
             },
             {
               path: "testimonial",
-              element: <Testimonial></Testimonial>
+              element: <Testimonial></Testimonial>,
+            },
+            {
+              path: "result",
+              children: [
+                {
+                  index: true,
+                  element: <ResultSheet />,
+                },
+                {
+                  path: "mark-sheet",
+                  element: <MarkSheet></MarkSheet>,
+                },
+                {
+                  path: "personal-mark-sheet",
+                  element: <PersonalMarkSheet></PersonalMarkSheet>,
+                },
+                {
+                  path: "merit-list",
+                  element: <MeritList></MeritList>,
+                },
+              ],
             },
           ],
         },
