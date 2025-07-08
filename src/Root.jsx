@@ -73,6 +73,7 @@ import ResultSheet from "./components/results/ResultSheet";
 import MarkSheet from "./components/results/MarkSheet";
 import PersonalMarkSheet from "./components/results/PersonalMarkSheet";
 import MeritList from "./components/results/MeritList";
+import ResultConfig from "./components/results/ResultConfig";
 
 function Root() {
   const router = createBrowserRouter([
@@ -171,6 +172,10 @@ function Root() {
                 {
                   path: "event-type",
                   element: <AddEvent />,
+                },
+                {
+                  path: "result-config",
+                  element: <ResultConfig></ResultConfig>,
                 },
               ],
             },

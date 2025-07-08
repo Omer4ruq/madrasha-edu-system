@@ -9,9 +9,9 @@ export const gsubjectApi = createApi({
     baseUrl: BASE_URL2,
     prepareHeaders: (headers) => {
       const token = localStorage.getItem('token'); // Adjust token retrieval method if needed
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
+      // if (token) {
+      //   headers.set('Authorization', `Bearer ${token}`);
+      // }
       headers.set('Content-Type', 'application/json');
       return headers;
     },
