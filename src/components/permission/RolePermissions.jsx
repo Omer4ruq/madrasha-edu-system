@@ -16,6 +16,8 @@ const RolePermissions = () => {
   const [isLocked, setIsLocked] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+
+
   // Fetch groups
   const {
     data: groups,
@@ -115,6 +117,13 @@ console.log("selectedGroup", selectedGroup)
   const handleCancelUnlock = () => {
     setIsModalOpen(false);
   };
+
+
+
+console.log("groups",groups)
+  console.log("groupPermissions", groupPermissions)
+console.log("selectedGroup", selectedGroup)
+
 
   return (
     <div className="py-8 w-full relative">
