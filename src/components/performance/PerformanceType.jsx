@@ -22,10 +22,10 @@ const PerformanceType = () => {
 
   // --- Start of Permission Logic ---
   const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, { skip: !group_id });
-  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_teacher_performance') || false;
-  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_teacher_performance') || false;
-  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_teacher_performance') || false;
-  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_teacher_performance') || false;
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_performance_name') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_performance_name') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_performance_name') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_performance_name') || false;
   // --- End of Permission Logic ---
 
   // API hooks

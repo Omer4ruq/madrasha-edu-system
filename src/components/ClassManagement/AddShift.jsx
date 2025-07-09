@@ -8,8 +8,11 @@ import {
 import { FaEdit, FaSpinner, FaTrash } from 'react-icons/fa';
 import { IoAdd, IoTime } from 'react-icons/io5';
 import { Toaster, toast } from 'react-hot-toast';
+import { useSelector } from 'react-redux'; // Import useSelector
+import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi'; // Import permission hook
 
 const AddShift = () => {
+  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
   const [shiftName, setShiftName] = useState('');
   const [editShiftId, setEditShiftId] = useState(null);
   const [editShiftName, setEditShiftName] = useState('');
@@ -23,9 +26,24 @@ const AddShift = () => {
   const [updateShift] = useUpdateStudentShiftApiMutation();
   const [deleteShift] = useDeleteStudentShiftApiMutation();
 
+  // Permissions hook
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Permission checks
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_studentshift') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_studentshift') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_studentshift') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_studentshift') || false;
+
   // Handle form submission for creating a new shift
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!hasAddPermission) {
+      toast.error('শিফট যোগ করার অনুমতি নেই।');
+      return;
+    }
     if (!shiftName.trim()) {
       toast.error('অনুগ্রহ করে একটি শিফটের নাম লিখুন');
       return;
@@ -37,6 +55,10 @@ const AddShift = () => {
 
   // Handle edit button click
   const handleEditClick = (shift) => {
+    if (!hasChangePermission) {
+      toast.error('শিফট সম্পাদনা করার অনুমতি নেই।');
+      return;
+    }
     setEditShiftId(shift.id);
     setEditShiftName(shift.name);
   };
@@ -44,6 +66,10 @@ const AddShift = () => {
   // Handle update shift
   const handleUpdate = async (e) => {
     e.preventDefault();
+    if (!hasChangePermission) {
+      toast.error('শিফট আপডেট করার অনুমতি নেই।');
+      return;
+    }
     if (!editShiftName.trim()) {
       toast.error('অনুগ্রহ করে একটি শিফটের নাম লিখুন');
       return;
@@ -60,6 +86,10 @@ const AddShift = () => {
 
   // Handle toggle active status
   const handleToggleActive = (shift) => {
+    if (!hasChangePermission) {
+      toast.error('শিফটের স্থিতি পরিবর্তন করার অনুমতি নেই।');
+      return;
+    }
     if (!shift?.id) {
       toast.error('অবৈধ শিফট আইডি। অনুগ্রহ করে আবার চেষ্টা করুন।');
       return;
@@ -71,6 +101,10 @@ const AddShift = () => {
 
   // Handle delete shift
   const handleDelete = (id) => {
+    if (!hasDeletePermission) {
+      toast.error('শিফট মুছে ফেলার অনুমতি নেই।');
+      return;
+    }
     if (!id) {
       toast.error('অবৈধ শিফট আইডি। অনুগ্রহ করে আবার চেষ্টা করুন।');
       return;
@@ -84,18 +118,34 @@ const AddShift = () => {
   const confirmAction = async () => {
     try {
       if (modalAction === 'create') {
+        if (!hasAddPermission) {
+          toast.error('শিফট তৈরি করার অনুমতি নেই।');
+          return;
+        }
         await createShift(modalData).unwrap();
         toast.success('শিফট সফলভাবে তৈরি করা হয়েছে!');
         setShiftName('');
       } else if (modalAction === 'update') {
+        if (!hasChangePermission) {
+          toast.error('শিফট আপডেট করার অনুমতি নেই।');
+          return;
+        }
         await updateShift({ id: modalData.id, ...modalData }).unwrap();
         toast.success('শিফট সফলভাবে আপডেট করা হয়েছে!');
         setEditShiftId(null);
         setEditShiftName('');
       } else if (modalAction === 'delete') {
+        if (!hasDeletePermission) {
+          toast.error('শিফট মুছে ফেলার অনুমতি নেই।');
+          return;
+        }
         await deleteShift(modalData.id).unwrap();
         toast.success('শিফট সফলভাবে মুছে ফেলা হয়েছে!');
       } else if (modalAction === 'toggle') {
+        if (!hasChangePermission) {
+          toast.error('শিফটের স্থিতি পরিবর্তন করার অনুমতি নেই।');
+          return;
+        }
         await updateShift({ id: modalData.id, ...modalData }).unwrap();
         toast.success(`শিফট ${modalData.name} এখন ${modalData.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}!`);
       }
@@ -108,6 +158,14 @@ const AddShift = () => {
       setModalData(null);
     }
   };
+
+  if (permissionsLoading) {
+    return <div className="p-4 text-[#441a05]/70 animate-fadeIn">লোড হচ্ছে...</div>;
+  }
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-red-400 animate-fadeIn">এই পৃষ্ঠাটি দেখার অনুমতি নেই।</div>;
+  }
 
   return (
     <div className="py-8 w-full relative">
@@ -169,58 +227,60 @@ const AddShift = () => {
 
       <div className="mx-auto">
         {/* Form to Add Shift */}
-        <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-          <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-            <IoTime className="text-4xl text-[#441a05]" />
-            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">নতুন শিফট যোগ করুন</h3>
-          </div>
-
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
-            <input
-              type="text"
-              id="shiftName"
-              value={shiftName}
-              onChange={(e) => setShiftName(e.target.value)}
-              className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-              placeholder="শিফটের নাম"
-              disabled={isCreating}
-              aria-label="শিফটের নাম"
-              aria-describedby={createError ? "shift-error" : undefined}
-            />
-            <button
-              type="submit"
-              disabled={isCreating}
-              title="নতুন শিফট তৈরি করুন"
-              className={`relative inline-flex items-center px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                isCreating ? 'cursor-not-allowed opacity-60' : 'hover:text-white'
-              }`}
-            >
-              {isCreating ? (
-                <span className="flex items-center space-x-3">
-                  <FaSpinner className="animate-spin text-lg" />
-                  <span>তৈরি করা হচ্ছে...</span>
-                </span>
-              ) : (
-                <span className="flex items-center space-x-2">
-                  <IoAdd className="w-5 h-5" />
-                  <span>শিফট তৈরি করুন</span>
-                </span>
-              )}
-            </button>
-          </form>
-          {createError && (
-            <div
-              id="shift-error"
-              className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
-              style={{ animationDelay: '0.4s' }}
-            >
-              ত্রুটি: {createError.status || 'অজানা'} - {JSON.stringify(createError.data || {})}
+        {hasAddPermission && (
+          <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+            <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
+              <IoTime className="text-4xl text-[#441a05]" />
+              <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">নতুন শিফট যোগ করুন</h3>
             </div>
-          )}
-        </div>
+
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
+              <input
+                type="text"
+                id="shiftName"
+                value={shiftName}
+                onChange={(e) => setShiftName(e.target.value)}
+                className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
+                placeholder="শিফটের নাম"
+                disabled={isCreating}
+                aria-label="শিফটের নাম"
+                aria-describedby={createError ? "shift-error" : undefined}
+              />
+              <button
+                type="submit"
+                disabled={isCreating}
+                title="নতুন শিফট তৈরি করুন"
+                className={`relative inline-flex items-center px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
+                  isCreating ? 'cursor-not-allowed opacity-60' : 'hover:text-white'
+                }`}
+              >
+                {isCreating ? (
+                  <span className="flex items-center space-x-3">
+                    <FaSpinner className="animate-spin text-lg" />
+                    <span>তৈরি করা হচ্ছে...</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center space-x-2">
+                    <IoAdd className="w-5 h-5" />
+                    <span>শিফট তৈরি করুন</span>
+                  </span>
+                )}
+              </button>
+            </form>
+            {createError && (
+              <div
+                id="shift-error"
+                className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
+                style={{ animationDelay: '0.4s' }}
+              >
+                ত্রুটি: {createError.status || 'অজানা'} - {JSON.stringify(createError.data || {})}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Edit Shift Form */}
-        {editShiftId && (
+        {hasChangePermission && editShiftId && (
           <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
             <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
               <FaEdit className="text-3xl text-[#441a05]" />
@@ -279,18 +339,22 @@ const AddShift = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       শিফটের নাম
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      সক্রিয়
-                    </th>
+                    {hasChangePermission && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        সক্রিয়
+                      </th>
+                    )}
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       তৈরির সময়
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       আপডেটের সময়
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ক্রিয়াকলাপ
-                    </th>
+                    {(hasChangePermission || hasDeletePermission) && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        ক্রিয়াকলাপ
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/20">
@@ -303,62 +367,70 @@ const AddShift = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
                         {shift.name}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
-                        <label className="inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={shift.is_active}
-                            onChange={() => handleToggleActive(shift)}
-                            className="hidden"
-                          />
-                          <span
-                            className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn ${
-                              shift.is_active
-                                ? 'bg-[#DB9E30] border-[#DB9E30]'
-                                : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
-                            }`}
-                          >
-                            {shift.is_active && (
-                              <svg
-                                className="w-4 h-4 text-[#441a05] animate-scaleIn"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
-                            )}
-                          </span>
-                        </label>
-                      </td>
+                      {hasChangePermission && (
+                        <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
+                          <label className="inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={shift.is_active}
+                              onChange={() => handleToggleActive(shift)}
+                              className="hidden"
+                            />
+                            <span
+                              className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn ${
+                                shift.is_active
+                                  ? 'bg-[#DB9E30] border-[#DB9E30]'
+                                  : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
+                              }`}
+                            >
+                              {shift.is_active && (
+                                <svg
+                                  className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              )}
+                            </span>
+                          </label>
+                        </td>
+                      )}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
                         {new Date(shift.created_at).toLocaleString('bn-BD')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
                         {new Date(shift.updated_at).toLocaleString('bn-BD')}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleEditClick(shift)}
-                          title="শিফট সম্পাদনা করুন"
-                          className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
-                        >
-                          <FaEdit className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(shift.id)}
-                          title="শিফট মুছুন"
-                          className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
-                        >
-                          <FaTrash className="w-5 h-5" />
-                        </button>
-                      </td>
+                      {(hasChangePermission || hasDeletePermission) && (
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          {hasChangePermission && (
+                            <button
+                              onClick={() => handleEditClick(shift)}
+                              title="শিফট সম্পাদনা করুন"
+                              className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
+                            >
+                              <FaEdit className="w-5 h-5" />
+                            </button>
+                          )}
+                          {hasDeletePermission && (
+                            <button
+                              onClick={() => handleDelete(shift.id)}
+                              title="শিফট মুছুন"
+                              className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                            >
+                              <FaTrash className="w-5 h-5" />
+                            </button>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -368,7 +440,7 @@ const AddShift = () => {
         </div>
 
         {/* Confirmation Modal */}
-        {isModalOpen && (
+        {isModalOpen && (hasAddPermission || hasChangePermission || hasDeletePermission) && (
           <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
             <div
               className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"

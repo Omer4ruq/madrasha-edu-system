@@ -6,12 +6,14 @@ import { useGetClassListApiQuery } from "../../redux/features/api/class/classLis
 import {
   useCreateStudentClassApIMutation,
   useGetStudentClassApIQuery,
-
 } from "../../redux/features/api/student/studentClassApi";
 import { Toaster, toast } from "react-hot-toast";
+import { useSelector } from "react-redux"; // Import useSelector
+import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi"; // Import permission hook
 
 const AddClass = () => {
   const navigate = useNavigate();
+  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
   const { data: classData, isLoading, error } = useGetClassListApiQuery();
   const {
     data: classList,
@@ -19,10 +21,19 @@ const AddClass = () => {
     error: listError,
   } = useGetStudentClassApIQuery();
   console.log("নির্বাচিত ক্লাসের তালিকা", classList);
-  console.log("class data", classData)
+  console.log("class data", classData);
   const [createClass, { isLoading: isCreating }] = useCreateStudentClassApIMutation();
   const [selectedClasses, setSelectedClasses] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Permissions hook
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Permission checks
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_studentclass') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_studentclass') || false;
 
   useEffect(() => {
     if (classList) {
@@ -35,6 +46,10 @@ const AddClass = () => {
   }, [classList]);
 
   const handleToggle = (classId) => {
+    if (!hasAddPermission) {
+      toast.error('ক্লাস যোগ বা সরানোর অনুমতি নেই।');
+      return;
+    }
     setSelectedClasses((prev) => ({
       ...prev,
       [classId]: !prev[classId],
@@ -42,10 +57,19 @@ const AddClass = () => {
   };
 
   const handleSubmit = async () => {
+    if (!hasAddPermission) {
+      toast.error('ক্লাস জমা দেওয়ার অনুমতি নেই।');
+      return;
+    }
     setIsModalOpen(true);
   };
-console.log("selected class id", selectedClasses)
+  console.log("selected class id", selectedClasses);
   const confirmSubmit = async () => {
+    if (!hasAddPermission) {
+      toast.error('ক্লাস তৈরি করার অনুমতি নেই।');
+      setIsModalOpen(false);
+      return;
+    }
     try {
       const existingClassIds = classList
         ? classList.map((item) => item.student_class.id)
@@ -87,17 +111,21 @@ console.log("selected class id", selectedClasses)
     navigate("/class-management/view-classes/subjects");
   };
 
-  if (isLoading || isListLoading) {
+  if (isLoading || isListLoading || permissionsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="flex items-center gap-4 p-6 bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 animate-fadeIn">
           <FaSpinner className="animate-spin text-3xl text-[#DB9E30]" />
           <span className="text-lg font-medium text-[#441a05]">
-            ক্লাস লোড হচ্ছে...
+            লোড হচ্ছে...
           </span>
         </div>
       </div>
     );
+  }
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-red-400 animate-fadeIn">এই পৃষ্ঠাটি দেখার অনুমতি নেই।</div>;
   }
 
   if (error || listError) {
@@ -188,56 +216,58 @@ console.log("selected class id", selectedClasses)
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Left: Select Classes */}
-        <div className="lg:col-span-1 bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl p-6 animate-fadeIn h-full border border-white/20">
-          <h3 className="text-lg font-semibold text-[#441a05] border-b border-white/20 pb-2 mb-4">
-            ক্লাস নির্বাচন করুন
-          </h3>
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-            {classData?.map((classItem, index) => (
-              <div
-                key={classItem.id}
-                className="flex items-center justify-between p-3 hover:bg-white/20 border border-white/30 rounded-lg transition-colors duration-300 animate-fadeIn"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <span className="text-[#441a05] font-medium">
-                  {classItem?.name}
-                </span>
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={!!selectedClasses[classItem.id]}
-                    onChange={() => handleToggle(classItem.id)}
-                    className="hidden"
-                  />
-                  <span
-                    className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 ${
-                      selectedClasses[classItem.id]
-                        ? "bg-[#DB9E30] border-[#DB9E30]"
-                        : "bg-white/10 border-[#9d9087] hover:border-[#441a05]"
-                    }`}
-                  >
-                    {selectedClasses[classItem.id] && (
-                      <svg
-                        className="w-4 h-4 text-[#441a05] animate-scaleIn"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                    )}
+        {hasAddPermission && (
+          <div className="lg:col-span-1 bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl p-6 animate-fadeIn h-full border border-white/20">
+            <h3 className="text-lg font-semibold text-[#441a05] border-b border-white/20 pb-2 mb-4">
+              ক্লাস নির্বাচন করুন
+            </h3>
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+              {classData?.map((classItem, index) => (
+                <div
+                  key={classItem.id}
+                  className="flex items-center justify-between p-3 hover:bg-white/20 border border-white/30 rounded-lg transition-colors duration-300 animate-fadeIn"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <span className="text-[#441a05] font-medium">
+                    {classItem?.name}
                   </span>
-                </label>
-              </div>
-            ))}
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={!!selectedClasses[classItem.id]}
+                      onChange={() => handleToggle(classItem.id)}
+                      className="hidden"
+                    />
+                    <span
+                      className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 ${
+                        selectedClasses[classItem.id]
+                          ? "bg-[#DB9E30] border-[#DB9E30]"
+                          : "bg-white/10 border-[#9d9087] hover:border-[#441a05]"
+                      }`}
+                    >
+                      {selectedClasses[classItem.id] && (
+                        <svg
+                          className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      )}
+                    </span>
+                  </label>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Right: Selected Classes */}
         <div className="lg:col-span-3 bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl p-6 animate-fadeIn max-h-[72vh] overflow-y-auto flex flex-col border border-white/20">
@@ -265,44 +295,48 @@ console.log("selected class id", selectedClasses)
                       <span className="text-[#441a05] font-medium">
                         {classItem?.name}
                       </span>
-                      <button
-                        onClick={() => handleToggle(id)}
-                        title="ক্লাস সরান"
-                        className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
-                      >
-                        <FaTrash className="w-5 h-5" />
-                      </button>
+                      {hasAddPermission && ( // Only show trash if has add permission to remove
+                        <button
+                          onClick={() => handleToggle(id)}
+                          title="ক্লাস সরান"
+                          className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                        >
+                          <FaTrash className="w-5 h-5" />
+                        </button>
+                      )}
                     </div>
                   ) : null;
                 })}
             </div>
           )}
 
-          <div className="flex justify-end mt-6">
-            <button
-              onClick={handleSubmit}
-              disabled={isCreating}
-              className={`relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                isCreating
-                  ? "cursor-not-allowed opacity-60"
-                  : "hover:text-white btn-glow"
-              }`}
-            >
-              {isCreating ? (
-                <span className="flex items-center space-x-3">
-                  <FaSpinner className="animate-spin text-lg" />
-                  <span>জমা দেওয়া হচ্ছে...</span>
-                </span>
-              ) : (
-                "নির্বাচিত ক্লাস জমা দিন"
-              )}
-            </button>
-          </div>
+          {hasAddPermission && (
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={handleSubmit}
+                disabled={isCreating}
+                className={`relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
+                  isCreating
+                    ? "cursor-not-allowed opacity-60"
+                    : "hover:text-white btn-glow"
+                }`}
+              >
+                {isCreating ? (
+                  <span className="flex items-center space-x-3">
+                    <FaSpinner className="animate-spin text-lg" />
+                    <span>জমা দেওয়া হচ্ছে...</span>
+                  </span>
+                ) : (
+                  "নির্বাচিত ক্লাস জমা দিন"
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Confirmation Modal */}
-      {isModalOpen && (
+      {isModalOpen && (hasAddPermission) && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
           <div
             className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"

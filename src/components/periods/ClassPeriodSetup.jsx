@@ -1,4 +1,4 @@
-import React, { useState, useRef  } from "react";
+import React, { useState, useRef } from "react";
 import { FaSpinner, FaTrash, FaEdit } from "react-icons/fa";
 import { IoAddCircle } from "react-icons/io5";
 import { Toaster, toast } from "react-hot-toast";
@@ -8,14 +8,17 @@ import {
   useGetClassPeriodsByClassIdQuery,
   usePatchClassPeriodMutation,
 } from "../../redux/features/api/periods/classPeriodsApi";
+import { useSelector } from "react-redux"; // Import useSelector
+import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi"; // Import permission hook
 
 const ClassPeriodSetup = () => {
+  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
   const [selectedClassId, setSelectedClassId] = useState(null);
   const [startTime, setStartTime] = useState("13:14"); // Current time (1:14 PM in 24-hour format)
   const [endTime, setEndTime] = useState("14:14"); // 1 hour later
   const [isBreakTime, setIsBreakTime] = useState(false);
-    const inputRef = useRef();
-    const inputRef2 = useRef();
+  const inputRef = useRef();
+  const inputRef2 = useRef();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
@@ -25,21 +28,30 @@ const ClassPeriodSetup = () => {
     breakTime: false,
   });
 
- const handleClick = () => {
-  if (inputRef.current) {
-    inputRef.current.focus(); // ফোকাস আগে
-    setTimeout(() => {
-      inputRef.current.showPicker(); // তারপর ড্রপডাউন
-    }, 0); // 0ms delay is enough
-  }
-};
+  // Permissions hook
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Permission checks
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_periodconfig') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_periodconfig') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_periodconfig') || false;
+
+  const handleClick = () => {
+    if (inputRef.current) {
+      inputRef.current.focus(); // ফোকাস আগে
+      setTimeout(() => {
+        inputRef.current.showPicker(); // তারপর ড্রপডাউন
+      }, 0); // 0ms delay is enough
+    }
+  };
   const handleClick2 = () => {
     if (inputRef2.current) {
       inputRef2.current.showPicker();
-      inputRef2.current.focus(); 
+      inputRef2.current.focus();
     }
   };
-
 
   // Fetch classes
   const { data: classes = [], isLoading: isClassesLoading } =
@@ -69,6 +81,10 @@ const ClassPeriodSetup = () => {
   // Handle form submission for adding new period
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!hasAddPermission) {
+      toast.error('পিরিয়ড যোগ করার অনুমতি নেই।');
+      return;
+    }
     setModalAction("add");
     setModalData({ startTime, endTime, breakTime: isBreakTime });
     setIsModalOpen(true);
@@ -76,6 +92,10 @@ const ClassPeriodSetup = () => {
 
   // Handle period update
   const handleUpdate = (period) => {
+    if (!hasChangePermission) {
+      toast.error('পিরিয়ড আপডেট করার অনুমতি নেই।');
+      return;
+    }
     setModalAction("update");
     setModalData({ periodId: period.period_id });
     setEditPeriod({
@@ -90,6 +110,10 @@ const ClassPeriodSetup = () => {
   const confirmAction = async () => {
     try {
       if (modalAction === "add") {
+        if (!hasAddPermission) {
+          toast.error('পিরিয়ড তৈরি করার অনুমতি নেই।');
+          return;
+        }
         if (!selectedClassId || !modalData.startTime || !modalData.endTime) {
           toast.error("দয়া করে ক্লাস এবং শুরু ও শেষের সময় নির্বাচন করুন।");
           return;
@@ -114,6 +138,10 @@ const ClassPeriodSetup = () => {
         setIsBreakTime(false);
         refetch();
       } else if (modalAction === "update") {
+        if (!hasChangePermission) {
+          toast.error('পিরিয়ড আপডেট করার অনুমতি নেই।');
+          return;
+        }
         if (!editPeriod.startTime || !editPeriod.endTime) {
           toast.error("দয়া করে শুরু এবং শেষের সময় প্রদান করুন।");
           return;
@@ -145,6 +173,21 @@ const ClassPeriodSetup = () => {
       setEditPeriod({ startTime: "", endTime: "", breakTime: false });
     }
   };
+
+  if (isClassesLoading || permissionsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-black/10 backdrop-blur-sm rounded-xl shadow-lg p-8 flex items-center space-x-4 animate-fadeIn">
+          <FaSpinner className="animate-spin text-2xl text-[#441a05]" />
+          <span className="text-[#441a05] font-medium">লোড হচ্ছে...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-red-400 animate-fadeIn">এই পৃষ্ঠাটি দেখার অনুমতি নেই।</div>;
+  }
 
   return (
     <div className="py-8">
@@ -269,7 +312,7 @@ const ClassPeriodSetup = () => {
         </div>
 
         {/* Period Form */}
-        {selectedClassId && (
+        {selectedClassId && hasAddPermission && (
           <div className="bg-black/10 backdrop-blur-sm p-6 rounded-2xl shadow-xl mb-10 animate-fadeIn">
             <h2 className="text-lg font-semibold text-[#441a05] mb-4 flex items-center">
               <span className="bg-[#DB9E30]/20 text-[#441a05] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">
@@ -284,7 +327,7 @@ const ClassPeriodSetup = () => {
                     শুরুর সময়
                   </label>
                   <input
-                   onClick={handleClick2}
+                    onClick={handleClick2}
                     type="time"
                     ref={inputRef2}
                     value={startTime}
@@ -300,7 +343,7 @@ const ClassPeriodSetup = () => {
                     শেষের সময়
                   </label>
                   <input
-                   onClick={handleClick}
+                    onClick={handleClick}
                     type="time"
                     ref={inputRef}
                     value={endTime}
@@ -403,13 +446,15 @@ const ClassPeriodSetup = () => {
                         </p>
                       </div>
                       <div className="space-x-2">
-                        <button
-                          onClick={() => handleUpdate(period)}
-                          className="px-3 py-1 bg-[#DB9E30] text-[#441a05] rounded-md hover:bg-[#DB9E30]/80 btn-glow"
-                          title="পিরিয়ড সম্পাদনা করুন / Edit period"
-                        >
-                          <FaEdit className="w-4 h-4" />
-                        </button>
+                        {hasChangePermission && (
+                          <button
+                            onClick={() => handleUpdate(period)}
+                            className="px-3 py-1 bg-[#DB9E30] text-[#441a05] rounded-md hover:bg-[#DB9E30]/80 btn-glow"
+                            title="পিরিয়ড সম্পাদনা করুন / Edit period"
+                          >
+                            <FaEdit className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </li>
@@ -420,7 +465,7 @@ const ClassPeriodSetup = () => {
         )}
 
         {/* Confirmation/Update Modal */}
-        {isModalOpen && (
+        {isModalOpen && (hasAddPermission || hasChangePermission) && (
           <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[10000]">
             <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
               <h3 className="text-lg font-semibold text-[#441a05] mb-4">

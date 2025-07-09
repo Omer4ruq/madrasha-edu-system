@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { FaBuilding, FaGlobe, FaUser, FaInfoCircle, FaGraduationCap, FaEdit } from 'react-icons/fa';
+import { useSelector } from 'react-redux'; // Import useSelector
+import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi'; // Import permission hook
+
 
 // Custom CSS for animations and styling
 const customStyles = `
@@ -67,8 +70,19 @@ const customStyles = `
 `;
 
 export default function InstituteDetails({ institutes, handleEditInstitute }) {
+  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
   // State for active tab per institute
   const [activeTabs, setActiveTabs] = useState({});
+
+  // Permissions hook
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Permission checks
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_institute') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_institute') || false;
+
 
   const setActiveTab = (instituteId, tab) => {
     setActiveTabs((prev) => ({
@@ -76,6 +90,14 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
       [instituteId]: tab,
     }));
   };
+
+  if (permissionsLoading) {
+    return <div className="p-4 text-gray-500 animate-fadeIn text-center">লোড হচ্ছে...</div>;
+  }
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-red-400 animate-fadeIn text-center text-lg font-semibold">এই পৃষ্ঠাটি দেখার অনুমতি নেই।</div>;
+  }
 
   return (
     <div className="mx-auto py-8">
@@ -104,14 +126,15 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
                   </p>
                 </div>
               </div>
-              {/* Edit Icon */}
-              <button
-                onClick={() => handleEditInstitute(institute)}
-                className="edit-icon text-[#9d9087] p-2 rounded-full transition-all duration-300 btn-ripple"
-                title="প্রোফাইল সম্পাদনা করুন"
-              >
-                <FaEdit className="sm:text-xl" />
-              </button>
+              {hasChangePermission && ( // Only show edit button if has change permission
+                <button
+                  onClick={() => handleEditInstitute(institute)}
+                  className="edit-icon text-[#9d9087] p-2 rounded-full transition-all duration-300 btn-ripple"
+                  title="প্রোফাইল সম্পাদনা করুন"
+                >
+                  <FaEdit className="sm:text-xl" />
+                </button>
+              )}
             </div>
 
             {/* Tab Navigation */}

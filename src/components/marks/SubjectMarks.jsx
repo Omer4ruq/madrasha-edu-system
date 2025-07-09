@@ -8,8 +8,12 @@ import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classC
 import { useGetSubjectMarkConfigsByClassQuery, useGetSubjectMarkConfigsBySubjectQuery } from '../../redux/features/api/marks/subjectMarkConfigsApi';
 import { useGetStudentActiveByClassQuery } from '../../redux/features/api/student/studentActiveApi';
 import { useCreateSubjectMarkMutation, useGetSubjectMarksQuery, useUpdateSubjectMarkMutation, useDeleteSubjectMarkMutation } from '../../redux/features/api/marks/subjectMarksApi';
+import { useSelector } from "react-redux"; // Import useSelector
+import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi"; // Import permission hook
+
 
 const SubjectMarks = () => {
+  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
   const [examId, setExamId] = useState('');
   const [academicYearId, setAcademicYearId] = useState('');
   const [selectedClassConfigId, setSelectedClassConfigId] = useState('');
@@ -24,30 +28,41 @@ const SubjectMarks = () => {
   const { data: exams, isLoading: examsLoading } = useGetExamApiQuery();
   const { data: academicYears, isLoading: yearsLoading } = useGetAcademicYearApiQuery();
   const { data: classes, isLoading: classesLoading } = useGetclassConfigApiQuery();
-  const { 
-    data: subjectMarkConfigs, 
-    isLoading: configsLoading, 
-    isFetching: configsFetching 
+  const {
+    data: subjectMarkConfigs,
+    isLoading: configsLoading,
+    isFetching: configsFetching
   } = useGetSubjectMarkConfigsByClassQuery(classId, { skip: !classId });
-  console.log("subjectMarkConfigs",subjectMarkConfigs)
-  const { 
-    data: subjectMarkConfigsBySubject, 
-    isLoading: subjectConfigsLoading 
+  console.log("subjectMarkConfigs", subjectMarkConfigs);
+  const {
+    data: subjectMarkConfigsBySubject,
+    isLoading: subjectConfigsLoading
   } = useGetSubjectMarkConfigsBySubjectQuery(subjectId, { skip: !subjectId });
-  const { 
-    data: students, 
-    isLoading: studentsLoading, 
-    isFetching: studentsFetching 
+  const {
+    data: students,
+    isLoading: studentsLoading,
+    isFetching: studentsFetching
   } = useGetStudentActiveByClassQuery(selectedClassConfigId, { skip: !selectedClassConfigId });
-  const { 
-    data: existingMarks, 
-    isLoading: marksLoading, 
+  const {
+    data: existingMarks,
+    isLoading: marksLoading,
     refetch: refetchMarks
   } = useGetSubjectMarksQuery({ exam_id: examId, class_id: classId, subject_id: subjectId }, { skip: !examId || !classId || !subjectId });
-  
+
   const [createSubjectMark] = useCreateSubjectMarkMutation();
   const [updateSubjectMark] = useUpdateSubjectMarkMutation();
   const [deleteSubjectMark] = useDeleteSubjectMarkMutation();
+
+  // Permissions hook
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Permission checks
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_subjectmark') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_subjectmark') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_subjectmark') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_subjectmark') || false;
 
   // Handle class selection to set both IDs
   const handleClassChange = (e) => {
@@ -75,6 +90,10 @@ const SubjectMarks = () => {
   }, [existingMarks]);
 
   const handleMarkChange = (studentId, markConfigId, value) => {
+    if (!hasChangePermission) {
+      toast.error('মার্ক পরিবর্তন করার অনুমতি নেই।');
+      return;
+    }
     const config = subjectMarkConfigsBySubject?.[0]?.mark_configs.find(c => c.id === markConfigId);
     const maxMark = config?.max_mark || 100;
     const numValue = Number(value);
@@ -98,6 +117,10 @@ const SubjectMarks = () => {
   };
 
   const saveIndividualMark = async (studentId, markConfigId, value) => {
+    if (!hasAddPermission && !hasChangePermission) {
+      toast.error('মার্ক সংরক্ষণ করার অনুমতি নেই।');
+      return;
+    }
     if (!examId || !academicYearId || !classId || !subjectId) {
       toast.error('দয়া করে পরীক্ষা, শিক্ষাবর্ষ, ক্লাস এবং বিষয় নির্বাচন করুন।');
       return;
@@ -109,7 +132,7 @@ const SubjectMarks = () => {
     try {
       const isAbsent = absentStudents.has(studentId);
       const obtained = isAbsent ? 0 : Number(value || 0);
-      
+
       const existingMark = existingMarks?.find(
         (mark) => mark.student === studentId && mark.mark_conf === markConfigId && mark.exam === Number(examId)
       );
@@ -126,13 +149,21 @@ const SubjectMarks = () => {
       };
 
       if (existingMark) {
+        if (!hasChangePermission) {
+          toast.error('মার্ক আপডেট করার অনুমতি নেই।');
+          return;
+        }
         await updateSubjectMark({ id: existingMark.id, ...markData }).unwrap();
         toast.success('মার্ক সফলভাবে আপডেট করা হয়েছে!');
       } else {
+        if (!hasAddPermission) {
+          toast.error('মার্ক তৈরি করার অনুমতি নেই।');
+          return;
+        }
         await createSubjectMark(markData).unwrap();
         toast.success('মার্ক সফলভাবে সংরক্ষিত!');
       }
-      
+
       setSavingState(studentId, markConfigId, 'saved');
       setTimeout(() => setSavingState(studentId, markConfigId, null), 2000);
       refetchMarks();
@@ -156,9 +187,13 @@ const SubjectMarks = () => {
   };
 
   const toggleAbsent = async (studentId) => {
+    if (!hasChangePermission) {
+      toast.error('উপস্থিতি স্ট্যাটাস পরিবর্তন করার অনুমতি নেই।');
+      return;
+    }
     const isCurrentlyAbsent = absentStudents.has(studentId);
     const newAbsentState = !isCurrentlyAbsent;
-    
+
     setAbsentStudents((prev) => {
       const newSet = new Set(prev);
       if (newAbsentState) {
@@ -175,12 +210,12 @@ const SubjectMarks = () => {
     }
 
     const markConfigs = subjectMarkConfigsBySubject?.[0]?.mark_configs || [];
-    
+
     for (const config of markConfigs) {
       try {
         const markKey = `${studentId}_${config.id}`;
         const obtained = newAbsentState ? 0 : Number(marks[markKey] || 0);
-        
+
         const existingMark = existingMarks?.find(
           (mark) => mark.student === studentId && mark.mark_conf === config.id && mark.exam === Number(examId)
         );
@@ -211,11 +246,20 @@ const SubjectMarks = () => {
   };
 
   const deleteStudentMarks = async (studentId) => {
+    if (!hasDeletePermission) {
+      toast.error('ছাত্রের মার্ক মুছে ফেলার অনুমতি নেই।');
+      return;
+    }
     setModalData({ studentId });
     setIsModalOpen(true);
   };
 
   const confirmDelete = async () => {
+    if (!hasDeletePermission) {
+      toast.error('মার্ক মুছে ফেলার অনুমতি নেই।');
+      setIsModalOpen(false);
+      return;
+    }
     try {
       const studentMarks = existingMarks?.filter(
         (mark) => mark.student === modalData.studentId && mark.exam === Number(examId)
@@ -252,7 +296,7 @@ const SubjectMarks = () => {
   const getSavingStateIcon = (studentId, markConfigId) => {
     const key = `${studentId}_${markConfigId}`;
     const state = savingStates[key];
-    
+
     switch (state) {
       case 'saving':
         return (
@@ -285,7 +329,7 @@ const SubjectMarks = () => {
   const markConfigs = selectedSubjectConfig?.mark_configs || [];
 
   // Loading states
-  if (configsLoading || configsFetching || studentsLoading || studentsFetching || examsLoading || yearsLoading || classesLoading) {
+  if (configsLoading || configsFetching || studentsLoading || studentsFetching || examsLoading || yearsLoading || classesLoading || permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="bg-black/10 backdrop-blur-sm rounded-xl shadow-lg p-8 flex items-center space-x-4 animate-fadeIn">
@@ -294,6 +338,10 @@ const SubjectMarks = () => {
         </div>
       </div>
     );
+  }
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-red-400 animate-fadeIn">এই পৃষ্ঠাটি দেখার অনুমতি নেই।</div>;
   }
 
   return (
@@ -457,7 +505,7 @@ const SubjectMarks = () => {
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-[#DB9E30]/20 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-[#DB9E30]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
               <div>
@@ -488,12 +536,16 @@ const SubjectMarks = () => {
                         </div>
                       </th>
                     ))}
-                    <th className="px-6 py-4 text-center text-sm font-bold text-[#441a05] uppercase tracking-wider">
-                      উপস্থিতি
-                    </th>
-                    <th className="px-6 py-4 text-center text-sm font-bold text-[#441a05] uppercase tracking-wider">
-                      অ্যাকশন
-                    </th>
+                    {hasChangePermission && (
+                      <th className="px-6 py-4 text-center text-sm font-bold text-[#441a05] uppercase tracking-wider">
+                        উপস্থিতি
+                      </th>
+                    )}
+                    {hasDeletePermission && (
+                      <th className="px-6 py-4 text-center text-sm font-bold text-[#441a05] uppercase tracking-wider">
+                        অ্যাকশন
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/20">
@@ -524,7 +576,7 @@ const SubjectMarks = () => {
                                   ? 'bg-gray-100 border-[#9d9087] text-[#441a05]/50 cursor-not-allowed'
                                   : 'bg-white/10 border-[#9d9087] text-[#441a05] hover:border-[#DB9E30] focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30]'
                               }`}
-                              disabled={absentStudents.has(student.id)}
+                              disabled={absentStudents.has(student.id) || !hasChangePermission}
                               min="0"
                               max={config.max_mark}
                               placeholder="0"
@@ -535,30 +587,34 @@ const SubjectMarks = () => {
                           </div>
                         </td>
                       ))}
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => toggleAbsent(student.id)}
-                          className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 transform hover:scale-105 btn-glow ${
-                            absentStudents.has(student.id)
-                              ? 'bg-red-500 text-white hover:bg-red-600'
-                              : 'bg-[#DB9E30] text-[#441a05] hover:bg-[#DB9E30]/80'
-                          }`}
-                          aria-label={`উপস্থিতি টগল করুন ${student.name}`}
-                          title={`উপস্থিতি টগল করুন / Toggle attendance for ${student.name}`}
-                        >
-                          {absentStudents.has(student.id) ? 'অনুপস্থিত' : 'উপস্থিত'}
-                        </button>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => deleteStudentMarks(student.id)}
-                          className="w-10 h-10 bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white rounded-lg transition-all duration-200 transform hover:scale-110 flex items-center justify-center btn-glow"
-                          aria-label={`মার্ক মুছুন ${student.name}`}
-                          title={`মার্ক মুছুন / Delete marks for ${student.name}`}
-                        >
-                          <FaTrash className="w-5 h-5" />
-                        </button>
-                      </td>
+                      {hasChangePermission && (
+                        <td className="px-6 py-4 text-center">
+                          <button
+                            onClick={() => toggleAbsent(student.id)}
+                            className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 transform hover:scale-105 btn-glow ${
+                              absentStudents.has(student.id)
+                                ? 'bg-red-500 text-white hover:bg-red-600'
+                                : 'bg-[#DB9E30] text-[#441a05] hover:bg-[#DB9E30]/80'
+                            }`}
+                            aria-label={`উপস্থিতি টগল করুন ${student.name}`}
+                            title={`উপস্থিতি টগল করুন / Toggle attendance for ${student.name}`}
+                          >
+                            {absentStudents.has(student.id) ? 'অনুপস্থিত' : 'উপস্থিত'}
+                          </button>
+                        </td>
+                      )}
+                      {hasDeletePermission && (
+                        <td className="px-6 py-4 text-center">
+                          <button
+                            onClick={() => deleteStudentMarks(student.id)}
+                            className="w-10 h-10 bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white rounded-lg transition-all duration-200 transform hover:scale-110 flex items-center justify-center btn-glow"
+                            aria-label={`মার্ক মুছুন ${student.name}`}
+                            title={`মার্ক মুছুন / Delete marks for ${student.name}`}
+                          >
+                            <FaTrash className="w-5 h-5" />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -591,7 +647,7 @@ const SubjectMarks = () => {
         )}
 
         {/* Confirmation Modal */}
-        {isModalOpen && (
+        {isModalOpen && (hasDeletePermission) && (
           <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[10000]">
             <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
               <h3 className="text-lg font-semibold text-[#441a05] mb-4">
