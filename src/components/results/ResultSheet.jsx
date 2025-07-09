@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Toaster, toast } from "react-hot-toast";
-import { FaSpinner, FaPrint } from "react-icons/fa";
+import { FaSpinner, FaPrint, FaDownload } from "react-icons/fa";
 import {
   PDFViewer,
   Document,
@@ -8,7 +8,9 @@ import {
   Text,
   View,
   StyleSheet,
+  pdf,
 } from "@react-pdf/renderer";
+import { saveAs } from "file-saver"; // For PDF download
 import { useGetExamApiQuery } from "../../redux/features/api/exam/examApi";
 import { useGetclassConfigApiQuery } from "../../redux/features/api/class/classConfigApi";
 import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
@@ -24,6 +26,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontFamily: "NotoSansBengali",
     color: "#441A05",
+    backgroundColor: "#FFFFFF",
   },
   header: {
     textAlign: "center",
@@ -60,19 +63,24 @@ const styles = StyleSheet.create({
   cell: {
     padding: 5,
     flex: 1,
-    textAlign: "left",
+    textAlign: "center",
     fontSize: 8,
   },
   headerCell: {
     padding: 5,
     flex: 1,
-    textAlign: "left",
+    textAlign: "center",
     fontSize: 8,
     fontWeight: "bold",
     textTransform: "uppercase",
   },
   rollCell: { flex: 0.5 },
   nameCell: { flex: 1.5 },
+  subjectCell: { flex: 0.8 }, // Optimized for 10-12 subjects
+  totalCell: { flex: 0.6 },
+  gradeCell: { flex: 0.6 },
+  rankCell: { flex: 0.5 },
+  avgCell: { flex: 0.6 },
   failCell: { backgroundColor: "#FFE6E6", color: "#9B1C1C" },
   absentCell: { backgroundColor: "#FFF7E6", color: "#9B6500" },
   statsContainer: {
@@ -129,9 +137,16 @@ const ResultSheet = () => {
       skip: !selectedClassConfig,
     });
   const { data: subjectMarks, isLoading: subjectMarksLoading } =
-    useGetSubjectMarksQuery({
-      skip: !selectedExam || !selectedClassConfig || !selectedAcademicYear,
-    });
+    useGetSubjectMarksQuery(
+      {
+        exam: selectedExam,
+        classConfig: selectedClassConfig,
+        academicYear: selectedAcademicYear,
+      },
+      {
+        skip: !selectedExam || !selectedClassConfig || !selectedAcademicYear,
+      }
+    );
   const { data: subjectConfigs, isLoading: subjectConfigsLoading } =
     useGetSubjectMarkConfigsByClassQuery(selectedClassConfig, {
       skip: !selectedClassConfig,
@@ -148,7 +163,7 @@ const ResultSheet = () => {
       setGrades(
         gradesData.map((g) => ({
           id: g.id,
-          grade: g.grade_name, // Bangla grade name
+          grade: g.grade_name,
           grade_name_op: g.grade_name_op,
           gpa: g.gpa,
           min: g.min_mark,
@@ -231,13 +246,14 @@ const ResultSheet = () => {
           subjects: subjectResults,
           totalObtained,
           totalMaxMarks,
+          averageMarks: averageMarks.toFixed(2),
           grade,
         };
       });
 
-      // Sort by total marks for ranking
+      // Sort by average marks for ranking
       const rankedResult = result
-        .sort((a, b) => b.totalObtained - a.totalObtained)
+        .sort((a, b) => b.averageMarks - a.averageMarks)
         .map((res, index) => ({ ...res, rank: index + 1 }));
 
       // Calculate statistics
@@ -277,6 +293,13 @@ const ResultSheet = () => {
 
   const handlePrint = () => {
     setShowPDF(true);
+  };
+
+  const handleDownload = async () => {
+    const doc = <ResultPDF />;
+    const asPdf = pdf(doc);
+    const blob = await asPdf.toBlob();
+    saveAs(blob, `Result_Sheet_${selectedExam}_${selectedClassConfig}.pdf`);
   };
 
   // PDF Document Component
@@ -334,15 +357,11 @@ const ResultSheet = () => {
           {grades.map((grade) => (
             <View key={grade.id} style={styles.tableRow}>
               <Text style={[styles.cell, { flex: 2 }]}>{grade.grade}</Text>
-              <Text style={[styles.cell, { flex: 1 }]}>
-                {grade.grade_name_op}
-              </Text>
+              <Text style={[styles.cell, { flex: 1 }]}>{grade.grade_name_op}</Text>
               <Text style={[styles.cell, { flex: 1 }]}>{grade.gpa}</Text>
               <Text style={[styles.cell, { flex: 1 }]}>{grade.min}</Text>
               <Text style={[styles.cell, { flex: 1 }]}>{grade.max}</Text>
-              <Text style={[styles.cell, { flex: 2 }]}>
-                {grade.remarks || "N/A"}
-              </Text>
+              <Text style={[styles.cell, { flex: 2 }]}>{grade.remarks || "N/A"}</Text>
             </View>
           ))}
         </View>
@@ -353,42 +372,35 @@ const ResultSheet = () => {
             <Text style={[styles.headerCell, styles.rollCell]}>রোল</Text>
             <Text style={[styles.headerCell, styles.nameCell]}>নাম</Text>
             {subjectConfigs?.map((config) => (
-              <Text key={config.id} style={styles.headerCell}>
+              <Text key={config.id} style={[styles.headerCell, styles.subjectCell]}>
                 {config.subject_name}
               </Text>
             ))}
-            <Text style={styles.headerCell}>মোট</Text>
-            <Text style={styles.headerCell}>গ্রেড</Text>
-            <Text style={styles.headerCell}>র্যাঙ্ক</Text>
+            <Text style={[styles.headerCell, styles.totalCell]}>মোট</Text>
+            <Text style={[styles.headerCell, styles.avgCell]}>আবারেজ</Text>
+            <Text style={[styles.headerCell, styles.gradeCell]}>গ্রেড</Text>
+            <Text style={[styles.headerCell, styles.rankCell]}>র্যাঙ্ক</Text>
           </View>
           {resultData.map((student) => (
             <View key={student.studentId} style={styles.tableRow}>
-              <Text style={[styles.cell, styles.rollCell]}>
-                {student.rollNo}
-              </Text>
-              <Text style={[styles.cell, styles.nameCell]}>
-                {student.studentName}
-              </Text>
+              <Text style={[styles.cell, styles.rollCell]}>{student.rollNo}</Text>
+              <Text style={[styles.cell, styles.nameCell]}>{student.studentName}</Text>
               {student.subjects.map((sub, index) => (
                 <Text
                   key={index}
                   style={[
                     styles.cell,
-                    sub.isFailed
-                      ? styles.failCell
-                      : sub.isAbsent
-                      ? styles.absentCell
-                      : {},
+                    styles.subjectCell,
+                    sub.isFailed ? styles.failCell : sub.isAbsent ? styles.absentCell : {},
                   ]}
                 >
-                  {sub.isAbsent
-                    ? "অনুপস্থিত"
-                    : `${sub.obtained}/${sub.maxMark}`}
+                  {sub.isAbsent ? "অনুপস্থিত" : `${sub.obtained}/${sub.maxMark}`}
                 </Text>
               ))}
-              <Text style={styles.cell}>{student.totalObtained}</Text>
-              <Text style={styles.cell}>{student.grade}</Text>
-              <Text style={styles.cell}>{student.rank}</Text>
+              <Text style={[styles.cell, styles.totalCell]}>{student.totalObtained}</Text>
+              <Text style={[styles.cell, styles.avgCell]}>{student.averageMarks}%</Text>
+              <Text style={[styles.cell, styles.gradeCell]}>{student.grade}</Text>
+              <Text style={[styles.cell, styles.rankCell]}>{student.rank}</Text>
             </View>
           ))}
         </View>
@@ -397,28 +409,22 @@ const ResultSheet = () => {
         <View style={styles.statsContainer}>
           <View style={styles.statsBox}>
             <Text style={styles.statsTitle}>পরিসংখ্যান</Text>
-            <Text style={styles.statsText}>
-              মোট শিক্ষার্থী: {statistics.totalStudents}
-            </Text>
+            <Text style={styles.statsText}>মোট শিক্ষার্থী: {statistics.totalStudents}</Text>
             <Text style={styles.statsText}>গ্রেড বিতরণ:</Text>
-            {Object.entries(statistics.gradeDistribution).map(
-              ([grade, count]) => (
-                <Text key={grade} style={styles.statsText}>
-                  {grade}: {count} জন
-                </Text>
-              )
-            )}
+            {Object.entries(statistics.gradeDistribution).map(([grade, count]) => (
+              <Text key={grade} style={styles.statsText}>
+                {grade}: {count} জন
+              </Text>
+            ))}
           </View>
           <View style={styles.statsBox}>
             <Text style={styles.statsTitle}>ফেল করা বিষয়</Text>
             {Object.entries(statistics.failedSubjects).length > 0 ? (
-              Object.entries(statistics.failedSubjects).map(
-                ([subject, count]) => (
-                  <Text key={subject} style={styles.statsText}>
-                    {subject}: {count} জন
-                  </Text>
-                )
-              )
+              Object.entries(statistics.failedSubjects).map(([subject, count]) => (
+                <Text key={subject} style={styles.statsText}>
+                  {subject}: {count} জন
+                </Text>
+              ))
             ) : (
               <Text style={styles.statsText}>কোনো বিষয়ে ফেল নেই</Text>
             )}
@@ -452,37 +458,67 @@ const ResultSheet = () => {
           }
           .a4-landscape {
             width: 1123px; /* 297mm at 96dpi */
+            height: 794px; /* 210mm at 96dpi */
             margin: 0 auto;
             background: white;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             padding: 20px;
             box-sizing: border-box;
             font-family: 'Noto Sans Bengali', sans-serif;
+            overflow: hidden;
           }
           .table-container {
-            border: 1px solid #9D9087;
+            // border: 1px solid #9D9087;
             border-radius: 4px;
             overflow-x: auto;
           }
           .table-header {
             background-color: rgba(219, 158, 48, 0.2);
-            padding: 5px;
+            
+            font-size: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-align: center;
+            // border: 1px solid #9D9087;
           }
           .table-row {
-            border-bottom: 1px solid #9D9087;
+            // border-bottom: 1px solid #9D9087;
             display: flex;
           }
           .table-cell {
             flex: 1;
-            padding: 5px;
-            font-size: 12px;
+            font-size: 8px;
             color: #441A05;
+            text-align: center;
+            border: 1px solid #9D9087; 
           }
           .roll-cell {
             flex: 0.5;
+            width: 40px;
           }
           .name-cell {
             flex: 1.5;
+            width: 120px;
+          }
+          .subject-cell {
+            flex: 0.8;
+            width: 60px;
+          }
+          .total-cell {
+            flex: 0.6;
+            width: 50px;
+          }
+          .grade-cell {
+            flex: 0.6;
+            width: 50px;
+          }
+          .rank-cell {
+            flex: 0.5;
+            width: 40px;
+          }
+          .avg-cell {
+            flex: 0.6;
+            width: 50px;
           }
           .fail-cell {
             background-color: #FFE6E6;
@@ -496,7 +532,7 @@ const ResultSheet = () => {
             display: flex;
             justify-content: space-between;
             margin-top: 10px;
-            font-size: 12px;
+            font-size: 8px;
           }
           .stats-box {
             border: 1px solid #9D9087;
@@ -505,8 +541,14 @@ const ResultSheet = () => {
             width: 48%;
             background-color: rgba(219, 158, 48, 0.1);
           }
+          .stats-title {
+            font-size: 10px;
+            font-weight: bold;
+            margin-bottom: 5px;
+          }
           ::-webkit-scrollbar {
             width: 8px;
+            height: 8px;
           }
           ::-webkit-scrollbar-track {
             background: transparent;
@@ -518,15 +560,25 @@ const ResultSheet = () => {
           ::-webkit-scrollbar-thumb:hover {
             background: rgba(10, 13, 21, 0.44);
           }
+          @media print {
+            .a4-landscape {
+              width: 297mm;
+              height: 210mm;
+              box-shadow: none;
+            }
+            .no-print {
+              display: none;
+            }
+          }
         `}
       </style>
 
       {/* Selection Form */}
-      <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+      <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl no-print">
         <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight mb-6">
           ফলাফল শীট তৈরি করুন
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <select
             value={selectedExam}
             onChange={(e) => setSelectedExam(e.target.value)}
@@ -549,8 +601,7 @@ const ResultSheet = () => {
             <option value="">ক্লাস নির্বাচন করুন</option>
             {classConfigs?.map((config) => (
               <option key={config.id} value={config.id}>
-                {config.class_name} - {config.section_name} ({config.shift_name}
-                )
+                {config.class_name} - {config.section_name} ({config.shift_name})
               </option>
             ))}
           </select>
@@ -567,20 +618,37 @@ const ResultSheet = () => {
               </option>
             ))}
           </select>
-          <button
-            onClick={handlePrint}
-            className="relative inline-flex items-center px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn hover:text-white btn-glow"
-            disabled={
-              !selectedExam ||
-              !selectedClassConfig ||
-              !selectedAcademicYear ||
-              gradesLoading
-            }
-            title="প্রিন্ট করুন"
-          >
-            <FaPrint className="w-5 h-5 mr-2" />
-            প্রিন্ট করুন
-          </button>
+          <div className="flex space-x-4">
+            <button
+              onClick={handlePrint}
+              className="relative inline-flex items-center px-4 py-2 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn hover:text-white btn-glow"
+              disabled={
+                !selectedExam ||
+                !selectedClassConfig ||
+                !selectedAcademicYear ||
+                gradesLoading
+              }
+              title="প্রিন্ট করুন"
+            >
+              <FaPrint className="w-4 h-4 mr-2" />
+              প্রিন্ট করুন
+            </button>
+            <button
+              onClick={handleDownload}
+              className="relative inline-flex items-center px-4 py-2 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn hover:text-white btn-glow"
+              disabled={
+                !selectedExam ||
+                !selectedClassConfig ||
+                !selectedAcademicYear ||
+                gradesLoading ||
+                resultData.length === 0
+              }
+              title="ডাউনলোড করুন"
+            >
+              <FaDownload className="w-4 h-4 mr-2" />
+              ডাউনলোড করুন
+            </button>
+          </div>
         </div>
       </div>
 
@@ -596,23 +664,23 @@ const ResultSheet = () => {
           <FaSpinner className="animate-spin text-4xl text-[#441a05]" />
         </div>
       ) : resultData.length > 0 ? (
-        <div className="a4-landscape p-6 space-y-6 bg-white text-gray-900 shadow-md border border-gray-300 print:p-4 print:text-sm relative">
+        <div className="a4-landscape p-5 space-y-4 bg-white text-gray-900 shadow-md border border-gray-300 print:p-4 print:text-sm relative">
           {/* Header */}
           <div className="text-center space-y-1">
-            <h2 className="text-3xl font-bold text-[#441a05]">
+            <h2 className="text-2xl font-bold text-[#441a05]">
               আল-মদিনা ইসলামিক মাদ্রাসা
             </h2>
-            <p className="text-sm text-[#441a05]">
+            <p className="text-[10px] text-[#441a05]">
               ঠিকানা: ১২৩, মাদ্রাসা রোড, ঢাকা, বাংলাদেশ
             </p>
-            <p className="text-sm text-[#441a05]">
+            <p className="text-[10px] text-[#441a05]">
               ফোন: +৮৮০ ১৭১২৩৪৫৬৭৮ | ইমেইল: info@almadina.edu.bd
             </p>
-            <h3 className="text-xl font-semibold text-[#441a05] mt-2">
+            <h3 className="text-lg font-semibold text-[#441a05] mt-2">
               ফলাফল শীট -{" "}
               {exams?.find((e) => e.id === Number(selectedExam))?.name}
             </h3>
-            <p className="text-sm text-[#441a05]">
+            <p className="text-[10px] text-[#441a05]">
               ক্লাস:{" "}
               {
                 classConfigs?.find((c) => c.id === Number(selectedClassConfig))
@@ -629,150 +697,86 @@ const ResultSheet = () => {
                   ?.shift_name
               }
             </p>
-            <p className="text-sm text-[#441a05]">
+            <p className="text-[10px] text-[#441a05]">
               শিক্ষাবর্ষ:{" "}
               {
-                academicYears?.find(
-                  (y) => y.id === Number(selectedAcademicYear)
-                )?.name
+                academicYears?.find((y) => y.id === Number(selectedAcademicYear))
+                  ?.name
               }
             </p>
           </div>
 
           {/* Grade Rule Table */}
-          <div className="overflow-x-auto w-fit mx-auto border border-gray-300 rounded bg-gray-50 absolute top-0 right-5">
-            <div className="flex bg-gray-200 font-semibold text-center text-[10px] divide-x divide-gray-300">
-              <div className="flex-2 px-2 w-16 text-[6px] text-nowrap">
-                গ্রেড নাম
-              </div>
-              <div className="flex-1 px-2 w-16 text-[6px] text-nowrap">
-                গ্রেড কোড
-              </div>
-              {/* <div className="flex-1 px-2 w-16 text-[6px] text-nowrap">GPA</div> */}
-              <div className="flex-1 px-2 w-16 text-[6px] text-nowrap">
-                সর্বনিম্ন
-              </div>
-              <div className="flex-1 px-2 w-16 text-[6px] text-nowrap">
-                সর্বোচ্চ
-              </div>
-              <div className="flex-2 px-2 w-16 text-[6px] text-nowrap">
-                মন্তব্য
-              </div>
+          <div className="table-container w-fit mx-auto absolute top-0 right-5">
+            <div className="table-header flex">
+              <div className=" px-2 w-24 border border-[#9D9087]">গ্রেড নাম</div>
+              {/* <div className="flex-1 px-2 w-16 border border-[#9D9087]">গ্রেড কোড</div> */}
+              {/* <div className="flex-1 px-2 w-16 border border-[#9D9087]">GPA</div> */}
+              <div className=" px-2 w-16 border border-[#9D9087]">সর্বনিম্ন</div>
+              <div className=" px-2 w-16 border border-[#9D9087]">সর্বোচ্চ</div>
+              <div className=" px-2 w-24 border border-[#9D9087]">মন্তব্য</div>
             </div>
             {grades.map((grade) => (
-              <div
-                key={grade.id}
-                className="flex text-[10px] text-center divide-x divide-gray-200"
-              >
-                <div className="flex-2 px-2 text-[6px] border text-nowrap w-16">
-                  {grade.grade}
-                </div>
-                <div className="flex-1 px-2 text-[6px] border text-nowrap w-16">
-                  {grade.grade_name_op}
-                </div>
-                {/* <div className="flex-1 px-2 text-[6px] border text-nowrap w-16">
-                  {grade.gpa}
-                </div> */}
-                <div className="flex-1 px-2 text-[6px] border text-nowrap w-16">
-                  {grade.min}
-                </div>
-                <div className="flex-1 px-2 text-[6px] border text-nowrap w-16">
-                  {grade.max}
-                </div>
-                <div className="flex-2 px-2 text-[6px] border text-nowrap w-16">
-                  {grade.remarks || "N/A"}
-                </div>
+              <div key={grade.id} className="flex">
+                <div className="text-[10px] text-center flex-2 w-24 border border-[#9D9087]">{grade.grade}</div>
+                {/* <div className="table-cell flex-1 w-16 border border-[#9D9087]">{grade.grade_name_op}</div> */}
+                {/* <div className="table-cell flex-1 w-16 border border-[#9D9087]">{grade.gpa}</div> */}
+                <div className="text-[10px] text-center flex-1 w-16 border border-[#9D9087]">{grade.min}</div>
+                <div className="text-[10px] text-center flex-1 w-16 border border-[#9D9087]">{grade.max}</div>
+                <div className="text-[10px] text-center flex-2 w-24 border border-[#9D9087]">{grade.remarks || "N/A"}</div>
               </div>
             ))}
           </div>
 
           {/* Result Table */}
-          <div className="overflow-x-auto border border-gray-300 rounded">
-            <div className="min-w-[900px] divide-y divide-gray-200">
+          <div className="table-container translate-y-20">
+            <div className="">
               {/* Table Header */}
-              <div className="flex bg-gray-100 text-xs font-semibold text-gray-700 text-center">
-                <div className="w-16 px-2 py-1 border-r">রোল</div>
-                <div className="flex-1 px-2 py-1 border-r">নাম</div>
+              <div className="table-header flex">
+                <div className="roll-cell border border-[#9D9087]">রোল</div>
+                <div className="name-cell border border-[#9D9087]">নাম</div>
                 {subjectConfigs?.map((config) => (
-                  <div key={config.id} className="w-20 px-2 py-1 border-r">
+                  <div key={config.id} className="subject-cell border border-[#9D9087] leading-4">
                     {config.subject_name}
                   </div>
                 ))}
-                <div className="w-20 px-2 py-1 border-r">মোট</div>
-                <div className="w-20 px-2 py-1 border-r">গ্রেড</div>
-                <div className="w-20 px-2 py-1">র্যাঙ্ক</div>
+                <div className="total-cell border border-[#9D9087]">মোট</div>
+                <div className="avg-cell border border-[#9D9087]">আবারেজ</div>
+                <div className="grade-cell border border-[#9D9087]">গ্রেড</div>
+                <div className="rank-cell border border-[#9D9087]">র্যাঙ্ক</div>
               </div>
 
               {/* Table Body */}
               {resultData.map((student) => (
-                <div
-                  key={student.studentId}
-                  className="flex text-xs text-center text-gray-800 hover:bg-gray-50 transition"
-                >
-                  <div className="w-16 px-2 py-1 border-r">
-                    {student.rollNo}
-                  </div>
-                  <div className="flex-1 px-2 py-1 border-r">
-                    {student.studentName}
-                  </div>
+                <div key={student.studentId} className="table-row overflow-hidden">
+                  <div className="table-cell roll-cell border">{student.rollNo}</div>
+                  <div className="table-cell name-cell border">{student.studentName}</div>
                   {student.subjects.map((sub, idx) => (
                     <div
                       key={idx}
-                      className={`w-20 px-2 py-1 border-r ${
+                      className={`table-cell text-ce subject-cell border ${
                         sub.isFailed
-                          ? "bg-red-100 text-red-600 font-semibold"
+                          ? "fail-cell"
                           : sub.isAbsent
-                          ? "bg-yellow-100 text-yellow-600 italic"
+                          ? "absent-cell"
                           : ""
                       }`}
                     >
-                      {sub.isAbsent
-                        ? "অনুপস্থিত"
-                        : `${sub.obtained}/${sub.maxMark}`}
+                      {sub.isAbsent ? "অনুপস্থিত" : `${sub.obtained}`}
                     </div>
                   ))}
-                  <div className="w-20 px-2 py-1 border-r font-semibold">
+                  <div className="table-cell total-cell border font-semibold">
                     {student.totalObtained}
                   </div>
-                  <div className="w-20 px-2 py-1 border-r font-bold">
+                  <div className="table-cell avg-cell border font-semibold">
+                    {student.averageMarks}
+                  </div>
+                  <div className="table-cell grade-cell border font-bold">
                     {student.grade}
                   </div>
-                  <div className="w-20 px-2 py-1">{student.rank}</div>
+                  <div className="table-cell rank-cell border">{student.rank}</div>
                 </div>
               ))}
-            </div>
-          </div>
-
-          {/* Statistics */}
-          <div className="flex flex-col md:flex-row gap-6 border border-gray-300 rounded p-4 bg-gray-50 text-[#441a05] text-sm">
-            {/* Grade Distribution */}
-            <div className="flex-1">
-              <h4 className="text-sm font-semibold mb-2">পরিসংখ্যান</h4>
-              <p>মোট শিক্ষার্থী: {statistics.totalStudents}</p>
-              <h5 className="text-xs font-medium mt-2">গ্রেড বিতরণ:</h5>
-              {Object.entries(statistics.gradeDistribution).map(
-                ([grade, count]) => (
-                  <p key={grade}>
-                    {grade}: {count} জন
-                  </p>
-                )
-              )}
-            </div>
-
-            {/* Failed Subjects */}
-            <div className="flex-1">
-              <h4 className="text-sm font-semibold mb-2">ফেল করা বিষয়</h4>
-              {Object.entries(statistics.failedSubjects).length > 0 ? (
-                Object.entries(statistics.failedSubjects).map(
-                  ([subject, count]) => (
-                    <p key={subject}>
-                      {subject}: {count} জন
-                    </p>
-                  )
-                )
-              ) : (
-                <p>কোনো বিষয়ে ফেল নেই</p>
-              )}
             </div>
           </div>
         </div>
@@ -784,7 +788,7 @@ const ResultSheet = () => {
 
       {/* PDF Preview */}
       {showPDF && resultData.length > 0 && (
-        <div className="animate-fadeIn mt-8">
+        <div className="animate-fadeIn mt-8 no-print">
           <PDFViewer style={{ width: "100%", height: "600px" }}>
             <ResultPDF />
           </PDFViewer>
