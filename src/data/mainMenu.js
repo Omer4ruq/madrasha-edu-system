@@ -113,6 +113,11 @@ const mainMenu = [
             title: "ইভেন্ট তৈরি",
             link: "/talimat/settings/event-type",
           },
+          {
+            id: "05/01/07",
+            title: "রেজাল্ট কনফিগারেশন",
+            link: "/talimat/settings/result-config",
+          },
         ],
       },
       {
@@ -151,7 +156,7 @@ const mainMenu = [
       },
       {
         id: "05/06",
-        title: "নম্বরপ্রাপ্ত",
+        title: "প্রাপ্তনম্বর",
         link: "/talimat/marks-given",
         children: [
           {

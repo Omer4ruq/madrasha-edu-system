@@ -4,6 +4,9 @@ import { IoAddCircleOutline } from 'react-icons/io5';
 import toast, { Toaster } from 'react-hot-toast';
 import { useCreateInstituteMutation, useUpdateInstituteMutation } from '../../redux/features/api/institute/instituteApi';
 import { useGetInstituteTypesQuery } from '../../redux/features/api/institute/instituteTypeApi';
+import { useSelector } from 'react-redux'; // Import useSelector
+import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi'; // Import permission hook
+
 
 // Custom CSS for animations and styling
 const customStyles = `
@@ -79,7 +82,18 @@ const customStyles = `
 `;
 
 const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
+  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
   const { data: instituteTypes, isLoading: isTypesLoading, error: typesError } = useGetInstituteTypesQuery();
+
+  // Permissions hook
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Permission checks
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_institute') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_institute') || false;
+
 
   const [formData, setFormData] = useState({
     institute_id: institute?.institute_id || '',
@@ -129,6 +143,16 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Determine required permission based on whether we are creating or updating
+    const requiredPermission = institute ? hasChangePermission : hasAddPermission;
+    const actionType = institute ? 'হালনাগাদ' : 'তৈরি';
+
+    if (!requiredPermission) {
+      toast.error(`প্রতিষ্ঠান ${actionType} করার অনুমতি নেই।`);
+      return;
+    }
+
     const payload = {
       ...formData,
       institute_type_id: parseInt(formData.institute_type_id) || null,
@@ -165,6 +189,8 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
       toast.error(`প্রতিষ্ঠান সংরক্ষণ ব্যর্থ: ${errorMessage}`);
     }
   };
+
+  const isFormDisabled = permissionsLoading || isTypesLoading || typesError || (institute && !hasChangePermission) || (!institute && !hasAddPermission);
 
   return (
     <div className="py-10 w-full min-h-screen">
@@ -216,6 +242,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="প্রতিষ্ঠানের নাম লিখুন"
                     aria-label="প্রতিষ্ঠানের নাম"
+                    disabled={isFormDisabled}
                   />
                 </div>
                 <div className="relative input-icon">
@@ -233,6 +260,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="প্রতিষ্ঠান আইডি লিখুন"
                     aria-label="প্রতিষ্ঠান আইডি"
+                    disabled={isFormDisabled}
                   />
                 </div>
                 <div className="relative input-icon">
@@ -250,6 +278,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="প্রধান শিক্ষকের নাম লিখুন"
                     aria-label="প্রধান শিক্ষকের নাম"
+                    disabled={isFormDisabled}
                   />
                 </div>
                 <div className="relative input-icon">
@@ -267,6 +296,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="মোবাইল নম্বর লিখুন"
                     aria-label="প্রধান শিক্ষকের মোবাইল"
+                    disabled={isFormDisabled}
                   />
                 </div>
                 <div className="relative input-icon">
@@ -283,6 +313,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="ঠিকানা লিখুন"
                     aria-label="প্রতিষ্ঠানের ঠিকানা"
+                    disabled={isFormDisabled}
                   />
                 </div>
               </div>
@@ -314,6 +345,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="ইমেইল ঠিকানা লিখুন"
                     aria-label="প্রতিষ্ঠানের ইমেইল"
+                    disabled={isFormDisabled}
                   />
                 </div>
                 <div className="relative input-icon">
@@ -330,6 +362,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="ইআইআইএন নম্বর লিখুন"
                     aria-label="ইআইআইএন নম্বর"
+                    disabled={isFormDisabled}
                   />
                 </div>
                 <div className="relative input-icon">
@@ -344,6 +377,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     onChange={handleChange}
                     className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     aria-label="লিঙ্গের ধরন"
+                    disabled={isFormDisabled}
                   >
                     <option value="Combined">মিশ্র</option>
                     <option value="Male">পুরুষ</option>
@@ -361,8 +395,9 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     value={formData.institute_type_id}
                     onChange={handleChange}
                     required
-                    disabled={isTypesLoading || typesError}
+                    disabled={isFormDisabled || isTypesLoading || typesError}
                     className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
+                    placeholder="প্রতিষ্ঠানের ধরন নির্বাচন করুন"
                     aria-label="প্রতিষ্ঠানের ধরন"
                   >
                     <option value="">প্রতিষ্ঠানের ধরন নির্বাচন করুন</option>
@@ -402,6 +437,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="ওয়েবসাইট ইউআরএল লিখুন"
                     aria-label="ওয়েবসাইট"
+                    disabled={isFormDisabled}
                   />
                 </div>
                 <div className="relative input-icon">
@@ -418,6 +454,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="ব্যবস্থাপনা ওয়েবসাইট ইউআরএল লিখুন"
                     aria-label="ব্যবস্থাপনা ওয়েবসাইট"
+                    disabled={isFormDisabled}
                   />
                 </div>
                 <div className="relative input-icon">
@@ -434,6 +471,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="ফেসবুক ইউআরএল লিখুন"
                     aria-label="ফেসবুক"
+                    disabled={isFormDisabled}
                   />
                 </div>
                 <div className="relative input-icon">
@@ -450,6 +488,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="ইউটিউব ইউআরএল লিখুন"
                     aria-label="ইউটিউব"
+                    disabled={isFormDisabled}
                   />
                 </div>
               </div>
@@ -481,6 +520,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="ম্যানেজারের নাম লিখুন"
                     aria-label="ইনচার্জ ম্যানেজার"
+                    disabled={isFormDisabled}
                   />
                 </div>
                 <div className="relative input-icon">
@@ -497,6 +537,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="ম্যানেজারের ইমেইল লিখুন"
                     aria-label="ম্যানেজারের ইমেইল"
+                    disabled={isFormDisabled}
                   />
                 </div>
                 <div className="relative input-icon">
@@ -513,6 +554,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="ম্যানেজারের মোবাইল লিখুন"
                     aria-label="ম্যানেজারের মোবাইল"
+                    disabled={isFormDisabled}
                   />
                 </div>
               </div>
@@ -544,6 +586,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="দৃষ্টিভঙ্গি শিরোনাম লিখুন"
                     aria-label="দৃষ্টিভঙ্গি শিরোনাম"
+                    disabled={isFormDisabled}
                   />
                 </div>
                 <div className="relative input-icon">
@@ -560,6 +603,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="স্বাক্ষর লিখুন"
                     aria-label="স্বাক্ষর"
+                    disabled={isFormDisabled}
                   />
                 </div>
                 <div className="relative input-icon">
@@ -576,6 +620,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="বোর্ড আইডি লিখুন"
                     aria-label="শিক্ষা বোর্ড আইডি"
+                    disabled={isFormDisabled}
                   />
                 </div>
                 <div className="relative input-icon">
@@ -592,6 +637,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="জেলা আইডি লিখুন"
                     aria-label="শিক্ষা জেলা আইডি"
+                    disabled={isFormDisabled}
                   />
                 </div>
                 <div className="relative input-icon">
@@ -608,6 +654,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="বিভাগ আইডি লিখুন"
                     aria-label="শিক্ষা বিভাগ আইডি"
+                    disabled={isFormDisabled}
                   />
                 </div>
                 <div className="relative input-icon">
@@ -624,6 +671,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="থানা আইডি লিখুন"
                     aria-label="শিক্ষা থানা আইডি"
+                    disabled={isFormDisabled}
                   />
                 </div>
               </div>
@@ -644,6 +692,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                 onChange={handleChange}
                 className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                 aria-label="স্থিতি"
+                disabled={isFormDisabled}
               >
                 <option value="Active">সক্রিয়</option>
                 <option value="Inactive">নিষ্ক্রিয়</option>
@@ -663,8 +712,8 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
             </button>
             <button
               type="submit"
-              disabled={isCreating || isUpdating || isTypesLoading || typesError}
-              className={`btn btn-ripple inline-flex items-center gap-2 px-10 py-3.5 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-200 animate-scaleIn ${isCreating || isUpdating || isTypesLoading || typesError ? 'opacity-50 cursor-not-allowed' : 'btn-glow'}`}
+              disabled={isFormDisabled || isCreating || isUpdating}
+              className={`btn btn-ripple inline-flex items-center gap-2 px-10 py-3.5 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-200 animate-scaleIn ${isFormDisabled || isCreating || isUpdating ? 'opacity-50 cursor-not-allowed' : 'btn-glow'}`}
               title={institute ? 'প্রতিষ্ঠান হালনাগাদ করুন' : 'প্রতিষ্ঠান তৈরি করুন'}
             >
               {isCreating || isUpdating ? (
