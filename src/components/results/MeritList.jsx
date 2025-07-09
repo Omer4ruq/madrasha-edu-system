@@ -100,7 +100,7 @@ const MeritList = () => {
         .sort((a, b) => b.totalObtained - a.totalObtained)
         .map((res, index) => ({
           ...res,
-          rankDisplay: index === 0 ? '১ম' : index === 1 ? '২য়' : index === 2 ? '৩য়' : `${index + 1}`,
+          rankDisplay: `${index + 1}`,
         }));
 
       setMeritData(rankedMerit);
