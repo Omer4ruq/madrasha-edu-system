@@ -111,7 +111,7 @@ const MarkSheet = () => {
         .map((res, index) => ({
           ...res,
           rank: index + 1,
-          rankDisplay: index === 0 ? '১ম' : index === 1 ? '২য়' : index === 2 ? '৩য়' : `${index + 1}`,
+          rankDisplay: `${index + 1}`,
         }));
 
       setResultData(rankedResult);
