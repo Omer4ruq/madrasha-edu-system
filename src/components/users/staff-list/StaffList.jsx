@@ -7,8 +7,12 @@ import {
   useGetStaffListApIQuery,
   useUpdateStaffListApIMutation,
 } from '../../../redux/features/api/staff/staffListApi';
+import { useSelector } from 'react-redux'; // Import useSelector
+import { useGetGroupPermissionsQuery } from '../../../redux/features/api/permissionRole/groupsApi'; // Import permission hook
+
 
 const StaffList = () => {
+  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
     name: '',
@@ -30,6 +34,17 @@ const StaffList = () => {
   const [modalData, setModalData] = useState(null);
   const pageSize = 3;
 
+  // Permissions hook
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Permission checks
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_staffprofile') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_staffprofile') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_staffprofile') || false;
+
+
   // Fetch staff data
   const {
     data: staffData,
@@ -40,7 +55,7 @@ const StaffList = () => {
     page,
     page_size: pageSize,
     ...filters,
-  });
+  }, { skip: !hasViewPermission }); // Skip query if no view permission
 
   const [updateStaff, { isLoading: isUpdating, error: updateError }] =
     useUpdateStaffListApIMutation();
@@ -98,6 +113,10 @@ const StaffList = () => {
 
   // Handle edit button click
   const handleEditClick = (staffMember) => {
+    if (!hasChangePermission) {
+      toast.error('স্টাফের তথ্য সম্পাদনা করার অনুমতি নেই।');
+      return;
+    }
     setEditStaffId(staffMember.id);
     setEditStaffData({
       name: staffMember.name,
@@ -111,6 +130,10 @@ const StaffList = () => {
   // Handle update form submission
   const handleUpdate = async (e) => {
     e.preventDefault();
+    if (!hasChangePermission) {
+      toast.error('স্টাফের তথ্য আপডেট করার অনুমতি নেই।');
+      return;
+    }
     if (!editStaffData.name.trim()) {
       toast.error('অনুগ্রহ করে স্টাফের নাম লিখুন');
       return;
@@ -134,6 +157,10 @@ const StaffList = () => {
 
   // Handle delete
   const handleDelete = (id) => {
+    if (!hasDeletePermission) {
+      toast.error('স্টাফ মুছে ফেলার অনুমতি নেই।');
+      return;
+    }
     setModalAction('delete');
     setModalData({ id });
     setIsModalOpen(true);
@@ -143,6 +170,10 @@ const StaffList = () => {
   const confirmAction = async () => {
     try {
       if (modalAction === 'delete') {
+        if (!hasDeletePermission) { // Double check for security
+          toast.error('স্টাফ মুছে ফেলার অনুমতি নেই।');
+          return;
+        }
         await deleteStaff(modalData.id).unwrap();
         toast.success('স্টাফ সফলভাবে মুছে ফেলা হয়েছে!');
       }
@@ -155,6 +186,27 @@ const StaffList = () => {
       setModalData(null);
     }
   };
+
+  if (isLoading || permissionsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen px-4">
+        <div className="flex items-center gap-4 p-6 bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 animate-fadeIn">
+          <FaSpinner className="animate-spin text-3xl text-[#DB9E30]" />
+          <span className="text-lg font-medium text-[#441a05]">
+            লোড হচ্ছে...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasViewPermission) {
+    return (
+      <div className="p-4 text-red-400 animate-fadeIn text-center text-lg font-semibold">
+        এই পৃষ্ঠাটি দেখার অনুমতি নেই।
+      </div>
+    );
+  }
 
   return (
     <div className="py-8 w-full">
@@ -210,27 +262,11 @@ const StaffList = () => {
               className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
               placeholder="ফোন নম্বর"
             />
-            {/* <input
-              type="text"
-              name="email"
-              value={filters.email}
-              onChange={handleFilterChange}
-              className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
-              placeholder="ইমেইল"
-            />
-            <input
-              type="text"
-              name="designation"
-              value={filters.designation}
-              onChange={handleFilterChange}
-              className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
-              placeholder="পদবী"
-            /> */}
           </div>
         </div>
 
         {/* Edit Staff Form */}
-        {editStaffId && (
+        {editStaffId && hasChangePermission && ( // Only show if has change permission
           <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-scaleIn shadow-xl">
             <div className="flex items-center space-x-4 mb-6">
               <FaEdit className="text-3xl text-[#441a05]" />
@@ -251,7 +287,7 @@ const StaffList = () => {
                 }
                 className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                 placeholder="নাম"
-                disabled={isUpdating}
+                disabled={isUpdating || !hasChangePermission} // Disable if no change permission
               />
               <input
                 type="text"
@@ -262,7 +298,7 @@ const StaffList = () => {
                 }
                 className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                 placeholder="ইউজার আইডি"
-                disabled={isUpdating}
+                disabled={isUpdating || !hasChangePermission} // Disable if no change permission
               />
               <input
                 type="text"
@@ -273,7 +309,7 @@ const StaffList = () => {
                 }
                 className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                 placeholder="ফোন নম্বর"
-                disabled={isUpdating}
+                disabled={isUpdating || !hasChangePermission} // Disable if no change permission
               />
               <input
                 type="email"
@@ -284,7 +320,7 @@ const StaffList = () => {
                 }
                 className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                 placeholder="ইমেইল"
-                disabled={isUpdating}
+                disabled={isUpdating || !hasChangePermission} // Disable if no change permission
               />
               <input
                 type="text"
@@ -295,13 +331,13 @@ const StaffList = () => {
                 }
                 className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                 placeholder="পদবী"
-                disabled={isUpdating}
+                disabled={isUpdating || !hasChangePermission} // Disable if no change permission
               />
               <button
                 type="submit"
-                disabled={isUpdating}
+                disabled={isUpdating || !hasChangePermission} // Disable if no change permission
                 className={`flex items-center justify-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                  isUpdating
+                  isUpdating || !hasChangePermission
                     ? 'cursor-not-allowed opacity-70'
                     : 'hover:text-white hover:shadow-md'
                 }`}
@@ -377,9 +413,11 @@ const StaffList = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                     পদবী
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    কার্যক্রম
-                  </th>
+                  {(hasChangePermission || hasDeletePermission) && ( // Only show actions column if user has relevant permissions
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      কার্যক্রম
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/20">
@@ -407,22 +445,28 @@ const StaffList = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
                       {staffMember.designation || '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button
-                        onClick={() => handleEditClick(staffMember)}
-                        className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
-                        aria-label={`সম্পাদনা ${staffMember.name}`}
-                      >
-                        <FaEdit className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(staffMember.id)}
-                        className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
-                        aria-label={`মুছুন ${staffMember.name}`}
-                      >
-                        <FaTrash className="w-5 h-5" />
-                      </button>
-                    </td>
+                    {(hasChangePermission || hasDeletePermission) && ( // Conditionally render action buttons
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {hasChangePermission && (
+                          <button
+                            onClick={() => handleEditClick(staffMember)}
+                            className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
+                            aria-label={`সম্পাদনা ${staffMember.name}`}
+                          >
+                            <FaEdit className="w-5 h-5" />
+                          </button>
+                        )}
+                        {hasDeletePermission && (
+                          <button
+                            onClick={() => handleDelete(staffMember.id)}
+                            className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                            aria-label={`মুছুন ${staffMember.name}`}
+                          >
+                            <FaTrash className="w-5 h-5" />
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -482,7 +526,7 @@ const StaffList = () => {
       </div>
 
       {/* Confirmation Modal */}
-      {isModalOpen && (
+      {isModalOpen && hasDeletePermission && ( // Only show if has delete permission
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
           <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
             <h3 className="text-lg font-semibold text-[#441a05] mb-4">

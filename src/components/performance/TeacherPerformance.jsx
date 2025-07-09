@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { useGetPerformanceApiQuery } from '../../redux/features/api/performance/performanceApi';
-
 import Select from 'react-select';
 import { FaSpinner } from 'react-icons/fa';
 import toast, { Toaster } from 'react-hot-toast';
@@ -9,11 +8,16 @@ import { useCreateTeacherPerformanceApiMutation, useGetTeacherPerformanceApiQuer
 import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
 import { IoAddCircle } from 'react-icons/io5';
 import selectStyles from '../../utilitis/selectStyles';
+import { useSelector } from 'react-redux';
+import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi';
 
 const TeacherPerformance = () => {
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState(null);
+
+  // Get group_id from auth state
+  const { group_id } = useSelector((state) => state.auth);
 
   // API Hooks
   const { data: teachers = [], isLoading: isTeachersLoading, error: teachersError } = useGetRoleStaffProfileApiQuery();
@@ -22,6 +26,13 @@ const TeacherPerformance = () => {
   const { data: academicYears = [], isLoading: isAcademicYearsLoading, error: academicYearsError } = useGetAcademicYearApiQuery();
   const [createTeacherPerformance, { isLoading: isCreating }] = useCreateTeacherPerformanceApiMutation();
   const [patchTeacherPerformance, { isLoading: isUpdating }] = useUpdateTeacherPerformanceApiMutation();
+
+  // Permission Logic
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, { skip: !group_id });
+   const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_teacher_performance') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_teacher_performance') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_teacher_performance') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_teacher_performance') || false;
 
   // Month options
   const monthOptions = [
@@ -90,6 +101,12 @@ const TeacherPerformance = () => {
 
   // Handle checkbox change
   const handleCheckboxChange = async (metricName) => {
+    const actionPermission = performanceData[metricName] ? hasChangePermission : hasAddPermission;
+    if (!actionPermission) {
+      toast.error('আপনার এই কাজটি করার অনুমতি নেই।');
+      return;
+    }
+
     const metricId = performanceMetrics.find((m) => m.name === metricName)?.id;
     if (!metricId || !selectedTeacher || !selectedMonth || !selectedAcademicYear) {
       toast.error('শিক্ষক, মাস এবং শিক্ষাবর্ষ নির্বাচন করুন এবং মেট্রিক্স লোড হয়েছে তা নিশ্চিত করুন।');
@@ -113,9 +130,17 @@ const TeacherPerformance = () => {
 
       if (existingPerf) {
         // Update existing performance (PATCH)
+        if (!hasChangePermission) {
+          toast.error('আপডেট করার অনুমতি আপনার নেই।', { id: toastId });
+          return;
+        }
         await patchTeacherPerformance({ id: existingPerf.id, ...payload }).unwrap();
       } else {
         // Create new performance (POST)
+        if (!hasAddPermission) {
+          toast.error('তৈরি করার অনুমতি আপনার নেই।', { id: toastId });
+          return;
+        }
         await createTeacherPerformance(payload).unwrap();
       }
 
@@ -125,7 +150,14 @@ const TeacherPerformance = () => {
     }
   };
 
- 
+  // Permission-based Rendering
+  if (permissionsLoading) {
+    return <div className="p-4 text-center">অনুমতি লোড হচ্ছে...</div>;
+  }
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-center text-red-500">এই পৃষ্ঠাটি দেখার অনুমতি আপনার নেই।</div>;
+  }
 
   // Render performance table
   const renderPerformanceTable = () => {
@@ -172,7 +204,7 @@ const TeacherPerformance = () => {
                       checked={performanceData[metric.name] || false}
                       onChange={() => handleCheckboxChange(metric.name)}
                       className="hidden"
-                      disabled={isCreating || isUpdating}
+                      disabled={isCreating || isUpdating || (!performanceData[metric.name] ? !hasAddPermission : !hasChangePermission)}
                     />
                     <span
                       className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${
@@ -206,6 +238,7 @@ const TeacherPerformance = () => {
 
   return (
     <div className="py-8 w-full relative mx-auto">
+      <Toaster position="top-right" />
       <style>
         {`
           @keyframes fadeIn {
@@ -254,93 +287,95 @@ const TeacherPerformance = () => {
         `}
       </style>
 
-      <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-         <div className="flex items-center space-x-2 mb-6">
-          <IoAddCircle className="text-3xl text-[#441a05]" />
-          <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">শিক্ষক কর্মক্ষমতা মূল্যায়ন</h3>
+      {(hasAddPermission || hasChangePermission) && (
+        <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+          <div className="flex items-center space-x-2 mb-6">
+            <IoAddCircle className="text-3xl text-[#441a05]" />
+            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">শিক্ষক কর্মক্ষমতা মূল্যায়ন</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <label className="flex items-center space-x-4 animate-fadeIn">
+              <span className="text-[#441a05] sm:text-base text-xs font-medium text-nowrap">মাস নির্বাচন:</span>
+              <div className="w-full">
+                <Select
+                  options={monthOptions}
+                  value={selectedMonth}
+                  onChange={handleMonthSelect}
+                  placeholder="মাস নির্বাচন"
+                  isLoading={false}
+                  isDisabled={isCreating || isUpdating}
+                  styles={selectStyles}
+                  className="animate-scaleIn"
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                  isClearable
+                  isSearchable
+                />
+              </div>
+            </label>
+            <label className="flex items-center space-x-4 animate-fadeIn">
+              <span className="text-[#441a05] sm:text-base text-xs font-medium text-nowrap">শিক্ষাবর্ষ নির্বাচন:</span>
+              <div className="w-full">
+                <Select
+                  options={academicYearOptions}
+                  value={selectedAcademicYear}
+                  onChange={handleAcademicYearSelect}
+                  placeholder="শিক্ষাবর্ষ নির্বাচন"
+                  isLoading={isAcademicYearsLoading}
+                  isDisabled={isAcademicYearsLoading || isCreating || isUpdating}
+                  styles={selectStyles}
+                  className="animate-scaleIn"
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                  isClearable
+                  isSearchable
+                />
+              </div>
+            </label>
+            <label className="flex items-center space-x-4 animate-fadeIn">
+              <span className="text-[#441a05] sm:text-base text-xs font-medium text-nowrap">শিক্ষক খুঁজুন:</span>
+              <div className="w-full">
+                <Select
+                  options={teacherOptions}
+                  value={selectedTeacher}
+                  onChange={handleTeacherSelect}
+                  placeholder="শিক্ষকের নাম"
+                  isLoading={isTeachersLoading}
+                  isDisabled={isTeachersLoading || isCreating || isUpdating}
+                  styles={selectStyles}
+                  className="animate-scaleIn"
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                  isClearable
+                  isSearchable
+                />
+              </div>
+            </label>
+          </div>
+          {isTeachersLoading && (
+            <div className="flex items-center space-x-2 text-[#441a05]/70 animate-fadeIn mt-4">
+              <FaSpinner className="animate-spin text-lg" />
+              <span>শিক্ষক লোড হচ্ছে...</span>
+            </div>
+          )}
+          {isAcademicYearsLoading && (
+            <div className="flex items-center space-x-2 text-[#441a05]/70 animate-fadeIn mt-4">
+              <FaSpinner className="animate-spin text-lg" />
+              <span>শিক্ষাবর্ষ লোড হচ্ছে...</span>
+            </div>
+          )}
+          {teachersError && (
+            <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn" style={{ animationDelay: '0.4s' }}>
+              শিক্ষক ত্রুটি: {teachersError.status || 'অজানা'} - {JSON.stringify(teachersError.data || {})}
+            </div>
+          )}
+          {academicYearsError && (
+            <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn" style={{ animationDelay: '0.4s' }}>
+              শিক্ষাবর্ষ ত্রুটি: {academicYearsError.status || 'অজানা'} - {JSON.stringify(academicYearsError.data || {})}
+            </div>
+          )}
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <label className="flex items-center space-x-4 animate-fadeIn">
-            <span className="text-[#441a05] sm:text-base text-xs font-medium text-nowrap">মাস নির্বাচন:</span>
-            <div className="w-full">
-              <Select
-                options={monthOptions}
-                value={selectedMonth}
-                onChange={handleMonthSelect}
-                placeholder="মাস নির্বাচন"
-                isLoading={false}
-                isDisabled={isCreating || isUpdating}
-                styles={selectStyles}
-                className="animate-scaleIn"
-                menuPortalTarget={document.body}
-                menuPosition="fixed"
-                isClearable
-                isSearchable
-              />
-            </div>
-          </label>
-          <label className="flex items-center space-x-4 animate-fadeIn">
-            <span className="text-[#441a05] sm:text-base text-xs font-medium text-nowrap">শিক্ষাবর্ষ নির্বাচন:</span>
-            <div className="w-full">
-              <Select
-                options={academicYearOptions}
-                value={selectedAcademicYear}
-                onChange={handleAcademicYearSelect}
-                placeholder="শিক্ষাবর্ষ নির্বাচন"
-                isLoading={isAcademicYearsLoading}
-                isDisabled={isAcademicYearsLoading || isCreating || isUpdating}
-                styles={selectStyles}
-                className="animate-scaleIn"
-                menuPortalTarget={document.body}
-                menuPosition="fixed"
-                isClearable
-                isSearchable
-              />
-            </div>
-          </label>
-          <label className="flex items-center space-x-4 animate-fadeIn">
-            <span className="text-[#441a05] sm:text-base text-xs font-medium text-nowrap">শিক্ষক খুঁজুন:</span>
-            <div className="w-full">
-              <Select
-                options={teacherOptions}
-                value={selectedTeacher}
-                onChange={handleTeacherSelect}
-                placeholder="শিক্ষকের নাম"
-                isLoading={isTeachersLoading}
-                isDisabled={isTeachersLoading || isCreating || isUpdating}
-                styles={selectStyles}
-                className="animate-scaleIn"
-                menuPortalTarget={document.body}
-                menuPosition="fixed"
-                isClearable
-                isSearchable
-              />
-            </div>
-          </label>
-        </div>
-        {isTeachersLoading && (
-          <div className="flex items-center space-x-2 text-[#441a05]/70 animate-fadeIn mt-4">
-            <FaSpinner className="animate-spin text-lg" />
-            <span>শিক্ষক লোড হচ্ছে...</span>
-          </div>
-        )}
-        {isAcademicYearsLoading && (
-          <div className="flex items-center space-x-2 text-[#441a05]/70 animate-fadeIn mt-4">
-            <FaSpinner className="animate-spin text-lg" />
-            <span>শিক্ষাবর্ষ লোড হচ্ছে...</span>
-          </div>
-        )}
-        {teachersError && (
-          <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn" style={{ animationDelay: '0.4s' }}>
-            শিক্ষক ত্রুটি: {teachersError.status || 'অজানা'} - {JSON.stringify(teachersError.data || {})}
-          </div>
-        )}
-        {academicYearsError && (
-          <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn" style={{ animationDelay: '0.4s' }}>
-            শিক্ষাবর্ষ ত্রুটি: {academicYearsError.status || 'অজানা'} - {JSON.stringify(academicYearsError.data || {})}
-          </div>
-        )}
-      </div>
+      )}
 
       <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
         <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">কর্মক্ষমতা মেট্রিক্স</h3>

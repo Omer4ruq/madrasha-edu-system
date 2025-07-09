@@ -17,10 +17,10 @@ const CleanType = () => {
 
   // --- Start of Permission Logic ---
   const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, { skip: !group_id });
-  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_clean_report') || false;
-  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_clean_report') || false;
-  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_clean_report') || false;
-  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_clean_report') || false;
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_clean_report_type') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_clean_report_type') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_clean_report_type') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_clean_report_type') || false;
   // --- End of Permission Logic ---
 
   // RTK Query hooks

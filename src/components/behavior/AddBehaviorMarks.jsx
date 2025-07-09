@@ -231,28 +231,42 @@ const AddBehaviorMarks = () => {
   }, [students, activeBehaviorTypes, selectedClass, selectedExam]);
 
   // Update with existing reports
-  useEffect(() => {
-    if (existingReports && students && activeBehaviorTypes.length > 0 && selectedExam && selectedClass && Object.keys(behaviorReports).length > 0) {
-      const updatedReports = { ...behaviorReports };
-      const updatedSavedMarks = { ...savedMarks };
+ useEffect(() => {
+  if (
+    existingReports &&
+    students &&
+    activeBehaviorTypes.length > 0 &&
+    selectedExam &&
+    selectedClass &&
+    Object.keys(behaviorReports).length > 0
+  ) {
+    const updatedReports = { ...behaviorReports };
+    const updatedSavedMarks = { ...savedMarks };
 
-      existingReports.forEach(report => {
-        if (report.exam_name_id === parseInt(selectedExam)) {
-          report.behavior_marks.forEach(mark => {
-            if (students.some(student => student.id === mark.student_id)) {
-              if (updatedReports[mark.student_id] && updatedReports[mark.student_id].hasOwnProperty(mark.behavior_type)) {
+    existingReports.forEach(report => {
+      if (report.exam_name_id === parseInt(selectedExam)) {
+        report.behavior_marks.forEach(mark => {
+          if (students.some(student => student.id === mark.student_id)) {
+            if (
+              updatedReports[mark.student_id] &&
+              updatedReports[mark.student_id].hasOwnProperty(mark.behavior_type)
+            ) {
+              // Only prefill if the current field is empty or unchanged
+              const currentValue = updatedReports[mark.student_id][mark.behavior_type];
+              if (currentValue === '' || currentValue === undefined || savedMarks[mark.student_id]?.[mark.behavior_type]) {
                 updatedReports[mark.student_id][mark.behavior_type] = mark.mark.toString();
                 updatedSavedMarks[mark.student_id][mark.behavior_type] = true;
               }
             }
-          });
-        }
-      });
-      
-      setBehaviorReports(updatedReports);
-      setSavedMarks(updatedSavedMarks);
-    }
-  }, [existingReports, students, activeBehaviorTypes, selectedExam, selectedClass]);
+          }
+        });
+      }
+    });
+
+    setBehaviorReports(updatedReports);
+    setSavedMarks(updatedSavedMarks);
+  }
+}, [existingReports, students, activeBehaviorTypes, selectedExam, selectedClass]);
 
   // Handle class change
   const handleClassChange = (e) => {
@@ -277,112 +291,90 @@ const AddBehaviorMarks = () => {
   };
 
   // Handle mark input change
-  const handleMarkChange = (studentId, behaviorTypeId, value) => {
-    const behaviorType = activeBehaviorTypes.find(bt => bt.id === behaviorTypeId);
-    const mark = parseFloat(value);
-    const isInvalid = !isNaN(mark) && (mark < 0 || mark > behaviorType.obtain_mark);
+const handleMarkChange = (studentId, behaviorTypeId, value) => {
+  const behaviorType = activeBehaviorTypes.find(bt => bt.id === behaviorTypeId);
+  const numericValue = parseFloat(value);
+  const isInvalid = value !== '' && (!/^\d+(\.\d{0,2})?$/.test(value) || numericValue < 0 || numericValue > behaviorType.obtain_mark);
 
-    setInvalidMarks(prev => ({
-      ...prev,
-      [`${studentId}-${behaviorTypeId}`]: isInvalid ? `মার্কস ০ থেকে ${behaviorType.obtain_mark} এর মধ্যে হতে হবে` : ''
-    }));
+  setInvalidMarks(prev => ({
+    ...prev,
+    [`${studentId}-${behaviorTypeId}`]: isInvalid
+      ? `মার্কস ০ থেকে ${behaviorType.obtain_mark} এর মধ্যে হতে হবে`
+      : '',
+  }));
 
-    setBehaviorReports(prev => ({
-      ...prev,
-      [studentId]: {
-        ...prev[studentId],
-        [behaviorTypeId]: value
-      }
-    }));
+  setBehaviorReports(prev => ({
+    ...prev,
+    [studentId]: {
+      ...prev[studentId],
+      [behaviorTypeId]: value,  // ✅ keep as string, even if ''
+    },
+  }));
 
+  setSavedMarks(prev => ({
+    ...prev,
+    [studentId]: {
+      ...prev[studentId],
+      [behaviorTypeId]: false,
+    },
+  }));
+};
+
+  // Handle mark submission
+const handleMarkSubmit = async (studentId, behaviorTypeId, value, nextInputId) => {
+  if (value === '') return; // ⛔ don’t submit if empty
+
+  const behaviorType = activeBehaviorTypes.find(bt => bt.id === behaviorTypeId);
+  const mark = parseFloat(value);
+
+  if (isNaN(mark) || mark < 0 || mark > behaviorType.obtain_mark) {
+    toast.error(`মার্কস ০ থেকে ${behaviorType.obtain_mark} এর মধ্যে হতে হবে।`);
+    return;
+  }
+
+  const behaviorMarks = activeBehaviorTypes.map(bt => {
+    const val = behaviorReports[studentId]?.[bt.id];
+    const parsed = parseFloat(val);
+    return {
+      student_id: parseInt(studentId),
+      behavior_type: bt.id,
+      mark: !isNaN(parsed) ? parsed : 0,
+    };
+  });
+
+  const reportData = {
+    exam_name_id: parseInt(selectedExam),
+    academic_year: parseInt(selectedYear),
+    student_id: parseInt(studentId),
+    behavior_marks: behaviorMarks,
+  };
+
+  try {
+    await createBehaviorReport(reportData).unwrap();
     setSavedMarks(prev => ({
       ...prev,
       [studentId]: {
         ...prev[studentId],
-        [behaviorTypeId]: false
-      }
+        [behaviorTypeId]: true,
+      },
     }));
-  };
+    setInvalidMarks(prev => ({
+      ...prev,
+      [`${studentId}-${behaviorTypeId}`]: '',
+    }));
 
-  // Handle mark submission
-  const handleMarkSubmit = async (studentId, behaviorTypeId, value, nextInputId) => {
-    const behaviorType = activeBehaviorTypes.find(bt => bt.id === behaviorTypeId);
-    const mark = parseFloat(value);
-
-    if (isNaN(mark) || mark < 0 || mark > behaviorType.obtain_mark) {
-      if (value !== '') {
-        toast.error(`মার্কস ০ থেকে ${behaviorType.obtain_mark} এর মধ্যে হতে হবে।`);
-        setBehaviorReports(prev => ({
-          ...prev,
-          [studentId]: {
-            ...prev[studentId],
-            [behaviorTypeId]: ''
-          }
-        }));
-        setInvalidMarks(prev => ({
-          ...prev,
-          [`${studentId}-${behaviorTypeId}`]: ''
-        }));
-      }
-      return;
+    if (nextInputId) {
+      const nextInput = inputRefs.current[nextInputId];
+      nextInput?.focus();
     }
 
-    const behaviorMarks = [];
-    activeBehaviorTypes.forEach(bt => {
-      let markValue;
-      if (bt.id === behaviorTypeId) {
-        markValue = mark;
-      } else {
-        markValue = parseFloat(behaviorReports[studentId][bt.id]);
-      }
-      
-      if (!isNaN(markValue) && markValue >= 0 && markValue <= bt.obtain_mark) {
-        behaviorMarks.push({
-          student_id: parseInt(studentId),
-          behavior_type: parseInt(bt.id),
-          mark: markValue
-        });
-      }
-    });
+    toast.success('মার্কস সফলভাবে সংরক্ষিত!');
+    refetch();
+  } catch (err) {
+    toast.error('মার্কস সংরক্ষণে ব্যর্থ!');
+  }
+};
 
-    if (behaviorMarks.length === 0) {
-      return;
-    }
-
-    const reportData = {
-      exam_name_id: parseInt(selectedExam),
-      academic_year: parseInt(selectedYear),
-      student_id: parseInt(studentId),
-      behavior_marks: behaviorMarks
-    };
-
-    try {
-      await createBehaviorReport(reportData).unwrap();
-      setSavedMarks(prev => ({
-        ...prev,
-        [studentId]: {
-          ...prev[studentId],
-          [behaviorTypeId]: true
-        }
-      }));
-      setInvalidMarks(prev => ({
-        ...prev,
-        [`${studentId}-${behaviorTypeId}`]: ''
-      }));
-      if (nextInputId) {
-        const nextInput = inputRefs.current[nextInputId];
-        if (nextInput) {
-          nextInput.focus();
-        }
-      }
-      toast.success('মার্কস সফলভাবে সংরক্ষিত!');
-      // Refetch reports to ensure latest data is available for PDF
-      refetch();
-    } catch (error) {
-      console.error('Failed to save behavior report:', error);
-      toast.error('মার্কস সংরক্ষণে ব্যর্থ!');
-    }
-  };
 
   // Handle input navigation
   const handleKeyDown = (e, studentId, behaviorTypeId, studentIndex, behaviorIndex) => {
@@ -560,21 +552,25 @@ const AddBehaviorMarks = () => {
                         return (
                           <td key={bt.id} className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]" style={{ minWidth: '180px' }}>
                             <div className="flex items-center">
-                              <input
-                                id={inputId}
-                                type="number"
-                                min="0"
-                                max={bt.obtain_mark}
-                                value={behaviorReports[student.id]?.[bt.id] || ''}
-                                onChange={(e) => handleMarkChange(student.id, bt.id, e.target.value)}
-                                onKeyDown={(e) => handleKeyDown(e, student.id, bt.id, studentIndex, behaviorIndex)}
-                                onBlur={(e) => handleMarkSubmit(student.id, bt.id, e.target.value, nextInputId)}
-                                ref={(el) => (inputRefs.current[inputId] = el)}
-                                className={`w-20 bg-transparent text-[#441a05] placeholder:text-[#441a05] pl-3 py-1 focus:outline-none border rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-1 focus:ring-[#441a05] ${
-                                  invalidMarks[`${student.id}-${bt.id}`] ? 'input-error' : savedMarks[student.id]?.[bt.id] ? 'has-existing-data border-green-300' : 'border-[#9d9087]'
-                                }`}
-                                placeholder="মার্কস"
-                              />
+                             <input
+  id={inputId}
+  type="number"
+  min="0"
+  max={bt.obtain_mark}
+  value={behaviorReports[student.id]?.[bt.id] || ''}
+  onChange={(e) => handleMarkChange(student.id, bt.id, e.target.value)}
+  onKeyDown={(e) => handleKeyDown(e, student.id, bt.id, studentIndex, behaviorIndex)}
+  ref={(el) => (inputRefs.current[inputId] = el)}
+  className={`w-20 bg-transparent text-[#441a05] placeholder:text-[#441a05] pl-3 py-1 focus:outline-none border rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-1 focus:ring-[#441a05] ${
+    invalidMarks[`${student.id}-${bt.id}`]
+      ? 'input-error'
+      : savedMarks[student.id]?.[bt.id]
+      ? 'has-existing-data border-green-300'
+      : 'border-[#9d9087]'
+  }`}
+  placeholder="মার্কস"
+/>
+
                               {savedMarks[student.id]?.[bt.id] && <FaCheck className="text-green-500 ml-2" />}
                               {invalidMarks[`${student.id}-${bt.id}`] && <FaTimes className="text-red-500 ml-2" />}
                             </div>

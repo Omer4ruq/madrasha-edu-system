@@ -11,8 +11,11 @@ import {
   useDeleteEventMutation,
 } from "../../redux/features/api/event/eventApi";
 import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
+import { useSelector } from "react-redux"; // Import useSelector
+import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi"; // Import permission hook
 
 const AddEvent = () => {
+  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
@@ -44,9 +47,24 @@ const AddEvent = () => {
   const [deleteEvent, { isLoading: isDeleting, error: deleteError }] =
     useDeleteEventMutation();
 
+  // Permissions hook
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Permission checks
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_event') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_event') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_event') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_event') || false;
+
   // Handle form submission for adding new event
   const handleSubmitEvent = async (e) => {
     e.preventDefault();
+    if (!hasAddPermission) {
+      toast.error('ইভেন্ট যোগ করার অনুমতি নেই।');
+      return;
+    }
     if (
       !newEvent.title.trim() ||
       !newEvent.start ||
@@ -84,6 +102,10 @@ const AddEvent = () => {
 
   // Handle edit button click
   const handleEditClick = (event) => {
+    if (!hasChangePermission) {
+      toast.error('ইভেন্ট সম্পাদনা করার অনুমতি নেই।');
+      return;
+    }
     setSelectedEventId(event.id);
     setNewEvent({
       title: event.title,
@@ -96,6 +118,10 @@ const AddEvent = () => {
   // Handle update event
   const handleUpdate = async (e) => {
     e.preventDefault();
+    if (!hasChangePermission) {
+      toast.error('ইভেন্ট আপডেট করার অনুমতি নেই।');
+      return;
+    }
     if (
       !newEvent.title.trim() ||
       !newEvent.start ||
@@ -123,6 +149,10 @@ const AddEvent = () => {
 
   // Handle delete event
   const handleDelete = (id) => {
+    if (!hasDeletePermission) {
+      toast.error('ইভেন্ট মুছে ফেলার অনুমতি নেই।');
+      return;
+    }
     setModalData({ id });
     setModalAction("delete");
     setIsModalOpen(true);
@@ -132,17 +162,29 @@ const AddEvent = () => {
   const confirmAction = async () => {
     try {
       if (modalAction === "create") {
+        if (!hasAddPermission) {
+          toast.error('ইভেন্ট তৈরি করার অনুমতি নেই।');
+          return;
+        }
         await createEvent(modalData).unwrap();
         toast.success("ইভেন্ট সফলভাবে তৈরি করা হয়েছে!");
         setNewEvent({ title: "", start: "", end: "", academic_year: "" });
       } else if (modalAction === "update") {
+        if (!hasChangePermission) {
+          toast.error('ইভেন্ট আপডেট করার অনুমতি নেই।');
+          return;
+        }
         await updateEvent(modalData).unwrap();
         toast.success("ইভেন্ট সফলভাবে আপডেট করা হয়েছে!");
         setSelectedEventId(null);
         setNewEvent({ title: "", start: "", end: "", academic_year: "" });
       } else if (modalAction === "delete") {
+        if (!hasDeletePermission) {
+          toast.error('ইভেন্ট মুছে ফেলার অনুমতি নেই।');
+          return;
+        }
         await deleteEvent(modalData.id).unwrap();
-        toast.success("ইভেনट সফলভাবে মুছে ফেলা হয়েছে!");
+        toast.success("ইভেনট সফলভাবে মুছে ফেলা হয়েছে!");
       }
       refetch();
     } catch (err) {
@@ -172,7 +214,7 @@ const AddEvent = () => {
     }
   };
 
-  if (eventsLoading || yearsLoading)
+  if (eventsLoading || yearsLoading || permissionsLoading)
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="bg-black/10 backdrop-blur-sm rounded-xl shadow-lg p-8 flex items-center space-x-4 animate-fadeIn">
@@ -181,6 +223,11 @@ const AddEvent = () => {
         </div>
       </div>
     );
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-red-400 animate-fadeIn">এই পৃষ্ঠাটি দেখার অনুমতি নেই।</div>;
+  }
+
   if (eventsError || yearsError)
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -305,136 +352,138 @@ const AddEvent = () => {
 
       {/* Header and Form */}
       <div className="">
-        <div ref={formRef} className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl w-full">
-          <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-            <IoAddCircle className="text-4xl text-[#441a05]" />
-            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
-              ইভেন্ট যোগ করুন
-            </h3>
-          </div>
+        {(hasAddPermission || hasChangePermission) && (
+          <div ref={formRef} className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl w-full">
+            <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
+              <IoAddCircle className="text-4xl text-[#441a05]" />
+              <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
+                ইভেন্ট যোগ করুন
+              </h3>
+            </div>
 
-          <form
-            onSubmit={selectedEventId ? handleUpdate : handleSubmitEvent}
-            className="grid grid-cols-1 md:grid-cols-4 gap-6"
-          >
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-[#441a05]">ইভেন্ট শিরোনাম</label>
-              <input
-                type="text"
-                value={newEvent.title}
-                onChange={(e) =>
-                  setNewEvent({ ...newEvent, title: e.target.value })
-                }
-                className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
-                placeholder="ইভেন্ট শিরোনাম"
-                disabled={isCreating || isUpdating}
-                aria-label="ইভেন্ট শিরোনাম লিখুন"
-                title="ইভেন্ট শিরোনাম লিখুন / Enter event title"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-[#441a05]">শুরুর সময়</label>
-              <DateTimePicker
-                value={newEvent.start}
-                onChange={(value) => setNewEvent({ ...newEvent, start: value })}
-                className="w-full text-[#441a05] animate-scaleIn"
-                disabled={isCreating || isUpdating}
-                format="y-MM-dd h:mm a"
-                locale="bn-BD"
-                disableClock={false}
-                aria-label="ইভেন্টের শুরুর সময় নির্বাচন করুন"
-                title="ইভেন্টের শুরুর সময় নির্বাচন করুন / Select event start time"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-[#441a05]">শেষের সময়</label>
-              <DateTimePicker
-                value={newEvent.end}
-                onChange={(value) => setNewEvent({ ...newEvent, end: value })}
-                className="w-full text-[#441a05] animate-scaleIn"
-                disabled={isCreating || isUpdating}
-                format="y-MM-dd h:mm a"
-                locale="bn-BD"
-                disableClock={false}
-                aria-label="ইভেন্টের শেষের সময় নির্বাচন করুন"
-                title="ইভেন্টের শেষের সময় নির্বাচন করুন / Select event end time"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-[#441a05]">একাডেমিক বছর</label>
-              <select
-                value={newEvent.academic_year}
-                onChange={(e) =>
-                  setNewEvent({ ...newEvent, academic_year: e.target.value })
-                }
-                className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
-                disabled={isCreating || isUpdating}
-                aria-label="একাডেমিক বছর নির্বাচন করুন"
-                title="একাডেমিক বছর নির্বাচন করুন / Select academic year"
-              >
-                <option value="" disabled>
-                  একাডেমিক বছর নির্বাচন করুন
-                </option>
-                {academicYears?.map((year) => (
-                  <option key={year.id} value={year.id}>
-                    {year.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-end space-x-4">
-              <button
-                type="submit"
-                disabled={isCreating || isUpdating}
-                className={`px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn btn-glow ${
-                  isCreating || isUpdating
-                    ? "cursor-not-allowed opacity-50"
-                    : "hover:text-white hover:shadow-md"
-                }`}
-                title={selectedEventId ? "ইভেন্ট আপডেট করুন / Update event" : "ইভেন্ট তৈরি করুন / Create event"}
-                aria-label={selectedEventId ? "ইভেন্ট আপডেট করুন" : "ইভেন্ট তৈরি করুন"}
-              >
-                {isCreating || isUpdating ? (
-                  <span className="flex items-center space-x-3">
-                    <FaSpinner className="animate-spin text-lg" />
-                    <span>
-                      {selectedEventId ? "আপডেট করা হচ্ছে..." : "তৈরি করা হচ্ছে..."}
-                    </span>
-                  </span>
-                ) : (
-                  <span>{selectedEventId ? "আপডেট করুন" : "তৈরি করুন"}</span>
-                )}
-              </button>
-              {selectedEventId && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedEventId(null);
-                    setNewEvent({
-                      title: "",
-                      start: "",
-                      end: "",
-                      academic_year: "",
-                    });
-                  }}
-                  className="px-6 py-3 rounded-lg font-medium bg-gray-500/20 text-[#441a05] hover:bg-gray-500/30 transition-all duration-300 animate-scaleIn btn-glow"
-                  title="সম্পাদনা বাতিল করুন / Cancel edit"
-                  aria-label="সম্পাদনা বাতিল করুন"
-                >
-                  বাতিল
-                </button>
-              )}
-            </div>
-          </form>
-          {(createError || updateError) && (
-            <div
-              className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
-              style={{ animationDelay: "0.4s" }}
+            <form
+              onSubmit={selectedEventId ? handleUpdate : handleSubmitEvent}
+              className="grid grid-cols-1 md:grid-cols-4 gap-6"
             >
-              ত্রুটি: {(createError || updateError)?.data?.message || "অজানা ত্রুটি"}
-            </div>
-          )}
-        </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-[#441a05]">ইভেন্ট শিরোনাম</label>
+                <input
+                  type="text"
+                  value={newEvent.title}
+                  onChange={(e) =>
+                    setNewEvent({ ...newEvent, title: e.target.value })
+                  }
+                  className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
+                  placeholder="ইভেন্ট শিরোনাম"
+                  disabled={isCreating || isUpdating}
+                  aria-label="ইভেন্ট শিরোনাম লিখুন"
+                  title="ইভেন্ট শিরোনাম লিখুন / Enter event title"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-[#441a05]">শুরুর সময়</label>
+                <DateTimePicker
+                  value={newEvent.start}
+                  onChange={(value) => setNewEvent({ ...newEvent, start: value })}
+                  className="w-full text-[#441a05] animate-scaleIn"
+                  disabled={isCreating || isUpdating}
+                  format="y-MM-dd h:mm a"
+                  locale="bn-BD"
+                  disableClock={false}
+                  aria-label="ইভেন্টের শুরুর সময় নির্বাচন করুন"
+                  title="ইভেন্টের শুরুর সময় নির্বাচন করুন / Select event start time"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-[#441a05]">শেষের সময়</label>
+                <DateTimePicker
+                  value={newEvent.end}
+                  onChange={(value) => setNewEvent({ ...newEvent, end: value })}
+                  className="w-full text-[#441a05] animate-scaleIn"
+                  disabled={isCreating || isUpdating}
+                  format="y-MM-dd h:mm a"
+                  locale="bn-BD"
+                  disableClock={false}
+                  aria-label="ইভেন্টের শেষের সময় নির্বাচন করুন"
+                  title="ইভেন্টের শেষের সময় নির্বাচন করুন / Select event end time"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-[#441a05]">একাডেমিক বছর</label>
+                <select
+                  value={newEvent.academic_year}
+                  onChange={(e) =>
+                    setNewEvent({ ...newEvent, academic_year: e.target.value })
+                  }
+                  className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
+                  disabled={isCreating || isUpdating}
+                  aria-label="একাডেমিক বছর নির্বাচন করুন"
+                  title="একাডেমিক বছর নির্বাচন করুন / Select academic year"
+                >
+                  <option value="" disabled>
+                    একাডেমিক বছর নির্বাচন করুন
+                  </option>
+                  {academicYears?.map((year) => (
+                    <option key={year.id} value={year.id}>
+                      {year.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-end space-x-4">
+                <button
+                  type="submit"
+                  disabled={isCreating || isUpdating}
+                  className={`px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn btn-glow ${
+                    isCreating || isUpdating
+                      ? "cursor-not-allowed opacity-50"
+                      : "hover:text-white hover:shadow-md"
+                  }`}
+                  title={selectedEventId ? "ইভেন্ট আপডেট করুন / Update event" : "ইভেন্ট তৈরি করুন / Create event"}
+                  aria-label={selectedEventId ? "ইভেন্ট আপডেট করুন" : "ইভেন্ট তৈরি করুন"}
+                >
+                  {isCreating || isUpdating ? (
+                    <span className="flex items-center space-x-3">
+                      <FaSpinner className="animate-spin text-lg" />
+                      <span>
+                        {selectedEventId ? "আপডেট করা হচ্ছে..." : "তৈরি করা হচ্ছে..."}
+                      </span>
+                    </span>
+                  ) : (
+                    <span>{selectedEventId ? "আপডেট করুন" : "তৈরি করুন"}</span>
+                  )}
+                </button>
+                {selectedEventId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedEventId(null);
+                      setNewEvent({
+                        title: "",
+                        start: "",
+                        end: "",
+                        academic_year: "",
+                      });
+                    }}
+                    className="px-6 py-3 rounded-lg font-medium bg-gray-500/20 text-[#441a05] hover:bg-gray-500/30 transition-all duration-300 animate-scaleIn btn-glow"
+                    title="সম্পাদনা বাতিল করুন / Cancel edit"
+                    aria-label="সম্পাদনা বাতিল করুন"
+                  >
+                    বাতিল
+                  </button>
+                )}
+              </div>
+            </form>
+            {(createError || updateError) && (
+              <div
+                className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
+                style={{ animationDelay: "0.4s" }}
+              >
+                ত্রুটি: {(createError || updateError)?.data?.message || "অজানা ত্রুটি"}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Events Table */}
         <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6 w-full">
@@ -471,9 +520,11 @@ const AddEvent = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       আপডেটের সময়
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ক্রিয়াকলাপ
-                    </th>
+                    {(hasChangePermission || hasDeletePermission) && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        ক্রিয়াকলাপ
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/20">
@@ -503,24 +554,30 @@ const AddEvent = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
                         {new Date(event.updated_at).toLocaleString("bn-BD")}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleEditClick(event)}
-                          className="text-[#441a05] hover:text-[#DB9E30] mr-4 transition-colors duration-300 btn-glow"
-                          aria-label={`ইভেন্ট সম্পাদনা করুন ${event.title}`}
-                          title={`ইভেন্ট সম্পাদনা করুন / Edit event ${event.title}`}
-                        >
-                          <FaEdit className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(event.id)}
-                          className="text-[#441a05] hover:text-red-500 transition-colors duration-300 btn-glow"
-                          aria-label={`ইভেন্ট মুছুন ${event.title}`}
-                          title={`ইভেন্ট মুছুন / Delete event ${event.title}`}
-                        >
-                          <FaTrash className="w-5 h-5" />
-                        </button>
-                      </td>
+                      {(hasChangePermission || hasDeletePermission) && (
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          {hasChangePermission && (
+                            <button
+                              onClick={() => handleEditClick(event)}
+                              className="text-[#441a05] hover:text-[#DB9E30] mr-4 transition-colors duration-300 btn-glow"
+                              aria-label={`ইভেন্ট সম্পাদনা করুন ${event.title}`}
+                              title={`ইভেন্ট সম্পাদনা করুন / Edit event ${event.title}`}
+                            >
+                              <FaEdit className="w-5 h-5" />
+                            </button>
+                          )}
+                          {hasDeletePermission && (
+                            <button
+                              onClick={() => handleDelete(event.id)}
+                              className="text-[#441a05] hover:text-red-500 transition-colors duration-300 btn-glow"
+                              aria-label={`ইভেন্ট মুছুন ${event.title}`}
+                              title={`ইভেন্ট মুছুন / Delete event ${event.title}`}
+                            >
+                              <FaTrash className="w-5 h-5" />
+                            </button>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -540,7 +597,7 @@ const AddEvent = () => {
         </div>
 
         {/* Confirmation Modal */}
-        {isModalOpen && (
+        {isModalOpen && (hasAddPermission || hasChangePermission || hasDeletePermission) && (
           <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[10001]">
             <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
               <h3 className="text-lg font-semibold text-[#441a05] mb-4">

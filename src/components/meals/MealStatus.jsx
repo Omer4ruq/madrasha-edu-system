@@ -5,9 +5,13 @@ import Select from 'react-select';
 import { Toaster, toast } from 'react-hot-toast';
 import { useGetMealStatusesQuery, useCreateMealStatusMutation, useUpdateMealStatusMutation, useDeleteMealStatusMutation } from '../../redux/features/api/meal/mealStatusApi';
 import { useSearchJointUsersQuery } from '../../redux/features/api/jointUsers/jointUsersApi';
-import selectStyles from '../../utilitis/selectStyles';
+import selectStyles from '../../utilitis/selectStyles'; // Assuming this path is correct
+import { useSelector } from 'react-redux'; // Import useSelector
+import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi'; // Import permission hook
+
 
 const MealStatus = () => {
+  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
   const [formData, setFormData] = useState({
     start_time: '',
     end_time: '',
@@ -23,9 +27,21 @@ const MealStatus = () => {
   const [modalData, setModalData] = useState(null);
   const dropdownRef = useRef(null);
 
+  // Permissions hook
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Permission checks
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_meal_status') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_meal_status') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_meal_status') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_meal_status') || false;
+
+
   // Fetch data
-  const { data: mealStatuses = [], isLoading: statusesLoading, error: statusesError, refetch } = useGetMealStatusesQuery();
-  const { data: jointUsers = [], isLoading: usersLoading } = useSearchJointUsersQuery(searchTerm, { skip: searchTerm.length < 3 });
+  const { data: mealStatuses = [], isLoading: statusesLoading, error: statusesError, refetch } = useGetMealStatusesQuery(undefined, { skip: !hasViewPermission });
+  const { data: jointUsers = [], isLoading: usersLoading } = useSearchJointUsersQuery(searchTerm, { skip: searchTerm.length < 3 || !hasViewPermission });
 
   // Mutations
   const [createMealStatus, { isLoading: isCreating, error: createError }] = useCreateMealStatusMutation();
@@ -90,6 +106,10 @@ const MealStatus = () => {
 
   // Handle status toggle
   const handleToggleStatus = (status) => {
+    if (!hasChangePermission) {
+      toast.error('খাবারের স্থিতি পরিবর্তন করার অনুমতি নেই।');
+      return;
+    }
     setModalAction('toggle');
     setModalData({
       id: status.id,
@@ -105,6 +125,15 @@ const MealStatus = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (editingId && !hasChangePermission) {
+      toast.error('খাবারের স্থিতি আপডেট করার অনুমতি নেই।');
+      return;
+    }
+    if (!editingId && !hasAddPermission) {
+      toast.error('নতুন খাবারের স্থিতি যোগ করার অনুমতি নেই।');
+      return;
+    }
+
     if (!validateForm()) return;
 
     const payload = {
@@ -123,6 +152,10 @@ const MealStatus = () => {
 
   // Handle edit button click
   const handleEdit = (status) => {
+    if (!hasChangePermission) {
+      toast.error('খাবারের স্থিতি সম্পাদনা করার অনুমতি নেই।');
+      return;
+    }
     setFormData({
       start_time: status.start_time,
       end_time: status.end_time,
@@ -136,6 +169,10 @@ const MealStatus = () => {
 
   // Handle delete button click
   const handleDelete = (id) => {
+    if (!hasDeletePermission) {
+      toast.error('খাবারের স্থিতি মুছে ফেলার অনুমতি নেই।');
+      return;
+    }
     setModalAction('delete');
     setModalData({ id });
     setIsModalOpen(true);
@@ -145,6 +182,7 @@ const MealStatus = () => {
   const confirmAction = async () => {
     try {
       if (modalAction === 'create') {
+        if (!hasAddPermission) { toast.error('খাবারের স্থিতি তৈরি করার অনুমতি নেই।'); return; }
         await createMealStatus(modalData).unwrap();
         toast.success('খাবারের স্থিতি সফলভাবে তৈরি করা হয়েছে!');
         setFormData({
@@ -156,6 +194,7 @@ const MealStatus = () => {
         });
         setSearchTerm('');
       } else if (modalAction === 'update') {
+        if (!hasChangePermission) { toast.error('খাবারের স্থিতি আপডেট করার অনুমতি নেই।'); return; }
         await updateMealStatus(modalData).unwrap();
         toast.success('খাবারের স্থিতি সফলভাবে আপডেট করা হয়েছে!');
         setEditingId(null);
@@ -168,9 +207,11 @@ const MealStatus = () => {
         });
         setSearchTerm('');
       } else if (modalAction === 'delete') {
+        if (!hasDeletePermission) { toast.error('খাবারের স্থিতি মুছে ফেলার অনুমতি নেই।'); return; }
         await deleteMealStatus(modalData.id).unwrap();
         toast.success('খাবারের স্থিতি সফলভাবে মুছে ফেলা হয়েছে!');
       } else if (modalAction === 'toggle') {
+        if (!hasChangePermission) { toast.error('খাবারের স্থিতি পরিবর্তন করার অনুমতি নেই।'); return; }
         await updateMealStatus(modalData).unwrap();
         toast.success(`খাবারের স্থিতি এখন ${modalData.status === 'ACTIVE' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}!`);
       }
@@ -190,6 +231,29 @@ const MealStatus = () => {
     { value: 'ACTIVE', label: 'সক্রিয়' },
     { value: 'DEACTIVATE', label: 'নিষ্ক্রিয়' },
   ];
+
+  if (statusesLoading || usersLoading || permissionsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen px-4">
+        <div className="flex items-center gap-4 p-6 bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 animate-fadeIn">
+          <FaSpinner className="animate-spin text-3xl text-[#DB9E30]" />
+          <span className="text-lg font-medium text-[#441a05]">
+            লোড হচ্ছে...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasViewPermission) {
+    return (
+      <div className="p-4 text-red-400 animate-fadeIn text-center text-lg font-semibold">
+        এই পৃষ্ঠাটি দেখার অনুমতি নেই।
+      </div>
+    );
+  }
+
+  const isFormDisabled = isCreating || isUpdating || (!editingId && !hasAddPermission) || (editingId && !hasChangePermission);
 
   return (
     <div className="py-8 w-full relative">
@@ -244,176 +308,178 @@ const MealStatus = () => {
 
       <div>
         {/* Add/Edit Meal Status Form */}
-        <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-          <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-            {editingId ? (
-              <FaEdit className="text-4xl text-[#441a05]" />
-            ) : (
-              <IoAddCircle className="text-4xl text-[#441a05]" />
-            )}
-            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
-              {editingId ? 'খাবারের স্থিতি সম্পাদনা করুন' : 'নতুন খাবারের স্থিতি যোগ করুন'}
-            </h3>
-          </div>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div ref={dropdownRef}>
-              <label className="block text-sm font-medium text-[#441a05] mb-1">ব্যবহারকারী নির্বাচন করুন</label>
-              <input
-                id="user_search"
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onFocus={() => setIsUserDropdownOpen(true)}
-                placeholder="নাম বা ব্যবহারকারীর আইডি লিখুন (ন্যূনতম ৩ অক্ষর)"
-                className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
-                disabled={isCreating || isUpdating}
-                aria-label="ব্যবহারকারী নির্বাচন করুন"
-                title="ব্যবহারকারী নির্বাচন করুন / Select user"
-                required
-              />
-              {isUserDropdownOpen && searchTerm.length >= 3 && (
-                <div className="absolute z-[10000] mt-1 w-full bg-black/10 backdrop-blur-sm border border-white/20 rounded-lg shadow-lg max-h-60 overflow-auto">
-                  {usersLoading ? (
-                    <p className="px-4 py-2 text-sm text-[#441a05]/70">লোড হচ্ছে...</p>
-                  ) : jointUsers.length > 0 ? (
-                    jointUsers.map((user) => (
-                      <div
-                        key={user.id}
-                        onClick={() => handleUserSelect(user)}
-                        className="px-4 py-2 hover:bg-white/10 cursor-pointer text-sm text-[#441a05]"
-                      >
-                        {user.name || user.user_id}
-                      </div>
-                    ))
-                  ) : (
-                    <p className="px-4 py-2 text-sm text-[#441a05]/70">কোনো ব্যবহারকারী পাওয়া যায়নি</p>
-                  )}
-                </div>
+        {(hasAddPermission || hasChangePermission) && (
+          <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+            <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
+              {editingId ? (
+                <FaEdit className="text-4xl text-[#441a05]" />
+              ) : (
+                <IoAddCircle className="text-4xl text-[#441a05]" />
               )}
+              <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
+                {editingId ? 'খাবারের স্থিতি সম্পাদনা করুন' : 'নতুন খাবারের স্থিতি যোগ করুন'}
+              </h3>
             </div>
-            <div>
-              <label htmlFor="start_time" className="block text-sm font-medium text-[#441a05] mb-1">
-                শুরুর তারিখ
-              </label>
-              <input
-                id="start_time"
-                type="date"
-                name="start_time"
-                value={formData.start_time}
-                onChange={handleInputChange}
-                onClick={handleDateClick}
-                className="w-full bg-transparent outline-none text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 focus:outline-none focus:border-[#441a05] focus:ring-[#441a05]"
-                disabled={isCreating || isUpdating}
-                required
-                aria-label="শুরুর তারিখ"
-                title="শুরুর তারিখ নির্বাচন করুন / Select start date"
-              />
-            </div>
-            <div>
-              <label htmlFor="end_time" className="block text-sm font-medium text-[#441a05] mb-1">
-                শেষের তারিখ
-              </label>
-              <input
-                id="end_time"
-                type="date"
-                name="end_time"
-                value={formData.end_time}
-                onChange={handleInputChange}
-                onClick={handleDateClick}
-                className="w-full bg-transparent outline-none text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 focus:outline-none focus:border-[#441a05] focus:ring-[#441a05]"
-                disabled={isCreating || isUpdating}
-                required
-                aria-label="শেষের তারিখ"
-                title="শেষের তারিখ নির্বাচন করুন / Select end date"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#441a05] mb-1">স্থিতি</label>
-              <Select
-                options={statusOptions}
-                value={statusOptions.find((opt) => opt.value === formData.status) || null}
-                onChange={(selected) => setFormData({ ...formData, status: selected ? selected.value : 'ACTIVE' })}
-                isDisabled={isCreating || isUpdating}
-                placeholder="স্থিতি নির্বাচন করুন"
-                className="react-select-container"
-                classNamePrefix="react-select"
-                menuPortalTarget={document.body}
-                menuPosition="fixed"
-                isSearchable={false}
-                aria-label="স্থিতি"
-                title="স্থিতি নির্বাচন করুন / Select status"
-                styles={selectStyles}
-              />
-            </div>
-            <div className="md:col-span-4">
-              <label htmlFor="remarks" className="block text-sm font-medium text-[#441a05] mb-1">
-                মন্তব্য
-              </label>
-              <textarea
-                id="remarks"
-                name="remarks"
-                value={formData.remarks}
-                onChange={handleInputChange}
-                className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
-                rows={4}
-                disabled={isCreating || isUpdating}
-                aria-label="মন্তব্য"
-                title="মন্তব্য / Remarks"
-              />
-            </div>
-            <div className="flex space-x-4 md:col-span-3">
-              <button
-                type="submit"
-                disabled={isCreating || isUpdating}
-                title={editingId ? 'খাবারের স্থিতি আপডেট করুন / Update meal status' : 'নতুন খাবারের স্থিতি তৈরি করুন / Create a new meal status'}
-                className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                  isCreating || isUpdating ? 'cursor-not-allowed' : 'hover:text-white btn-glow'
-                }`}
-              >
-                {(isCreating || isUpdating) ? (
-                  <span className="flex items-center space-x-3">
-                    <FaSpinner className="animate-spin text-lg" />
-                    <span>{editingId ? 'আপডেট করা হচ্ছে...' : 'তৈরি করা হচ্ছে...'}</span>
-                  </span>
-                ) : (
-                  <span className="flex items-center space-x-2">
-                    <IoAdd className="w-5 h-5" />
-                    <span>{editingId ? 'স্থিতি আপডেট করুন' : 'স্থিতি তৈরি করুন'}</span>
-                  </span>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div ref={dropdownRef}>
+                <label className="block text-sm font-medium text-[#441a05] mb-1">ব্যবহারকারী নির্বাচন করুন</label>
+                <input
+                  id="user_search"
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onFocus={() => setIsUserDropdownOpen(true)}
+                  placeholder="নাম বা ব্যবহারকারীর আইডি লিখুন (ন্যূনতম ৩ অক্ষর)"
+                  className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+                  disabled={isFormDisabled}
+                  aria-label="ব্যবহারকারী নির্বাচন করুন"
+                  title="ব্যবহারকারী নির্বাচন করুন / Select user"
+                  required
+                />
+                {isUserDropdownOpen && searchTerm.length >= 3 && (
+                  <div className="absolute z-[10000] mt-1 w-full bg-black/10 backdrop-blur-sm border border-white/20 rounded-lg shadow-lg max-h-60 overflow-auto">
+                    {usersLoading ? (
+                      <p className="px-4 py-2 text-sm text-[#441a05]/70">লোড হচ্ছে...</p>
+                    ) : jointUsers.length > 0 ? (
+                      jointUsers.map((user) => (
+                        <div
+                          key={user.id}
+                          onClick={() => handleUserSelect(user)}
+                          className="px-4 py-2 hover:bg-white/10 cursor-pointer text-sm text-[#441a05]"
+                        >
+                          {user.name || user.user_id}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="px-4 py-2 text-sm text-[#441a05]/70">কোনো ব্যবহারকারী পাওয়া যায়নি</p>
+                    )}
+                  </div>
                 )}
-              </button>
-              {editingId && (
+              </div>
+              <div>
+                <label htmlFor="start_time" className="block text-sm font-medium text-[#441a05] mb-1">
+                  শুরুর তারিখ
+                </label>
+                <input
+                  id="start_time"
+                  type="date"
+                  name="start_time"
+                  value={formData.start_time}
+                  onChange={handleInputChange}
+                  onClick={handleDateClick}
+                  className="w-full bg-transparent outline-none text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 focus:outline-none focus:border-[#441a05] focus:ring-[#441a05]"
+                  disabled={isFormDisabled}
+                  required
+                  aria-label="শুরুর তারিখ"
+                  title="শুরুর তারিখ নির্বাচন করুন / Select start date"
+                />
+              </div>
+              <div>
+                <label htmlFor="end_time" className="block text-sm font-medium text-[#441a05] mb-1">
+                  শেষের তারিখ
+                </label>
+                <input
+                  id="end_time"
+                  type="date"
+                  name="end_time"
+                  value={formData.end_time}
+                  onChange={handleInputChange}
+                  onClick={handleDateClick}
+                  className="w-full bg-transparent outline-none text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 focus:outline-none focus:border-[#441a05] focus:ring-[#441a05]"
+                  disabled={isFormDisabled}
+                  required
+                  aria-label="শেষের তারিখ"
+                  title="শেষের তারিখ নির্বাচন করুন / Select end date"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#441a05] mb-1">স্থিতি</label>
+                <Select
+                  options={statusOptions}
+                  value={statusOptions.find((opt) => opt.value === formData.status) || null}
+                  onChange={(selected) => setFormData({ ...formData, status: selected ? selected.value : 'ACTIVE' })}
+                  isDisabled={isFormDisabled}
+                  placeholder="স্থিতি নির্বাচন করুন"
+                  className="react-select-container"
+                  classNamePrefix="react-select"
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                  isSearchable={false}
+                  aria-label="স্থিতি"
+                  title="স্থিতি নির্বাচন করুন / Select status"
+                  styles={selectStyles}
+                />
+              </div>
+              <div className="md:col-span-4">
+                <label htmlFor="remarks" className="block text-sm font-medium text-[#441a05] mb-1">
+                  মন্তব্য
+                </label>
+                <textarea
+                  id="remarks"
+                  name="remarks"
+                  value={formData.remarks}
+                  onChange={handleInputChange}
+                  className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+                  rows={4}
+                  disabled={isFormDisabled}
+                  aria-label="মন্তব্য"
+                  title="মন্তব্য / Remarks"
+                />
+              </div>
+              <div className="flex space-x-4 md:col-span-3">
                 <button
-                  type="button"
-                  onClick={() => {
-                    setFormData({
-                      start_time: '',
-                      end_time: '',
-                      status: 'ACTIVE',
-                      remarks: '',
-                      meal_user: null,
-                    });
-                    setSearchTerm('');
-                    setEditingId(null);
-                  }}
-                  title="সম্পাদনা বাতিল করুন / Cancel editing"
-                  className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
+                  type="submit"
+                  disabled={isFormDisabled}
+                  title={editingId ? 'খাবারের স্থিতি আপডেট করুন / Update meal status' : 'নতুন খাবারের স্থিতি তৈরি করুন / Create a new meal status'}
+                  className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
+                    isFormDisabled ? 'cursor-not-allowed' : 'hover:text-white btn-glow'
+                  }`}
                 >
-                  বাতিল
+                  {(isCreating || isUpdating) ? (
+                    <span className="flex items-center space-x-3">
+                      <FaSpinner className="animate-spin text-lg" />
+                      <span>{editingId ? 'আপডেট করা হচ্ছে...' : 'তৈরি করা হচ্ছে...'}</span>
+                    </span>
+                  ) : (
+                    <span className="flex items-center space-x-2">
+                      <IoAdd className="w-5 h-5" />
+                      <span>{editingId ? 'স্থিতি আপডেট করুন' : 'স্থিতি তৈরি করুন'}</span>
+                    </span>
+                  )}
                 </button>
-              )}
-            </div>
-          </form>
-          {(createError || updateError) && (
-            <div
-              id="status-error"
-              className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
-              style={{ animationDelay: '0.4s' }}
-            >
-              ত্রুটি: {(createError || updateError).status || 'অজানা'} - {JSON.stringify((createError || updateError).data || {})}
-            </div>
-          )}
-        </div>
+                {editingId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData({
+                        start_time: '',
+                        end_time: '',
+                        status: 'ACTIVE',
+                        remarks: '',
+                        meal_user: null,
+                      });
+                      setSearchTerm('');
+                      setEditingId(null);
+                    }}
+                    title="সম্পাদনা বাতিল করুন / Cancel editing"
+                    className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
+                  >
+                    বাতিল
+                  </button>
+                )}
+              </div>
+            </form>
+            {(createError || updateError) && (
+              <div
+                id="status-error"
+                className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
+                style={{ animationDelay: '0.4s' }}
+              >
+                ত্রুটি: {(createError || updateError).status || 'অজানা'} - {JSON.stringify((createError || updateError).data || {})}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Meal Statuses Table */}
         <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
@@ -455,9 +521,11 @@ const MealStatus = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       আপডেটের সময়
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ক্রিয়াকলাপ
-                    </th>
+                    {(hasChangePermission || hasDeletePermission) && ( // Conditionally render actions column
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        ক্রিয়াকলাপ
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/20">
@@ -490,6 +558,7 @@ const MealStatus = () => {
                               className="hidden"
                               aria-label={`স্থিতি ${status.status === 'ACTIVE' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}`}
                               title={`স্থিতি ${status.status === 'ACTIVE' ? 'সক্রিয়' : 'নিষ্ক্রিয়'} / Status ${status.status}`}
+                              disabled={!hasChangePermission} // Disable if no change permission
                             />
                             <span
                               className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${
@@ -526,22 +595,28 @@ const MealStatus = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
                           {new Date(status.updated_at).toLocaleString('bn-BD')}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button
-                            onClick={() => handleEdit(status)}
-                            title="খাবারের স্থিতি সম্পাদনা করুন / Edit meal status"
-                            className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
-                          >
-                            <FaEdit className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(status.id)}
-                            title="খাবারের স্থিতি মুছুন / Delete meal status"
-                            className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
-                          >
-                            <FaTrash className="w-5 h-5" />
-                          </button>
-                        </td>
+                        {(hasChangePermission || hasDeletePermission) && ( // Conditionally render action buttons
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            {hasChangePermission && (
+                              <button
+                                onClick={() => handleEdit(status)}
+                                title="খাবারের স্থিতি সম্পাদনা করুন / Edit meal status"
+                                className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
+                              >
+                                <FaEdit className="w-5 h-5" />
+                              </button>
+                            )}
+                            {hasDeletePermission && (
+                              <button
+                                onClick={() => handleDelete(status.id)}
+                                title="খাবারের স্থিতি মুছুন / Delete meal status"
+                                className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                              >
+                                <FaTrash className="w-5 h-5" />
+                              </button>
+                            )}
+                          </td>
+                        )}
                       </tr>
                     );
                   })}
@@ -564,7 +639,7 @@ const MealStatus = () => {
         </div>
 
         {/* Confirmation Modal */}
-        {isModalOpen && (
+        {isModalOpen && (hasAddPermission || hasChangePermission || hasDeletePermission) && ( // Only show if user has relevant permissions
           <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[10000]">
             <div
               className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"

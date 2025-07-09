@@ -11,8 +11,12 @@ import {
 import { useGetMealsNameApiQuery } from '../../redux/features/api/meal/mealsNameApi';
 import { useGetMealItemApiQuery } from '../../redux/features/api/meal/mealItemApi';
 import { Toaster, toast } from 'react-hot-toast';
+import { useSelector } from 'react-redux'; // Import useSelector
+import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi'; // Import permission hook
+
 
 const MealSetup = () => {
+  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
   const [formData, setFormData] = useState({
     day: 'SUN',
     is_active: false,
@@ -20,27 +24,40 @@ const MealSetup = () => {
     meal_item: [],
   });
   const [editingId, setEditingId] = useState(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // This state seems unused based on select component logic
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
-  const dropdownRef = useRef(null);
+  const dropdownRef = useRef(null); // This ref is also likely unused with react-select
+
+  // Permissions hook
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Permission checks
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_meal_setup') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_meal_setup') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_meal_setup') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_meal_setup') || false;
+
 
   // Fetch data
-  const { data: mealSetups = [], isLoading: setupsLoading, error: setupsError, refetch } = useGetMealSetupApiQuery();
-  const { data: mealNames = [], isLoading: namesLoading, error: namesError } = useGetMealsNameApiQuery();
-  const { data: mealItems = [], isLoading: itemsLoading, error: itemsError } = useGetMealItemApiQuery();
+  const { data: mealSetups = [], isLoading: setupsLoading, error: setupsError, refetch } = useGetMealSetupApiQuery(undefined, { skip: !hasViewPermission });
+  const { data: mealNames = [], isLoading: namesLoading, error: namesError } = useGetMealsNameApiQuery(undefined, { skip: !hasViewPermission });
+  const { data: mealItems = [], isLoading: itemsLoading, error: itemsError } = useGetMealItemApiQuery(undefined, { skip: !hasViewPermission });
 
   // Mutations
   const [createMealSetup, { isLoading: isCreating, error: createError }] = useCreateMealSetupApiMutation();
   const [updateMealSetup, { isLoading: isUpdating, error: updateError }] = useUpdateMealSetupApiMutation();
   const [deleteMealSetup, { isLoading: isDeleting, error: deleteError }] = useDeleteMealSetupApiMutation();
 
-  // Handle clicks outside dropdown to close it
+  // Handle clicks outside dropdown to close it (if needed for custom dropdowns)
   useEffect(() => {
+    // This useEffect is mostly for custom dropdowns, not typically needed for react-select
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
+        // setIsDropdownOpen(false); // This state appears unused based on select component
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -72,7 +89,7 @@ const MealSetup = () => {
     });
   };
 
-  // Handle checkbox changes
+  // Handle checkbox changes (for is_active)
   const handleCheckboxChange = (e) => {
     const { name, checked } = e.target;
     setFormData({
@@ -81,7 +98,7 @@ const MealSetup = () => {
     });
   };
 
-  // Handle meal items checkbox changes
+  // Handle meal items checkbox changes (for multi-select)
   const handleMealItemChange = (itemId) => {
     setFormData((prev) => {
       const mealItems = prev.meal_item.includes(itemId)
@@ -94,6 +111,15 @@ const MealSetup = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (editingId && !hasChangePermission) {
+      toast.error('খাবার সেটআপ আপডেট করার অনুমতি নেই।');
+      return;
+    }
+    if (!editingId && !hasAddPermission) {
+      toast.error('নতুন খাবার সেটআপ যোগ করার অনুমতি নেই।');
+      return;
+    }
+
     if (!validateForm()) return;
 
     const payload = {
@@ -111,6 +137,10 @@ const MealSetup = () => {
 
   // Handle edit button click
   const handleEdit = (setup) => {
+    if (!hasChangePermission) {
+      toast.error('খাবার সেটআপ সম্পাদনা করার অনুমতি নেই।');
+      return;
+    }
     setFormData({
       day: setup.day,
       is_active: setup.is_active,
@@ -122,6 +152,10 @@ const MealSetup = () => {
 
   // Handle toggle active status
   const handleToggleActive = (setup) => {
+    if (!hasChangePermission) {
+      toast.error('খাবার সেটআপ স্থিতি পরিবর্তন করার অনুমতি নেই।');
+      return;
+    }
     setModalAction('toggle');
     setModalData({
       id: setup.id,
@@ -135,6 +169,10 @@ const MealSetup = () => {
 
   // Handle delete button click
   const handleDelete = (id) => {
+    if (!hasDeletePermission) {
+      toast.error('খাবার সেটআপ মুছে ফেলার অনুমতি নেই।');
+      return;
+    }
     setModalAction('delete');
     setModalData({ id });
     setIsModalOpen(true);
@@ -144,6 +182,7 @@ const MealSetup = () => {
   const confirmAction = async () => {
     try {
       if (modalAction === 'create') {
+        if (!hasAddPermission) { toast.error('খাবার সেটআপ তৈরি করার অনুমতি নেই।'); return; }
         await createMealSetup({
           day: modalData.day,
           is_active: modalData.is_active,
@@ -152,17 +191,20 @@ const MealSetup = () => {
         }).unwrap();
         toast.success('খাবার সেটআপ সফলভাবে তৈরি করা হয়েছে!');
         setFormData({ day: 'SUN', is_active: true, meal_name: '', meal_item: [] });
-        setIsDropdownOpen(false);
+        // setIsDropdownOpen(false); // No longer needed for react-select
       } else if (modalAction === 'update') {
+        if (!hasChangePermission) { toast.error('খাবার সেটআপ আপডেট করার অনুমতি নেই।'); return; }
         await updateMealSetup(modalData).unwrap();
         toast.success('খাবার সেটআপ সফলভাবে আপডেট করা হয়েছে!');
         setEditingId(null);
         setFormData({ day: 'SUN', is_active: true, meal_name: '', meal_item: [] });
-        setIsDropdownOpen(false);
+        // setIsDropdownOpen(false); // No longer needed for react-select
       } else if (modalAction === 'delete') {
+        if (!hasDeletePermission) { toast.error('খাবার সেটআপ মুছে ফেলার অনুমতি নেই।'); return; }
         await deleteMealSetup(modalData.id).unwrap();
         toast.success('খাবার সেটআপ সফলভাবে মুছে ফেলা হয়েছে!');
       } else if (modalAction === 'toggle') {
+        if (!hasChangePermission) { toast.error('খাবার সেটআপ স্থিতি পরিবর্তন করার অনুমতি নেই।'); return; }
         await updateMealSetup(modalData).unwrap();
         toast.success(`খাবার সেটআপ এখন ${modalData.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}!`);
       }
@@ -241,6 +283,29 @@ const MealSetup = () => {
     }),
   };
 
+  const isFormDisabled = isCreating || isUpdating || (!editingId && !hasAddPermission) || (editingId && !hasChangePermission);
+
+  if (setupsLoading || namesLoading || itemsLoading || permissionsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen px-4">
+        <div className="flex items-center gap-4 p-6 bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 animate-fadeIn">
+          <FaSpinner className="animate-spin text-3xl text-[#DB9E30]" />
+          <span className="text-lg font-medium text-[#441a05]">
+            লোড হচ্ছে...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasViewPermission) {
+    return (
+      <div className="p-4 text-red-400 animate-fadeIn text-center text-lg font-semibold">
+        এই পৃষ্ঠাটি দেখার অনুমতি নেই।
+      </div>
+    );
+  }
+
   return (
     <div className="py-8 w-full relative">
       <Toaster position="top-right" reverseOrder={false} />
@@ -258,10 +323,6 @@ const MealSetup = () => {
             from { transform: translateY(100%); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
           }
-          @keyframes slideDown {
-            from { transform: translateY(0); opacity: 1; }
-            to { transform: translateY(100%); opacity: 0; }
-          }
           .animate-fadeIn {
             animation: fadeIn 0.6s ease-out forwards;
           }
@@ -270,9 +331,6 @@ const MealSetup = () => {
           }
           .animate-slideUp {
             animation: slideUp 0.4s ease-out forwards;
-          }
-          .animate-slideDown {
-            animation: slideDown 0.4s ease-out forwards;
           }
           .tick-glow {
             transition: all 0.3s ease;
@@ -301,151 +359,120 @@ const MealSetup = () => {
 
       <div>
         {/* Add/Edit Meal Setup Form */}
-        <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-          <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-            {editingId ? (
-              <FaEdit className="text-4xl text-[#441a05]" />
-            ) : (
-              <IoAddCircle className="text-4xl text-[#441a05]" />
-            )}
-            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
-              {editingId ? 'খাবার সেটআপ সম্পাদনা করুন' : 'নতুন খাবার সেটআপ যোগ করুন'}
-            </h3>
-          </div>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className='flex items-center gap-5'>
-              {/* <div className="flex items-center">
-              <label className="inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="is_active"
-                  checked={formData.is_active}
-                  onChange={handleCheckboxChange}
-                  className="hidden"
-                  disabled={isCreating || isUpdating}
-                  aria-label="সক্রিয়"
-                  title="সক্রিয় / Active"
-                />
-                <span
-                  className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${formData.is_active
-                      ? 'bg-[#DB9E30] border-[#DB9E30]'
-                      : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
-                    }`}
-                >
-                  {formData.is_active && (
-                    <svg
-                      className="w-4 h-4 text-[#441a05] animate-scaleIn"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </span>
-                <span className="ml-2 text-sm text-[#441a05]">সক্রিয়</span>
-              </label>
-            </div> */}
-              <Select
-                options={days}
-                value={days.find((day) => day.value === formData.day) || null}
-                onChange={(selected) => handleInputChange('day', selected ? selected.value : 'SUN')}
-                isDisabled={isCreating || isUpdating}
-                placeholder="সপ্তাহের দিন নির্বাচন"
-                className="react-select-container w-full"
-                classNamePrefix="react-select"
-                menuPortalTarget={document.body}
-                menuPosition="fixed"
-                isSearchable={false}
-                aria-label="সপ্তাহের দিন"
-                title="সপ্তাহের দিন নির্বাচন "
-                styles={selectStyles}
-              />
+        {(hasAddPermission || hasChangePermission) && (
+          <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+            <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
+              {editingId ? (
+                <FaEdit className="text-4xl text-[#441a05]" />
+              ) : (
+                <IoAddCircle className="text-4xl text-[#441a05]" />
+              )}
+              <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
+                {editingId ? 'খাবার সেটআপ সম্পাদনা করুন' : 'নতুন খাবার সেটআপ যোগ করুন'}
+              </h3>
             </div>
-            <div>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className='flex items-center gap-5'>
+                <Select
+                  options={days}
+                  value={days.find((day) => day.value === formData.day) || null}
+                  onChange={(selected) => handleInputChange('day', selected ? selected.value : 'SUN')}
+                  isDisabled={isFormDisabled}
+                  placeholder="সপ্তাহের দিন নির্বাচন"
+                  className="react-select-container w-full"
+                  classNamePrefix="react-select"
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                  isSearchable={false}
+                  aria-label="সপ্তাহের দিন"
+                  title="সপ্তাহের দিন নির্বাচন "
+                  styles={selectStyles}
+                />
+              </div>
+              <div>
+                <Select
+                  options={mealNames.map((meal) => ({ value: meal.id.toString(), label: meal.name }))}
+                  value={
+                    formData.meal_name
+                      ? { value: formData.meal_name, label: mealNames.find((meal) => meal.id.toString() === formData.meal_name)?.name || 'অজানা' }
+                      : null
+                  }
+                  onChange={(selected) => handleInputChange('meal_name', selected ? selected.value : '')}
+                  isDisabled={isFormDisabled || namesLoading}
+                  placeholder="খাবারের ধরন নির্বাচন"
+                  className="react-select-container"
+                  classNamePrefix="react-select"
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                  isSearchable={false}
+                  aria-label="খাবারের ধরন"
+                  title="খাবারের ধরন"
+                  styles={selectStyles}
+                />
+              </div>
               <Select
-                options={mealNames.map((meal) => ({ value: meal.id.toString(), label: meal.name }))}
-                value={
-                  formData.meal_name
-                    ? { value: formData.meal_name, label: mealNames.find((meal) => meal.id.toString() === formData.meal_name)?.name || 'অজানা' }
-                    : null
-                }
-                onChange={(selected) => handleInputChange('meal_name', selected ? selected.value : '')}
-                isDisabled={isCreating || isUpdating || namesLoading}
-                placeholder="খাবারের ধরন নির্বাচন"
+                options={mealItems.map((item) => ({ value: item.id.toString(), label: item.name }))}
+                value={formData.meal_item.map((itemId) =>
+                  ({ value: itemId.toString(), label: mealItems.find((item) => item.id === itemId)?.name || 'অজানা' })
+                )}
+                onChange={(selected) => handleInputChange('meal_item', selected ? selected.map(opt => Number(opt.value)) : [])}
+                isDisabled={isFormDisabled || itemsLoading}
+                isMulti
+                placeholder="খাবারের আইটেম নির্বাচন"
                 className="react-select-container"
                 classNamePrefix="react-select"
                 menuPortalTarget={document.body}
                 menuPosition="fixed"
                 isSearchable={false}
-                aria-label="খাবারের ধরন"
-                title="খাবারের ধরন"
+                aria-label="খাবারের আইটেম নির্বাচন করুন"
+                title="খাবারের আইটেম নির্বাচন করুন / Select meal items"
                 styles={selectStyles}
               />
-            </div>
-            <Select
-              options={mealItems.map((item) => ({ value: item.id.toString(), label: item.name }))}
-              value={formData.meal_item.map((itemId) =>
-                ({ value: itemId.toString(), label: mealItems.find((item) => item.id === itemId)?.name || 'অজানা' })
-              )}
-              onChange={(selected) => handleInputChange('meal_item', selected ? selected.map(opt => Number(opt.value)) : [])}
-              isDisabled={isCreating || isUpdating || itemsLoading}
-              isMulti
-              placeholder="খাবারের আইটেম নির্বাচন"
-              className="react-select-container"
-              classNamePrefix="react-select"
-              menuPortalTarget={document.body}
-              menuPosition="fixed"
-              isSearchable={false}
-              aria-label="খাবারের আইটেম নির্বাচন করুন"
-              title="খাবারের আইটেম নির্বাচন করুন / Select meal items"
-              styles={selectStyles}
-            />
-            <button
-              type="submit"
-              disabled={isCreating || isUpdating}
-              title={editingId ? 'খাবার সেটআপ আপডেট করুন / Update meal setup' : 'নতুন খাবার সেটআপ তৈরি করুন / Create a new meal setup'}
-              className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${isCreating || isUpdating ? 'cursor-not-allowed' : 'hover:text-white hover:shadow-md'
-                }`}
-            >
-              {(isCreating || isUpdating) ? (
-                <span className="flex items-center space-x-3">
-                  <FaSpinner className="animate-spin text-lg" />
-                  <span>{editingId ? 'আপডেট করা হচ্ছে...' : 'তৈরি করা হচ্ছে...'}</span>
-                </span>
-              ) : (
-                <span className="flex items-center space-x-2">
-                  <IoAdd className="w-5 h-5" />
-                  <span>{editingId ? 'সেটআপ আপডেট করুন' : 'সেটআপ তৈরি করুন'}</span>
-                </span>
-              )}
-            </button>
-            {editingId && (
               <button
-                type="button"
-                onClick={() => {
-                  setFormData({ day: 'SUN', is_active: true, meal_name: '', meal_item: [] });
-                  setEditingId(null);
-                  setIsDropdownOpen(false);
-                }}
-                title="সম্পাদনা বাতিল করুন / Cancel editing"
-                className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
+                type="submit"
+                disabled={isFormDisabled}
+                title={editingId ? 'খাবার সেটআপ আপডেট করুন / Update meal setup' : 'নতুন খাবার সেটআপ তৈরি করুন / Create a new meal setup'}
+                className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${isFormDisabled ? 'cursor-not-allowed' : 'hover:text-white hover:shadow-md'
+                  }`}
               >
-                বাতিল
+                {(isCreating || isUpdating) ? (
+                  <span className="flex items-center space-x-3">
+                    <FaSpinner className="animate-spin text-lg" />
+                    <span>{editingId ? 'আপডেট করা হচ্ছে...' : 'তৈরি করা হচ্ছে...'}</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center space-x-2">
+                    <IoAdd className="w-5 h-5" />
+                    <span>{editingId ? 'সেটআপ আপডেট করুন' : 'সেটআপ তৈরি করুন'}</span>
+                  </span>
+                )}
               </button>
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData({ day: 'SUN', is_active: true, meal_name: '', meal_item: [] });
+                    setEditingId(null);
+                    // setIsDropdownOpen(false); // No longer needed
+                  }}
+                  title="সম্পাদনা বাতিল করুন / Cancel editing"
+                  className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
+                >
+                  বাতিল
+                </button>
+              )}
+            </form>
+            {(createError || updateError) && (
+              <div
+                id="setup-error"
+                className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
+                style={{ animationDelay: '0.4s' }}
+              >
+                ত্রুটি: {(createError || updateError).status || 'অজানা'} - {JSON.stringify((createError || updateError).data || {})}
+              </div>
             )}
-          </form>
-          {(createError || updateError) && (
-            <div
-              id="setup-error"
-              className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
-              style={{ animationDelay: '0.4s' }}
-            >
-              ত্রুটি: {(createError || updateError).status || 'অজানা'} - {JSON.stringify((createError || updateError).data || {})}
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Meal Setups Table */}
         <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
@@ -476,18 +503,22 @@ const MealSetup = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       খাবারের আইটেম
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      সক্রিয়
-                    </th>
+                    {hasChangePermission && ( // Conditionally render active column
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        সক্রিয়
+                      </th>
+                    )}
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       তৈরির সময়
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       আপডেটের সময়
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ক্রিয়াকলাপ
-                    </th>
+                    {(hasChangePermission || hasDeletePermission) && ( // Conditionally render actions column
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        ক্রিয়াকলাপ
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/20">
@@ -511,61 +542,70 @@ const MealSetup = () => {
                           .map((itemId) => mealItems.find((item) => item.id === itemId)?.name || 'অজানা')
                           .join(', ')}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
-                        <label className="inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={setup.is_active}
-                            onChange={() => handleToggleActive(setup)}
-                            className="hidden"
-                          />
-                          <span
-                            className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${setup.is_active
-                                ? 'bg-[#DB9E30] border-[#DB9E30]'
-                                : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
-                              }`}
-                          >
-                            {setup.is_active && (
-                              <svg
-                                className="w-4 h-4 text-[#441a05] animate-scaleIn"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
-                            )}
-                          </span>
-                        </label>
-                      </td>
+                      {hasChangePermission && ( // Conditionally render active toggle
+                        <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
+                          <label className="inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={setup.is_active}
+                              onChange={() => handleToggleActive(setup)}
+                              className="hidden"
+                              disabled={!hasChangePermission} // Disable if no change permission
+                            />
+                            <span
+                              className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${setup.is_active
+                                  ? 'bg-[#DB9E30] border-[#DB9E30]'
+                                  : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
+                                }`}
+                            >
+                              {setup.is_active && (
+                                <svg
+                                  className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              )}
+                            </span>
+                          </label>
+                        </td>
+                      )}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
                         {new Date(setup.created_at).toLocaleString('bn-BD')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
                         {new Date(setup.updated_at).toLocaleString('bn-BD')}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleEdit(setup)}
-                          title="খাবার সেটআপ সম্পাদনা করুন / Edit meal setup"
-                          className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
-                        >
-                          <FaEdit className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(setup.id)}
-                          title="খাবার সেটআপ মুছুন / Delete meal setup"
-                          className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
-                        >
-                          <FaTrash className="w-5 h-5" />
-                        </button>
-                      </td>
+                      {(hasChangePermission || hasDeletePermission) && ( // Conditionally render action buttons
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          {hasChangePermission && (
+                            <button
+                              onClick={() => handleEdit(setup)}
+                              title="খাবার সেটআপ সম্পাদনা করুন / Edit meal setup"
+                              className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
+                            >
+                              <FaEdit className="w-5 h-5" />
+                            </button>
+                          )}
+                          {hasDeletePermission && (
+                            <button
+                              onClick={() => handleDelete(setup.id)}
+                              title="খাবার সেটআপ মুছুন / Delete meal setup"
+                              className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                            >
+                              <FaTrash className="w-5 h-5" />
+                            </button>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -587,7 +627,7 @@ const MealSetup = () => {
         </div>
 
         {/* Confirmation Modal */}
-        {isModalOpen && (
+        {isModalOpen && (hasAddPermission || hasChangePermission || hasDeletePermission) && ( // Only show if user has relevant permissions
           <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[10000]">
             <div
               className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"

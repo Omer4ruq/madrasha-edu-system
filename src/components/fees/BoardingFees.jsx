@@ -9,9 +9,12 @@ import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-ye
 import { useGetFundsQuery } from '../../redux/features/api/funds/fundsApi';
 import { useGetWaiversQuery } from '../../redux/features/api/waivers/waiversApi';
 import { useCreateFeeMutation, useUpdateFeeMutation, useDeleteFeeMutation } from '../../redux/features/api/fees/feesApi';
-import selectStyles from '../../utilitis/selectStyles';
+import selectStyles from '../../utilitis/selectStyles'; // Assuming this path is correct
+import { useSelector } from 'react-redux'; // Import useSelector
+import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi'; // Import permission hook
 
 const BoardingFees = () => {
+  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
   const [userId, setUserId] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
@@ -26,18 +29,31 @@ const BoardingFees = () => {
   const [selectAll, setSelectAll] = useState(false); // State for Select All checkbox
   const dropdownRef = useRef(null);
 
+  // Permissions hook
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Permission checks
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_fees') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_fees') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_fees') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_fees') || false;
+
+
   // API Queries
   const { data: studentData, isLoading: studentLoading, error: studentError } = useGetStudentActiveApiQuery(
     userId ? { user_id: userId } : undefined,
-    { skip: !userId }
+    { skip: !userId || !hasViewPermission } // Skip query if no view permission
   );
   const {
     data: feesData,
-    refetch: refetchFees
-  } = useGetStudentCurrentFeesQuery(selectedStudent?.id, { skip: !selectedStudent });
-  const { data: academicYears } = useGetAcademicYearApiQuery();
-  const { data: funds } = useGetFundsQuery();
-  const { data: waivers } = useGetWaiversQuery();
+    refetch: refetchFees,
+    isLoading: feesDataLoading, // Added loading state
+  } = useGetStudentCurrentFeesQuery(selectedStudent?.id, { skip: !selectedStudent || !hasViewPermission });
+  const { data: academicYears, isLoading: academicYearsLoading } = useGetAcademicYearApiQuery(undefined, { skip: !hasViewPermission });
+  const { data: funds, isLoading: fundsLoading } = useGetFundsQuery(undefined, { skip: !hasViewPermission });
+  const { data: waivers, isLoading: waiversLoading } = useGetWaiversQuery(undefined, { skip: !hasViewPermission });
   const [createFee, { isLoading: isCreating }] = useCreateFeeMutation();
   const [updateFee, { isLoading: isUpdating }] = useUpdateFeeMutation();
   const [deleteFee, { isLoading: isDeleting }] = useDeleteFeeMutation();
@@ -124,11 +140,19 @@ const BoardingFees = () => {
 
   // Handle payment input change
   const handlePaymentInput = (feeId, value) => {
+    if (!hasChangePermission) {
+      toast.error('পেমেন্ট ইনপুট পরিবর্তন করার অনুমতি নেই।');
+      return;
+    }
     setPaymentInputs((prev) => ({ ...prev, [feeId]: value }));
   };
 
   // Handle discount input change
   const handleDiscountInput = (feeId, value, payableAfterWaiver) => {
+    if (!hasChangePermission) {
+      toast.error('ডিসকাউন্ট ইনপুট পরিবর্তন করার অনুমতি নেই।');
+      return;
+    }
     const discount = parseFloat(value) || 0;
     if (discount > parseFloat(payableAfterWaiver)) {
       toast.error(`ডিসকাউন্ট পেয়েবল পরিমাণ (${payableAfterWaiver}) অতিক্রম করতে পারে না`);
@@ -139,6 +163,10 @@ const BoardingFees = () => {
 
   // Handle fee selection
   const handleFeeSelect = (feeId) => {
+    if (!hasAddPermission && !hasChangePermission) { // Allow selection if either add or change
+      toast.error('ফি নির্বাচন করার অনুমতি নেই।');
+      return;
+    }
     setSelectedFees((prev) =>
       prev.includes(feeId)
         ? prev.filter((id) => id !== feeId)
@@ -148,6 +176,10 @@ const BoardingFees = () => {
 
   // Handle Select All checkbox
   const handleSelectAll = () => {
+    if (!hasAddPermission && !hasChangePermission) { // Allow select all if either add or change
+      toast.error('সব ফি নির্বাচন করার অনুমতি নেই।');
+      return;
+    }
     if (selectAll) {
       setSelectedFees([]);
       setSelectAll(false);
@@ -196,6 +228,10 @@ const BoardingFees = () => {
   // Handle submit
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!hasAddPermission && !hasChangePermission) { // Allow submit if either add or change
+      toast.error('ফি প্রক্রিয়া করার অনুমতি নেই।');
+      return;
+    }
     if (!validateForm()) return;
 
     setModalAction('submit');
@@ -207,6 +243,10 @@ const BoardingFees = () => {
   const confirmAction = async () => {
     try {
       if (modalAction === 'submit') {
+        if (!hasAddPermission && !hasChangePermission) { // Double check for security
+          toast.error('ফি প্রক্রিয়া করার অনুমতি নেই।');
+          return;
+        }
         const promises = modalData.fees.map(async (feeId) => {
           const fee = filteredFees.find((f) => f.id === feeId);
           const { waiverAmount, payableAfterWaiver } = calculatePayableAmount(fee, waivers);
@@ -251,8 +291,10 @@ const BoardingFees = () => {
           );
 
           if (existingFeeRecord) {
+            if (!hasChangePermission) { toast.error('ফি আপডেট করার অনুমতি নেই।'); return Promise.reject("Permission denied"); }
             return updateFee({ id: existingFeeRecord.id, ...feeData }).unwrap();
           } else {
+            if (!hasAddPermission) { toast.error('ফি তৈরি করার অনুমতি নেই।'); return Promise.reject("Permission denied"); }
             return createFee(feeData).unwrap();
           }
         });
@@ -265,10 +307,12 @@ const BoardingFees = () => {
         setSelectAll(false); // Reset Select All after submission
         refetchFees();
       } else if (modalAction === 'update') {
+        if (!hasChangePermission) { toast.error('বোর্ডিং ফি আপডেট করার অনুমতি নেই।'); return; }
         await updateFee(modalData).unwrap();
         toast.success('বোর্ডিং ফি সফলভাবে আপডেট করা হয়েছে!');
         refetchFees();
       } else if (modalAction === 'delete') {
+        if (!hasDeletePermission) { toast.error('বোর্ডিং ফি মুছে ফেলার অনুমতি নেই।'); return; }
         await deleteFee(modalData.id).unwrap();
         toast.success('বোর্ডিং ফি সফলভাবে মুছে ফেলা হয়েছে!');
         refetchFees();
@@ -285,6 +329,10 @@ const BoardingFees = () => {
 
   // Handle fee update
   const handleUpdateFee = (feeId, updatedData) => {
+    if (!hasChangePermission) {
+      toast.error('বোর্ডিং ফি আপডেট করার অনুমতি নেই।');
+      return;
+    }
     setModalAction('update');
     setModalData({ id: feeId, ...updatedData });
     setIsModalOpen(true);
@@ -292,6 +340,10 @@ const BoardingFees = () => {
 
   // Handle fee deletion
   const handleDeleteFee = (feeId) => {
+    if (!hasDeletePermission) {
+      toast.error('বোর্ডিং ফি মুছে ফেলার অনুমতি নেই।');
+      return;
+    }
     setModalAction('delete');
     setModalData({ id: feeId });
     setIsModalOpen(true);
@@ -306,6 +358,29 @@ const BoardingFees = () => {
     value: fund.id,
     label: fund.name,
   })) || [];
+
+  const isLoadingData = studentLoading || feesDataLoading || academicYearsLoading || fundsLoading || waiversLoading || permissionsLoading;
+
+  if (isLoadingData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen px-4">
+        <div className="flex items-center gap-4 p-6 bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 animate-fadeIn">
+          <FaSpinner className="animate-spin text-3xl text-[#DB9E30]" />
+          <span className="text-lg font-medium text-[#441a05]">
+            লোড হচ্ছে...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasViewPermission) {
+    return (
+      <div className="p-4 text-red-400 animate-fadeIn text-center text-lg font-semibold">
+        এই পৃষ্ঠাটি দেখার অনুমতি নেই।
+      </div>
+    );
+  }
 
   return (
     <div className="py-8">
@@ -377,7 +452,7 @@ const BoardingFees = () => {
                 onFocus={() => setIsUserDropdownOpen(true)}
                 placeholder="ইউজার আইডি লিখুন"
                 className="w-full bg-transparent p-2 text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
-                disabled={isCreating || isUpdating}
+                disabled={isCreating || isUpdating || !hasAddPermission} // Disable if no add permission
                 aria-label="ইউজার আইডি"
                 title="ইউজার আইডি / User ID"
               />
@@ -388,7 +463,7 @@ const BoardingFees = () => {
                 options={academicYearOptions}
                 value={academicYearOptions.find((opt) => opt.value === selectedAcademicYear) || null}
                 onChange={(selected) => setSelectedAcademicYear(selected ? selected.value : '')}
-                isDisabled={isCreating || isUpdating}
+                isDisabled={isCreating || isUpdating || !hasAddPermission} // Disable if no add permission
                 placeholder="একাডেমিক বছর নির্বাচন করুন"
                 className="react-select-container"
                 classNamePrefix="react-select"
@@ -406,7 +481,7 @@ const BoardingFees = () => {
                 options={fundOptions}
                 value={fundOptions.find((opt) => opt.value === selectedFund) || null}
                 onChange={(selected) => setSelectedFund(selected ? selected.value : '')}
-                isDisabled={isCreating || isUpdating}
+                isDisabled={isCreating || isUpdating || !hasAddPermission} // Disable if no add permission
                 placeholder="ফান্ড নির্বাচন করুন"
                 className="react-select-container"
                 classNamePrefix="react-select"
@@ -471,40 +546,42 @@ const BoardingFees = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                         স্থিতি
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                        <label className="inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={selectAll}
-                            onChange={handleSelectAll}
-                            disabled={isCreating || isUpdating || filteredFees.every(fee => getFeeStatus(fee).status === 'PAID')}
-                            className="hidden"
-                            aria-label="সব ফি নির্বাচন করুন"
-                            title="সব ফি নির্বাচন করুন / Select all fees"
-                          />
-                          <span
-                            className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${selectAll ? 'bg-[#DB9E30] border-[#DB9E30]' : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'}`}
-                          >
-                            {selectAll && (
-                              <svg
-                                className="w-4 h-4 text-[#441a05] animate-scaleIn"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
-                            )}
-                          </span>
-                          <span className="ml-2 text-[#441a05]/70 text-nowrap">সব নির্বাচন</span>
-                        </label>
-                      </th>
+                      {(hasAddPermission || hasChangePermission) && ( // Only show select column if user has add/change permission
+                        <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                          <label className="inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={selectAll}
+                              onChange={handleSelectAll}
+                              disabled={isCreating || isUpdating || filteredFees.every(fee => getFeeStatus(fee).status === 'PAID') || (!hasAddPermission && !hasChangePermission)} // Disable if no add/change permission
+                              className="hidden"
+                              aria-label="সব ফি নির্বাচন করুন"
+                              title="সব ফি নির্বাচন করুন / Select all fees"
+                            />
+                            <span
+                              className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${selectAll ? 'bg-[#DB9E30] border-[#DB9E30]' : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'}`}
+                            >
+                              {selectAll && (
+                                <svg
+                                  className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              )}
+                            </span>
+                            <span className="ml-2 text-[#441a05]/70 text-nowrap">সব নির্বাচন</span>
+                          </label>
+                        </th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/20">
@@ -554,7 +631,7 @@ const BoardingFees = () => {
                               onChange={(e) => handleDiscountInput(fee.id, e.target.value, payableAfterWaiver)}
                               className="w-full bg-transparent p-2 text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
                               min="0"
-                              disabled={status === 'PAID' || isCreating || isUpdating}
+                              disabled={status === 'PAID' || isCreating || isUpdating || !hasChangePermission} // Disable if no change permission
                               placeholder={existingRecord ? `বর্তমান: ${storedDiscountAmount}` : '0'}
                               aria-label="ডিসকাউন্ট ইনপুট"
                               title="ডিসকাউন্ট ইনপুট / Discount input"
@@ -573,7 +650,7 @@ const BoardingFees = () => {
                               onChange={(e) => handlePaymentInput(fee.id, e.target.value)}
                               className="w-full bg-transparent p-2 text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
                               min="0"
-                              disabled={status === 'PAID' || isCreating || isUpdating}
+                              disabled={status === 'PAID' || isCreating || isUpdating || !hasAddPermission} // Disable if no add permission
                               placeholder={status === 'PARTIAL' ? `বাকি: ${dueAmount}` : '0'}
                               aria-label="এখন প্রদান"
                               title="এখন প্রদান / Pay now"
@@ -594,74 +671,78 @@ const BoardingFees = () => {
                               {status === 'PAID' ? 'প্রদান' : status === 'PARTIAL' ? 'আংশিক' : 'অপ্রদান'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
-                            <label className="inline-flex items-center cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={selectedFees.includes(fee.id)}
-                                onChange={() => handleFeeSelect(fee.id)}
-                                disabled={status === 'PAID' || isCreating || isUpdating}
-                                className="hidden"
-                                aria-label={`ফি নির্বাচন ${fee.fees_title}`}
-                                title={`ফি নির্বাচন করুন / Select fee ${fee.fees_title}`}
-                              />
-                              <span
-                                className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${selectedFees.includes(fee.id)
-                                  ? 'bg-[#DB9E30] border-[#DB9E30]'
-                                  : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
-                                  }`}
-                              >
-                                {selectedFees.includes(fee.id) && (
-                                  <svg
-                                    className="w-4 h-4 text-[#441a05] animate-scaleIn"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth="2"
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                )}
-                              </span>
-                            </label>
-                          </td>
+                          {(hasAddPermission || hasChangePermission) && ( // Conditionally render checkbox
+                            <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
+                              <label className="inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedFees.includes(fee.id)}
+                                  onChange={() => handleFeeSelect(fee.id)}
+                                  disabled={status === 'PAID' || isCreating || isUpdating || (!hasAddPermission && !hasChangePermission)} // Disable if no add/change permission
+                                  className="hidden"
+                                  aria-label={`ফি নির্বাচন ${fee.fees_title}`}
+                                  title={`ফি নির্বাচন করুন / Select fee ${fee.fees_title}`}
+                                />
+                                <span
+                                  className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${selectedFees.includes(fee.id)
+                                    ? 'bg-[#DB9E30] border-[#DB9E30]'
+                                    : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
+                                    }`}
+                                >
+                                  {selectedFees.includes(fee.id) && (
+                                    <svg
+                                      className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M5 13l4 4L19 7"
+                                      />
+                                    </svg>
+                                  )}
+                                </span>
+                              </label>
+                            </td>
+                          )}
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
               </div>
-              <button
-                type="submit"
-                disabled={selectedFees.length === 0 || isCreating || isUpdating}
-                className={`mt-4 relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${selectedFees.length === 0 || isCreating || isUpdating ? 'cursor-not-allowed' : 'hover:text-white hover:shadow-md'
-                  }`}
-                aria-label="নির্বাচিত বোর্ডিং ফি জমা দিন"
-                title={selectedFees.some(feeId => feesData?.fees_records?.find((record) => record.feetype_id === feeId))
-                  ? 'নির্বাচিত বোর্ডিং ফি আপডেট করুন / Update selected boarding fees'
-                  : 'নির্বাচিত বোর্ডিং ফি জমা দিন / Submit selected boarding fees'}
-              >
-                {(isCreating || isUpdating) ? (
-                  <span className="flex items-center space-x-3">
-                    <FaSpinner className="animate-spin text-lg" />
-                    <span>প্রক্রিয়াকরণ...</span>
-                  </span>
-                ) : (
-                  <span className="flex items-center space-x-2">
-                    <IoAdd className="w-5 h-5" />
-                    <span>
-                      {selectedFees.some(feeId => feesData?.fees_records?.find((record) => record.feetype_id === feeId))
-                        ? 'নির্বাচিত বোর্ডিং ফি আপডেট করুন'
-                        : 'নির্বাচিত বোর্ডিং ফি জমা দিন'}
+              {(hasAddPermission || hasChangePermission) && ( // Only show submit button if user has add/change permission
+                <button
+                  type="submit"
+                  disabled={selectedFees.length === 0 || isCreating || isUpdating || (!hasAddPermission && !hasChangePermission)} // Disable if no add/change permission
+                  className={`mt-4 relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${selectedFees.length === 0 || isCreating || isUpdating || (!hasAddPermission && !hasChangePermission) ? 'cursor-not-allowed' : 'hover:text-white hover:shadow-md'
+                    }`}
+                  aria-label="নির্বাচিত বোর্ডিং ফি জমা দিন"
+                  title={selectedFees.some(feeId => feesData?.fees_records?.find((record) => record.feetype_id === feeId))
+                    ? 'নির্বাচিত বোর্ডিং ফি আপডেট করুন / Update selected boarding fees'
+                    : 'নির্বাচিত বোর্ডিং ফি জমা দিন / Submit selected boarding fees'}
+                >
+                  {(isCreating || isUpdating) ? (
+                    <span className="flex items-center space-x-3">
+                      <FaSpinner className="animate-spin text-lg" />
+                      <span>প্রক্রিয়াকরণ...</span>
                     </span>
-                  </span>
-                )}
-              </button>
+                  ) : (
+                    <span className="flex items-center space-x-2">
+                      <IoAdd className="w-5 h-5" />
+                      <span>
+                        {selectedFees.some(feeId => feesData?.fees_records?.find((record) => record.feetype_id === feeId))
+                          ? 'নির্বাচিত বোর্ডিং ফি আপডেট করুন'
+                          : 'নির্বাচিত বোর্ডিং ফি জমা দিন'}
+                      </span>
+                    </span>
+                  )}
+                </button>
+              )}
             </form>
           </div>
         )}
@@ -692,9 +773,11 @@ const BoardingFees = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       স্থিতি
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ক্রিয়াকলাপ
-                    </th>
+                    {(hasChangePermission || hasDeletePermission) && ( // Conditionally render actions column
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        ক্রিয়াকলাপ
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/20">
@@ -743,29 +826,35 @@ const BoardingFees = () => {
                               {fee.status === 'PAID' ? 'প্রদান' : fee.status === 'PARTIAL' ? 'আংশিক' : 'অপ্রদান'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button
-                              onClick={() =>
-                                handleUpdateFee(fee.id, {
-                                  amount: fee.amount,
-                                  discount_amount: fee.discount_amount,
-                                  status: fee.status,
-                                  waiver_amount: fee.waiver_amount || waiverAmount,
-                                })
-                              }
-                              title="বোর্ডিং ফি আপডেট করুন / Update boarding fee"
-                              className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
-                            >
-                              <FaEdit className="w-5 h-5" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteFee(fee.id)}
-                              title="বোর্ডিং ফি মুছুন / Delete boarding fee"
-                              className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
-                            >
-                              <FaTrash className="w-5 h-5" />
-                            </button>
-                          </td>
+                          {(hasChangePermission || hasDeletePermission) && ( // Conditionally render action buttons
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              {hasChangePermission && (
+                                <button
+                                  onClick={() =>
+                                    handleUpdateFee(fee.id, {
+                                      amount: fee.amount,
+                                      discount_amount: fee.discount_amount,
+                                      status: fee.status,
+                                      waiver_amount: fee.waiver_amount || waiverAmount,
+                                    })
+                                  }
+                                  title="বোর্ডিং ফি আপডেট করুন / Update boarding fee"
+                                  className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
+                                >
+                                  <FaEdit className="w-5 h-5" />
+                                </button>
+                              )}
+                              {hasDeletePermission && (
+                                <button
+                                  onClick={() => handleDeleteFee(fee.id)}
+                                  title="বোর্ডিং ফি মুছুন / Delete boarding fee"
+                                  className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                                >
+                                  <FaTrash className="w-5 h-5" />
+                                </button>
+                              )}
+                            </td>
+                          )}
                         </tr>
                       );
                     })}
@@ -789,7 +878,7 @@ const BoardingFees = () => {
         )}
 
         {/* Confirmation Modal */}
-        {isModalOpen && (
+        {isModalOpen && (hasAddPermission || hasChangePermission || hasDeletePermission) && ( // Only show if user has relevant permissions
           <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[10000]">
             <div
               className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"

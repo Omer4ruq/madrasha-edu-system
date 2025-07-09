@@ -8,8 +8,12 @@ import {
   useGetExamApiQuery,
   useUpdateExamApiMutation,
 } from "../../../redux/features/api/exam/examApi";
+import { useSelector } from "react-redux"; // Import useSelector
+import { useGetGroupPermissionsQuery } from "../../../redux/features/api/permissionRole/groupsApi"; // Import permission hook
+
 
 const AddExamType = () => {
+  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
   const [examName, setExamName] = useState("");
   const [editExamId, setEditExamId] = useState(null);
   const [editExamName, setEditExamName] = useState("");
@@ -27,9 +31,24 @@ const AddExamType = () => {
   const [updateExam, { isLoading: isUpdating, error: updateError }] = useUpdateExamApiMutation();
   const [deleteExam, { isLoading: isDeleting, error: deleteError }] = useDeleteExamApiMutation();
 
+  // Permissions hook
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Permission checks
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_examname') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_examname') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_examname') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_examname') || false;
+
   // Handle form submission for adding new exam type
   const handleSubmitExam = async (e) => {
     e.preventDefault();
+    if (!hasAddPermission) {
+      toast.error('পরীক্ষার ধরন যোগ করার অনুমতি নেই।');
+      return;
+    }
     if (!examName.trim()) {
       toast.error("অনুগ্রহ করে একটি পরীক্ষার ধরনের নাম লিখুন");
       return;
@@ -49,6 +68,10 @@ const AddExamType = () => {
 
   // Handle edit button click
   const handleEditClick = (exam) => {
+    if (!hasChangePermission) {
+      toast.error('পরীক্ষার ধরন সম্পাদনা করার অনুমতি নেই।');
+      return;
+    }
     setEditExamId(exam.id);
     setEditExamName(exam.name);
   };
@@ -56,6 +79,10 @@ const AddExamType = () => {
   // Handle update exam type
   const handleUpdate = async (e) => {
     e.preventDefault();
+    if (!hasChangePermission) {
+      toast.error('পরীক্ষার ধরন আপডেট করার অনুমতি নেই।');
+      return;
+    }
     if (!editExamName.trim()) {
       toast.error("অনুগ্রহ করে একটি পরীক্ষার ধরনের নাম লিখুন");
       return;
@@ -72,6 +99,10 @@ const AddExamType = () => {
 
   // Handle toggle active status
   const handleToggleActive = (exam) => {
+    if (!hasChangePermission) {
+      toast.error('পরীক্ষার ধরনের স্থিতি পরিবর্তন করার অনুমতি নেই।');
+      return;
+    }
     setModalAction("toggle");
     setModalData({
       id: exam.id,
@@ -83,6 +114,10 @@ const AddExamType = () => {
 
   // Handle delete exam type
   const handleDelete = (id) => {
+    if (!hasDeletePermission) {
+      toast.error('পরীক্ষার ধরন মুছে ফেলার অনুমতি নেই।');
+      return;
+    }
     setModalAction("delete");
     setModalData({ id });
     setIsModalOpen(true);
@@ -92,18 +127,34 @@ const AddExamType = () => {
   const confirmAction = async () => {
     try {
       if (modalAction === "create") {
+        if (!hasAddPermission) {
+          toast.error('পরীক্ষার ধরন তৈরি করার অনুমতি নেই।');
+          return;
+        }
         await createExam(modalData).unwrap();
         toast.success("পরীক্ষার ধরন সফলভাবে তৈরি করা হয়েছে!");
         setExamName("");
       } else if (modalAction === "update") {
+        if (!hasChangePermission) {
+          toast.error('পরীক্ষার ধরন আপডেট করার অনুমতি নেই।');
+          return;
+        }
         await updateExam(modalData).unwrap();
         toast.success("পরীক্ষার ধরন সফলভাবে আপডেট করা হয়েছে!");
         setEditExamId(null);
         setEditExamName("");
       } else if (modalAction === "delete") {
+        if (!hasDeletePermission) {
+          toast.error('পরীক্ষার ধরন মুছে ফেলার অনুমতি নেই।');
+          return;
+        }
         await deleteExam(modalData.id).unwrap();
         toast.success("পরীক্ষার ধরন সফলভাবে মুছে ফেলা হয়েছে!");
       } else if (modalAction === "toggle") {
+        if (!hasChangePermission) {
+          toast.error('পরীক্ষার ধরনের স্থিতি পরিবর্তন করার অনুমতি নেই।');
+          return;
+        }
         await updateExam(modalData).unwrap();
         toast.success(`পরীক্ষার ধরন ${modalData.name} এখন ${modalData.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"}!`);
       }
@@ -116,6 +167,23 @@ const AddExamType = () => {
       setModalData(null);
     }
   };
+
+  if (isExamLoading || permissionsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen px-4">
+        <div className="flex items-center gap-4 p-6 bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 animate-fadeIn">
+          <FaSpinner className="animate-spin text-3xl text-[#DB9E30]" />
+          <span className="text-lg font-medium text-[#441a05]">
+            লোড হচ্ছে...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-red-400 animate-fadeIn">এই পৃষ্ঠাটি দেখার অনুমতি নেই।</div>;
+  }
 
   return (
     <div className="py-8 w-full relative">
@@ -177,56 +245,58 @@ const AddExamType = () => {
 
       <div className="">
         {/* Form to Add Exam Type */}
-        <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-          <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-            <IoAddCircle className="text-4xl text-[#441a05]" />
-            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">নতুন পরীক্ষার ধরন যোগ করুন</h3>
-          </div>
-          <form onSubmit={handleSubmitExam} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
-            <input
-              type="text"
-              id="examName"
-              value={examName}
-              onChange={(e) => setExamName(e.target.value)}
-              className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-              placeholder="পরীক্ষার ধরন লিখুন (যেমন, মধ্যবর্তী)"
-              disabled={isCreating}
-              aria-describedby={createError ? "exam-error" : undefined}
-            />
-            <button
-              type="submit"
-              disabled={isCreating}
-              title="নতুন পরীক্ষার ধরন তৈরি করুন"
-              className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                isCreating ? "cursor-not-allowed" : "hover:text-white hover:shadow-md"
-              }`}
-            >
-              {isCreating ? (
-                <span className="flex items-center space-x-3">
-                  <FaSpinner className="animate-spin text-lg" />
-                  <span>তৈরি করা হচ্ছে...</span>
-                </span>
-              ) : (
-                <span className="flex items-center space-x-2">
-                  <IoAdd className="w-5 h-5" />
-                  <span>পরীক্ষার ধরন তৈরি করুন</span>
-                </span>
-              )}
-            </button>
-          </form>
-          {createError && (
-            <div
-              id="exam-error"
-              className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
-              style={{ animationDelay: "0.4s" }}
-            >
-              ত্রুটি: {createError.status || "অজানা"} - {JSON.stringify(createError.data || {})}
+        {hasAddPermission && (
+          <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+            <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
+              <IoAddCircle className="text-4xl text-[#441a05]" />
+              <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">নতুন পরীক্ষার ধরন যোগ করুন</h3>
             </div>
-          )}
-        </div>
+            <form onSubmit={handleSubmitExam} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
+              <input
+                type="text"
+                id="examName"
+                value={examName}
+                onChange={(e) => setExamName(e.target.value)}
+                className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
+                placeholder="পরীক্ষার ধরন লিখুন (যেমন, মধ্যবর্তী)"
+                disabled={isCreating}
+                aria-describedby={createError ? "exam-error" : undefined}
+              />
+              <button
+                type="submit"
+                disabled={isCreating}
+                title="নতুন পরীক্ষার ধরন তৈরি করুন"
+                className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
+                  isCreating ? "cursor-not-allowed" : "hover:text-white hover:shadow-md"
+                }`}
+              >
+                {isCreating ? (
+                  <span className="flex items-center space-x-3">
+                    <FaSpinner className="animate-spin text-lg" />
+                    <span>তৈরি করা হচ্ছে...</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center space-x-2">
+                    <IoAdd className="w-5 h-5" />
+                    <span>পরীক্ষার ধরন তৈরি করুন</span>
+                  </span>
+                )}
+              </button>
+            </form>
+            {createError && (
+              <div
+                id="exam-error"
+                className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
+                style={{ animationDelay: "0.4s" }}
+              >
+                ত্রুটি: {createError.status || "অজানা"} - {JSON.stringify(createError.data || {})}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Edit Exam Form */}
-        {editExamId && (
+        {hasChangePermission && editExamId && (
           <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
             <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
               <FaEdit className="text-3xl text-[#441a05]" />
@@ -305,18 +375,22 @@ const AddExamType = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       পরীক্ষার ধরন
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      সক্রিয়
-                    </th>
+                    {hasChangePermission && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        সক্রিয়
+                      </th>
+                    )}
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       তৈরির সময়
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       আপডেটের সময়
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ক্রিয়াকলাপ
-                    </th>
+                    {(hasChangePermission || hasDeletePermission) && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        ক্রিয়াকলাপ
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/20">
@@ -329,62 +403,70 @@ const AddExamType = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
                         {exam.name}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
-                        <label className="inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={exam.is_active}
-                            onChange={() => handleToggleActive(exam)}
-                            className="hidden"
-                          />
-                          <span
-                            className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn ${
-                              exam.is_active
-                                ? "bg-[#DB9E30] border-[#DB9E30]"
-                                : "bg-white/10 border-[#9d9087] hover:border-[#441a05]"
-                            }`}
-                          >
-                            {exam.is_active && (
-                              <svg
-                                className="w-4 h-4 text-[#441a05] animate-scaleIn"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
-                            )}
-                          </span>
-                        </label>
-                      </td>
+                      {hasChangePermission && (
+                        <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
+                          <label className="inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={exam.is_active}
+                              onChange={() => handleToggleActive(exam)}
+                              className="hidden"
+                            />
+                            <span
+                              className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn ${
+                                exam.is_active
+                                  ? "bg-[#DB9E30] border-[#DB9E30]"
+                                  : "bg-white/10 border-[#9d9087] hover:border-[#441a05]"
+                              }`}
+                            >
+                              {exam.is_active && (
+                                <svg
+                                  className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              )}
+                            </span>
+                          </label>
+                        </td>
+                      )}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
                         {new Date(exam.created_at).toLocaleString("bn-BD")}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
                         {new Date(exam.updated_at).toLocaleString("bn-BD")}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleEditClick(exam)}
-                          title="পরীক্ষার ধরন সম্পাদনা করুন"
-                          className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
-                        >
-                          <FaEdit className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(exam.id)}
-                          title="পরীক্ষার ধরন মুছুন"
-                          className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
-                        >
-                          <FaTrash className="w-5 h-5" />
-                        </button>
-                      </td>
+                      {(hasChangePermission || hasDeletePermission) && (
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          {hasChangePermission && (
+                            <button
+                              onClick={() => handleEditClick(exam)}
+                              title="পরীক্ষার ধরন সম্পাদনা করুন"
+                              className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
+                            >
+                              <FaEdit className="w-5 h-5" />
+                            </button>
+                          )}
+                          {hasDeletePermission && (
+                            <button
+                              onClick={() => handleDelete(exam.id)}
+                              title="পরীক্ষার ধরন মুছুন"
+                              className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                            >
+                              <FaTrash className="w-5 h-5" />
+                            </button>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -406,7 +488,7 @@ const AddExamType = () => {
         </div>
 
         {/* Confirmation Modal */}
-        {isModalOpen && (
+        {isModalOpen && (hasAddPermission || hasChangePermission || hasDeletePermission) && (
           <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
             <div
               className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"

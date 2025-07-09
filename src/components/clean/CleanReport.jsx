@@ -1,17 +1,25 @@
 import React, { useState, useMemo } from 'react';
 import Select from 'react-select';
-import { FaSpinner } from 'react-icons/fa';
+import { FaSpinner, FaTrash } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
-import { useCreateCleanReportApiMutation, useGetCleanReportApiQuery, useUpdateCleanReportApiMutation } from '../../redux/features/api/clean/cleanReportApi';
+import { useCreateCleanReportApiMutation, useGetCleanReportApiQuery, useUpdateCleanReportApiMutation, useDeleteCleanReportApiMutation } from '../../redux/features/api/clean/cleanReportApi';
 import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
 import { useGetCleanReportTypeApiQuery } from '../../redux/features/api/clean/cleanReportTypeApi';
 import { IoAddCircle } from 'react-icons/io5';
 import selectStyles from '../../utilitis/selectStyles';
+import { useSelector } from 'react-redux';
+import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi';
 
 const CleanReport = () => {
   // State for form inputs
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalAction, setModalAction] = useState(null);
+  const [modalData, setModalData] = useState(null);
+
+  // Get group_id from auth state
+  const { group_id } = useSelector((state) => state.auth);
 
   // API Hooks
   const { data: cleanReports = [], isLoading: isReportsLoading, error: reportsError } =
@@ -22,6 +30,14 @@ const CleanReport = () => {
     useGetCleanReportTypeApiQuery();
   const [createCleanReport, { isLoading: isCreating }] = useCreateCleanReportApiMutation();
   const [updateCleanReport, { isLoading: isUpdating }] = useUpdateCleanReportApiMutation();
+  const [deleteCleanReport, { isLoading: isDeleting, error: deleteError }] = useDeleteCleanReportApiMutation();
+
+  // Permission Logic
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, { skip: !group_id });
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_clean_report') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_clean_report') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_clean_report') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_clean_report') || false;
 
   // Transform class config data for react-select
   const classOptions = useMemo(
@@ -48,7 +64,7 @@ const CleanReport = () => {
 
     cleanReportTypes.forEach((type) => {
       const report = filteredReports.find((r) => r.Clean_report_type === type.id);
-      map[type.name] = report ? report.is_clean : false;
+      map[type.id] = report ? report.is_clean : false;
     });
 
     return map;
@@ -65,14 +81,19 @@ const CleanReport = () => {
   };
 
   // Handle checkbox change
-  const handleCheckboxChange = async (typeName) => {
-    const typeId = cleanReportTypes.find((t) => t.name === typeName)?.id;
-    if (!typeId || !selectedClass || !selectedDate) {
+  const handleCheckboxChange = async (typeId) => {
+    const actionPermission = cleanReportData[typeId] ? hasChangePermission : hasAddPermission;
+    if (!actionPermission) {
+      toast.error('আপনার এই কাজটি করার অনুমতি নেই।');
+      return;
+    }
+
+    if (!selectedClass || !selectedDate) {
       toast.error('ক্লাস এবং তারিখ নির্বাচন করুন এবং রিপোর্টের ধরন লোড হয়েছে তা নিশ্চিত করুন।');
       return;
     }
 
-    const currentStatus = cleanReportData[typeName];
+    const currentStatus = cleanReportData[typeId];
     const newStatus = !currentStatus;
     const toastId = toast.loading('পরিচ্ছন্নতা রিপোর্ট আপডেট হচ্ছে...');
 
@@ -87,9 +108,17 @@ const CleanReport = () => {
 
       if (existingReport) {
         // Update existing report
+        if (!hasChangePermission) {
+          toast.error('আপডেট করার অনুমতি আপনার নেই।', { id: toastId });
+          return;
+        }
         await updateCleanReport({ id: existingReport.id, ...payload }).unwrap();
       } else {
         // Create new report
+        if (!hasAddPermission) {
+          toast.error('তৈরি করার অনুমতি আপনার নেই।', { id: toastId });
+          return;
+        }
         await createCleanReport(payload).unwrap();
       }
 
@@ -101,6 +130,44 @@ const CleanReport = () => {
     }
   };
 
+  // Handle delete report
+  const handleDelete = (reportId) => {
+    if (!hasDeletePermission) {
+      toast.error('মুছে ফেলার অনুমতি আপনার নেই।');
+      return;
+    }
+    setModalAction('delete');
+    setModalData({ id: reportId });
+    setIsModalOpen(true);
+  };
+
+  // Confirm action for modal
+  const confirmAction = async () => {
+    try {
+      if (modalAction === 'delete') {
+        if (!hasDeletePermission) {
+          toast.error('মুছে ফেলার অনুমতি আপনার নেই।');
+          return;
+        }
+        await deleteCleanReport(modalData.id).unwrap();
+        toast.success('পরিচ্ছন্নতা রিপোর্ট সফলভাবে মুছে ফেলা হয়েছে!');
+      }
+      setIsModalOpen(false);
+      setModalAction(null);
+      setModalData(null);
+    } catch (err) {
+      toast.error(`মুছে ফেলতে ত্রুটি: ${err.status || 'অজানা'} - ${JSON.stringify(err.data || {})}`);
+    }
+  };
+
+  // Permission-based Rendering
+  if (permissionsLoading) {
+    return <div className="p-4 text-center">অনুমতি লোড হচ্ছে...</div>;
+  }
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-center text-red-500">এই পৃষ্ঠাটি দেখার অনুমতি আপনার নেই।</div>;
+  }
 
   // Render clean report table
   const renderCleanReportTable = () => {
@@ -144,54 +211,85 @@ const CleanReport = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                 পরিচ্ছন্নতা রিপোর্টের ধরন
               </th>
+              {hasDeletePermission && (
+                <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                  ক্রিয়াকলাপ
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-white/20">
-            {cleanReportTypes.map((type, index) => (
-              <tr key={type.id} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
-                <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
-                  <label htmlFor={`checkbox-${type.id}`} className="inline-flex items-center cursor-pointer">
-                    <input
-                      id={`checkbox-${type.id}`}
-                      type="checkbox"
-                      checked={cleanReportData[type.name] || false}
-                      onChange={() => handleCheckboxChange(type.name)}
-                      className="hidden"
-                      disabled={isCreating || isUpdating}
-                    />
-                    <span
-                      className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn ${
-                        cleanReportData[type.name]
-                          ? 'bg-[#DB9E30] border-[#DB9E30] tick-glow'
-                          : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
-                      }`}
-                    >
-                      {cleanReportData[type.name] && (
-                        <svg
-                          className="w-4 h-4 text-[#441a05] animate-scaleIn"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
+            {cleanReportTypes.map((type, index) => {
+              const report = filteredReports.find((r) => r.Clean_report_type === type.id);
+              return (
+                <tr key={type.id} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">
+                    <label htmlFor={`checkbox-${type.id}`} className="inline-flex items-center cursor-pointer">
+                      <input
+                        id={`checkbox-${type.id}`}
+                        type="checkbox"
+                        checked={cleanReportData[type.id] || false}
+                        onChange={() => handleCheckboxChange(type.id)}
+                        className="hidden"
+                        disabled={isCreating || isUpdating || (!cleanReportData[type.id] ? !hasAddPermission : !hasChangePermission)}
+                      />
+                      <span
+                        className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn ${
+                          cleanReportData[type.id]
+                            ? 'bg-[#DB9E30] border-[#DB9E30] tick-glow'
+                            : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
+                        }`}
+                      >
+                        {cleanReportData[type.id] && (
+                          <svg
+                            className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </span>
+                    </label>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{type.name}</td>
+                  {hasDeletePermission && (
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      {report && (
+                        <button
+                          onClick={() => handleDelete(report.id)}
+                          title="পরিচ্ছন্নতা রিপোর্ট মুছুন"
+                          className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                          disabled={isDeleting}
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
+                          <FaTrash className="w-5 h-5" />
+                        </button>
                       )}
-                    </span>
-                  </label>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{type.name}</td>
-              </tr>
-            ))}
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
+        {(isDeleting || deleteError) && (
+          <div
+            className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
+            style={{ animationDelay: '0.4s' }}
+          >
+            {isDeleting
+              ? 'পরিচ্ছন্নতা রিপোর্ট মুছে ফেলা হচ্ছে...'
+              : `মুছে ফেলতে ত্রুটি: ${deleteError?.status || 'অজানা'} - ${JSON.stringify(deleteError?.data || {})}`}
+          </div>
+        )}
       </div>
     );
   };
 
   return (
     <div className="py-8 w-full relative mx-auto">
-
       <style>
         {`
           @keyframes fadeIn {
@@ -238,62 +336,64 @@ const CleanReport = () => {
         `}
       </style>
 
-      <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-        <div className="flex items-center space-x-2 mb-6">
-          <IoAddCircle className="text-3xl text-[#441a05]" />
-          <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">পরিচ্ছন্নতার রিপোর্ট</h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <label className="flex items-center space-x-4 animate-fadeIn">
-            <span className="text-[#441a05] sm:text-base text-xs font-medium text-nowrap">তারিখ নির্বাচন করুন:</span>
-            <div className="w-full">
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={handleDateChange}
-                onClick={(e) => e.target.showPicker()}
-                className="w-full bg-transparent text-[#441a05] pl-3 py-1.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                disabled={isCreating || isUpdating}
-                aria-label="তারিখ"
-                title="তারিখ নির্বাচন করুন / Select date"
-              />
-            </div>
-          </label>
-          <label className="flex items-center space-x-4 animate-fadeIn">
-            <span className="text-[#441a05] sm:text-base text-xs font-medium text-nowrap">ক্লাস নির্বাচন করুন:</span>
-            <div className="w-full">
-              <Select
-                options={classOptions}
-                value={selectedClass}
-                onChange={handleClassSelect}
-                placeholder="ক্লাস নির্বাচন"
-                isLoading={isClassesLoading}
-                isDisabled={isClassesLoading || isCreating || isUpdating}
-                styles={selectStyles}
-                className="animate-scaleIn "
-                menuPortalTarget={document.body}
-                menuPosition="fixed"
-                isClearable
-                isSearchable
-              />
-            </div>
-          </label>
-        </div>
-        {isClassesLoading && (
-          <div className="flex items-center space-x-2 text-[#441a05]/70 animate-fadeIn mt-4">
-            <FaSpinner className="animate-spin text-lg" />
-            <span>ক্লাস লোড হচ্ছে...</span>
+      {(hasAddPermission || hasChangePermission) && (
+        <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+          <div className="flex items-center space-x-2 mb-6">
+            <IoAddCircle className="text-3xl text-[#441a05]" />
+            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">পরিচ্ছন্নতার রিপোর্ট</h3>
           </div>
-        )}
-        {classesError && (
-          <div
-            className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
-            style={{ animationDelay: '0.4s' }}
-          >
-            ক্লাস ত্রুটি: {classesError.status || 'অজানা'} - {JSON.stringify(classesError.data || {})}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <label className="flex items-center space-x-4 animate-fadeIn">
+              <span className="text-[#441a05] sm:text-base text-xs font-medium text-nowrap">তারিখ নির্বাচন করুন:</span>
+              <div className="w-full">
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={handleDateChange}
+                  onClick={(e) => e.target.showPicker()}
+                  className="w-full bg-transparent text-[#441a05] pl-3 py-1.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
+                  disabled={isCreating || isUpdating}
+                  aria-label="তারিখ"
+                  title="তারিখ নির্বাচন করুন / Select date"
+                />
+              </div>
+            </label>
+            <label className="flex items-center space-x-4 animate-fadeIn">
+              <span className="text-[#441a05] sm:text-base text-xs font-medium text-nowrap">ক্লাস নির্বাচন করুন:</span>
+              <div className="w-full">
+                <Select
+                  options={classOptions}
+                  value={selectedClass}
+                  onChange={handleClassSelect}
+                  placeholder="ক্লাস নির্বাচন"
+                  isLoading={isClassesLoading}
+                  isDisabled={isClassesLoading || isCreating || isUpdating}
+                  styles={selectStyles}
+                  className="animate-scaleIn"
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                  isClearable
+                  isSearchable
+                />
+              </div>
+            </label>
           </div>
-        )}
-      </div>
+          {isClassesLoading && (
+            <div className="flex items-center space-x-2 text-[#441a05]/70 animate-fadeIn mt-4">
+              <FaSpinner className="animate-spin text-lg" />
+              <span>ক্লাস লোড হচ্ছে...</span>
+            </div>
+          )}
+          {classesError && (
+            <div
+              className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
+              style={{ animationDelay: '0.4s' }}
+            >
+              ক্লাস ত্রুটি: {classesError.status || 'অজানা'} - {JSON.stringify(classesError.data || {})}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
         <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">
@@ -301,6 +401,38 @@ const CleanReport = () => {
         </h3>
         {renderCleanReportTable()}
       </div>
+
+      {/* Confirmation Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
+          <div
+            className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border-t border-white/20 animate-slideUp"
+          >
+            <h3 className="text-lg font-semibold text-[#441a05] mb-4">
+              পরিচ্ছন্নতা রিপোর্ট মুছে ফেলা নিশ্চিত করুন
+            </h3>
+            <p className="text-[#441a05] mb-6">
+              আপনি কি নিশ্চিত যে এই পরিচ্ছন্নতা রিপোর্টটি মুছে ফেলতে চান?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
+                title="বাতিল করুন"
+              >
+                বাতিল
+              </button>
+              <button
+                onClick={confirmAction}
+                className="px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white transition-colors duration-300 btn-glow"
+                title="নিশ্চিত করুন"
+              >
+                নিশ্চিত করুন
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

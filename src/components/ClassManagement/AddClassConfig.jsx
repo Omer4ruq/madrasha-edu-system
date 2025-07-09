@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-// import { useGetStudentClassApIQuery } from "../../redux/features/api/class/classListApi";
-import { useGetStudentSectionApiQuery } from "../../redux/features/api/student/studentSectionApi";
+import {
+  useGetStudentSectionApiQuery,
+} from "../../redux/features/api/student/studentSectionApi";
 import { useGetStudentShiftApiQuery } from "../../redux/features/api/student/studentShiftApi";
 import { useGetStudentClassApIQuery } from "../../redux/features/api/student/studentClassApi";
 import {
@@ -12,8 +13,11 @@ import {
 import { FaChalkboard, FaSpinner, FaTrash, FaEdit } from "react-icons/fa";
 import { IoAdd, IoBookmark, IoSettings, IoTime } from "react-icons/io5";
 import { Toaster, toast } from "react-hot-toast";
+import { useSelector } from "react-redux"; // Import useSelector
+import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi"; // Import permission hook
 
 const AddClassConfig = () => {
+  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
   const [classId, setClassId] = useState("");
   const [sectionId, setSectionId] = useState("");
   const [shiftId, setShiftId] = useState("");
@@ -55,12 +59,28 @@ const AddClassConfig = () => {
   const [updateClassConfig] = useUpdateClassConfigApiMutation();
   const [deleteClassConfig] = useDeleteClassConfigApiMutation();
 
+  // Permissions hook
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Permission checks
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_classconfig') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_classconfig') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_classconfig') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_classconfig') || false;
+
+
   // Filter active sections and shifts
   const activeSections = sectionData?.filter((sec) => sec.is_active) || [];
   const activeShifts = shiftData?.filter((shf) => shf.is_active) || [];
 
   // Handle edit button click
   const handleEdit = (config) => {
+    if (!hasChangePermission) {
+      toast.error('কনফিগারেশন সম্পাদনা করার অনুমতি নেই।');
+      return;
+    }
     setIsEditMode(true);
     setEditConfigId(config.id);
     setClassId(config.class_id?.toString() || "");
@@ -80,6 +100,15 @@ const AddClassConfig = () => {
   // Handle form submission for create or update
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!isEditMode && !hasAddPermission) {
+      toast.error('নতুন কনফিগারেশন তৈরি করার অনুমতি নেই।');
+      return;
+    }
+    if (isEditMode && !hasChangePermission) {
+      toast.error('কনফিগারেশন সম্পাদনা করার অনুমতি নেই।');
+      return;
+    }
 
     if (classLoading || sectionLoading || shiftLoading || isListLoading) {
       toast.error("অনুগ্রহ করে অপেক্ষা করুন, ডেটা এখনও লোড হচ্ছে");
@@ -110,6 +139,10 @@ const AddClassConfig = () => {
 
   // Handle delete configuration
   const handleDelete = (id) => {
+    if (!hasDeletePermission) {
+      toast.error('কনফিগারেশন মুছে ফেলার অনুমতি নেই।');
+      return;
+    }
     setModalAction('delete');
     setModalData({ id });
     setIsModalOpen(true);
@@ -119,12 +152,20 @@ const AddClassConfig = () => {
   const confirmAction = async () => {
     try {
       if (modalAction === 'create') {
+        if (!hasAddPermission) {
+          toast.error('নতুন কনফিগারেশন তৈরি করার অনুমতি নেই।');
+          return;
+        }
         await createClassConfig(modalData).unwrap();
         toast.success("কনফিগারেশন সফলভাবে তৈরি করা হয়েছে!");
         setClassId("");
         setSectionId("");
         setShiftId("");
       } else if (modalAction === 'update') {
+        if (!hasChangePermission) {
+          toast.error('কনফিগারেশন আপডেট করার অনুমতি নেই।');
+          return;
+        }
         await updateClassConfig(modalData).unwrap();
         toast.success("কনফিগারেশন সফলভাবে সম্পাদনা করা হয়েছে!");
         setIsEditMode(false);
@@ -133,6 +174,10 @@ const AddClassConfig = () => {
         setSectionId("");
         setShiftId("");
       } else if (modalAction === 'delete') {
+        if (!hasDeletePermission) {
+          toast.error('কনফিগারেশন মুছে ফেলার অনুমতি নেই।');
+          return;
+        }
         await deleteClassConfig(modalData.id).unwrap();
         toast.success("কনফিগারেশন সফলভাবে মুছে ফেলা হয়েছে!");
       }
@@ -145,6 +190,14 @@ const AddClassConfig = () => {
       setModalData(null);
     }
   };
+
+  if (permissionsLoading) {
+    return <div className="p-4 text-[#441a05]/70 animate-fadeIn">লোড হচ্ছে...</div>;
+  }
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-red-400 animate-fadeIn">এই পৃষ্ঠাটি দেখার অনুমতি নেই।</div>;
+  }
 
   return (
     <div className="py-8 w-full relative">
@@ -207,167 +260,169 @@ const AddClassConfig = () => {
 
       <div className="mx-auto">
         {/* Form to Create or Edit Configuration */}
-        <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-          <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-            <IoSettings className="text-4xl text-[#441a05]" />
-            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
-              {isEditMode ? "কনফিগারেশন সম্পাদনা করুন" : "নতুন কনফিগারেশন তৈরি করুন"}
-            </h3>
-          </div>
-
-          <form
-            onSubmit={handleSubmit}
-            className="grid grid-cols-1 md:grid-cols-4 gap-6"
-          >
-            {/* Class Dropdown */}
-            <div className="relative">
-              <FaChalkboard
-                className="absolute left-3 top-[10px] transform -translate-y-1/2 text-[#441a05] w-5 h-5 animate-scaleIn"
-                title="ক্লাস নির্বাচন করুন"
-              />
-              <select
-                id="classSelect"
-                value={classId}
-                onChange={(e) => setClassId(e.target.value)}
-                className="w-full bg-transparent text-[#441a05] pl-10 pr-8 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
-                disabled={classLoading || isListLoading}
-                aria-label="ক্লাস নির্বাচন করুন"
-                aria-describedby={classError ? "class-error" : undefined}
-              >
-                <option value="" disabled className="bg-black/10 backdrop-blur-sm">
-                  একটি ক্লাস নির্বাচন করুন
-                </option>
-                {classList?.map((cls) => (
-                  <option key={cls.id} value={cls.id} className="bg-black/10 backdrop-blur-sm">
-                    {cls.student_class?.name || "N/A"}
-                  </option>
-                ))}
-              </select>
+        {(hasAddPermission || hasChangePermission) && (
+          <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+            <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
+              <IoSettings className="text-4xl text-[#441a05]" />
+              <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
+                {isEditMode ? "কনফিগারেশন সম্পাদনা করুন" : "নতুন কনফিগারেশন তৈরি করুন"}
+              </h3>
             </div>
 
-            {/* Section Dropdown */}
-            <div className="relative">
-              <IoBookmark
-                className="absolute left-3 top-[10px] transform -translate-y-1/2 text-[#441a05] w-5 h-5 animate-scaleIn"
-                title="সেকশন নির্বাচন করুন"
-              />
-              <select
-                id="sectionSelect"
-                value={sectionId}
-                onChange={(e) => setSectionId(e.target.value)}
-                className="w-full bg-transparent text-[#441a05] pl-10 pr-8 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
-                disabled={sectionLoading || activeSections.length === 0}
-                aria-label="সেকশন নির্বাচন করুন"
-                aria-describedby={sectionError ? "section-error" : undefined}
-              >
-                <option value="" disabled className="backdrop-blur-sm bg-black/10">
-                  একটি সেকশন নির্বাচন করুন
-                </option>
-                {activeSections.map((sec) => (
-                  <option key={sec.id} value={sec.id} className="backdrop-blur-sm bg-black/10">
-                    {sec.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Shift Dropdown */}
-            <div className="relative">
-              <IoTime
-                className="absolute left-3 top-[10px] transform -translate-y-1/2 text-[#441a05] w-5 h-5 animate-scaleIn"
-                title="শিফট নির্বাচন করুন"
-              />
-              <select
-                id="shiftSelect"
-                value={shiftId}
-                onChange={(e) => setShiftId(e.target.value)}
-                className="w-full bg-transparent text-[#441a05] pl-10 pr-8 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
-                disabled={shiftLoading || activeShifts.length === 0}
-                aria-label="শিফট নির্বাচন করুন"
-                aria-describedby={shiftError ? "shift-error" : undefined}
-              >
-                <option value="" disabled className="backdrop-blur-sm bg-black/10">
-                  একটি শিফট নির্বাচন করুন
-                </option>
-                {activeShifts.map((shf) => (
-                  <option key={shf.id} value={shf.id} className="backdrop-blur-sm bg-black/10">
-                    {shf.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Submit and Cancel Buttons */}
-            <div className="flex space-x-4">
-              <button
-                type="submit"
-                disabled={configLoading}
-                title={isEditMode ? "কনফিগারেশন সম্পাদনা করুন" : "নতুন কনফিগারেশন যোগ করুন"}
-                className={`relative inline-flex items-center px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                  configLoading ? "cursor-not-allowed opacity-60" : "hover:text-white btn-glow"
-                }`}
-              >
-                {configLoading ? (
-                  <span className="flex items-center space-x-3">
-                    <FaSpinner className="animate-spin text-lg" />
-                    <span>{isEditMode ? "সম্পাদনা হচ্ছে..." : "যোগ করা হচ্ছে..."}</span>
-                  </span>
-                ) : (
-                  <span className="flex items-center space-x-2">
-                    <IoAdd className="w-5 h-5" />
-                    <span>{isEditMode ? "সম্পাদনা করুন" : "যোগ করুন"}</span>
-                  </span>
-                )}
-              </button>
-              {isEditMode && (
-                <button
-                  type="button"
-                  onClick={handleCancelEdit}
-                  title="সম্পাদনা বাতিল করুন"
-                  className="relative inline-flex items-center px-8 py-3 rounded-lg font-medium bg-gray-500/20 text-[#441a05] transition-all duration-300 animate-scaleIn hover:bg-gray-500/30"
-                >
-                  <span className="flex items-center space-x-2">
-                    <span>বাতিল</span>
-                  </span>
-                </button>
-              )}
-            </div>
-          </form>
-
-          {/* Error Messages */}
-          {(classError || sectionError || shiftError || listError || configError) && (
-            <div
-              className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
-              style={{ animationDelay: "0.4s" }}
+            <form
+              onSubmit={handleSubmit}
+              className="grid grid-cols-1 md:grid-cols-4 gap-6"
             >
-              {classError && (
-                <p id="class-error">
-                  ক্লাস লোড করতে ত্রুটি: {JSON.stringify(classError)}
-                </p>
-              )}
-              {sectionError && (
-                <p id="section-error">
-                  সেকশন লোড করতে ত্রুটি: {JSON.stringify(sectionError)}
-                </p>
-              )}
-              {shiftError && (
-                <p id="shift-error">
-                  শিফট লোড করতে ত্রুটি: {JSON.stringify(shiftError)}
-                </p>
-              )}
-              {listError && (
-                <p id="list-error">
-                  ক্লাস তালিকা লোড করতে ত্রুটি: {JSON.stringify(listError)}
-                </p>
-              )}
-              {configError && (
-                <p id="config-error">
-                  কনফিগারেশন লোড করতে ত্রুটি: {JSON.stringify(configError)}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
+              {/* Class Dropdown */}
+              <div className="relative">
+                <FaChalkboard
+                  className="absolute left-3 top-[10px] transform -translate-y-1/2 text-[#441a05] w-5 h-5 animate-scaleIn"
+                  title="ক্লাস নির্বাচন করুন"
+                />
+                <select
+                  id="classSelect"
+                  value={classId}
+                  onChange={(e) => setClassId(e.target.value)}
+                  className="w-full bg-transparent text-[#441a05] pl-10 pr-8 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
+                  disabled={classLoading || isListLoading}
+                  aria-label="ক্লাস নির্বাচন করুন"
+                  aria-describedby={classError ? "class-error" : undefined}
+                >
+                  <option value="" disabled className="bg-black/10 backdrop-blur-sm">
+                    একটি ক্লাস নির্বাচন করুন
+                  </option>
+                  {classList?.map((cls) => (
+                    <option key={cls.id} value={cls.id} className="bg-black/10 backdrop-blur-sm">
+                      {cls.student_class?.name || "N/A"}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Section Dropdown */}
+              <div className="relative">
+                <IoBookmark
+                  className="absolute left-3 top-[10px] transform -translate-y-1/2 text-[#441a05] w-5 h-5 animate-scaleIn"
+                  title="সেকশন নির্বাচন করুন"
+                />
+                <select
+                  id="sectionSelect"
+                  value={sectionId}
+                  onChange={(e) => setSectionId(e.target.value)}
+                  className="w-full bg-transparent text-[#441a05] pl-10 pr-8 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
+                  disabled={sectionLoading || activeSections.length === 0}
+                  aria-label="সেকশন নির্বাচন করুন"
+                  aria-describedby={sectionError ? "section-error" : undefined}
+                >
+                  <option value="" disabled className="backdrop-blur-sm bg-black/10">
+                    একটি সেকশন নির্বাচন করুন
+                  </option>
+                  {activeSections.map((sec) => (
+                    <option key={sec.id} value={sec.id} className="backdrop-blur-sm bg-black/10">
+                      {sec.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Shift Dropdown */}
+              <div className="relative">
+                <IoTime
+                  className="absolute left-3 top-[10px] transform -translate-y-1/2 text-[#441a05] w-5 h-5 animate-scaleIn"
+                  title="শিফট নির্বাচন করুন"
+                />
+                <select
+                  id="shiftSelect"
+                  value={shiftId}
+                  onChange={(e) => setShiftId(e.target.value)}
+                  className="w-full bg-transparent text-[#441a05] pl-10 pr-8 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
+                  disabled={shiftLoading || activeShifts.length === 0}
+                  aria-label="শিফট নির্বাচন করুন"
+                  aria-describedby={shiftError ? "shift-error" : undefined}
+                >
+                  <option value="" disabled className="backdrop-blur-sm bg-black/10">
+                    একটি শিফট নির্বাচন করুন
+                  </option>
+                  {activeShifts.map((shf) => (
+                    <option key={shf.id} value={shf.id} className="backdrop-blur-sm bg-black/10">
+                      {shf.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Submit and Cancel Buttons */}
+              <div className="flex space-x-4">
+                <button
+                  type="submit"
+                  disabled={configLoading}
+                  title={isEditMode ? "কনফিগারেশন সম্পাদনা করুন" : "নতুন কনফিগারেশন যোগ করুন"}
+                  className={`relative inline-flex items-center px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
+                    configLoading ? "cursor-not-allowed opacity-60" : "hover:text-white btn-glow"
+                  }`}
+                >
+                  {configLoading ? (
+                    <span className="flex items-center space-x-3">
+                      <FaSpinner className="animate-spin text-lg" />
+                      <span>{isEditMode ? "সম্পাদনা হচ্ছে..." : "যোগ করা হচ্ছে..."}</span>
+                    </span>
+                  ) : (
+                    <span className="flex items-center space-x-2">
+                      <IoAdd className="w-5 h-5" />
+                      <span>{isEditMode ? "সম্পাদনা করুন" : "যোগ করুন"}</span>
+                    </span>
+                  )}
+                </button>
+                {isEditMode && (
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    title="সম্পাদনা বাতিল করুন"
+                    className="relative inline-flex items-center px-8 py-3 rounded-lg font-medium bg-gray-500/20 text-[#441a05] transition-all duration-300 animate-scaleIn hover:bg-gray-500/30"
+                  >
+                    <span className="flex items-center space-x-2">
+                      <span>বাতিল</span>
+                    </span>
+                  </button>
+                )}
+              </div>
+            </form>
+
+            {/* Error Messages */}
+            {(classError || sectionError || shiftError || listError || configError) && (
+              <div
+                className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
+                style={{ animationDelay: "0.4s" }}
+              >
+                {classError && (
+                  <p id="class-error">
+                    ক্লাস লোড করতে ত্রুটি: {JSON.stringify(classError)}
+                  </p>
+                )}
+                {sectionError && (
+                  <p id="section-error">
+                    সেকশন লোড করতে ত্রুটি: {JSON.stringify(sectionError)}
+                  </p>
+                )}
+                {shiftError && (
+                  <p id="shift-error">
+                    শিফট লোড করতে ত্রুটি: {JSON.stringify(shiftError)}
+                  </p>
+                )}
+                {listError && (
+                  <p id="list-error">
+                    ক্লাস তালিকা লোড করতে ত্রুটি: {JSON.stringify(listError)}
+                  </p>
+                )}
+                {configError && (
+                  <p id="config-error">
+                    কনফিগারেশন লোড করতে ত্রুটি: {JSON.stringify(configError)}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Configurations Table */}
         <div className="bg-black/10 px-5 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] border border-white/20">
@@ -392,9 +447,11 @@ const AddClassConfig = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       শিফট
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ক্রিয়াকলাপ
-                    </th>
+                    {(hasChangePermission || hasDeletePermission) && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        ক্রিয়াকলাপ
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/20">
@@ -413,24 +470,28 @@ const AddClassConfig = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
                         {config.shift_name || "N/A"}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-4">
-                          <button
-                            onClick={() => handleEdit(config)}
-                            title="কনফিগারেশন সম্পাদনা করুন"
-                            className="text-[#441a05] hover:text-blue-500 transition-colors duration-300"
-                          >
-                            <FaEdit className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(config.id)}
-                            title="কনফিগারেশন মুছুন"
-                            className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
-                          >
-                            <FaTrash className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </td>
+                      {(hasChangePermission || hasDeletePermission) && (
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          {hasChangePermission && (
+                            <button
+                              onClick={() => handleEdit(config)}
+                              title="কনফিগারেশন সম্পাদনা করুন"
+                              className="text-[#441a05] hover:text-blue-500 transition-colors duration-300"
+                            >
+                              <FaEdit className="w-5 h-5" />
+                            </button>
+                          )}
+                          {hasDeletePermission && (
+                            <button
+                              onClick={() => handleDelete(config.id)}
+                              title="কনফিগারেশন মুছুন"
+                              className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                            >
+                              <FaTrash className="w-5 h-5" />
+                            </button>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -440,7 +501,7 @@ const AddClassConfig = () => {
         </div>
 
         {/* Confirmation Modal */}
-        {isModalOpen && (
+        {isModalOpen && (hasAddPermission || hasChangePermission || hasDeletePermission) && (
           <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
             <div
               className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"

@@ -8,23 +8,25 @@ import {
   useGetStudentListQuery,
   useUpdateStudentListMutation,
 } from '../../../redux/features/api/student/studentListApi';
-// import { useGetStudentClassApIQuery } from '../../../redux/features/api/class/classListApi';
 import { useGetStudentSectionApiQuery } from '../../../redux/features/api/student/studentSectionApi';
 import { useGetStudentShiftApiQuery } from '../../../redux/features/api/student/studentShiftApi';
 import { useGetAcademicYearApiQuery } from '../../../redux/features/api/academic-year/academicYearApi';
 import { useGetStudentClassApIQuery } from '../../../redux/features/api/student/studentClassApi';
+import { useSelector } from 'react-redux'; // Import useSelector
+import { useGetGroupPermissionsQuery } from '../../../redux/features/api/permissionRole/groupsApi'; // Import permission hook
 
 
 const StudentList = () => {
+  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
     name: '',
     user_id: '',
     roll: '',
     phone: '',
-    class: '', // Changed to match backend parameter
-    section: '', // Changed to match backend parameter
-    shift: '', // Changed to match backend parameter
+    class: '',
+    section: '',
+    shift: '',
     admission_year: '',
     status: '',
   });
@@ -41,6 +43,17 @@ const StudentList = () => {
   const [modalData, setModalData] = useState(null);
   const pageSize = 3;
 
+  // Permissions hook
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Permission checks
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_student') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_student') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_student') || false;
+
+
   // Fetch student data
   const {
     data: studentData,
@@ -51,16 +64,13 @@ const StudentList = () => {
     page,
     page_size: pageSize,
     ...filters,
-  });
+  }, { skip: !hasViewPermission }); // Skip query if no view permission
 
   // Fetch dropdown data
-  const { data: classes, isLoading: isClassesLoading } = useGetStudentClassApIQuery();
-  const { data: sections, isLoading: isSectionsLoading } = useGetStudentSectionApiQuery();
-  const { data: shifts, isLoading: isShiftsLoading } = useGetStudentShiftApiQuery();
-  const { data: academicYears, isLoading: isAcademicYearsLoading } = useGetAcademicYearApiQuery();
-
-
-  console.log(classes)
+  const { data: classes, isLoading: isClassesLoading } = useGetStudentClassApIQuery({ skip: !hasViewPermission });
+  const { data: sections, isLoading: isSectionsLoading } = useGetStudentSectionApiQuery({ skip: !hasViewPermission });
+  const { data: shifts, isLoading: isShiftsLoading } = useGetStudentShiftApiQuery({ skip: !hasViewPermission });
+  const { data: academicYears, isLoading: isAcademicYearsLoading } = useGetAcademicYearApiQuery({ skip: !hasViewPermission });
 
   const [updateStudent, { isLoading: isUpdating, error: updateError }] =
     useUpdateStudentListMutation();
@@ -87,7 +97,7 @@ const StudentList = () => {
     label: shift.name,
   })) || [];
   const academicYearOptions = academicYears?.map((year) => ({
-    value: year.name, // Assuming the API returns { id, year }
+    value: year.name,
     label: year.name,
   })) || [];
   const statusOptions = [
@@ -144,6 +154,10 @@ const StudentList = () => {
 
   // Handle edit button click
   const handleEditClick = (student) => {
+    if (!hasChangePermission) {
+      toast.error('ছাত্রের তথ্য সম্পাদনা করার অনুমতি নেই।');
+      return;
+    }
     setEditStudentId(student.id);
     setEditStudentData({
       name: student.name,
@@ -157,6 +171,10 @@ const StudentList = () => {
   // Handle update form submission
   const handleUpdate = async (e) => {
     e.preventDefault();
+    if (!hasChangePermission) {
+      toast.error('ছাত্রের তথ্য আপডেট করার অনুমতি নেই।');
+      return;
+    }
     if (!editStudentData.name.trim()) {
       toast.error('অনুগ্রহ করে ছাত্রের নাম লিখুন');
       return;
@@ -180,6 +198,10 @@ const StudentList = () => {
 
   // Handle delete
   const handleDelete = (id) => {
+    if (!hasDeletePermission) {
+      toast.error('ছাত্র মুছে ফেলার অনুমতি নেই।');
+      return;
+    }
     setModalAction('delete');
     setModalData({ id });
     setIsModalOpen(true);
@@ -189,6 +211,10 @@ const StudentList = () => {
   const confirmAction = async () => {
     try {
       if (modalAction === 'delete') {
+        if (!hasDeletePermission) {
+          toast.error('ছাত্র মুছে ফেলার অনুমতি নেই।'); // Double check for security
+          return;
+        }
         await deleteStudent(modalData.id).unwrap();
         toast.success('ছাত্র সফলভাবে মুছে ফেলা হয়েছে!');
       }
@@ -241,6 +267,27 @@ const StudentList = () => {
       opacity: 0.7,
     }),
   };
+
+  if (isLoading || isClassesLoading || isSectionsLoading || isShiftsLoading || isAcademicYearsLoading || permissionsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen px-4">
+        <div className="flex items-center gap-4 p-6 bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 animate-fadeIn">
+          <FaSpinner className="animate-spin text-3xl text-[#DB9E30]" />
+          <span className="text-lg font-medium text-[#441a05]">
+            লোড হচ্ছে...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasViewPermission) {
+    return (
+      <div className="p-4 text-red-400 animate-fadeIn text-center text-lg font-semibold">
+        এই পৃষ্ঠাটি দেখার অনুমতি নেই।
+      </div>
+    );
+  }
 
   return (
     <div className="py-8 w-full">
@@ -357,7 +404,7 @@ const StudentList = () => {
         </div>
 
         {/* Edit Student Form */}
-        {editStudentId && (
+        {editStudentId && hasChangePermission && ( // Only show if has change permission
           <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
             <div className="flex items-center space-x-4 mb-6">
               <FaEdit className="text-3xl text-[#441a05]" />
@@ -378,7 +425,7 @@ const StudentList = () => {
                 }
                 className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                 placeholder="নাম"
-                disabled={isUpdating}
+                disabled={isUpdating || !hasChangePermission} // Disable if no change permission
               />
               <input
                 type="text"
@@ -392,7 +439,7 @@ const StudentList = () => {
                 }
                 className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                 placeholder="ইউজার আইডি"
-                disabled={isUpdating}
+                disabled={isUpdating || !hasChangePermission} // Disable if no change permission
               />
               <input
                 type="text"
@@ -406,7 +453,7 @@ const StudentList = () => {
                 }
                 className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                 placeholder="ক্লাস"
-                disabled={isUpdating}
+                disabled={isUpdating || !hasChangePermission} // Disable if no change permission
               />
               <input
                 type="text"
@@ -420,7 +467,7 @@ const StudentList = () => {
                 }
                 className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                 placeholder="সেকশন"
-                disabled={isUpdating}
+                disabled={isUpdating || !hasChangePermission} // Disable if no change permission
               />
               <input
                 type="text"
@@ -432,15 +479,15 @@ const StudentList = () => {
                     shift_name: e.target.value,
                   })
                 }
-                className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-3 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
+                className="w-full bg-transparent text-[#441a05] placeholder-black/70 pl-10 py-2 border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                 placeholder="শিফট"
-                disabled={isUpdating}
+                disabled={isUpdating || !hasChangePermission} // Disable if no change permission
               />
               <button
                 type="submit"
-                disabled={isUpdating}
+                disabled={isUpdating || !hasChangePermission} // Disable if no change permission
                 className={`flex items-center justify-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                  isUpdating
+                  isUpdating || !hasChangePermission
                     ? 'cursor-not-allowed opacity-70'
                     : 'hover:text-white hover:shadow-md'
                 }`}
@@ -516,9 +563,11 @@ const StudentList = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                     শিফট
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    কার্যক্রম
-                  </th>
+                  {(hasChangePermission || hasDeletePermission) && ( // Only show actions column if user has relevant permissions
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      কার্যক্রম
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/20">
@@ -546,22 +595,28 @@ const StudentList = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
                       {student.shift_name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button
-                        onClick={() => handleEditClick(student)}
-                        className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
-                        aria-label={`সম্পাদনা ${student.name}`}
-                      >
-                        <FaEdit className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(student.id)}
-                        className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
-                        aria-label={`মুছুন ${student.name}`}
-                      >
-                        <FaTrash className="w-5 h-5" />
-                      </button>
-                    </td>
+                    {(hasChangePermission || hasDeletePermission) && ( // Conditionally render action buttons
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {hasChangePermission && (
+                          <button
+                            onClick={() => handleEditClick(student)}
+                            className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
+                            aria-label={`সম্পাদনা ${student.name}`}
+                          >
+                            <FaEdit className="w-5 h-5" />
+                          </button>
+                        )}
+                        {hasDeletePermission && (
+                          <button
+                            onClick={() => handleDelete(student.id)}
+                            className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                            aria-label={`মুছুন ${student.name}`}
+                          >
+                            <FaTrash className="w-5 h-5" />
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -621,7 +676,7 @@ const StudentList = () => {
       </div>
 
       {/* Confirmation Modal */}
-      {isModalOpen && (
+      {isModalOpen && hasDeletePermission && ( // Only show if has delete permission
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
           <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
             <h3 className="text-lg font-semibold text-[#441a05] mb-4">

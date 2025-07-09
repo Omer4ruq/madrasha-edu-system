@@ -9,8 +9,12 @@ import { useGetTeacherSubjectAssignsByClassAndSubjectQuery } from "../../../redu
 import { useGetClassPeriodsByClassIdQuery } from "../../../redux/features/api/periods/classPeriodsApi";
 import { useGetClassSubjectsQuery } from "../../../redux/features/api/class-subjects/classSubjectsApi";
 import { useCreateRoutineMutation } from "../../../redux/features/api/routines/routinesApi";
+import { useSelector } from "react-redux"; // Import useSelector
+import { useGetGroupPermissionsQuery } from "../../../redux/features/api/permissionRole/groupsApi"; // Import permission hook
+
 
 export default function ClassRoutine() {
+  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState(null);
@@ -19,6 +23,14 @@ export default function ClassRoutine() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState(null);
 
+  // Permissions hook
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Permission checks
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_routine') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_routine') || false;
 
 
   const dayMap = {
@@ -108,6 +120,10 @@ export default function ClassRoutine() {
   };
 
   const handleCreateRoutine = async () => {
+    if (!hasAddPermission) {
+      toast.error('রুটিন তৈরি করার অনুমতি নেই।');
+      return;
+    }
     if (!selectedClass || !isValidId(selectedClass.class_id)) {
       toast.error("শ্রেণি নির্বাচন করুন");
       return;
@@ -141,6 +157,11 @@ export default function ClassRoutine() {
   };
 
   const confirmCreateRoutine = async () => {
+    if (!hasAddPermission) {
+      toast.error('রুটিন তৈরি করার অনুমতি নেই।');
+      setIsModalOpen(false);
+      return;
+    }
     try {
       const result = await createRoutine(modalData).unwrap();
       toast.success("রুটিন সফলভাবে তৈরি হয়েছে");
@@ -161,6 +182,25 @@ export default function ClassRoutine() {
   };
 
 
+
+  if (classesLoading || allteachersLoading || teachersLoading || periodsLoading || subjectsLoading || permissionsLoading) {
+    return (
+      <div className="py-8 w-full relative">
+        <div className="flex items-center justify-center min-h-screen px-4">
+          <div className="flex items-center gap-4 p-6 bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 animate-fadeIn">
+            <FaSpinner className="animate-spin text-3xl text-[#DB9E30]" />
+            <span className="text-lg font-medium text-[#441a05]">
+              লোড হচ্ছে...
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-red-400 animate-fadeIn">এই পৃষ্ঠাটি দেখার অনুমতি নেই।</div>;
+  }
 
   return (
     <div className="py-8 w-full relative">
@@ -263,7 +303,7 @@ export default function ClassRoutine() {
           )}
         </div>
 
-        {selectedClass && isValidId(selectedClass.class_id) && (
+        {selectedClass && isValidId(selectedClass.class_id) && hasAddPermission && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
             {/* Days Section */}
             <div>
@@ -504,7 +544,7 @@ export default function ClassRoutine() {
         )}
 
         {/* Submit Button */}
-        {selectedClass && isValidId(selectedClass.class_id) && (
+        {selectedClass && isValidId(selectedClass.class_id) && hasAddPermission && (
           <div className="flex justify-center mb-8 animate-fadeIn">
             <button
               onClick={handleCreateRoutine}
@@ -549,7 +589,7 @@ export default function ClassRoutine() {
         )}
 
         {/* Confirmation Modal */}
-        {isModalOpen && (
+        {isModalOpen && hasAddPermission && (
           <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
             <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
               <h3 className="text-lg font-semibold text-[#441a05] mb-4">

@@ -10,9 +10,12 @@ import {
 } from "../../redux/features/api/class-subjects/classSubjectsApi";
 import { useGetGSubjectsByClassQuery } from "../../redux/features/api/class-subjects/gsubjectApi";
 import { useGetStudentClassApIQuery } from "../../redux/features/api/student/studentClassApi";
-// import { useGetStudentClassApIQuery } from "../../redux/features/api/class/classListApi";
+import { useSelector } from "react-redux"; // Import useSelector
+import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi"; // Import permission hook
+
 
 const ClassSubject = () => {
+  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
   const [selectedClassId, setSelectedClassId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState(null);
@@ -41,6 +44,17 @@ const ClassSubject = () => {
   const [deleteClassSubject, { isLoading: deleteLoading }] =
     useDeleteClassSubjectMutation();
 
+  // Permissions hook
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Permission checks
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_classsubject') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_classsubject') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_classsubject') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_classsubject') || false;
+
   // Set the first class as selected by default when classes are loaded
   useEffect(() => {
     if (classes.length > 0 && !selectedClassId) {
@@ -55,6 +69,10 @@ const ClassSubject = () => {
 
   // Handle subject checkbox change
   const handleSubjectStatusChange = async (subjectId, isActive) => {
+    if (!hasAddPermission && !hasChangePermission) {
+      toast.error('বিষয় যোগ বা আপডেট করার অনুমতি নেই।');
+      return;
+    }
     const existingSubject = classSubjects.find(
       (sub) => sub.class_subject === subjectId
     );
@@ -66,12 +84,20 @@ const ClassSubject = () => {
 
     try {
       if (existingSubject) {
+        if (!hasChangePermission) {
+          toast.error('বিষয় আপডেট করার অনুমতি নেই।');
+          return;
+        }
         await updateClassSubject({
           id: existingSubject.id,
           ...payload,
         }).unwrap();
         toast.success(`বিষয় সফলভাবে ${action} করা হয়েছে!`);
       } else {
+        if (!hasAddPermission) {
+          toast.error('বিষয় তৈরি করার অনুমতি নেই।');
+          return;
+        }
         await createClassSubject(payload).unwrap();
         toast.success(`বিষয় সফলভাবে ${action} করা হয়েছে!`);
       }
@@ -88,6 +114,10 @@ const ClassSubject = () => {
 
   // Handle toggle active status from table
   const handleToggleActive = (subjectId, currentStatus) => {
+    if (!hasChangePermission) {
+      toast.error('বিষয় স্ট্যাটাস পরিবর্তন করার অনুমতি নেই।');
+      return;
+    }
     setModalAction("toggle");
     setModalData({ id: subjectId, is_active: !currentStatus });
     setIsModalOpen(true);
@@ -95,6 +125,10 @@ const ClassSubject = () => {
 
   // Handle delete button click
   const handleDelete = (id) => {
+    if (!hasDeletePermission) {
+      toast.error('বিষয় মুছে ফেলার অনুমতি নেই।');
+      return;
+    }
     setModalAction("delete");
     setModalData({ id });
     setIsModalOpen(true);
@@ -104,9 +138,17 @@ const ClassSubject = () => {
   const confirmAction = async () => {
     try {
       if (modalAction === "delete") {
+        if (!hasDeletePermission) {
+          toast.error('বিষয় মুছে ফেলার অনুমতি নেই।');
+          return;
+        }
         await deleteClassSubject(modalData.id).unwrap();
         toast.success("বিষয় সফলভাবে মুছে ফেলা হয়েছে!");
       } else if (modalAction === "toggle") {
+        if (!hasChangePermission) {
+          toast.error('বিষয় স্ট্যাটাস পরিবর্তন করার অনুমতি নেই।');
+          return;
+        }
         await updateClassSubject({
           id: modalData.id,
           is_active: modalData.is_active,
@@ -138,6 +180,19 @@ const ClassSubject = () => {
       setModalData(null);
     }
   };
+
+  if (classesLoading || subjectsLoading || gSubjectsLoading || permissionsLoading) {
+    return (
+      <div className="text-center animate-fadeIn">
+        <FaSpinner className="inline-block animate-spin text-2xl text-[#441a05] mb-2" />
+        <p className="text-[#441a05]/70">লোড হচ্ছে...</p>
+      </div>
+    );
+  }
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-red-400 animate-fadeIn">এই পৃষ্ঠাটি দেখার অনুমতি নেই।</div>;
+  }
 
   return (
     <div className="py-8">
@@ -237,7 +292,7 @@ const ClassSubject = () => {
         </div>
 
         {/* Subject List with Checkboxes */}
-        {selectedClassId && (
+        {selectedClassId && (hasAddPermission || hasChangePermission) && (
           <div className="bg-black/10 backdrop-blur-sm p-6 rounded-2xl shadow-xl mb-10 mx-auto animate-fadeIn">
             <h2 className="text-lg font-semibold text-[#441a05] mb-4">
               নির্বাচিত ক্লাসের জন্য বিষয়
@@ -275,7 +330,7 @@ const ClassSubject = () => {
                               e.target.checked
                             )
                           }
-                          disabled={createLoading || updateLoading}
+                          disabled={createLoading || updateLoading || (!hasAddPermission && !existingSubject) || (!hasChangePermission && existingSubject)}
                           className="hidden"
                           aria-label={`বিষয় নির্বাচন ${subject.name}`}
                           title={`বিষয় নির্বাচন করুন / Select subject ${subject.name}`}
@@ -351,18 +406,22 @@ const ClassSubject = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       SL
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      সক্রিয়
-                    </th>
+                    {hasChangePermission && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        সক্রিয়
+                      </th>
+                    )}
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       তৈরির সময়
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       আপডেটের সময়
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ক্রিয়াকলাপ
-                    </th>
+                    {hasDeletePermission && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        ক্রিয়াকলাপ
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/20">
@@ -401,47 +460,49 @@ const ClassSubject = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
                             {gSubject.sl || "-"}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                            <label className="flex items-center cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={subject.is_active}
-                                // onChange={() => handleToggleActive(subject.id, subject.is_active)}
-                                disabled={updateLoading || deleteLoading}
-                                className="hidden cursor-none"
-                                aria-label={`বিষয় ${
-                                  gSubject.name || "অজানা"
-                                } সক্রিয়/নিষ্ক্রিয় করুন`}
-                                title={`বিষয় সক্রিয়/নিষ্ক্রিয় করুন / Toggle subject ${
-                                  gSubject.name || "Unknown"
-                                }`}
-                              />
-                              <span
-                                className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${
-                                  subject.is_active
-                                    ? "bg-[#DB9E30] border-[#DB9E30]"
-                                    : "bg-white/10 border-[#9d9087] hover:border-[#441a05]"
-                                }`}
-                              >
-                                {subject.is_active && (
-                                  <svg
-                                    className="w-4 h-4 text-[#441a05] animate-scaleIn"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth="2"
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                )}
-                              </span>
-                            </label>
-                          </td>
+                          {hasChangePermission && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                              <label className="flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={subject.is_active}
+                                  onChange={() => handleToggleActive(subject.id, subject.is_active)}
+                                  disabled={updateLoading || deleteLoading}
+                                  className="hidden cursor-none"
+                                  aria-label={`বিষয় ${
+                                    gSubject.name || "অজানা"
+                                  } সক্রিয়/নিষ্ক্রিয় করুন`}
+                                  title={`বিষয় সক্রিয়/নিষ্ক্রিয় করুন / Toggle subject ${
+                                    gSubject.name || "Unknown"
+                                  }`}
+                                />
+                                <span
+                                  className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${
+                                    subject.is_active
+                                      ? "bg-[#DB9E30] border-[#DB9E30]"
+                                      : "bg-white/10 border-[#9d9087] hover:border-[#441a05]"
+                                  }`}
+                                >
+                                  {subject.is_active && (
+                                    <svg
+                                      className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M5 13l4 4L19 7"
+                                      />
+                                    </svg>
+                                  )}
+                                </span>
+                              </label>
+                            </td>
+                          )}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
                             {new Date(subject.created_at).toLocaleString(
                               "bn-BD"
@@ -452,21 +513,23 @@ const ClassSubject = () => {
                               "bn-BD"
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button
-                              onClick={() => handleDelete(subject.id)}
-                              disabled={deleteLoading}
-                              className={`text-[#441a05] hover:text-red-500 transition-colors duration-300 ${
-                                deleteLoading
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
-                              }`}
-                              title="বিষয় মুছুন / Delete subject"
-                              aria-label="বিষয় মুছুন"
-                            >
-                              <FaTrash className="w-5 h-5" />
-                            </button>
-                          </td>
+                          {hasDeletePermission && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <button
+                                onClick={() => handleDelete(subject.id)}
+                                disabled={deleteLoading}
+                                className={`text-[#441a05] hover:text-red-500 transition-colors duration-300 ${
+                                  deleteLoading
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : ""
+                                }`}
+                                title="বিষয় মুছুন / Delete subject"
+                                aria-label="বিষয় মুছুন"
+                              >
+                                <FaTrash className="w-5 h-5" />
+                              </button>
+                            </td>
+                          )}
                         </tr>
                       );
                     })}
@@ -482,7 +545,7 @@ const ClassSubject = () => {
         )}
 
         {/* Confirmation Modal */}
-        {isModalOpen && (
+        {isModalOpen && (hasChangePermission || hasDeletePermission) && (
           <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[10000]">
             <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
               <h3 className="text-lg font-semibold text-[#441a05] mb-4">
@@ -511,7 +574,7 @@ const ClassSubject = () => {
                   className="px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white transition-colors duration-300 btn-glow"
                   title="নিশ্চিত করুন / Confirm"
                 >
-                  নিশ্চিত করুন
+                  নিশ্চit করুন
                 </button>
               </div>
             </div>

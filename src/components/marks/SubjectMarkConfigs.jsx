@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { FaSpinner, FaTrash } from 'react-icons/fa';
 import { IoAddCircle } from 'react-icons/io5';
 import { Toaster, toast } from 'react-hot-toast';
-// import {
-//   useGetStudentClassApIQuery,
-// } from '../../redux/features/api/class/classListApi';
 import {
   useGetSubjectMarkConfigsQuery,
   useCreateSubjectMarkConfigMutation,
@@ -14,27 +11,42 @@ import {
 import { useGetGmarkTypesQuery } from '../../redux/features/api/marks/gmarktype';
 import { useGetClassSubjectsByClassIdQuery } from '../../redux/features/api/class-subjects/classSubjectsApi';
 import { useGetStudentClassApIQuery } from '../../redux/features/api/student/studentClassApi';
+import { useSelector } from "react-redux"; // Import useSelector
+import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi"; // Import permission hook
+
 
 const SubjectMarkConfigs = () => {
+  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
   const { data: classes = [], isLoading: classesLoading } = useGetStudentClassApIQuery();
   const [selectedClassId, setSelectedClassId] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState(null);
   const [modalAction, setModalAction] = useState(null);
-  const { 
-    data: subjects = [], 
-    isLoading: subjectsLoading, 
-    error: subjectsError 
+  const {
+    data: subjects = [],
+    isLoading: subjectsLoading,
+    error: subjectsError
   } = useGetClassSubjectsByClassIdQuery(selectedClassId, { skip: !selectedClassId });
-  const { 
-    data: markConfigs = [], 
-    isLoading: configsLoading 
+  const {
+    data: markConfigs = [],
+    isLoading: configsLoading
   } = useGetSubjectMarkConfigsQuery({ skip: !selectedClassId });
   const { data: markTypes = [], isLoading: markTypesLoading } = useGetGmarkTypesQuery();
   const [createSubjectMarkConfig] = useCreateSubjectMarkConfigMutation();
   const [updateSubjectMarkConfig] = useUpdateSubjectMarkConfigMutation();
   const [deleteSubjectMarkConfig] = useDeleteSubjectMarkConfigMutation();
   const [subjectConfigs, setSubjectConfigs] = useState({});
+
+  // Permissions hook
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
+    skip: !group_id,
+  });
+
+  // Permission checks
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_markconfig') || false;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_markconfig') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_markconfig') || false;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_markconfig') || false;
 
   // Map mark type names to IDs and vice versa
   const markTypeMapping = markTypes.reduce((acc, type) => ({
@@ -76,14 +88,18 @@ const SubjectMarkConfigs = () => {
   };
 
   const handleInputChange = (subjectId, field, value, markType = null) => {
+    if (!hasChangePermission) {
+      toast.error('মার্ক কনফিগারেশন সম্পাদনা করার অনুমতি নেই।');
+      return;
+    }
     const newConfigs = { ...subjectConfigs };
     if (!newConfigs[subjectId]) {
-      newConfigs[subjectId] = { 
-        subject_id: subjectId, 
-        max_mark: 100, 
+      newConfigs[subjectId] = {
+        subject_id: subjectId,
+        max_mark: 100,
         subject_type: 'COMPULSARY',
         subject_serial: 1,
-        mark_configs: [] 
+        mark_configs: []
       };
     }
 
@@ -97,7 +113,7 @@ const SubjectMarkConfigs = () => {
       newConfigs[subjectId][field] = numValue === '' ? '' : (numValue || 100);
     } else if (markType) {
       const configIndex = newConfigs[subjectId].mark_configs.findIndex(c => c.mark_type === markType);
-      
+
       if (configIndex > -1) {
         if (field === 'max_mark') {
           newConfigs[subjectId].mark_configs[configIndex].max_mark = numValue;
@@ -110,10 +126,10 @@ const SubjectMarkConfigs = () => {
           newConfigs[subjectId].mark_configs[configIndex].pass_mark = numValue;
         }
       } else if (numValue !== '' && numValue > 0 && field === 'max_mark') {
-        newConfigs[subjectId].mark_configs.push({ 
-          mark_type: markType, 
-          max_mark: numValue, 
-          pass_mark: Math.floor(numValue * 0.33) 
+        newConfigs[subjectId].mark_configs.push({
+          mark_type: markType,
+          max_mark: numValue,
+          pass_mark: Math.floor(numValue * 0.33)
         });
       }
 
@@ -126,12 +142,21 @@ const SubjectMarkConfigs = () => {
   };
 
   const handleUpdate = (subjectId) => {
+    if (!hasChangePermission) {
+      toast.error('মার্ক কনফিগারেশন আপডেট করার অনুমতি নেই।');
+      return;
+    }
     setModalAction('update');
     setModalData({ subjectId });
     setIsModalOpen(true);
   };
 
   const confirmUpdate = async () => {
+    if (!hasChangePermission) {
+      toast.error('মার্ক কনফিগারেশন আপডেট করার অনুমতি নেই।');
+      setIsModalOpen(false);
+      return;
+    }
     try {
       const config = subjectConfigs[modalData.subjectId];
       if (!config || !config.id) {
@@ -168,12 +193,21 @@ const SubjectMarkConfigs = () => {
   };
 
   const handleDelete = (subjectId) => {
+    if (!hasDeletePermission) {
+      toast.error('মার্ক কনফিগারেশন মুছে ফেলার অনুমতি নেই।');
+      return;
+    }
     setModalAction('delete');
     setModalData({ subjectId });
     setIsModalOpen(true);
   };
 
   const confirmDelete = async () => {
+    if (!hasDeletePermission) {
+      toast.error('মার্ক কনফিগারেশন মুছে ফেলার অনুমতি নেই।');
+      setIsModalOpen(false);
+      return;
+    }
     try {
       const config = subjectConfigs[modalData.subjectId];
       if (!config || !config.id) {
@@ -183,7 +217,7 @@ const SubjectMarkConfigs = () => {
 
       await deleteSubjectMarkConfig(config.id).unwrap();
       toast.success('বিষয় মার্ক কনফিগারেশন সফলভাবে মুছে ফেলা হয়েছে!');
-      
+
       const newConfigs = { ...subjectConfigs };
       delete newConfigs[modalData.subjectId];
       setSubjectConfigs(newConfigs);
@@ -212,6 +246,10 @@ const SubjectMarkConfigs = () => {
   };
 
   const handleSubmit = async () => {
+    if (!hasAddPermission) {
+      toast.error('কনফিগারেশন সংরক্ষণ করার অনুমতি নেই।');
+      return;
+    }
     try {
       if (!selectedClassId) {
         toast.error('দয়া করে প্রথমে একটি ক্লাস নির্বাচন করুন।');
@@ -267,7 +305,7 @@ const SubjectMarkConfigs = () => {
     return classes.find(cls => cls.id === selectedClassId);
   };
 
-  if (classesLoading || subjectsLoading || markTypesLoading || configsLoading) {
+  if (classesLoading || subjectsLoading || markTypesLoading || configsLoading || permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="bg-black/10 backdrop-blur-sm rounded-xl shadow-lg p-8 flex items-center space-x-4 animate-fadeIn">
@@ -276,6 +314,10 @@ const SubjectMarkConfigs = () => {
         </div>
       </div>
     );
+  }
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-red-400 animate-fadeIn">এই পৃষ্ঠাটি দেখার অনুমতি নেই।</div>;
   }
 
   if (subjectsError) {
@@ -362,8 +404,8 @@ const SubjectMarkConfigs = () => {
                 key={cls.id}
                 onClick={() => handleClassChange(cls.id)}
                 className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 animate-scaleIn ${
-                  selectedClassId === cls.id 
-                    ? 'bg-[#DB9E30] text-[#441a05] shadow-lg ring-2 ring-[#9d9087]' 
+                  selectedClassId === cls.id
+                    ? 'bg-[#DB9E30] text-[#441a05] shadow-lg ring-2 ring-[#9d9087]'
                     : 'bg-white/10 text-[#441a05] hover:bg-white/20 hover:shadow-md'
                 }`}
                 style={{ animationDelay: `${index * 0.1}s` }}
@@ -390,7 +432,7 @@ const SubjectMarkConfigs = () => {
               <span className="bg-[#DB9E30]/20 text-[#441a05] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">২</span>
               বিষয় কনফিগার করুন ({subjects.length}টি বিষয়)
             </h2>
-            
+
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {subjects.map((subject, index) => {
                 const totalDistributed = getTotalDistributedMarks(subject.id);
@@ -403,7 +445,7 @@ const SubjectMarkConfigs = () => {
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-bold text-[#441a05] truncate flex-1">{subject?.name}</h3>
                       <div className="flex space-x-2">
-                        {subjectConfigs[subject.id]?.id && (
+                        {subjectConfigs[subject.id]?.id && hasChangePermission && (
                           <>
                             <button
                               onClick={() => handleUpdate(subject.id)}
@@ -412,14 +454,16 @@ const SubjectMarkConfigs = () => {
                             >
                               আপডেট
                             </button>
-                            <button
-                              onClick={() => handleDelete(subject.id)}
-                              className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm btn-glow"
-                              title="মুছুন / Delete"
-                            >
-                              <FaTrash className="w-4 h-4" />
-                            </button>
                           </>
+                        )}
+                        {subjectConfigs[subject.id]?.id && hasDeletePermission && (
+                          <button
+                            onClick={() => handleDelete(subject.id)}
+                            className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm btn-glow"
+                            title="মুছুন / Delete"
+                          >
+                            <FaTrash className="w-4 h-4" />
+                          </button>
                         )}
                         <span className="bg-[#DB9E30]/20 text-[#441a05] text-xs font-medium px-2 py-1 rounded-full">
                           #{index + 1}
@@ -436,6 +480,7 @@ const SubjectMarkConfigs = () => {
                           className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
                           aria-label={`বিষয়ের ধরন ${subject.name}`}
                           title={`বিষয়ের ধরন নির্বাচন করুন / Select subject type for ${subject.name}`}
+                          disabled={!hasChangePermission}
                         >
                           <option value="COMPULSARY">📝 বাধ্যতামূলক</option>
                           <option value="CHOOSABLE">🎯 ঐচ্ছিক</option>
@@ -455,6 +500,7 @@ const SubjectMarkConfigs = () => {
                             min="0"
                             aria-label={`সর্বোচ্চ মার্ক ${subject.name}`}
                             title={`সর্বোচ্চ মার্ক নির্ধারণ করুন / Set max marks for ${subject.name}`}
+                            disabled={!hasChangePermission}
                           />
                         </div>
                         <div>
@@ -468,6 +514,7 @@ const SubjectMarkConfigs = () => {
                             min="1"
                             aria-label={`ক্রমিক নং ${subject.name}`}
                             title={`ক্রমিক নং নির্ধারণ করুন / Set serial number for ${subject.name}`}
+                            disabled={!hasChangePermission}
                           />
                         </div>
                       </div>
@@ -477,8 +524,8 @@ const SubjectMarkConfigs = () => {
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="font-semibold text-[#441a05]">মার্ক বণ্টন</h4>
                         <div className={`text-xs font-medium px-2 py-1 rounded-full ${
-                          isOverLimit ? 'bg-red-100 text-red-600' : 
-                          remainingMarks === 0 ? 'bg-green-100 text-green-600' : 
+                          isOverLimit ? 'bg-red-100 text-red-600' :
+                          remainingMarks === 0 ? 'bg-green-100 text-green-600' :
                           'bg-[#DB9E30]/20 text-[#441a05]'
                         }`}>
                           {totalDistributed}/{subjectMaxMark}
@@ -504,6 +551,7 @@ const SubjectMarkConfigs = () => {
                                   min="0"
                                   aria-label={`সর্বোচ্চ মার্ক ${markType.name} ${subject.name}`}
                                   title={`সর্বোচ্চ মার্ক নির্ধারণ করুন / Set max marks for ${markType.name} in ${subject.name}`}
+                                  disabled={!hasChangePermission}
                                 />
                               </div>
                               <div>
@@ -516,6 +564,7 @@ const SubjectMarkConfigs = () => {
                                   min="0"
                                   aria-label={`পাস মার্ক ${markType.name} ${subject.name}`}
                                   title={`পাস মার্ক নির্ধারণ করুন / Set pass marks for ${markType.name} in ${subject.name}`}
+                                  disabled={!hasChangePermission}
                                 />
                               </div>
                             </div>
@@ -529,10 +578,10 @@ const SubjectMarkConfigs = () => {
                           <span>{((totalDistributed / subjectMaxMark) * 100).toFixed(0)}%</span>
                         </div>
                         <div className="w-full bg-white/20 rounded-full h-2">
-                          <div 
+                          <div
                             className={`h-2 rounded-full transition-all duration-300 ${
-                              isOverLimit ? 'bg-red-500' : 
-                              remainingMarks === 0 ? 'bg-green-500' : 
+                              isOverLimit ? 'bg-red-500' :
+                              remainingMarks === 0 ? 'bg-green-500' :
                               'bg-[#DB9E30]'
                             }`}
                             style={{ width: `${Math.min((totalDistributed / subjectMaxMark) * 100, 100)}%` }}
@@ -548,16 +597,18 @@ const SubjectMarkConfigs = () => {
               })}
             </div>
 
-            <div className="mt-8 text-center">
-              <button 
-                onClick={handleSubmit} 
-                className="bg-[#DB9E30] text-[#441a05] px-8 py-4 rounded-xl font-semibold hover:bg-[#DB9E30]/80 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center mx-auto btn-glow"
-                title="সব কনফিগারেশন সংরক্ষণ করুন / Save all configurations"
-              >
-                <span className="mr-2">💾</span>
-                সব কনফিগারেশন সংরক্ষণ করুন
-              </button>
-            </div>
+            {hasAddPermission && (
+              <div className="mt-8 text-center">
+                <button
+                  onClick={handleSubmit}
+                  className="bg-[#DB9E30] text-[#441a05] px-8 py-4 rounded-xl font-semibold hover:bg-[#DB9E30]/80 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center mx-auto btn-glow"
+                  title="সব কনফিগারেশন সংরক্ষণ করুন / Save all configurations"
+                >
+                  <span className="mr-2">💾</span>
+                  সব কনফিগারেশন সংরক্ষণ করুন
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -570,7 +621,7 @@ const SubjectMarkConfigs = () => {
         )}
 
         {/* Confirmation Modal */}
-        {isModalOpen && (
+        {isModalOpen && (hasChangePermission || hasDeletePermission) && (
           <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[10000]">
             <div
               className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"
