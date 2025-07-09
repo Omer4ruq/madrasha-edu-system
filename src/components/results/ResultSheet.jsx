@@ -469,7 +469,7 @@ const ResultSheet = () => {
           }
           .table-container {
             // border: 1px solid #9D9087;
-            border-radius: 4px;
+            // border-radius: 4px;
             overflow-x: auto;
           }
           .table-header {

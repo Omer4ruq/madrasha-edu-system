@@ -212,12 +212,12 @@ const PersonalMarkSheet = () => {
           }
           .table-container {
             border: 1px solid #9D9087;
-            border-radius: 8px;
+            // border-radius: 8px;
             overflow-x: auto;
           }
           .table-header {
             background-color: rgba(219, 158, 48, 0.2);
-            padding: 8px;
+            // padding: 8px;
             display: flex;
             font-weight: bold;
             text-transform: uppercase;
