@@ -578,7 +578,7 @@ const ResultSheet = () => {
         <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight mb-6">
           ফলাফল শীট তৈরি করুন
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <select
             value={selectedExam}
             onChange={(e) => setSelectedExam(e.target.value)}
@@ -618,7 +618,7 @@ const ResultSheet = () => {
               </option>
             ))}
           </select>
-          <div className="flex space-x-4">
+          {/* <div className="flex space-x-4">
             <button
               onClick={handlePrint}
               className="relative inline-flex items-center px-4 py-2 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn hover:text-white btn-glow"
@@ -648,7 +648,7 @@ const ResultSheet = () => {
               <FaDownload className="w-4 h-4 mr-2" />
               ডাউনলোড করুন
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
 
