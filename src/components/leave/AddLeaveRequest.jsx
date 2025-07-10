@@ -42,7 +42,8 @@ const AddLeaveRequest = () => {
   const [createLeaveRequestApi, { isLoading: isCreatingLeave, error: createLeaveError }] = useCreateLeaveRequestApiMutation();
   const [createMealStatus, { isLoading: isCreatingMeal, error: createMealError }] = useCreateMealStatusMutation();
   const [deleteLeaveRequestApi, { isLoading: isDeleting, error: deleteError }] = useDeleteLeaveRequestApiMutation();
-
+console.log("leaveRequests",leaveRequests)
+console.log("users",users)
   // Format select options
   const leaveTypeOptions = leaveTypes.map((type) => ({
     value: type.id,
@@ -74,7 +75,7 @@ const AddLeaveRequest = () => {
     setSelectedUser(user);
     setFormData((prev) => ({
       ...prev,
-      user_id: user.id.toString(),
+      user_id: user.user_id,
     }));
     setSearchTerm(`${user.name} (${user?.student_profile?.class_name || "N/A"})`);
     setShowDropdown(false);
@@ -277,7 +278,7 @@ const AddLeaveRequest = () => {
                         onClick={() => handleUserSelect(user)}
                         className="p-2 text-[#441a05] bg-white hover:bg-[#DB9E30] cursor-pointer"
                         role="option"
-                        aria-selected={selectedUser?.id === user.id}
+                        aria-selected={selectedUser?.id == user.id}
                       >
                         {user.name} ({user?.student_profile?.class_name || "N/A"})
                       </div>

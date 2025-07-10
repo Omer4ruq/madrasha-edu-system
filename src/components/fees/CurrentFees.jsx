@@ -13,6 +13,343 @@ import selectStyles from '../../utilitis/selectStyles';
 import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi';
 import { useSelector } from 'react-redux';
 
+import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer'; // Add PDF imports
+import CurrentFeeHistoryTable from './CurrentFeeHistoryTable';
+import { useGetInstituteLatestQuery } from '../../redux/features/api/institute/instituteLatestApi';
+
+// Register Noto Sans Bengali font for voucher
+try {
+  Font.register({
+    family: 'NotoSansBengali',
+    src: 'https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf',
+  });
+} catch (error) {
+  console.error('Font registration failed:', error);
+  Font.register({
+    family: 'Helvetica',
+    src: 'https://fonts.gstatic.com/s/helvetica/v13/Helvetica.ttf',
+  });
+}
+
+// PDF styles for voucher
+const voucherStyles = StyleSheet.create({
+  page: {
+    padding: 40,
+    fontFamily: 'NotoSansBengali',
+    fontSize: 12,
+    color: '#222',
+    backgroundColor: '#fff',
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: 20,
+    borderBottomWidth: 2,
+    borderBottomColor: '#441a05',
+    paddingBottom: 15,
+  },
+  schoolName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#441a05',
+    marginBottom: 5,
+  },
+  headerText: {
+    fontSize: 12,
+    marginBottom: 3,
+    color: '#666',
+  },
+  voucherTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 10,
+    color: '#441a05',
+    textDecoration: 'underline',
+  },
+  voucherNumber: {
+    fontSize: 10,
+    color: '#888',
+    marginTop: 5,
+  },
+  studentInfo: {
+    marginVertical: 20,
+    padding: 15,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  studentInfoTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#441a05',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  infoRow: {
+    flexDirection: 'row',
+    marginBottom: 5,
+  },
+  infoLabel: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    width: 120,
+    color: '#555',
+  },
+  infoValue: {
+    fontSize: 11,
+    flex: 1,
+    color: '#333',
+  },
+  table: {
+    marginVertical: 20,
+    borderWidth: 1,
+    borderColor: '#441a05',
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#441a05',
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 11,
+    padding: 8,
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+    padding: 8,
+    backgroundColor: '#fff',
+  },
+  tableRowAlternate: {
+    backgroundColor: '#f8f9fa',
+  },
+  tableCell: {
+    flex: 1,
+    fontSize: 10,
+    textAlign: 'left',
+    paddingHorizontal: 4,
+  },
+  tableCellCenter: {
+    textAlign: 'center',
+  },
+  tableCellRight: {
+    textAlign: 'right',
+  },
+  summary: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#441a05',
+    borderRadius: 5,
+  },
+  summaryTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#441a05',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 5,
+    paddingHorizontal: 10,
+  },
+  summaryLabel: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#555',
+  },
+  summaryValue: {
+    fontSize: 11,
+    color: '#333',
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: '#441a05',
+    paddingTop: 8,
+    paddingHorizontal: 10,
+    marginTop: 8,
+  },
+  totalLabel: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#441a05',
+  },
+  totalValue: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#441a05',
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 30,
+    left: 40,
+    right: 40,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: '#e9ecef',
+    paddingTop: 10,
+  },
+  footerText: {
+    fontSize: 10,
+    color: '#666',
+  },
+  signature: {
+    marginTop: 40,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  signatureBox: {
+    textAlign: 'center',
+    width: 150,
+  },
+  signatureLine: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+    marginBottom: 5,
+    height: 40,
+  },
+  signatureLabel: {
+    fontSize: 10,
+    color: '#666',
+  },
+});
+
+// Fee Voucher PDF Component
+const FeeVoucherPDF = ({ 
+  student, 
+  feeDetails, 
+  academicYear, 
+  fund, 
+  totalAmount, 
+  totalWaiver, 
+  totalDiscount, 
+  netPayable,
+  voucherNumber,
+  institute
+}) => (
+  
+  <Document>
+    <Page size="A4" style={voucherStyles.page}>
+      {/* Header */}
+      <View style={voucherStyles.header}>
+        <Text style={voucherStyles.schoolName}>{institute?.institute_name}</Text>
+        <Text style={voucherStyles.headerText}>{institute?.address}</Text>
+        <Text style={voucherStyles.headerText}>{institute?.institute_email_address} | {institute?.institute_mobile}</Text>
+        <Text style={voucherStyles.voucherTitle}>ফি পেমেন্ট ভাউচার</Text>
+        <Text style={voucherStyles.voucherNumber}>ভাউচার নং: {voucherNumber}</Text>
+      </View>
+
+      {/* Student Information */}
+      <View style={voucherStyles.studentInfo}>
+        <Text style={voucherStyles.studentInfoTitle}>ছাত্র/ছাত্রীর তথ্য</Text>
+        <View style={voucherStyles.infoRow}>
+          <Text style={voucherStyles.infoLabel}>নাম:</Text>
+          <Text style={voucherStyles.infoValue}>{student.name}</Text>
+        </View>
+        <View style={voucherStyles.infoRow}>
+          <Text style={voucherStyles.infoLabel}>রোল নং:</Text>
+          <Text style={voucherStyles.infoValue}>{student.roll_no || 'অজানা'}</Text>
+        </View>
+        <View style={voucherStyles.infoRow}>
+          <Text style={voucherStyles.infoLabel}>পিতার নাম:</Text>
+          <Text style={voucherStyles.infoValue}>{student.father_name || 'অজানা'}</Text>
+        </View>
+        <View style={voucherStyles.infoRow}>
+          <Text style={voucherStyles.infoLabel}>শিক্ষাবর্ষ:</Text>
+          <Text style={voucherStyles.infoValue}>{academicYear}</Text>
+        </View>
+        <View style={voucherStyles.infoRow}>
+          <Text style={voucherStyles.infoLabel}>তহবিল:</Text>
+          <Text style={voucherStyles.infoValue}>{fund}</Text>
+        </View>
+        <View style={voucherStyles.infoRow}>
+          <Text style={voucherStyles.infoLabel}>পেমেন্ট তারিখ:</Text>
+          <Text style={voucherStyles.infoValue}>
+            {new Date().toLocaleDateString('bn-BD', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </Text>
+        </View>
+      </View>
+
+      {/* Fee Details Table */}
+      <View style={voucherStyles.table}>
+        <View style={voucherStyles.tableHeader}>
+          <Text style={[voucherStyles.tableCell, { flex: 2 }]}>ফি বিবরণ</Text>
+          <Text style={[voucherStyles.tableCell, voucherStyles.tableCellCenter]}>মূল পরিমাণ</Text>
+          <Text style={[voucherStyles.tableCell, voucherStyles.tableCellCenter]}>ওয়েভার</Text>
+          <Text style={[voucherStyles.tableCell, voucherStyles.tableCellCenter]}>ডিসকাউন্ট</Text>
+          <Text style={[voucherStyles.tableCell, voucherStyles.tableCellCenter]}>প্রদেয় পরিমাণ</Text>
+        </View>
+        {feeDetails.map((fee, index) => (
+          <View key={fee.id} style={[voucherStyles.tableRow, index % 2 === 1 && voucherStyles.tableRowAlternate]}>
+            <Text style={[voucherStyles.tableCell, { flex: 2 }]}>{fee.name}</Text>
+            <Text style={[voucherStyles.tableCell, voucherStyles.tableCellCenter]}>{fee.originalAmount}</Text>
+            <Text style={[voucherStyles.tableCell, voucherStyles.tableCellCenter]}>{fee.waiverAmount}</Text>
+            <Text style={[voucherStyles.tableCell, voucherStyles.tableCellCenter]}>{fee.discountAmount}</Text>
+            <Text style={[voucherStyles.tableCell, voucherStyles.tableCellCenter]}>{fee.paidAmount}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/* Summary */}
+      <View style={voucherStyles.summary}>
+        <Text style={voucherStyles.summaryTitle}>পেমেন্ট সারসংক্ষেপ</Text>
+        <View style={voucherStyles.summaryRow}>
+          <Text style={voucherStyles.summaryLabel}>মোট ফি:</Text>
+          <Text style={voucherStyles.summaryValue}>{totalAmount} টাকা</Text>
+        </View>
+        <View style={voucherStyles.summaryRow}>
+          <Text style={voucherStyles.summaryLabel}>মোট ওয়েভার:</Text>
+          <Text style={voucherStyles.summaryValue}>{totalWaiver} টাকা</Text>
+        </View>
+        <View style={voucherStyles.summaryRow}>
+          <Text style={voucherStyles.summaryLabel}>মোট ডিসকাউন্ট:</Text>
+          <Text style={voucherStyles.summaryValue}>{totalDiscount} টাকা</Text>
+        </View>
+        <View style={voucherStyles.totalRow}>
+          <Text style={voucherStyles.totalLabel}>মোট প্রদেয় পরিমাণ:</Text>
+          <Text style={voucherStyles.totalValue}>{netPayable} টাকা</Text>
+        </View>
+      </View>
+
+      {/* Signatures */}
+      <View style={voucherStyles.signature}>
+        <View style={voucherStyles.signatureBox}>
+          <View style={voucherStyles.signatureLine}></View>
+          <Text style={voucherStyles.signatureLabel}>ছাত্র/অভিভাবক স্বাক্ষর</Text>
+        </View>
+        <View style={voucherStyles.signatureBox}>
+          <View style={voucherStyles.signatureLine}></View>
+          <Text style={voucherStyles.signatureLabel}>ক্যাশিয়ার স্বাক্ষর</Text>
+        </View>
+        <View style={voucherStyles.signatureBox}>
+          <View style={voucherStyles.signatureLine}></View>
+          <Text style={voucherStyles.signatureLabel}>প্রিন্সিপাল স্বাক্ষর</Text>
+        </View>
+      </View>
+
+      {/* Footer */}
+      <View style={voucherStyles.footer} fixed>
+        <Text style={voucherStyles.footerText}>
+          এই ভাউচারটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে।
+        </Text>
+        <Text style={voucherStyles.footerText}>
+          মুদ্রণ তারিখ: {new Date().toLocaleDateString('bn-BD')} {new Date().toLocaleTimeString('bn-BD')}
+        </Text>
+      </View>
+    </Page>
+  </Document>
+);
+
 const CurrentFees = () => {
   const { group_id } = useSelector((state) => state.auth);
   const [userId, setUserId] = useState('');
@@ -28,7 +365,7 @@ const CurrentFees = () => {
   const [modalData, setModalData] = useState(null);
   const [selectAll, setSelectAll] = useState(false);
   const dropdownRef = useRef(null);
-
+const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
   // API Queries
   const { data: studentData, isLoading: studentLoading, error: studentError } = useGetStudentActiveApiQuery(
     userId ? { user_id: userId } : undefined,
@@ -47,6 +384,10 @@ const CurrentFees = () => {
   const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
     skip: !group_id,
   });
+
+  console.log("studentData", studentData)
+  console.log("feesData", feesData)
+  console.log("waivers", waivers)
 
   // Check permissions
   const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_fees') || false;
@@ -83,17 +424,94 @@ const CurrentFees = () => {
     setSelectedFees([]);
   }, [feesData]);
 
+  // Generate voucher number
+  const generateVoucherNumber = () => {
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 1000);
+    return `FV-${timestamp}-${random}`;
+  };
+console.log("institute", institute)
+  // Generate and download fee voucher
+  const generateFeeVoucher = async (processedFees) => {
+    try {
+      const voucherNumber = generateVoucherNumber();
+      
+      // Calculate totals
+      let totalAmount = 0;
+      let totalWaiver = 0;
+      let totalDiscount = 0;
+      let netPayable = 0;
+
+      const feeDetails = processedFees.map(feeId => {
+        const fee = filteredFees.find(f => f.id === feeId);
+        const { waiverAmount, payableAfterWaiver } = calculatePayableAmount(fee, waivers);
+        const { storedDiscountAmount } = getFeeStatus(fee);
+        
+        const currentDiscount = discountInputs[feeId] ? 
+          parseFloat(discountInputs[feeId]) : 
+          parseFloat(storedDiscountAmount || 0);
+        const paidAmount = parseFloat(paymentInputs[feeId] || 0);
+        const originalAmount = parseFloat(fee.amount);
+        
+        totalAmount += originalAmount;
+        totalWaiver += parseFloat(waiverAmount);
+        totalDiscount += currentDiscount;
+        netPayable += paidAmount;
+
+        return {
+          id: fee.id,
+          name: fee.fees_title,
+          originalAmount: originalAmount.toFixed(2),
+          waiverAmount: waiverAmount,
+          discountAmount: currentDiscount.toFixed(2),
+          paidAmount: paidAmount.toFixed(2)
+        };
+      });
+
+      // Get academic year and fund names
+      const academicYearName = academicYears?.find(year => year.id === selectedAcademicYear)?.name || 'অজানা';
+      const fundName = funds?.find(fund => fund.id === selectedFund)?.name || 'অজানা';
+
+      const voucherData = {
+        student: selectedStudent,
+        feeDetails,
+        academicYear: academicYearName,
+        fund: fundName,
+        totalAmount: totalAmount.toFixed(2),
+        totalWaiver: totalWaiver.toFixed(2),
+        totalDiscount: totalDiscount.toFixed(2),
+        netPayable: netPayable.toFixed(2),
+        voucherNumber,
+        institute
+      };
+
+      const doc = <FeeVoucherPDF {...voucherData} />;
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `ফি_ভাউচার_${selectedStudent.name}_${voucherNumber}_${new Date().toLocaleDateString('bn-BD')}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+      
+      toast.success('ভাউচার সফলভাবে ডাউনলোড হয়েছে!');
+    } catch (error) {
+      console.error('Voucher generation error:', error);
+      toast.error(`ভাউচার তৈরিতে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
+    }
+  };
+
   // Calculate payable amount with waiver
   const calculatePayableAmount = (fee, waivers) => {
     const feeHeadId = parseInt(fee.fee_head_id);
     const waiver = waivers?.find(
       (w) =>
         w.student_id === selectedStudent?.id &&
-        w.academic_year.toString() === selectedAcademicYear &&
+        w?.academic_year === selectedAcademicYear &&
         Array.isArray(w.fee_types) &&
         w.fee_types.map(Number).includes(feeHeadId)
     );
-
+    console.log("get waiver", waiver)
     const waiverPercentage = waiver ? parseFloat(waiver.waiver_amount) / 100 : 0;
     const feeAmount = parseFloat(fee.amount) || 0;
     const waiverAmount = feeAmount * waiverPercentage;
@@ -290,6 +708,10 @@ const CurrentFees = () => {
 
         await Promise.all(promises);
         toast.success('ফি সফলভাবে প্রক্রিয়া করা হয়েছে!');
+        
+        // Generate and download voucher
+        await generateFeeVoucher(modalData.fees);
+        
         setSelectedFees([]);
         setPaymentInputs({});
         setDiscountInputs({});
@@ -413,45 +835,23 @@ const CurrentFees = () => {
               </table>
             </div>
           )}
-          {feesData?.fees_records?.length > 0 && (
-            <div className="mt-8">
-              <h2 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">ফি ইতিহাস</h2>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-white/20">
-                  <thead className="bg-white/5">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ফি প্রকার</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">মোট প্রদান পরিমাণ</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ওয়েভার পরিমাণ</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ডিসকাউন্ট পরিমাণ</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">স্থিতি</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/20">
-                    {feesData.fees_records.map((fee, index) => {
-                      const feeNameRecord = feesData.fees_name_records?.find((f) => f.id === fee.feetype_id);
-                      const waiverAmount = feeNameRecord ? calculatePayableAmount(feeNameRecord, waivers).waiverAmount : '0.00';
-
-                      return (
-                        <tr key={fee.id} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">{fee.feetype_name}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">{fee.amount}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">{fee.waiver_amount || waiverAmount}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">{fee.discount_amount}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${fee.status === 'PAID' ? 'text-[#441a05] bg-[#DB9E30]' : fee.status === 'PARTIAL' ? 'text-yellow-800 bg-yellow-100/50' : 'text-red-800 bg-red-100/50'}`}>
-                              {fee.status === 'PAID' ? 'প্রদান' : fee.status === 'PARTIAL' ? 'আংশিক' : 'অপ্রদান'}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
         </div>
+        
+        {/* Fee History Table - Using the new component */}
+        {feesData?.fees_records?.length > 0 && (
+          <div className="mt-8">
+            <FeeHistoryTable
+              feeRecords={feesData.fees_records}
+              feesNameRecords={feesData.fees_name_records}
+              waivers={waivers}
+              selectedStudent={selectedStudent}
+              hasChangePermission={false}
+              hasDeletePermission={false}
+              hasViewPermission={hasViewPermission}
+              calculatePayableAmount={calculatePayableAmount}
+            />
+          </div>
+        )}
       </div>
     );
   }
@@ -828,120 +1228,22 @@ const CurrentFees = () => {
           <p className="text-[#441a05]/70 mb-8 animate-fadeIn">এই ছাত্রের জন্য কোনো বর্তমান ফি উপলব্ধ নেই।</p>
         )}
 
-        {/* Fee History Table */}
-        {(hasChangePermission || hasDeletePermission) && feesData?.fees_records?.length > 0 && (
-          <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
-            <h2 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">ফি ইতিহাস</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-white/20">
-                <thead className="bg-white/5">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ফি প্রকার
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      মোট প্রদান পরিমাণ
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ওয়েভার পরিমাণ
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ডিসকাউন্ট পরিমাণ
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      স্থিতি
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ক্রিয়াকলাপ
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/20">
-                  {feesData.fees_records.map((fee, index) => {
-                    const feeNameRecord = feesData.fees_name_records?.find(
-                      (f) => f.id === fee.feetype_id
-                    );
-                    const waiverAmount = feeNameRecord
-                      ? calculatePayableAmount(feeNameRecord, waivers).waiverAmount
-                      : '0.00';
-
-                    return (
-                      <tr
-                        key={fee.id}
-                        className="bg-white/5 animate-fadeIn"
-                        style={{ animationDelay: `${index * 0.1}s` }}
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                          {fee.feetype_name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                          {fee.amount}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                          {fee.waiver_amount || waiverAmount}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                          {fee.discount_amount}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                          <span
-                            className={`px-2 py-1 text-xs font-semibold rounded-full ${fee.status === 'PAID'
-                              ? 'text-[#441a05] bg-[#DB9E30]'
-                              : fee.status === 'PARTIAL'
-                                ? 'text-yellow-800 bg-yellow-100/50'
-                                : 'text-red-800 bg-red-100/50'
-                              }`}
-                          >
-                            {fee.status === 'PAID' ? 'প্রদান' : fee.status === 'PARTIAL' ? 'আংশিক' : 'অপ্রদান'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          {hasChangePermission && (
-                            <button
-                              onClick={() =>
-                                handleUpdateFee(fee.id, {
-                                  amount: fee.amount,
-                                  discount_amount: fee.discount_amount,
-                                  status: fee.status,
-                                  waiver_amount: fee.waiver_amount || waiverAmount,
-                                })
-                              }
-                              title="ফি আপডেট করুন / Update fee"
-                              className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
-                            >
-                              <FaEdit className="w-5 h-5" />
-                            </button>
-                          )}
-                          {hasDeletePermission && (
-                            <button
-                              onClick={() => handleDeleteFee(fee.id)}
-                              title="ফি মুছুন / Delete fee"
-                              className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
-                            >
-                              <FaTrash className="w-5 h-5" />
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            {(isDeleting || isUpdating) && (
-              <div
-                className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
-                style={{ animationDelay: '0.4s' }}
-              >
-                {isDeleting
-                  ? 'ফি মুছে ফেলা হচ্ছে...'
-                  : 'ফি আপডেট করা হচ্ছে...'}
-              </div>
-            )}
-          </div>
-        )}
-        {(hasChangePermission || hasDeletePermission) && feesData?.fees_records?.length === 0 && selectedStudent && (
-          <p className="text-[#441a05]/70 animate-fadeIn">এই ছাত্রের জন্য কোনো ফি ইতিহাস উপলব্ধ নেই।</p>
+        {/* Fee History Table - Using the new component */}
+        {feesData?.fees_records?.length > 0 && (
+          <CurrentFeeHistoryTable
+            feeRecords={feesData.fees_records}
+            feesNameRecords={feesData.fees_name_records}
+            waivers={waivers}
+            selectedStudent={selectedStudent}
+            hasChangePermission={hasChangePermission}
+            hasDeletePermission={hasDeletePermission}
+            hasViewPermission={hasViewPermission}
+            onUpdateFee={handleUpdateFee}
+            onDeleteFee={handleDeleteFee}
+            calculatePayableAmount={calculatePayableAmount}
+            isUpdating={isUpdating}
+            isDeleting={isDeleting}
+          />
         )}
 
         {/* Confirmation Modal */}
