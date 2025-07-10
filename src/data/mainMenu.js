@@ -492,6 +492,11 @@ const mainMenu = [
         title: "হাজিরা খাতা",
         link: "/layout/attendance-sheet",
       },
+      {
+        id: "11/02",
+        title: "মুতালায়া ও সবক রিপোর্ট",
+        link: "/layout/mutalaya-report",
+      },
     ],
   },
 ];

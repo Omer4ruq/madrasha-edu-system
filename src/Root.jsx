@@ -74,6 +74,7 @@ import MarkSheet from "./components/results/MarkSheet";
 import PersonalMarkSheet from "./components/results/PersonalMarkSheet";
 import MeritList from "./components/results/MeritList";
 import ResultConfig from "./components/results/ResultConfig";
+import MutalayaReport from "./components/layout/MutalayaReport";
 
 function Root() {
   const router = createBrowserRouter([
@@ -462,6 +463,10 @@ function Root() {
             {
               path: "attendance-sheet",
               element: <AttendanceSheet />,
+            },
+            {
+              path: "mutalaya-report",
+              element: <MutalayaReport></MutalayaReport>,
             },
           ],
         },
