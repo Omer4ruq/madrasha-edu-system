@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { FaSpinner, FaDownload } from 'react-icons/fa';
+import { PDFViewer, Document, Page, Text, View, StyleSheet, pdf, Font } from '@react-pdf/renderer';
+import { saveAs } from 'file-saver';
 import { useGetStudentActiveByClassQuery } from '../../redux/features/api/student/studentActiveApi';
 import { useGetSubjectMarksQuery } from '../../redux/features/api/marks/subjectMarksApi';
 import { useGetGradeRulesQuery } from '../../redux/features/api/result/gradeRuleApi';
@@ -8,8 +10,87 @@ import { useGetExamApiQuery } from '../../redux/features/api/exam/examApi';
 import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
 import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
 import { useGetSubjectMarkConfigsByClassQuery } from '../../redux/features/api/marks/subjectMarkConfigsApi';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+
+// Register Bangla font with alternative source and fallback
+Font.register({
+  family: 'NotoSansBengali',
+  src: 'https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf',
+});
+Font.register({
+  family: 'ArialUnicodeMS',
+  src: 'https://cdn.jsdelivr.net/npm/arial-unicode-ms/ArialUnicodeMS.ttf',
+});
+Font.registerHyphenationCallback((word) => [word]); // Prevent text splitting issues
+
+// PDF styles synced with original frontend layout
+const styles = StyleSheet.create({
+  page: {
+    padding: 20,
+    fontSize: 12,
+    fontFamily: 'NotoSansBengali',
+    color: '#000',
+    backgroundColor: '#FFF',
+    display: 'flex',
+    flexDirection: 'column',
+    width: 595.28, // A4 portrait width at 72dpi
+    height: 841.89, // A4 portrait height at 72dpi
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#000',
+    textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+  },
+  subHeader: {
+    fontSize: 14,
+    color: '#000',
+    marginTop: 4,
+  },
+  table: {
+    border: '1px solid #000',
+    marginTop: 20,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(219, 158, 48, 0.2)',
+    borderBottom: '2px solid #000',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottom: '1px solid #000',
+  },
+  cell: {
+    flex: 1,
+    padding: 8,
+    fontSize: 12,
+    color: '#000',
+    textAlign: 'left',
+    borderRight: '1px solid #000',
+  },
+  serialCell: { flex: 0.5 },
+  subjectCell: { flex: 1.5 },
+  scoreCell: { flex: 1 },
+  failCell: { backgroundColor: '#FFE6E6', color: '#9B1C1C' },
+  absentCell: { backgroundColor: '#FFF7E6', color: '#9B6500' },
+  summary: {
+    marginTop: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+  },
+  summaryText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+});
 
 const PersonalMarkSheet = () => {
   const [selectedStudent, setSelectedStudent] = useState('');
@@ -131,34 +212,77 @@ const PersonalMarkSheet = () => {
     return grade ? grade.grade : 'N/A';
   };
 
-  // Function to download PDF
-  const downloadPDF = () => {
-    if (!markSheetRef.current) {
-      toast.error('মার্কশীট ডেটা লোড হয়নি।');
+  const handleDownload = async () => {
+    if (!marksData) {
+      toast.error('কোনো ফলাফল ডেটা পাওয়া যায়নি। দয়া করে ফিল্টার চেক করুন।');
       return;
     }
 
-    html2canvas(markSheetRef.current, {
-      scale: 2,
-      useCORS: true,
-      logging: true,
-    }).then((canvas) => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'px',
-        format: [793, 1122], // A4 portrait dimensions at 96dpi
-      });
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = 793;
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Personal_Mark_Sheet_${new Date().toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' })}.pdf`);
-      toast.success('PDF ডাউনলোড সম্পন্ন!');
-    }).catch((error) => {
-      console.error('PDF Generation Error:', error);
-      toast.error('PDF তৈরি করতে ত্রুটি: ' + error.message);
-    });
+    const PdfDocument = (
+      <Document>
+        <Page size="A4" orientation="portrait" style={styles.page}>
+          <View style={styles.header}>
+            <Text style={styles.title}>আল-মদিনা ইসলামিক মাদ্রাসা</Text>
+            <Text style={styles.subHeader}>ঠিকানা: ১২৩, মাদ্রাসা রোড, ঢাকা, বাংলাদেশ</Text>
+            <Text style={styles.subHeader}>ফোন: +৮৮০ ১৭১২৩৪৫৬৭৮ | ইমেইল: info@almadina.edu.bd</Text>
+            <Text style={styles.title}>
+              ব্যক্তিগত ফলাফল শীট - {exams?.find((e) => e.id === Number(selectedExam))?.name}
+            </Text>
+            <Text style={styles.subHeader}>
+              নাম: {marksData.studentName} | রোল: {marksData.rollNo}
+            </Text>
+            <Text style={styles.subHeader}>
+              ক্লাস: {classConfigs?.find((c) => c.id === Number(selectedClassConfig))?.class_name} |
+              শাখা: {classConfigs?.find((c) => c.id === Number(selectedClassConfig))?.section_name} |
+              শিফট: {classConfigs?.find((c) => c.id === Number(selectedClassConfig))?.shift_name}
+            </Text>
+            <Text style={styles.subHeader}>
+              শিক্ষাবর্ষ: {academicYears?.find((y) => y.id === Number(selectedAcademicYear))?.name}
+            </Text>
+          </View>
+
+          <View style={styles.table}>
+            <View style={styles.tableHeader}>
+              <Text style={[styles.cell, styles.serialCell]}>ক্রমিক নং</Text>
+              <Text style={[styles.cell, styles.subjectCell]}>বিষয়</Text>
+              <Text style={styles.cell}>বিষয় নম্বর</Text>
+            </View>
+            {marksData.subjects.map((sub, index) => (
+              <View key={index} style={styles.tableRow}>
+                <Text style={[styles.cell, styles.serialCell]}>{index + 1}</Text>
+                <Text style={[styles.cell, styles.subjectCell]}>{sub.subject}</Text>
+                <Text
+                  style={[
+                    styles.cell,
+                    sub.isFailed ? styles.failCell : sub.isAbsent ? styles.absentCell : {},
+                  ]}
+                >
+                  {sub.isAbsent ? 'অনুপস্থিত' : sub.obtained}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.summary}>
+            <Text style={styles.summaryText}>গ্রেড: {marksData.grade}</Text>
+            <Text style={styles.summaryText}>মোট নম্বর: {marksData.totalObtained} / {marksData.totalMaxMarks}</Text>
+            <Text style={styles.summaryText}>মেধা স্থান: {marksData.meritPosition || 'N/A'}</Text>
+            <Text style={styles.summaryText}>গড় নম্বর: {marksData.averageMarks}</Text>
+          </View>
+        </Page>
+      </Document>
+    );
+
+    try {
+      const asPdf = pdf(PdfDocument);
+      const blob = await asPdf.toBlob();
+      console.log('PDF Blob generated. Sample text check:', 'ক্রমিক নং' in blob); // Debug text presence
+      saveAs(blob, `Personal_Mark_Sheet_${selectedExam}_${selectedClassConfig}_${new Date().toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' })}.pdf`);
+      toast.success('PDF ডাউনলোড সফল!');
+    } catch (error) {
+      console.error('PDF Download Error:', error);
+      toast.error(`PDF ডাউনলোডে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
+    }
   };
 
   return (
@@ -225,28 +349,27 @@ const PersonalMarkSheet = () => {
             opacity: 0.6;
           }
           .table-container {
-            border: 1px solid #9D9087;
+            border: 1px solid #000;
             overflow-x: auto;
           }
           .table-header {
             background-color: rgba(219, 158, 48, 0.2);
-            // padding: 8px;
             display: flex;
             font-weight: bold;
             text-transform: uppercase;
-            border-bottom: 2px solid #9D9087;
+            border-bottom: 2px solid #000;
           }
           .table-row {
-            border-bottom: 1px solid #9D9087;
+            border-bottom: 1px solid #000;
             display: flex;
           }
           .table-cell {
             flex: 1;
             padding: 8px;
             font-size: 12px;
-            color: #441A05;
+            color: #000;
             text-align: left;
-            border-right: 1px solid #9D9087;
+            border-right: 1px solid #000;
           }
           .serial-cell {
             flex: 0.5;
@@ -378,7 +501,7 @@ const PersonalMarkSheet = () => {
         </div>
       </div>
 
-      {/* Personal Mark Sheet */}
+      {/* Personal Mark Sheet in Frontend */}
       {(examsLoading || classConfigsLoading || academicYearsLoading || studentsLoading || subjectMarksLoading || subjectConfigsLoading || gradesLoading) ? (
         <div className="flex justify-center items-center h-64">
           <FaSpinner className="animate-spin text-4xl text-[#441A05]" />
@@ -453,8 +576,8 @@ const PersonalMarkSheet = () => {
             </div>
           </div>
           <button
-            onClick={downloadPDF}
-            className="download-btn"
+            onClick={handleDownload}
+            className="download-btn mx-auto"
             disabled={!marksData}
           >
             <FaDownload /> PDF ডাউনলোড

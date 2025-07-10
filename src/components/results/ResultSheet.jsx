@@ -630,20 +630,6 @@ const ResultSheet = () => {
         </div>
         <div className="flex space-x-4 mt-6">
           <button
-            onClick={handlePrint}
-            className="relative inline-flex items-center px-4 py-2 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn hover:text-white btn-glow"
-            disabled={
-              !selectedExam ||
-              !selectedClassConfig ||
-              !selectedAcademicYear ||
-              gradesLoading
-            }
-            title="প্রিন্ট করুন"
-          >
-            <FaPrint className="w-4 h-4 mr-2" />
-            প্রিন্ট করুন
-          </button>
-          <button
             onClick={handleDownload}
             className="relative inline-flex items-center px-4 py-2 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn hover:text-white btn-glow"
             disabled={

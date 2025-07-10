@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { FaSpinner, FaDownload } from 'react-icons/fa';
 import { useGetStudentActiveByClassQuery } from '../../redux/features/api/student/studentActiveApi';
@@ -8,8 +8,70 @@ import { useGetExamApiQuery } from '../../redux/features/api/exam/examApi';
 import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
 import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
 import { useGetSubjectMarkConfigsByClassQuery } from '../../redux/features/api/marks/subjectMarkConfigsApi';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { PDFViewer, Document, Page, Text, View, StyleSheet, pdf, Font } from '@react-pdf/renderer';
+import { saveAs } from 'file-saver';
+
+// Register Bangla font with alternative source and fallback
+Font.register({
+  family: 'NotoSansBengali',
+  src: 'https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf',
+});
+Font.register({
+  family: 'ArialUnicodeMS',
+  src: 'https://cdn.jsdelivr.net/npm/arial-unicode-ms/ArialUnicodeMS.ttf',
+});
+Font.registerHyphenationCallback((word) => [word]); // Prevent text splitting issues
+
+// PDF styles synced with frontend layout
+const styles = StyleSheet.create({
+  page: {
+    padding: 20,
+    fontSize: 12,
+    fontFamily: 'NotoSansBengali',
+    color: '#441A05',
+    backgroundColor: '#FFF',
+    width: 595.28, // A4 portrait width at 72dpi
+    height: 841.89, // A4 portrait height at 72dpi
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#441A05',
+    textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+  },
+  subHeader: {
+    fontSize: 14,
+    color: '#441A05',
+    marginTop: 4,
+  },
+  table: {
+    border: '1px solid #000',
+    marginTop: 20,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(219, 158, 48, 0.2)',
+    borderBottom: '1px solid #000',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottom: '1px solid #000',
+  },
+  cell: {
+    flex: 1,
+    padding: 8,
+    fontSize: 12,
+    color: '#000',
+    textAlign: 'left',
+    borderRight: '1px solid #000',
+  },
+  rankCell: { flex: 0.8 },
+  nameCell: { flex: 1.5 },
+});
 
 const MeritList = () => {
   const [selectedExam, setSelectedExam] = useState('');
@@ -17,7 +79,6 @@ const MeritList = () => {
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [meritData, setMeritData] = useState([]);
   const [grades, setGrades] = useState([]);
-  const meritListRef = useRef(null);
 
   // Fetch data from APIs
   const { data: exams, isLoading: examsLoading } = useGetExamApiQuery();
@@ -27,6 +88,11 @@ const MeritList = () => {
     skip: !selectedClassConfig,
   });
   const { data: subjectMarks, isLoading: subjectMarksLoading } = useGetSubjectMarksQuery({
+    exam: selectedExam,
+    classConfig: selectedClassConfig,
+    academicYear: selectedAcademicYear,
+    skip: !selectedExam || !selectedClassConfig || !selectedAcademicYear,
+  }, {
     skip: !selectedExam || !selectedClassConfig || !selectedAcademicYear,
   });
   const { data: subjectConfigs, isLoading: subjectConfigsLoading } = useGetSubjectMarkConfigsByClassQuery(selectedClassConfig, {
@@ -114,25 +180,66 @@ const MeritList = () => {
   };
 
   // Function to download PDF
-  const downloadPDF = () => {
-    if (!meritListRef.current) return;
+  const downloadPDF = async () => {
+    if (meritData.length === 0) {
+      toast.error('কোনো মেধা তালিকা ডেটা পাওয়া যায়নি। দয়া করে ফিল্টার চেক করুন।');
+      return;
+    }
 
-    html2canvas(meritListRef.current, { scale: 2 }).then((canvas) => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'px',
-        format: [793, 1122], // A4 dimensions at 96dpi
-      });
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = 793;
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Merit_List_${new Date().toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' })}.pdf`);
+    const PdfDocument = (
+      <Document>
+        <Page size="A4" orientation="portrait" style={styles.page}>
+          <View style={styles.header}>
+            <Text style={styles.title}>আল-মদিনা ইসলামিক মাদ্রাসা</Text>
+            <Text style={styles.subHeader}>ঠিকানা: ১২৩, মাদ্রাসা রোড, ঢাকা, বাংলাদেশ</Text>
+            <Text style={styles.subHeader}>ফোন: +৮৮০ ১৭১২৩৪৫৬৭৮ | ইমেইল: info@almadina.edu.bd</Text>
+            <Text style={styles.title}>
+              মেধা তালিকা - {exams?.find((e) => e.id === Number(selectedExam))?.name}
+            </Text>
+            <Text style={styles.subHeader}>
+              ক্লাস: {classConfigs?.find((c) => c.id === Number(selectedClassConfig))?.class_name} |
+              শাখা: {classConfigs?.find((c) => c.id === Number(selectedClassConfig))?.section_name} |
+              শিফট: {classConfigs?.find((c) => c.id === Number(selectedClassConfig))?.shift_name}
+            </Text>
+            <Text style={styles.subHeader}>
+              শিক্ষাবর্ষ: {academicYears?.find((y) => y.id === Number(selectedAcademicYear))?.name}
+            </Text>
+          </View>
+
+          <View style={styles.table}>
+            <View style={styles.tableHeader}>
+              <Text style={[styles.cell, styles.rankCell]}>মেধা স্থান</Text>
+              <Text style={[styles.cell, styles.nameCell]}>নাম</Text>
+              <Text style={styles.cell}>রোল নম্বর</Text>
+              <Text style={styles.cell}>মোট</Text>
+              <Text style={styles.cell}>গড়</Text>
+              <Text style={styles.cell}>গ্রেড</Text>
+            </View>
+            {meritData.map((student, index) => (
+              <View key={student.studentId} style={styles.tableRow}>
+                <Text style={[styles.cell, styles.rankCell]}>{student.rankDisplay}</Text>
+                <Text style={[styles.cell, styles.nameCell]}>{student.studentName}</Text>
+                <Text style={styles.cell}>{student.rollNo}</Text>
+                <Text style={styles.cell}>{student.totalObtained}</Text>
+                <Text style={styles.cell}>{student.averageMarks}</Text>
+                <Text style={styles.cell}>{student.grade}</Text>
+              </View>
+            ))}
+          </View>
+        </Page>
+      </Document>
+    );
+
+    try {
+      const asPdf = pdf(PdfDocument);
+      const blob = await asPdf.toBlob();
+      console.log('PDF Blob generated. Sample text check:', 'মেধা স্থান' in blob); // Debug text presence
+      saveAs(blob, `Merit_List_${selectedClassConfig}_${new Date().toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' })}.pdf`);
       toast.success('PDF ডাউনলোড সম্পন্ন!');
-    }).catch((error) => {
-      toast.error('PDF তৈরি করতে ত্রুটি: ' + error.message);
-    });
+    } catch (error) {
+      console.error('PDF Download Error:', error);
+      toast.error(`PDF ডাউনলোডে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
+    }
   };
 
   return (
@@ -189,29 +296,27 @@ const MeritList = () => {
             opacity: 0.6;
           }
           .table-container {
-            border: 1px solid #9D9087;
-            // border-radius: 8px;
+            border: 1px solid #000;
             overflow-x: auto;
           }
           .table-header {
             background-color: rgba(219, 158, 48, 0.2);
-            // padding: 8px;
             display: flex;
             font-weight: bold;
             text-transform: uppercase;
-            border-bottom: 2px solid #9D9087;
+            border-bottom: 1px solid #000;
           }
           .table-row {
-            border-bottom: 1px solid #9D9087;
+            border-bottom: 1px solid #000;
             display: flex;
           }
           .table-cell {
             flex: 1;
             padding: 8px;
             font-size: 12px;
-            color: #441A05;
+            color: #000;
             text-align: left;
-            border-right: 1px solid #9D9087;
+            border-right: 1px solid #000;
           }
           .name-cell {
             flex: 1.5;
@@ -222,7 +327,7 @@ const MeritList = () => {
           .header-title {
             font-size: 24px;
             font-weight: bold;
-            color: #441A05;
+            color: #000;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
           }
           .header-subtitle {
@@ -314,6 +419,13 @@ const MeritList = () => {
             ))}
           </select>
         </div>
+        <button
+          onClick={downloadPDF}
+          className="download-btn"
+          disabled={meritData.length === 0 || examsLoading || classConfigsLoading || academicYearsLoading || studentsLoading || subjectMarksLoading || subjectConfigsLoading || gradesLoading}
+        >
+          <FaDownload /> PDF ডাউনলোড
+        </button>
       </div>
 
       {/* Merit List */}
@@ -323,7 +435,7 @@ const MeritList = () => {
         </div>
       ) : meritData.length > 0 ? (
         <div>
-          <div ref={meritListRef} className="a4-portrait animate-fadeIn">
+          <div className="a4-portrait animate-fadeIn">
             <div className="text-center mb-6">
               <h2 className="header-title">
                 আল-মদিনা ইসলামিক মাদ্রাসা
@@ -368,13 +480,6 @@ const MeritList = () => {
               ))}
             </div>
           </div>
-          {/* <button
-            onClick={downloadPDF}
-            className="download-btn"
-            disabled={meritData.length === 0}
-          >
-            <FaDownload /> PDF ডাউনলোড
-          </button> */}
         </div>
       ) : (
         <p className="text-center text-[#441A05]/70">মেধা তালিকা তৈরি করতে উপরের ফিল্টার নির্বাচন করুন।</p>
