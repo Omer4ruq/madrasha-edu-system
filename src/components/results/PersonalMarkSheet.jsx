@@ -28,6 +28,12 @@ const PersonalMarkSheet = () => {
     skip: !selectedClassConfig,
   });
   const { data: subjectMarks, isLoading: subjectMarksLoading } = useGetSubjectMarksQuery({
+    exam: selectedExam,
+    classConfig: selectedClassConfig,
+    academicYear: selectedAcademicYear,
+    student: selectedStudent,
+    skip: !selectedExam || !selectedClassConfig || !selectedAcademicYear || !selectedStudent,
+  }, {
     skip: !selectedExam || !selectedClassConfig || !selectedAcademicYear || !selectedStudent,
   });
   const { data: subjectConfigs, isLoading: subjectConfigsLoading } = useGetSubjectMarkConfigsByClassQuery(selectedClassConfig, {
@@ -127,9 +133,16 @@ const PersonalMarkSheet = () => {
 
   // Function to download PDF
   const downloadPDF = () => {
-    if (!markSheetRef.current) return;
+    if (!markSheetRef.current) {
+      toast.error('মার্কশীট ডেটা লোড হয়নি।');
+      return;
+    }
 
-    html2canvas(markSheetRef.current, { scale: 2 }).then((canvas) => {
+    html2canvas(markSheetRef.current, {
+      scale: 2,
+      useCORS: true,
+      logging: true,
+    }).then((canvas) => {
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -143,6 +156,7 @@ const PersonalMarkSheet = () => {
       pdf.save(`Personal_Mark_Sheet_${new Date().toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' })}.pdf`);
       toast.success('PDF ডাউনলোড সম্পন্ন!');
     }).catch((error) => {
+      console.error('PDF Generation Error:', error);
       toast.error('PDF তৈরি করতে ত্রুটি: ' + error.message);
     });
   };
@@ -212,7 +226,6 @@ const PersonalMarkSheet = () => {
           }
           .table-container {
             border: 1px solid #9D9087;
-            // border-radius: 8px;
             overflow-x: auto;
           }
           .table-header {
@@ -421,31 +434,31 @@ const PersonalMarkSheet = () => {
 
             {/* Summary Section */}
             <div className="mt-4 flex justify-between absolute w-full left-0 px-5 bottom-5">
-              <div className=" flex">
+              <div className="flex">
                 <div className="text-sm text-black font-semibold">গ্রেড :</div>
                 <div className="ml-4 text-sm text-black font-semibold">{marksData.grade}</div>
               </div>
-              <div className=" flex">
+              <div className="flex">
                 <div className="text-sm text-black font-semibold">মোট নম্বর :</div>
                 <div className="ml-4 text-sm text-black font-semibold">{marksData.totalObtained} / {marksData.totalMaxMarks}</div>
               </div>
-              <div className=" flex">
+              <div className="flex">
                 <div className="text-sm text-black font-semibold">মেধা স্থান :</div>
                 <div className="ml-4 text-sm text-black font-semibold">{marksData.meritPosition || 'N/A'}</div>
               </div>
-              <div className=" flex">
+              <div className="flex">
                 <div className="text-sm text-black font-semibold">গড় নম্বর :</div>
                 <div className="ml-4 text-sm text-black font-semibold">{marksData.averageMarks}</div>
               </div>
             </div>
           </div>
-          {/* <button
+          <button
             onClick={downloadPDF}
             className="download-btn"
             disabled={!marksData}
           >
             <FaDownload /> PDF ডাউনলোড
-          </button> */}
+          </button>
         </div>
       ) : (
         <p className="text-center text-[#441A05]/70">ফলাফল দেখতে উপরের ফিল্টার নির্বাচন করুন।</p>
