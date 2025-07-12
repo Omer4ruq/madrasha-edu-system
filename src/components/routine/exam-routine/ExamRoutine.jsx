@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Select from "react-select";
-import { FaSpinner, FaCalendarAlt, FaTrash } from "react-icons/fa";
+import { FaSpinner, FaCalendarAlt, FaTrash, FaSave } from "react-icons/fa";
 import { IoAdd } from "react-icons/io5";
 import { Toaster, toast } from "react-hot-toast";
 import { useGetExamApiQuery } from "../../../redux/features/api/exam/examApi";
 import { useGetAcademicYearApiQuery } from "../../../redux/features/api/academic-year/academicYearApi";
-// import { useGetStudentClassApIQuery } from "../../../redux/features/api/class/classListApi";
 import {
   useCreateExamSchedulesMutation,
   useDeleteExamSchedulesMutation,
@@ -99,40 +98,52 @@ const ExamRoutine = () => {
     updateExamSchedules,
     { isLoading: isUpdateLoading, error: updateError },
   ] = useUpdateExamSchedulesMutation();
-  const [deleteExamSchedules] = useDeleteExamSchedulesMutation(); // Correctly destructure
+  const [deleteExamSchedules] = useDeleteExamSchedulesMutation();
 
-  const existingSchedules =
-    Array.isArray(existingSchedulesData) && existingSchedulesData.length > 0
-      ? existingSchedulesData[0]?.schedules || []
-      : [];
+  const existingSchedules = useMemo(
+    () =>
+      Array.isArray(existingSchedulesData) && existingSchedulesData.length > 0
+        ? existingSchedulesData[0]?.schedules || []
+        : [],
+    [existingSchedulesData]
+  );
 
   // Options for react-select
-  const examOptions = exams.map((exam) => ({
-    value: exam.id,
-    label: exam.name,
-  }));
-  const yearOptions = academicYears.map((year) => ({
-    value: year.id,
-    label: year.name,
-  }));
+  const examOptions = useMemo(
+    () => exams.map((exam) => ({ value: exam.id, label: exam.name })),
+    [exams]
+  );
+  const yearOptions = useMemo(
+    () => academicYears.map((year) => ({ value: year.id, label: year.name })),
+    [academicYears]
+  );
 
-  // Initialize active tab and schedules
+  // Initialize activeTab
   useEffect(() => {
     if (classes.length > 0 && !activeTab) {
       setActiveTab(classes[0].student_class.id);
     }
+  }, [classes, activeTab]);
+
+  // Initialize schedules and submittedRoutines
+  useEffect(() => {
     if (activeTab && subjects.length > 0) {
-      setSchedules((prev) => ({
-        ...prev,
-        [activeTab]: subjects.reduce(
+      setSchedules((prev) => {
+        const currentSchedules = prev[activeTab] || {};
+        const newSchedules = subjects.reduce(
           (acc, subject) => ({
             ...acc,
-            [subject.id]: prev[activeTab]?.[subject.id] || {},
+            [subject.id]: currentSchedules[subject.id] || {},
           }),
-          prev[activeTab] || {}
-        ),
-      }));
+          {}
+        );
+        if (JSON.stringify(currentSchedules) !== JSON.stringify(newSchedules)) {
+          return { ...prev, [activeTab]: newSchedules };
+        }
+        return prev;
+      });
     }
+
     if (existingSchedules.length > 0) {
       const newSchedules = existingSchedules.reduce(
         (acc, schedule) => ({
@@ -146,16 +157,28 @@ const ExamRoutine = () => {
         }),
         {}
       );
-      setSchedules((prev) => ({
-        ...prev,
-        [activeTab]: { ...prev[activeTab], ...newSchedules },
-      }));
-      setSubmittedRoutines((prev) => ({
-        ...prev,
-        [activeTab]: existingSchedules,
-      }));
+
+      setSchedules((prev) => {
+        const currentSchedules = prev[activeTab] || {};
+        if (
+          JSON.stringify(currentSchedules) !== JSON.stringify(newSchedules)
+        ) {
+          return { ...prev, [activeTab]: { ...currentSchedules, ...newSchedules } };
+        }
+        return prev;
+      });
+
+      setSubmittedRoutines((prev) => {
+        const currentRoutines = prev[activeTab] || [];
+        if (
+          JSON.stringify(currentRoutines) !== JSON.stringify(existingSchedules)
+        ) {
+          return { ...prev, [activeTab]: existingSchedules };
+        }
+        return prev;
+      });
     }
-  }, [classes, activeTab, subjects, existingSchedules]);
+  }, [activeTab, subjects, existingSchedules]);
 
   // Handle errors
   useEffect(() => {
@@ -183,9 +206,9 @@ const ExamRoutine = () => {
     setSchedules((prev) => ({
       ...prev,
       [classId]: {
-        ...prev[classId],
+        ...prev[classId] || {},
         [subjectId]: {
-          ...prev[classId]?.[subjectId],
+          ...prev[classId]?.[subjectId] || {},
           [field]: value,
         },
       },
@@ -199,20 +222,54 @@ const ExamRoutine = () => {
     }
   };
 
-  // Handle update schedule
-  const handleUpdate = async (scheduleId) => {
-    const schedule = schedules[activeTab][scheduleId];
-    if (!schedule.exam_date || !schedule.start_time || !schedule.end_time) {
-      toast.error("অনুগ্রহ করে তারিখ, শুরুর সময় এবং শেষ সময় পূরণ করুন।");
+  // Handle update schedule for specific subject
+  const handleUpdate = async (scheduleId, subjectId, subjectName) => {
+    if (!selectedExam || !selectedYear) {
+      toast.error("অনুগ্রহ করে পরীক্ষা এবং শিক্ষাবর্ষ নির্বাচন করুন।");
       return;
     }
 
+    const schedule = schedules[activeTab]?.[subjectId];
+    if (!schedule) {
+      toast.error(`${subjectName} এর জন্য কোনো শিডিউল পাওয়া যায়নি।`);
+      return;
+    }
+
+    // Validate inputs
+    if (!schedule.exam_date || !schedule.start_time || !schedule.end_time) {
+      toast.error(`অনুগ্রহ করে ${subjectName} এর জন্য তারিখ, শুরুর সময় এবং শেষ সময় পূরণ করুন।`);
+      return;
+    }
+
+    // Validate time logic
+    const startTime = new Date(`1970-01-01T${schedule.start_time}:00`);
+    const endTime = new Date(`1970-01-01T${schedule.end_time}:00`);
+    if (endTime <= startTime) {
+      toast.error(`${subjectName} এর শেষ সময় অবশ্যই শুরুর সময়ের পরে হতে হবে।`);
+      return;
+    }
+
+    // Validate date format
+    const examDate = new Date(schedule.exam_date);
+    if (isNaN(examDate.getTime())) {
+      toast.error(`${subjectName} এর জন্য বৈধ তারিখ নির্বাচন করুন।`);
+      return;
+    }
+
+    // Format times to match API requirement (e.g., "12:17:00.000Z")
+    const formatTimeToUTC = (time) => {
+      const [hours, minutes] = time.split(":");
+      return `${hours}:${minutes}:00.000Z`;
+    };
+
     const updatedSchedule = {
-      id: schedule.id || scheduleId,
+      id: scheduleId,
       exam_date: schedule.exam_date,
-      start_time: schedule.start_time,
-      end_time: schedule.end_time,
-      subject_id: scheduleId,
+      start_time: formatTimeToUTC(schedule.start_time),
+      end_time: formatTimeToUTC(schedule.end_time),
+      exam_name: selectedExam.value,
+      class_name: activeTab,
+      subject_id: subjectId,
       academic_year: selectedYear.value,
     };
 
@@ -221,20 +278,33 @@ const ExamRoutine = () => {
       setSubmittedRoutines((prev) => ({
         ...prev,
         [activeTab]: (prev[activeTab] || []).map((s) =>
-          s.id === scheduleId ? updatedSchedule : s
+          s.id === scheduleId ? { ...s, ...updatedSchedule } : s
         ),
       }));
+      setSchedules((prev) => ({
+        ...prev,
+        [activeTab]: {
+          ...prev[activeTab],
+          [subjectId]: {
+            ...prev[activeTab][subjectId],
+            id: scheduleId,
+            exam_date: schedule.exam_date,
+            start_time: schedule.start_time,
+            end_time: schedule.end_time,
+          },
+        },
+      }));
       setEditingSchedule(null);
-      toast.success("রুটিন সফলভাবে আপডেট হয়েছে!");
+      toast.success(`${subjectName} এর রুটিন সফলভাবে আপডেট হয়েছে!`);
     } catch (error) {
-      toast.error("রুটিন আপডেট করতে ব্যর্থ হয়েছে।");
+      toast.error(`${subjectName} এর রুটিন আপডেট করতে ব্যর্থ হয়েছে: ${error?.data?.detail || "অজানা ত্রুটি"}`);
     }
   };
 
   // Handle delete schedule
-  const handleDelete = async (scheduleId) => {
+  const handleDelete = async (scheduleId, subjectName) => {
     try {
-      await deleteExamSchedules(scheduleId).unwrap(); // Correct call
+      await deleteExamSchedules(scheduleId).unwrap();
       setSubmittedRoutines((prev) => ({
         ...prev,
         [activeTab]: (prev[activeTab] || []).filter((s) => s.id !== scheduleId),
@@ -246,10 +316,9 @@ const ExamRoutine = () => {
           [scheduleId]: {},
         },
       }));
-      toast.success("রুটিন সফলভাবে মুছে ফেলা হয়েছে!");
+      toast.success(`${subjectName} এর রুটিন সফলভাবে মুছে ফেলা হয়েছে!`);
     } catch (error) {
-      console.error("Delete error:", error); // Log error for debugging
-      toast.error("রুটিন মুছতে ব্যর্থ হয়েছে।");
+      toast.error(`${subjectName} এর রুটিন মুছতে ব্যর্থ হয়েছে: ${error?.data?.detail || "অজানা ত্রুটি"}`);
     }
   };
 
@@ -276,6 +345,7 @@ const ExamRoutine = () => {
         start_time: schedule.start_time,
         end_time: schedule.end_time,
         academic_year: selectedYear.value,
+        exam_id: selectedExam.value,
       }));
 
     if (validSchedules.length === 0) {
@@ -319,15 +389,19 @@ const ExamRoutine = () => {
     isUpdateLoading;
 
   // Sort schedules by exam_date
-  const sortedSchedules = [
-    ...(submittedRoutines[activeTab] || []),
-    ...existingSchedules,
-  ]
-    .filter(
-      (schedule, index, self) =>
-        self.findIndex((s) => s.id === schedule.id) === index
-    )
-    .sort((a, b) => a.exam_date.localeCompare(b.exam_date));
+  const sortedSchedules = useMemo(
+    () =>
+      [
+        ...(submittedRoutines[activeTab] || []),
+        ...existingSchedules,
+      ]
+        .filter(
+          (schedule, index, self) =>
+            self.findIndex((s) => s.id === schedule.id) === index
+        )
+        .sort((a, b) => a.exam_date.localeCompare(b.exam_date)),
+    [submittedRoutines, existingSchedules, activeTab]
+  );
 
   return (
     <div className="py-8 w-full relative">
@@ -413,7 +487,7 @@ const ExamRoutine = () => {
                 {isLoading ? (
                   <>
                     <FaSpinner className="animate-spin text-lg mr-2" />
-                    সাবমিট করা হচ্ছে...
+                    সাবমিট হচ্ছে...
                   </>
                 ) : (
                   <>
@@ -460,8 +534,7 @@ const ExamRoutine = () => {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {subjects.map((subject, index) => {
-                        const schedule =
-                          schedules[activeTab]?.[subject.id] || {};
+                        const schedule = schedules[activeTab]?.[subject.id] || {};
                         const existing = existingSchedules.find(
                           (s) => s.subject_id === subject.id
                         );
@@ -476,8 +549,8 @@ const ExamRoutine = () => {
                             </h4>
                             <div className="space-y-4">
                               <div className="relative input-icon">
-                                <label htmlFor="" className="text-sm">
-                                  মাস <span className="text-red-500">*</span>
+                                <label className="text-sm">
+                                  তারিখ <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                   type="date"
@@ -500,7 +573,7 @@ const ExamRoutine = () => {
                               </div>
                               <div className="flex space-x-4">
                                 <div className="w-full">
-                                  <label htmlFor="" className="text-sm">
+                                  <label className="text-sm">
                                     শুরুর সময় <span className="text-red-500">*</span>
                                   </label>
                                   <input
@@ -521,7 +594,9 @@ const ExamRoutine = () => {
                                   />
                                 </div>
                                 <div className="w-full">
-                                  <label htmlFor="" className="text-sm">শেষের সময় <span className="text-red-500">*</span></label>
+                                  <label className="text-sm">
+                                    শেষের সময় <span className="text-red-500">*</span>
+                                  </label>
                                   <input
                                     type="time"
                                     value={schedule.end_time || ""}
@@ -556,12 +631,29 @@ const ExamRoutine = () => {
                                 {editingSchedule === existing?.id && (
                                   <>
                                     <button
-                                      onClick={() => handleUpdate(existing.id)}
-                                      className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 btn-glow transition-all duration-300 btn-ripple"
+                                      onClick={() =>
+                                        handleUpdate(existing.id, subject.id, subject.name)
+                                      }
+                                      className={`flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 btn-glow transition-all duration-300 btn-ripple ${
+                                        isUpdateLoading
+                                          ? "cursor-not-allowed opacity-70"
+                                          : ""
+                                      }`}
+                                      disabled={isUpdateLoading}
                                       aria-label={`সংরক্ষণ করুন: ${subject.name}`}
                                       title={`সংরক্ষণ করুন: ${subject.name} / Save schedule for ${subject.name}`}
                                     >
-                                      সংরক্ষণ
+                                      {isUpdateLoading ? (
+                                        <>
+                                          <FaSpinner className="animate-spin text-lg mr-2" />
+                                          সংরক্ষণ হচ্ছে...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <FaSave className="inline-block mr-2" />
+                                          সংরক্ষণ
+                                        </>
+                                      )}
                                     </button>
                                     <button
                                       onClick={() => setEditingSchedule(null)}
@@ -633,12 +725,27 @@ const ExamRoutine = () => {
                                       <div className="flex justify-center gap-2">
                                         <button
                                           onClick={() =>
-                                            handleUpdate(schedule.id)
+                                            handleUpdate(schedule.id, schedule.subject_id, subjectName)
                                           }
-                                          className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition btn-glow btn-ripple"
+                                          className={`px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition btn-glow btn-ripple ${
+                                            isUpdateLoading
+                                              ? "cursor-not-allowed opacity-70"
+                                              : ""
+                                          }`}
+                                          disabled={isUpdateLoading}
                                           title={`সংরক্ষণ করুন / Save ${subjectName}`}
                                         >
-                                          সংরক্ষণ
+                                          {isUpdateLoading ? (
+                                            <>
+                                              <FaSpinner className="animate-spin text-lg mr-2" />
+                                              সংরক্ষণ হচ্ছে...
+                                            </>
+                                          ) : (
+                                            <>
+                                              <FaSave className="inline-block mr-2" />
+                                              সংরক্ষণ
+                                            </>
+                                          )}
                                         </button>
                                         <button
                                           onClick={() =>
@@ -663,7 +770,7 @@ const ExamRoutine = () => {
                                         </button>
                                         <button
                                           onClick={() =>
-                                            handleDelete(schedule.id)
+                                            handleDelete(schedule.id, subjectName)
                                           }
                                           className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition btn-glow btn-ripple"
                                           title={`মুছুন / Delete ${subjectName}`}
