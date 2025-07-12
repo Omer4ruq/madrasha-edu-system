@@ -27,39 +27,38 @@ Font.register({
 });
 Font.registerHyphenationCallback((word) => [word]); // Prevent text splitting issues
 
-// PDF styles synced with assumed layout
+// PDF styles synced with frontend layout
 const styles = StyleSheet.create({
   page: {
     padding: 20,
-    fontSize: 12,
+    fontSize: 8, // Match frontend text-xs (approx 8pt at 96dpi)
     fontFamily: "NotoSansBengali",
-    color: "#441A05",
+    color: "#000000",
     backgroundColor: "#FFF",
     width: 595.28, // A4 portrait width at 72dpi
-    height: 841.89, // A4 portrait height at 72dpi,
+    height: 841.89, // A4 portrait height at 72dpi
   },
   header: {
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 16,
   },
   title: {
-    fontSize: 24,
+    fontSize: 14, // Match frontend text-lg (approx 14pt at 96dpi)
     fontWeight: "bold",
-    color: "#441A05",
-    textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+    color: "#000000",
   },
   subHeader: {
-    fontSize: 14,
-    color: "#441A05",
+    fontSize: 10, // Match frontend text-sm (approx 10pt at 96dpi)
+    color: "#000000",
     marginTop: 4,
   },
   table: {
     border: "1px solid #000",
-    marginTop: 20,
+    borderCollapse: "collapse",
   },
   tableHeader: {
     flexDirection: "row",
-    backgroundColor: "rgba(219, 158, 48, 0.2)",
+    backgroundColor: "#FFF",
     borderBottom: "1px solid #000",
   },
   tableRow: {
@@ -68,18 +67,18 @@ const styles = StyleSheet.create({
   },
   cell: {
     flex: 1,
-    padding: 8,
-    fontSize: 12,
+    padding: 4, // Match frontend py-1 px-2
+    fontSize: 8,
     color: "#000",
-    textAlign: "left",
+    textAlign: "center",
     borderRight: "1px solid #000",
+    alignItems: "center",
   },
-  rollCell: { flex: 0.8 },
-  nameCell: { flex: 1.5 },
-  subjectCell: { flex: 1.5 },
-  dateCell: { flex: 1.2 },
-  totalCell: { flex: 1 },
-  averageCell: { flex: 1 },
+  rollCell: { flex: 0.8, alignItems: "center" },
+  nameCell: { flex: 1.5, alignItems: "center" },
+  subjectCell: { flex: 1.5, alignItems: "center" },
+  dateCell: { flex: 0.6, alignItems: "center" }, // Smaller width for date columns
+  totalCell: { flex: 1, alignItems: "center" },
 });
 
 const MutalayaReport = () => {
@@ -87,6 +86,7 @@ const MutalayaReport = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [reportData, setReportData] = useState([]);
+  const [dynamicReportData, setDynamicReportData] = useState([]);
 
   // Fetch APIs
   const { data: classConfigs, isLoading: classConfigsLoading } =
@@ -104,7 +104,7 @@ const MutalayaReport = () => {
   const simulateMarks = (studentId) => {
     const mockMarks = subjects?.map((subject) => ({
       subject: subject.name,
-      obtained: Math.floor(Math.random() * 100), // Random marks for demo
+      obtained: Math.floor(Math.random() * 100),
       maxMark: 100,
       examDate: new Date(startDate || "2025-07-01").toLocaleDateString("bn-BD"),
     }));
@@ -133,115 +133,178 @@ const MutalayaReport = () => {
     }
   }, [students, subjects, selectedClassConfig, startDate, endDate]);
 
+  // Generate dynamic dates based on date range
+  const generateDynamicDates = () => {
+    if (!startDate || !endDate) return [];
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const dates = [];
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const bnDate = d.toLocaleDateString("bn-BD", { day: "numeric" });
+      const bnDay = d.toLocaleDateString("bn-BD", { weekday: "long" });
+      dates.push({ day: bnDay, date: bnDate });
+    }
+    return dates;
+  };
+
+  // Simulate attendance data
+  const simulateAttendance = (studentId, subjectName) => {
+    const dynamicDates = generateDynamicDates();
+    const attendance = {};
+    dynamicDates.forEach((d) => {
+      attendance[d.date] = {
+        sobok: Math.random() > 0.3 ? "✓" : Math.floor(Math.random() * 10).toString(),
+        mutalaya: Math.random() > 0.5 ? "✓" : Math.random() > 0.7 ? "১/২" : "",
+      };
+    });
+    return attendance;
+  };
+
+  // Generate dynamic report data for primary layout
+  useEffect(() => {
+    if (students && subjects && selectedClassConfig && startDate && endDate) {
+      const dynamicData = students.map((student) => ({
+        name: student.name,
+        subjects: subjects.map((subject) => ({
+          name: subject.name,
+          attendance: simulateAttendance(student.id, subject.name),
+        })),
+      }));
+      setDynamicReportData(dynamicData);
+    }
+  }, [students, subjects, selectedClassConfig, startDate, endDate]);
+
   // Function to download PDF
   const downloadPDF = async () => {
     if (
-      reportData.length === 0 ||
       !selectedClassConfig ||
       !startDate ||
-      !endDate
+      !endDate ||
+      dynamicReportData.length === 0
     ) {
       toast.error("দয়া করে ক্লাস এবং তারিখের রেঞ্জ নির্বাচন করুন।");
       return;
     }
 
+    const dynamicDates = generateDynamicDates();
+    
+    // Split data into chunks to fit on A4 pages
+    const rowsPerPage = 20; // Estimated rows per page based on font size and spacing
+    const rows = dynamicReportData.flatMap((student, sIdx) =>
+      student.subjects.map((subject, subjIdx) => ({ student, sIdx, subjIdx }))
+    );
+    const pages = [];
+    for (let i = 0; i < rows.length; i += rowsPerPage) {
+      pages.push(rows.slice(i, i + rowsPerPage));
+    }
+
     const PdfDocument = (
       <Document>
-        <Page size="A4" orientation="portrait" style={styles.page}>
-          <View style={styles.header}>
-            <Text style={styles.title}>আল-মদিনা ইসলামিক মাদ্রাসা</Text>
-            <Text style={styles.subHeader}>
-              ঠিকানা: ১২৩, মাদ্রাসা রোড, ঢাকা, বাংলাদেশ
-            </Text>
-            <Text style={styles.subHeader}>
-              ফোন: +৮৮০ ১৭১২৩৪৫৬৭৮ | ইমেইল: info@almadina.edu.bd
-            </Text>
-            <Text style={styles.title}>মুতালায়া রিপোর্ট</Text>
-            <Text style={styles.subHeader}>
-              ক্লাস:{" "}
-              {
-                classConfigs?.find((c) => c.id === Number(selectedClassConfig))
-                  ?.class_name
-              }{" "}
-              | শাখা:{" "}
-              {
-                classConfigs?.find((c) => c.id === Number(selectedClassConfig))
-                  ?.section_name
-              }{" "}
-              | শিফট:{" "}
-              {
-                classConfigs?.find((c) => c.id === Number(selectedClassConfig))
-                  ?.shift_name
-              }
-            </Text>
-            <Text style={styles.subHeader}>
-              তারিখের রেঞ্জ: {new Date(startDate).toLocaleDateString("bn-BD")} -{" "}
-              {new Date(endDate).toLocaleDateString("bn-BD")}
-            </Text>
-          </View>
-
-          <View style={styles.table}>
-            <View style={styles.tableHeader}>
-              <Text style={[styles.cell, styles.rollCell]}>রোল</Text>
-              <Text style={[styles.cell, styles.nameCell]}>নাম</Text>
-              <Text style={[styles.cell, styles.subjectCell]}>বিষয়</Text>
-              <Text style={[styles.cell, styles.dateCell]}>পরীক্ষার তারিখ</Text>
-              <Text style={[styles.cell, styles.totalCell]}>মোট</Text>
-              <Text style={[styles.cell, styles.averageCell]}>গড়</Text>
+        {pages.map((pageRows, pageIdx) => (
+          <Page key={pageIdx} size="A4" style={styles.page}>
+            <View style={styles.header}>
+              <Text style={styles.title}>মুতালায়া ও সবক শুনানোর রিপোর্ট</Text>
+              <Text style={styles.subHeader}>
+                জামাত:{" "}
+                {
+                  classConfigs?.find((c) => c.id === Number(selectedClassConfig))
+                    ?.class_name
+                }{" "}
+                | মাস: {new Date(startDate).toLocaleDateString("bn-BD", { month: "long" })} - ২০২৫
+              </Text>
             </View>
-            {reportData.map((student) =>
-              student.subjects.map((subject, index) => (
-                <View
-                  key={`${student.studentId}-${index}`}
-                  style={styles.tableRow}
-                >
-                  {index === 0 && (
+
+            <View style={styles.table}>
+              {/* Table Header */}
+              <View style={styles.tableHeader}>
+                <Text style={[styles.cell, styles.rollCell]} rowSpan={3}>
+                  ক্রমিক
+                </Text>
+                <Text style={[styles.cell, styles.nameCell]} rowSpan={3}>
+                  নাম
+                </Text>
+                <Text style={[styles.cell, styles.subjectCell]} rowSpan={3}>
+                  বিষয়
+                </Text>
+                {dynamicDates.map((d, i) => (
+                  <Text
+                    key={i}
+                    style={[styles.cell, styles.dateCell]}
+                    colSpan={2}
+                  >
+                    {d.day}
+                  </Text>
+                ))}
+                <Text style={[styles.cell, styles.totalCell]} rowSpan={3}>
+                  মন্তব্য
+                </Text>
+              </View>
+              <View style={styles.tableRow}>
+                {dynamicDates.map((d, i) => (
+                  <Text
+                    key={i}
+                    style={[styles.cell, styles.dateCell]}
+                    colSpan={2}
+                  >
+                    {d.date}
+                  </Text>
+                ))}
+              </View>
+              <View style={styles.tableRow}>
+                {dynamicDates.map((_, i) => (
+                  <React.Fragment key={i}>
+                    <Text style={[styles.cell, styles.dateCell]}>সবক</Text>
+                    <Text style={[styles.cell, styles.dateCell]}>মুতালায়া</Text>
+                  </React.Fragment>
+                ))}
+              </View>
+              {/* Table Body */}
+              {pageRows.map(({ student, sIdx, subjIdx }, rowIdx) => (
+                <View key={`${pageIdx}-${rowIdx}`} style={styles.tableRow}>
+                  {subjIdx === 0 && (
                     <>
-                      <Text style={[styles.cell, styles.rollCell]}>
-                        {student.rollNo}
+                      <Text
+                        style={[styles.cell, styles.rollCell]}
+                        rowSpan={student.subjects.length}
+                      >
+                        {sIdx + 1}
                       </Text>
-                      <Text style={[styles.cell, styles.nameCell]}>
-                        {student.studentName}
+                      <Text
+                        style={[styles.cell, styles.nameCell]}
+                        rowSpan={student.subjects.length}
+                      >
+                        {student.name}
                       </Text>
                     </>
                   )}
                   <Text style={[styles.cell, styles.subjectCell]}>
-                    {subject.subject}
+                    {student.subjects[subjIdx].name}
                   </Text>
-                  <Text style={[styles.cell, styles.dateCell]}>
-                    {subject.examDate}
-                  </Text>
-                  {index === student.subjects.length - 1 && (
-                    <>
-                      <Text style={[styles.cell, styles.totalCell]}>
-                        {student.totalObtained}
+                  {dynamicDates.map((d) => (
+                    <React.Fragment key={d.date}>
+                      <Text style={[styles.cell, styles.dateCell]}>
+                        {student.subjects[subjIdx].attendance[d.date]?.sobok || ""}
                       </Text>
-                      <Text style={[styles.cell, styles.averageCell]}>
-                        {student.averageMarks}
+                      <Text style={[styles.cell, styles.dateCell]}>
+                        {student.subjects[subjIdx].attendance[d.date]?.mutalaya || ""}
                       </Text>
-                    </>
-                  )}
-                  {index !== student.subjects.length - 1 && (
-                    <>
-                      <Text style={[styles.cell, styles.totalCell]} />
-                      <Text style={[styles.cell, styles.averageCell]} />
-                    </>
-                  )}
+                    </React.Fragment>
+                  ))}
+                  <Text style={[styles.cell, styles.totalCell]} />
                 </View>
-              ))
-            )}
-          </View>
-        </Page>
+              ))}
+            </View>
+          </Page>
+        ))}
       </Document>
     );
 
     try {
       const asPdf = pdf(PdfDocument);
       const blob = await asPdf.toBlob();
-      console.log("PDF Blob generated. Sample text check:", "রোল" in blob); // Debug text presence
       saveAs(
         blob,
-        `Mutalaya_Report_${selectedClassConfig}_${new Date().toLocaleString(
+        `Mutalaya_Sobok_Mutalaya_Report_${selectedClassConfig}_${new Date().toLocaleString(
           "bn-BD",
           { timeZone: "Asia/Dhaka" }
         )}.pdf`
@@ -253,113 +316,9 @@ const MutalayaReport = () => {
     }
   };
 
-const dates = [
-  { day: "শনিবার", date: "৬" },
-  { day: "রবিবার", date: "৭" },
-  { day: "সোমবার", date: "৮" },
-  { day: "মঙ্গলবার", date: "৯" },
-  { day: "বুধবার", date: "১০" },
-];
-
-const studentss = [
-  {
-    name: "সাবির আহমাদ",
-    subjects: [
-      {
-        name: "আল ফিকহ ১",
-        attendance: {
-          '৬': { sobok: "✓", mutalaya: "" },
-          '৭': { sobok: "✓", mutalaya: "" },
-          '৮': { sobok: "৮", mutalaya: "✓" },
-          '৯': { sobok: "✓", mutalaya: "১/২" },
-        },
-      },
-      {
-        name: "তাফসীর",
-        attendance: {
-          '৬': { sobok: "✓", mutalaya: "" },
-          '৭': { sobok: "✓", mutalaya: "" },
-        },
-      },
-      {
-        name: "আল ফিকহ ১",
-        attendance: {
-          '৬': { sobok: "✓", mutalaya: "" },
-          '৭': { sobok: "✓", mutalaya: "" },
-          '৮': { sobok: "৮", mutalaya: "✓" },
-          '৯': { sobok: "✓", mutalaya: "১/২" },
-        },
-      },
-      {
-        name: "তাফসীর",
-        attendance: {
-          '৬': { sobok: "✓", mutalaya: "" },
-          '৭': { sobok: "✓", mutalaya: "" },
-        },
-      },
-      {
-        name: "আল ফিকহ ১",
-        attendance: {
-          '৬': { sobok: "✓", mutalaya: "" },
-          '৭': { sobok: "✓", mutalaya: "" },
-          '৮': { sobok: "৮", mutalaya: "✓" },
-          '৯': { sobok: "✓", mutalaya: "১/২" },
-        },
-      },
-      {
-        name: "তাফসীর",
-        attendance: {
-          '৬': { sobok: "✓", mutalaya: "" },
-          '৭': { sobok: "✓", mutalaya: "" },
-        },
-      },
-    ],
-  },
-  {
-    name: "জাফির হাসান",
-    subjects: [
-      {
-        name: "আল ফিকহ ১",
-        attendance: {
-          '৬': { sobok: "✓", mutalaya: "" },
-          '৭': { sobok: "৭", mutalaya: "✓" },
-        },
-      },
-      {
-        name: "আল ফিকহ ১",
-        attendance: {
-          '৬': { sobok: "✓", mutalaya: "" },
-          '৭': { sobok: "৭", mutalaya: "✓" },
-        },
-      },
-      {
-        name: "আল ফিকহ ১",
-        attendance: {
-          '৬': { sobok: "✓", mutalaya: "" },
-          '৭': { sobok: "৭", mutalaya: "✓" },
-        },
-      },
-      {
-        name: "আল ফিকহ ১",
-        attendance: {
-          '৬': { sobok: "✓", mutalaya: "" },
-          '৭': { sobok: "৭", mutalaya: "✓" },
-        },
-      },
-      {
-        name: "আল ফিকহ ১",
-        attendance: {
-          '৬': { sobok: "✓", mutalaya: "" },
-          '৭': { sobok: "৭", mutalaya: "✓" },
-        },
-      },
-    ],
-  },
-];
-
-
   return (
     <div className="py-8 w-full relative">
+      <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
           @keyframes fadeIn {
@@ -460,8 +419,7 @@ const studentss = [
             <option value="">ক্লাস নির্বাচন করুন</option>
             {classConfigs?.map((config) => (
               <option key={config.id} value={config.id}>
-                {config.class_name} - {config.section_name} ({config.shift_name}
-                )
+                {config.class_name} - {config.section_name} ({config.shift_name})
               </option>
             ))}
           </select>
@@ -469,14 +427,16 @@ const studentss = [
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="date-field"
+            onClick={(e) => e.currentTarget.showPicker()}
+            className="date-field outline-none"
             placeholder="শুরুর তারিখ"
           />
           <input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="date-field"
+            onClick={(e) => e.currentTarget.showPicker()}
+            className="date-field outline-none"
             placeholder="শেষের তারিখ"
           />
         </div>
@@ -494,80 +454,123 @@ const studentss = [
         </button>
       </div>
 
-      {/* Report Preview (Optional) */}
+      {/* Report Preview */}
       {classConfigsLoading || studentsLoading || subjectsLoading ? (
         <div className="flex justify-center items-center h-64">
           <FaSpinner className="animate-spin text-4xl text-[#441A05]" />
         </div>
       ) : reportData.length > 0 ? (
-        <div className="a4-portrait animate-fadeIn">
-          <div className="text-center mb-6">
-            <h2 className="header-title">আল-মদিনা ইসলামিক মাদ্রাসা</h2>
-            <p className="header-subtitle">
-              ঠিকানা: ১২৩, মাদ্রাসা রোড, ঢাকা, বাংলাদেশ
-            </p>
-            <p className="header-subtitle">
-              ফোন: +৮৮০ ১৭১২৩৪৫৬৭৮ | ইমেইল: info@almadina.edu.bd
-            </p>
-            <h3 className="header-title mt-4">মুতালায়া রিপোর্ট</h3>
-            <p className="header-subtitle">
-              ক্লাস:{" "}
+        <div className="p-4 text-xs font-[kalpurush] text-black a4-portrait animate-fadeIn">
+          {/* Header */}
+          <div className="text-center mb-4">
+            <h2 className="text-lg font-bold">মুতালায়া ও সবক শুনানোর রিপোর্ট</h2>
+            <p className="text-sm">
+              জামাত:{" "}
               {
                 classConfigs?.find((c) => c.id === Number(selectedClassConfig))
                   ?.class_name
               }{" "}
-              | শাখা:{" "}
-              {
-                classConfigs?.find((c) => c.id === Number(selectedClassConfig))
-                  ?.section_name
-              }{" "}
-              | শিফট:{" "}
-              {
-                classConfigs?.find((c) => c.id === Number(selectedClassConfig))
-                  ?.shift_name
-              }
-            </p>
-            <p className="header-subtitle">
-              তারিখের রেঞ্জ: {new Date(startDate).toLocaleDateString("bn-BD")} -{" "}
-              {new Date(endDate).toLocaleDateString("bn-BD")}
+              | মাস: {new Date(startDate).toLocaleDateString("bn-BD", { month: "long" })} - ২০২৫
             </p>
           </div>
 
-          <div className="border">
-            <div className="border">
-              <div className="border">রোল</div>
-              <div className="border">নাম</div>
-              <div className="border">বিষয়</div>
-              <div className="border">পরীক্ষার তারিখ</div>
-              <div className="border">মোট</div>
-              <div className="border">গড়</div>
-            </div>
-            {reportData.map((student) =>
-              student.subjects.map((subject, index) => (
-                <div key={`${student.studentId}-${index}`} className="">
-                  {index === 0 && (
-                    <>
-                      <div className="border">{student.rollNo}</div>
-                      <div className="border">{student.studentName}</div>
-                    </>
-                  )}
-                  <div className="border">{subject.subject}</div>
-                  <div className="border">{subject.examDate}</div>
-                  {index === student.subjects.length - 1 && (
-                    <>
-                      <div className="border">{student.totalObtained}</div>
-                      <div className="border">{student.averageMarks}</div>
-                    </>
-                  )}
-                  {index !== student.subjects.length - 1 && (
-                    <>
-                      <div className="border" />
-                      <div className="border" />
-                    </>
-                  )}
-                </div>
-              ))
-            )}
+          <div className="">
+            <table className="table-auto w-full border-collapse">
+              <thead>
+                <tr>
+                  <th rowSpan="3" className="border border-black py-1 text-[8px]">
+                    ক্রমিক
+                  </th>
+                  <th
+                    rowSpan="3"
+                    className="border border-black px-2 py-1 text-[8px]"
+                  >
+                    নাম
+                  </th>
+                  <th
+                    rowSpan="3"
+                    className="border border-black px-2 py-1 text-[8px]"
+                  >
+                    বিষয়
+                  </th>
+                  {generateDynamicDates().map((d, i) => (
+                    <th
+                      key={i}
+                      colSpan={2}
+                      className="border border-black text-center text-[8px]"
+                    >
+                      {d.day}
+                    </th>
+                  ))}
+                  <th
+                    rowSpan="3"
+                    className="border border-black px-2 py-1 text-[8px]"
+                  >
+                    মন্তব্য
+                  </th>
+                </tr>
+                <tr>
+                  {generateDynamicDates().map((d, i) => (
+                    <th
+                      key={i}
+                      colSpan={2}
+                      className="border border-black text-center text-[8px]"
+                    >
+                      {d.date}
+                    </th>
+                  ))}
+                </tr>
+                <tr>
+                  {generateDynamicDates().map((_, i) => (
+                    <React.Fragment key={i}>
+                      <th className="border border-black text-center text-[8px] px-2">
+                        সবক
+                      </th>
+                      <th className="border border-black text-center text-[8px]">
+                        মুতালায়া
+                      </th>
+                    </React.Fragment>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {dynamicReportData.map((student, sIdx) =>
+                  student.subjects.map((subject, subjIdx) => (
+                    <tr key={`${sIdx}-${subjIdx}`}>
+                      {subjIdx === 0 && (
+                        <td
+                          rowSpan={student.subjects.length}
+                          className="border border-black text-center align-top text-[8px]"
+                        >
+                          {sIdx + 1}
+                        </td>
+                      )}
+                      {subjIdx === 0 && (
+                        <td
+                          rowSpan={student.subjects.length}
+                          className="border border-black align-top px-1 text-center text-[8px]"
+                        >
+                          {student.name}
+                        </td>
+                      )}
+                      <td className="border border-black px-1 text-center text-[8px]">
+                        {subject.name}
+                      </td>
+                      {generateDynamicDates().map((d) => (
+                        <React.Fragment key={d.date}>
+                          <td className="border border-black text-center text-[8px]">
+
+                          </td>
+                          <td className="border border-black text-center text-[8px]">
+                          </td>
+                        </React.Fragment>
+                      ))}
+                      <td className="border border-black"></td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       ) : (
@@ -575,85 +578,6 @@ const studentss = [
           রিপোর্ট তৈরি করতে ফিল্টার নির্বাচন করুন।
         </p>
       )}
-
-
-   <div className="p-4 text-xs font-[kalpurush] text-black a4-portrait animate-fadeIn">
-      {/* Header */}
-      <div className="text-center mb-4">
-        <h2 className="text-lg font-bold">
-          মুতালায়া ও সবক জানানোর রিপোর্ট
-        </h2>
-        <p className="text-sm">জামাত: নাইমুল্লাহ | মাস: জুলাই - ২০২৫</p>
-      </div>
-
-      <div className="">
-        <table className="table-auto w-full border-collapse">
-          <thead>
-            <tr>
-              <th rowSpan="3" className="border border-black px-2 py-1 text-[8px]">ক্রমিক</th>
-              <th rowSpan="3" className="border border-black px-2 py-1 text-[8px]">নাম</th>
-              <th rowSpan="3" className="border border-black px-2 py-1 text-[8px]">বিষয়</th>
-              {dates.map((d, i) => (
-                <th key={i} colSpan={2} className="border border-black text-center text-[8px]">
-                  {d.day}
-                </th>
-              ))}
-            </tr>
-            <tr>
-              {dates.map((d, i) => (
-                <th key={i} colSpan={2} className="border border-black text-center text-[8px]">
-                  {d.date}
-                </th>
-              ))}
-            </tr>
-            <tr>
-              {dates.map((_, i) => (
-                <React.Fragment key={i}>
-                  <th className="border border-black text-center text-[8px] px-2">সবক</th>
-                  <th className="border border-black text-center text-[8px]">মুতালায়া</th>
-                </React.Fragment>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {studentss.map((student, sIdx) =>
-              student.subjects.map((subject, subjIdx) => (
-                <tr key={`${sIdx}-${subjIdx}`}>
-                  {subjIdx === 0 && (
-                    <td
-                      rowSpan={student.subjects.length}
-                      className="border border-black text-center align-top text-[8px]"
-                    >
-                      {sIdx + 1}
-                    </td>
-                  )}
-                  {subjIdx === 0 && (
-                    <td
-                      rowSpan={student.subjects.length}
-                      className="border border-black align-top px-1 text-center text-[8px]"
-                    >
-                      {student.name}
-                    </td>
-                  )}
-                  <td className="border border-black px-1 text-center text-[8px]">{subject.name}</td>
-                  {dates.map((d) => (
-                    <React.Fragment key={d.date}>
-                      <td className="border border-black text-center text-[8px]">
-                        {/* {subject.attendance[d.date]?.sobok || ""} */}
-                        
-                      </td>
-                      <td className="border border-black text-center text-[8px]">
-                        {/* {subject.attendance[d.date]?.mutalaya || ""} */}
-                      </td>
-                    </React.Fragment>
-                  ))}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
     </div>
   );
 };
