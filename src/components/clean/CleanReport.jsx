@@ -2,13 +2,410 @@ import React, { useState, useMemo } from 'react';
 import Select from 'react-select';
 import { FaSpinner, FaTrash } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
-import { useCreateCleanReportApiMutation, useGetCleanReportApiQuery, useUpdateCleanReportApiMutation, useDeleteCleanReportApiMutation } from '../../redux/features/api/clean/cleanReportApi';
+import {
+  useCreateCleanReportApiMutation,
+  useGetCleanReportApiQuery,
+  useUpdateCleanReportApiMutation,
+  useDeleteCleanReportApiMutation,
+} from '../../redux/features/api/clean/cleanReportApi';
 import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
 import { useGetCleanReportTypeApiQuery } from '../../redux/features/api/clean/cleanReportTypeApi';
 import { IoAddCircle } from 'react-icons/io5';
 import selectStyles from '../../utilitis/selectStyles';
 import { useSelector } from 'react-redux';
 import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi';
+import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
+
+// Register Noto Sans Bengali font (Used for PDF generation)
+try {
+  Font.register({
+    family: 'NotoSansBengali',
+    src: 'https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf',
+  });
+} catch (error) {
+  console.error('Font registration failed:', error);
+  Font.register({
+    family: 'Helvetica',
+    src: 'https://fonts.gstatic.com/s/helvetica/v13/Helvetica.ttf',
+  });
+}
+
+// PDF Styles (Similar to TeacherPerformance, adapted for CleanReport)
+const styles = StyleSheet.create({
+  page: {
+    padding: 30,
+    fontFamily: 'NotoSansBengali',
+    fontSize: 10,
+    color: '#2c3e50',
+    backgroundColor: '#ffffff',
+  },
+  headerContainer: {
+    backgroundColor: '#441a05',
+    marginHorizontal: -30,
+    marginTop: -30,
+    paddingHorizontal: 30,
+    paddingVertical: 25,
+    marginBottom: 25,
+  },
+  header: {
+    textAlign: 'center',
+  },
+  schoolName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 5,
+  },
+  headerText: {
+    fontSize: 12,
+    color: '#f8f9fa',
+    marginBottom: 8,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#DB9E30',
+    textAlign: 'center',
+  },
+  metaContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    fontSize: 9,
+    marginBottom: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#DB9E30',
+  },
+  metaText: {
+    color: '#6c757d',
+  },
+  reportInfoCard: {
+    marginBottom: 20,
+    padding: 15,
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  reportInfoTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#441a05',
+    marginBottom: 10,
+    textAlign: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+    paddingBottom: 5,
+  },
+  reportInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    paddingVertical: 4,
+  },
+  reportLabel: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#495057',
+    flex: 1,
+  },
+  reportValue: {
+    fontSize: 10,
+    color: '#212529',
+    fontWeight: '500',
+    flex: 1,
+    textAlign: 'right',
+  },
+  table: {
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+    marginBottom: 20,
+  },
+  tableRow: {
+    flexDirection: 'row',
+  },
+  tableHeader: {
+    backgroundColor: '#441a05',
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: 11,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    textAlign: 'center',
+    borderRightWidth: 1,
+    borderRightColor: 'rgba(255,255,255,0.2)',
+  },
+  tableCell: {
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    fontSize: 10,
+    borderRightWidth: 1,
+    borderRightColor: '#e9ecef',
+    flex: 1,
+    textAlign: 'left',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f8f9fa',
+  },
+  tableCellCenter: {
+    textAlign: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tableRowAlternate: {
+    backgroundColor: '#f8f9fa',
+  },
+  tableRowEven: {
+    backgroundColor: '#ffffff',
+  },
+  statusIcon: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  statusClean: {
+    color: '#28a745',
+  },
+  statusDirty: {
+    color: '#dc3545',
+  },
+  statusText: {
+    fontSize: 9,
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  summarySection: {
+    marginTop: 25,
+    padding: 20,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    borderLeftWidth: 5,
+    borderLeftColor: '#441a05',
+  },
+  summaryTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#441a05',
+    marginBottom: 15,
+    textAlign: 'center',
+    textDecoration: 'underline',
+  },
+  summaryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  summaryItem: {
+    width: '48%',
+    marginBottom: 12,
+    padding: 10,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  summaryLabel: {
+    fontSize: 9,
+    color: '#6c757d',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  summaryValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#441a05',
+    textAlign: 'center',
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: '#e9ecef',
+    borderRadius: 4,
+    marginTop: 15,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#28a745',
+    borderRadius: 4,
+  },
+  progressText: {
+    textAlign: 'center',
+    marginTop: 5,
+    fontSize: 10,
+    color: '#495057',
+    fontWeight: 'bold',
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 30,
+    right: 30,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    fontSize: 8,
+    color: '#6c757d',
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#e9ecef',
+  },
+  watermark: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%) rotate(-45deg)',
+    fontSize: 60,
+    color: 'rgba(68, 26, 5, 0.05)',
+    zIndex: -1,
+  },
+});
+
+// PDF Document Component
+const PDFDocument = ({ cleanReportTypes, filteredReports, selectedClass, selectedDate, cleanReportData }) => {
+  
+  const totalReports = cleanReportTypes.length;
+  const cleanCount = filteredReports.filter(report => report.is_clean).length;
+  const dirtyCount = totalReports - cleanCount;
+  const cleanPercentage = totalReports > 0 ? ((cleanCount / totalReports) * 100).toFixed(1) : 0;
+  
+  // Format the selected date for display
+  const formatDate = (dateString) => {
+    try {
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      return new Date(dateString).toLocaleDateString('bn-BD', options);
+    } catch (e) {
+      return dateString;
+    }
+  };
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {/* Watermark */}
+        <Text style={styles.watermark}>আদর্শ বিদ্যালয়</Text>
+        
+        {/* Header Section */}
+        <View style={styles.headerContainer}>
+          <View style={styles.header}>
+            <Text style={styles.schoolName}>আদর্শ বিদ্যালয়</Text>
+            <Text style={styles.headerText}>ঢাকা, বাংলাদেশ</Text>
+            <Text style={styles.headerText}>ফোন: ০১৭xxxxxxxx | ইমেইল: info@school.edu.bd</Text>
+            <Text style={styles.title}>পরিচ্ছন্নতা মূল্যায়ন প্রতিবেদন</Text>
+          </View>
+        </View>
+
+        {/* Meta Information */}
+        <View style={styles.metaContainer}>
+          <Text style={styles.metaText}>
+            প্রতিবেদনের তারিখ: {new Date().toLocaleDateString('bn-BD', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </Text>
+          <Text style={styles.metaText}>
+            সময়: {new Date().toLocaleTimeString('bn-BD', { 
+              hour: '2-digit', 
+              minute: '2-digit', 
+              hour12: true 
+            })}
+          </Text>
+        </View>
+
+        {/* Report Information Card */}
+        <View style={styles.reportInfoCard}>
+          <Text style={styles.reportInfoTitle}>রিপোর্টের তথ্য</Text>
+          <View style={styles.reportInfoRow}>
+            <Text style={styles.reportLabel}>ক্লাস:</Text>
+            <Text style={styles.reportValue}>{selectedClass?.label || 'অজানা'}</Text>
+          </View>
+          <View style={styles.reportInfoRow}>
+            <Text style={styles.reportLabel}>তারিখ:</Text>
+            <Text style={styles.reportValue}>{formatDate(selectedDate)}</Text>
+          </View>
+        </View>
+
+        {/* Cleanliness Report Table */}
+        <View style={styles.table}>
+          <View style={styles.tableRow}>
+            <Text style={[styles.tableHeader, { flex: 3 }]}>পরিচ্ছন্নতার ধরন</Text>
+            <Text style={[styles.tableHeader, { flex: 1 }]}>স্থিতি</Text>
+            <Text style={[styles.tableHeader, { flex: 1 }]}>চিহ্ন</Text>
+          </View>
+          {cleanReportTypes.map((type, index) => {
+            const isClean = cleanReportData[type.id] || false;
+            return (
+              <View key={type.id} style={[
+                styles.tableRow, 
+                index % 2 === 0 ? styles.tableRowEven : styles.tableRowAlternate
+              ]}>
+                <Text style={[styles.tableCell, { flex: 3 }]}>{type.name}</Text>
+                <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
+                  {isClean ? 'পরিষ্কার' : 'অপরিষ্কার'}
+                </Text>
+                <View style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
+                  <Text style={[
+                    styles.statusIcon,
+                    isClean ? styles.statusClean : styles.statusDirty
+                  ]}>
+                    {isClean ? '✓' : 'X'}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Cleanliness Summary */}
+        <View style={styles.summarySection}>
+          <Text style={styles.summaryTitle}>পরিচ্ছন্নতা সারাংশ</Text>
+          <View style={styles.summaryGrid}>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>মোট পরিচ্ছন্নতার ধরন</Text>
+              <Text style={styles.summaryValue}>{totalReports}</Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>পরিষ্কার</Text>
+              <Text style={[styles.summaryValue, { color: '#28a745' }]}>{cleanCount}</Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>অপরিষ্কার</Text>
+              <Text style={[styles.summaryValue, { color: '#dc3545' }]}>{dirtyCount}</Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>সাফল্যের হার</Text>
+              <Text style={[styles.summaryValue, { color: '#441a05' }]}>{cleanPercentage}%</Text>
+            </View>
+          </View>
+          
+          {/* Progress Bar */}
+          <View style={styles.progressBar}>
+            <View style={[styles.progressFill, { width: `${cleanPercentage}%` }]} />
+          </View>
+          <Text style={styles.progressText}>
+            অগ্রগতি: {cleanCount}/{totalReports} ({cleanPercentage}%)
+          </Text>
+        </View>
+
+        {/* Footer */}
+        <View style={styles.footer} fixed>
+          <Text>এই প্রতিবেদনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে | আদর্শ বিদ্যালয় - পরিচ্ছন্নতা ব্যবস্থাপনা সিস্টেম</Text>
+          <Text render={({ pageNumber, totalPages }) => `পৃষ্ঠা ${pageNumber} এর ${totalPages}`} />
+        </View>
+      </Page>
+    </Document>
+  );
+};
+
 
 const CleanReport = () => {
   // State for form inputs
@@ -157,6 +554,49 @@ const CleanReport = () => {
       setModalData(null);
     } catch (err) {
       toast.error(`মুছে ফেলতে ত্রুটি: ${err.status || 'অজানা'} - ${JSON.stringify(err.data || {})}`);
+    }
+  };
+
+  // Generate PDF Report
+  const generatePDFReport = async () => {
+    if (!hasViewPermission) {
+      toast.error('পরিচ্ছন্নতা প্রতিবেদন দেখার অনুমতি নেই।');
+      return;
+    }
+    
+    if (!selectedClass || !selectedDate) {
+      toast.error('অনুগ্রহ করে ক্লাস এবং তারিখ নির্বাচন করুন।');
+      return;
+    }
+    
+    if (cleanReportTypes.length === 0) {
+      toast.error('কোনো পরিচ্ছন্নতা রিপোর্টের ধরন পাওয়া যায়নি।');
+      return;
+    }
+
+    try {
+      const doc = <PDFDocument
+        cleanReportTypes={cleanReportTypes}
+        filteredReports={filteredReports}
+        selectedClass={selectedClass}
+        selectedDate={selectedDate}
+        cleanReportData={cleanReportData}
+      />;
+      
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      const fileName = `পরিচ্ছন্নতা_রিপোর্ট_${selectedClass?.label || 'অজানা'}_${selectedDate}.pdf`;
+      
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success('প্রতিবেদন সফলভাবে ডাউনলোড হয়েছে!');
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error(`প্রতিবেদন তৈরিতে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
     }
   };
 
@@ -320,6 +760,25 @@ const CleanReport = () => {
           .btn-glow:hover {
             box-shadow: 0 0 15px rgba(219, 158, 48, 0.3);
           }
+          .report-button {
+            background-color: #441a05;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+          }
+          .report-button:hover {
+            background-color: #5a2e0a;
+            box-shadow: 0 0 15px rgba(219, 158, 48, 0.3);
+          }
+          .report-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+          }
           ::-webkit-scrollbar {
             width: 8px;
           }
@@ -378,6 +837,21 @@ const CleanReport = () => {
               </div>
             </label>
           </div>
+
+          {/* PDF Report Button */}
+          {selectedClass && selectedDate && (
+            <div className="flex justify-end mt-6 animate-fadeIn">
+              <button
+                onClick={generatePDFReport}
+                className="report-button btn-glow"
+                disabled={!cleanReportTypes.length || isTypesLoading || isReportsLoading}
+                title="পরিচ্ছন্নতা প্রতিবেদন ডাউনলোড করুন"
+              >
+                রিপোর্ট ডাউনলোড
+              </button>
+            </div>
+          )}
+
           {isClassesLoading && (
             <div className="flex items-center space-x-2 text-[#441a05]/70 animate-fadeIn mt-4">
               <FaSpinner className="animate-spin text-lg" />
@@ -396,9 +870,20 @@ const CleanReport = () => {
       )}
 
       <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
-        <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">
-          পরিচ্ছন্নতা রিপোর্টের ধরন
-        </h3>
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 border-b border-white/20">
+          <h3 className="text-lg font-semibold text-[#441a05]">পরিচ্ছন্নতা রিপোর্টের ধরন</h3>
+          {/* Additional PDF Report Button in table header */}
+          {selectedClass && selectedDate && cleanReportTypes.length > 0 && (
+            <button
+              onClick={generatePDFReport}
+              className="report-button btn-glow"
+              disabled={isTypesLoading || isReportsLoading}
+              title="পরিচ্ছন্নতা প্রতিবেদন ডাউনলোড করুন"
+            >
+              রিপোর্ট ডাউনলোড
+            </button>
+          )}
+        </div>
         {renderCleanReportTable()}
       </div>
 
