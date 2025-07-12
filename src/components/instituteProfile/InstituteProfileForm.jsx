@@ -417,7 +417,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
             <div className="flex items-center justify-between mb-4 cursor-pointer" onClick={() => toggleSection('online')}>
               <div className="flex items-center">
                 <FaGlobe className="text-3xl text-[#DB9E30] mr-2" />
-                <h3 className="text-2xl font-semibold text-[#441a05]">অনলাইন উপস্থিতি</h3>
+                <h3 className="text-2xl font-semibold text-[#441a05]">অনলাইন তথ্য</h3>
               </div>
               {openSections.online ? <FaChevronUp className="text-[#DB9E30]" /> : <FaChevronDown className="text-[#DB9E30]" />}
             </div>

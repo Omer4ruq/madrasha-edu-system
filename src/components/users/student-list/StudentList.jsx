@@ -1,34 +1,43 @@
-import React, { useState, useCallback, useRef, useMemo } from 'react';
-import { FaEdit, FaSpinner, FaTrash, FaEye, FaDownload } from 'react-icons/fa';
-import toast, { Toaster } from 'react-hot-toast';
-import debounce from 'lodash.debounce';
-import Select from 'react-select';
+import React, { useState, useCallback, useRef, useMemo } from "react";
+import { FaEdit, FaSpinner, FaTrash, FaEye, FaDownload } from "react-icons/fa";
+import toast, { Toaster } from "react-hot-toast";
+import debounce from "lodash.debounce";
+import Select from "react-select";
 import {
   useDeleteStudentListMutation,
   useGetStudentListQuery,
   useUpdateStudentListMutation,
-} from '../../../redux/features/api/student/studentListApi';
-import { useGetStudentSectionApiQuery } from '../../../redux/features/api/student/studentSectionApi';
-import { useGetStudentShiftApiQuery } from '../../../redux/features/api/student/studentShiftApi';
-import { useGetAcademicYearApiQuery } from '../../../redux/features/api/academic-year/academicYearApi';
-import { useGetStudentClassApIQuery } from '../../../redux/features/api/student/studentClassApi';
-import { useSelector } from 'react-redux';
-import { useGetGroupPermissionsQuery } from '../../../redux/features/api/permissionRole/groupsApi';
+} from "../../../redux/features/api/student/studentListApi";
+import { useGetStudentSectionApiQuery } from "../../../redux/features/api/student/studentSectionApi";
+import { useGetStudentShiftApiQuery } from "../../../redux/features/api/student/studentShiftApi";
+import { useGetAcademicYearApiQuery } from "../../../redux/features/api/academic-year/academicYearApi";
+import { useGetStudentClassApIQuery } from "../../../redux/features/api/student/studentClassApi";
+import { useSelector } from "react-redux";
+import { useGetGroupPermissionsQuery } from "../../../redux/features/api/permissionRole/groupsApi";
 
 // --- PDF Imports and Setup ---
-import { Document, Page, Text, View, StyleSheet, Font, pdf, Image } from '@react-pdf/renderer';
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  Font,
+  pdf,
+  Image,
+} from "@react-pdf/renderer";
 
 // Register Noto Sans Bengali font
 try {
   Font.register({
-    family: 'NotoSansBengali',
-    src: 'https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf',
+    family: "NotoSansBengali",
+    src: "https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf",
   });
 } catch (error) {
-  console.error('Font registration failed:', error);
+  console.error("Font registration failed:", error);
   Font.register({
-    family: 'Helvetica',
-    src: 'https://fonts.gstatic.com/s/helvetica/v13/Helvetica.ttf',
+    family: "Helvetica",
+    src: "https://fonts.gstatic.com/s/helvetica/v13/Helvetica.ttf",
   });
 }
 
@@ -36,24 +45,24 @@ try {
 const styles = StyleSheet.create({
   page: {
     padding: 25,
-    fontFamily: 'NotoSansBengali',
+    fontFamily: "NotoSansBengali",
     fontSize: 9,
-    color: '#000000',
-    backgroundColor: '#ffffff',
+    color: "#000000",
+    backgroundColor: "#ffffff",
     lineHeight: 1.2,
   },
-  
+
   // Header
   header: {
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 15,
     paddingBottom: 10,
     borderBottomWidth: 2,
-    borderBottomColor: '#000000',
+    borderBottomColor: "#000000",
   },
   schoolName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 3,
   },
   schoolAddress: {
@@ -62,165 +71,165 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 12,
-    fontWeight: 'bold',
-    textDecoration: 'underline',
+    fontWeight: "bold",
+    textDecoration: "underline",
   },
-  
+
   // Main content layout
   mainContent: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginTop: 10,
   },
   leftSection: {
-    width: '65%',
+    width: "65%",
     paddingRight: 15,
   },
   rightSection: {
-    width: '35%',
-    alignItems: 'center',
+    width: "35%",
+    alignItems: "center",
   },
-  
+
   // Photo
   photoBox: {
     width: 100,
     height: 120,
-    border: '2px solid #000000',
-    justifyContent: 'center',
-    alignItems: 'center',
+    border: "2px solid #000000",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 10,
   },
   photoText: {
     fontSize: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
-  
+
   // Section headers
   sectionTitle: {
     fontSize: 10,
-    fontWeight: 'bold',
-    backgroundColor: '#f0f0f0',
+    fontWeight: "bold",
+    backgroundColor: "#f0f0f0",
     padding: 4,
     marginTop: 8,
     marginBottom: 5,
-    textAlign: 'center',
+    textAlign: "center",
     borderWidth: 1,
-    borderColor: '#000000',
+    borderColor: "#000000",
   },
-  
+
   // Information table
   table: {
     marginBottom: 8,
   },
   tableRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderBottomWidth: 0.5,
-    borderBottomColor: '#cccccc',
+    borderBottomColor: "#cccccc",
     minHeight: 18,
   },
   labelCell: {
-    width: '35%',
+    width: "35%",
     padding: 3,
     fontSize: 8,
-    fontWeight: 'bold',
-    backgroundColor: '#f8f8f8',
+    fontWeight: "bold",
+    backgroundColor: "#f8f8f8",
     borderRightWidth: 0.5,
-    borderRightColor: '#cccccc',
+    borderRightColor: "#cccccc",
   },
   valueCell: {
-    width: '65%',
+    width: "65%",
     padding: 3,
     fontSize: 8,
   },
-  
+
   // Two column table
   twoColRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderBottomWidth: 0.5,
-    borderBottomColor: '#cccccc',
+    borderBottomColor: "#cccccc",
     minHeight: 18,
   },
   twoColLabel1: {
-    width: '18%',
+    width: "18%",
     padding: 3,
     fontSize: 8,
-    fontWeight: 'bold',
-    backgroundColor: '#f8f8f8',
+    fontWeight: "bold",
+    backgroundColor: "#f8f8f8",
     borderRightWidth: 0.5,
-    borderRightColor: '#cccccc',
+    borderRightColor: "#cccccc",
   },
   twoColValue1: {
-    width: '32%',
+    width: "32%",
     padding: 3,
     fontSize: 8,
     borderRightWidth: 0.5,
-    borderRightColor: '#cccccc',
+    borderRightColor: "#cccccc",
   },
   twoColLabel2: {
-    width: '18%',
+    width: "18%",
     padding: 3,
     fontSize: 8,
-    fontWeight: 'bold',
-    backgroundColor: '#f8f8f8',
+    fontWeight: "bold",
+    backgroundColor: "#f8f8f8",
     borderRightWidth: 0.5,
-    borderRightColor: '#cccccc',
+    borderRightColor: "#cccccc",
   },
   twoColValue2: {
-    width: '32%',
+    width: "32%",
     padding: 3,
     fontSize: 8,
   },
-  
+
   // Status and signatures
   statusRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginTop: 8,
     marginBottom: 15,
   },
   statusBox: {
     padding: 4,
     borderWidth: 1,
-    borderColor: '#000000',
-    backgroundColor: '#f0f0f0',
+    borderColor: "#000000",
+    backgroundColor: "#f0f0f0",
   },
   statusText: {
     fontSize: 8,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
-  
+
   signatureSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginTop: 20,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#cccccc',
+    borderTopColor: "#cccccc",
   },
   signatureBox: {
-    width: '30%',
-    alignItems: 'center',
+    width: "30%",
+    alignItems: "center",
   },
   signatureLine: {
-    width: '100%',
+    width: "100%",
     borderBottomWidth: 1,
-    borderBottomColor: '#000000',
+    borderBottomColor: "#000000",
     height: 15,
     marginBottom: 3,
   },
   signatureLabel: {
     fontSize: 7,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
   },
-  
+
   footer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 15,
     left: 25,
     right: 25,
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 7,
-    color: '#666666',
+    color: "#666666",
   },
 });
 
@@ -252,56 +261,71 @@ const StudentProfilePDF = ({ student }) => {
 
   // Academic information
   const academicData = [
-    { label: 'ক্লাস', value: student.class_name || 'N/A' },
-    { label: 'সেকশন', value: student.section_name || 'N/A' },
-    { label: 'শিফট', value: student.shift_name || 'N/A' },
-    { label: 'রোল নং', value: student.roll_no || 'N/A' },
-    { label: 'ভর্তির বছর', value: student.admission_year || 'N/A' },
+    { label: "ক্লাস", value: student.class_name || "N/A" },
+    { label: "সেকশন", value: student.section_name || "N/A" },
+    { label: "শিফট", value: student.shift_name || "N/A" },
+    { label: "রোল নং", value: student.roll_no || "N/A" },
+    { label: "ভর্তির বছর", value: student.admission_year || "N/A" },
   ];
 
   // Personal information in two columns
   const personalData = [
     {
-      label1: 'নাম', value1: student.name || 'N/A',
-      label2: 'আইডি নং', value2: student.user_id || 'N/A'
+      label1: "নাম",
+      value1: student.name || "N/A",
+      label2: "আইডি নং",
+      value2: student.user_id || "N/A",
     },
     {
-      label1: 'জন্ম তারিখ', value1: student.dob || 'N/A',
-      label2: 'লিঙ্গ', value2: student.gender || 'N/A'
+      label1: "জন্ম তারিখ",
+      value1: student.dob || "N/A",
+      label2: "লিঙ্গ",
+      value2: student.gender || "N/A",
     },
     {
-      label1: 'রক্তের গ্রুপ', value1: student.blood_group || 'N/A',
-      label2: 'ধর্ম', value2: student.religion || 'N/A'
+      label1: "রক্তের গ্রুপ",
+      value1: student.blood_group || "N/A",
+      label2: "ধর্ম",
+      value2: student.religion || "N/A",
     },
     {
-      label1: 'মোবাইল নং', value1: student.phone_number || 'N/A',
-      label2: 'ইমেইল', value2: student.email || 'N/A'
+      label1: "মোবাইল নং",
+      value1: student.phone_number || "N/A",
+      label2: "ইমেইল",
+      value2: student.email || "N/A",
     },
   ];
 
   // Family information
   const familyData = [
     {
-      label1: 'বাবার নাম', value1: student.father_name || 'N/A',
-      label2: 'মায়ের নাম', value2: student.mother_name || 'N/A'
+      label1: "বাবার নাম",
+      value1: student.father_name || "N/A",
+      label2: "মায়ের নাম",
+      value2: student.mother_name || "N/A",
     },
     {
-      label1: 'অভিভাবক', value1: student.guardian || 'N/A',
-      label2: 'অভিভাবকের ফোন', value2: student.guardian_phone || 'N/A'
+      label1: "অভিভাবক",
+      value1: student.guardian || "N/A",
+      label2: "অভিভাবকের ফোন",
+      value2: student.guardian_phone || "N/A",
     },
   ];
 
   // Address
-  const fullAddress = [
-    student.village,
-    student.post_office,
-    student.ps_or_upazilla,
-    student.district
-  ].filter(Boolean).join(', ') || 'N/A';
+  const fullAddress =
+    [
+      student.village,
+      student.post_office,
+      student.ps_or_upazilla,
+      student.district,
+    ]
+      .filter(Boolean)
+      .join(", ") || "N/A";
 
   const addressData = [
-    { label: 'বর্তমান ঠিকানা', value: fullAddress },
-    { label: 'স্থায়ী ঠিকানা', value: fullAddress },
+    { label: "বর্তমান ঠিকানা", value: fullAddress },
+    { label: "স্থায়ী ঠিকানা", value: fullAddress },
   ];
 
   return (
@@ -341,7 +365,7 @@ const StudentProfilePDF = ({ student }) => {
           <View style={styles.rightSection}>
             {/* Photo */}
             <View style={styles.photoBox}>
-              <Text style={styles.photoText}>ছাত্রের{'\n'}ছবি</Text>
+              <Text style={styles.photoText}>ছাত্রের{"\n"}ছবি</Text>
             </View>
 
             {/* Status */}
@@ -373,7 +397,8 @@ const StudentProfilePDF = ({ student }) => {
 
         {/* Footer */}
         <Text style={styles.footer}>
-          প্রতিবেদন তৈরি: {new Date().toLocaleDateString('bn-BD')} | আদর্শ বিদ্যালয় - ছাত্র ব্যবস্থাপনা সিস্টেম
+          প্রতিবেদন তৈরি: {new Date().toLocaleDateString("bn-BD")} | আদর্শ
+          বিদ্যালয় - ছাত্র ব্যবস্থাপনা সিস্টেম
         </Text>
       </Page>
     </Document>
@@ -384,38 +409,44 @@ const StudentList = () => {
   const { user, group_id } = useSelector((state) => state.auth);
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
-    name: '',
-    user_id: '',
-    roll: '',
-    phone: '',
-    class: '',
-    section: '',
-    shift: '',
-    admission_year: '',
-    status: '',
+    name: "",
+    user_id: "",
+    roll: "",
+    phone: "",
+    class: "",
+    section: "",
+    shift: "",
+    admission_year: "",
+    status: "",
   });
   const [editStudentId, setEditStudentId] = useState(null);
   const [editStudentData, setEditStudentData] = useState({
-    name: '',
-    user_id: '',
-    class_name: '',
-    section_name: '',
-    shift_name: '',
+    name: "",
+    user_id: "",
+    class_name: "",
+    section_name: "",
+    shift_name: "",
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
-  const pageSize = 10;
+  const pageSize = 20;
 
   // Permissions hook
-  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
-    skip: !group_id,
-  });
+  const { data: groupPermissions, isLoading: permissionsLoading } =
+    useGetGroupPermissionsQuery(group_id, {
+      skip: !group_id,
+    });
 
   // Permission checks
-  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_student') || false;
-  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_student') || false;
-  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_student') || false;
+  const hasViewPermission =
+    groupPermissions?.some((perm) => perm.codename === "view_student") || false;
+  const hasChangePermission =
+    groupPermissions?.some((perm) => perm.codename === "change_student") ||
+    false;
+  const hasDeletePermission =
+    groupPermissions?.some((perm) => perm.codename === "delete_student") ||
+    false;
 
   // Fetch student data
   const {
@@ -423,17 +454,24 @@ const StudentList = () => {
     isLoading,
     isError,
     error,
-  } = useGetStudentListQuery({
-    page,
-    page_size: pageSize,
-    ...filters,
-  }, { skip: !hasViewPermission });
+  } = useGetStudentListQuery(
+    {
+      page,
+      page_size: pageSize,
+      ...filters,
+    },
+    { skip: !hasViewPermission }
+  );
 
   // Fetch dropdown data
-  const { data: classes, isLoading: isClassesLoading } = useGetStudentClassApIQuery({ skip: !hasViewPermission });
-  const { data: sections, isLoading: isSectionsLoading } = useGetStudentSectionApiQuery({ skip: !hasViewPermission });
-  const { data: shifts, isLoading: isShiftsLoading } = useGetStudentShiftApiQuery({ skip: !hasViewPermission });
-  const { data: academicYears, isLoading: isAcademicYearsLoading } = useGetAcademicYearApiQuery({ skip: !hasViewPermission });
+  const { data: classes, isLoading: isClassesLoading } =
+    useGetStudentClassApIQuery({ skip: !hasViewPermission });
+  const { data: sections, isLoading: isSectionsLoading } =
+    useGetStudentSectionApiQuery({ skip: !hasViewPermission });
+  const { data: shifts, isLoading: isShiftsLoading } =
+    useGetStudentShiftApiQuery({ skip: !hasViewPermission });
+  const { data: academicYears, isLoading: isAcademicYearsLoading } =
+    useGetAcademicYearApiQuery({ skip: !hasViewPermission });
 
   const [updateStudent, { isLoading: isUpdating, error: updateError }] =
     useUpdateStudentListMutation();
@@ -447,25 +485,29 @@ const StudentList = () => {
   const hasPreviousPage = !!studentData?.previous;
 
   // Format dropdown options
-  const classOptions = classes?.map((cls) => ({
-    value: cls.student_class.name,
-    label: cls.student_class.name,
-  })) || [];
-  const sectionOptions = sections?.map((sec) => ({
-    value: sec.name,
-    label: sec.name,
-  })) || [];
-  const shiftOptions = shifts?.map((shift) => ({
-    value: shift.name,
-    label: shift.name,
-  })) || [];
-  const academicYearOptions = academicYears?.map((year) => ({
-    value: year.name,
-    label: year.name,
-  })) || [];
+  const classOptions =
+    classes?.map((cls) => ({
+      value: cls.student_class.name,
+      label: cls.student_class.name,
+    })) || [];
+  const sectionOptions =
+    sections?.map((sec) => ({
+      value: sec.name,
+      label: sec.name,
+    })) || [];
+  const shiftOptions =
+    shifts?.map((shift) => ({
+      value: shift.name,
+      label: shift.name,
+    })) || [];
+  const academicYearOptions =
+    academicYears?.map((year) => ({
+      value: year.name,
+      label: year.name,
+    })) || [];
   const statusOptions = [
-    { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
+    { value: "active", label: "Active" },
+    { value: "inactive", label: "Inactive" },
   ];
 
   // Debounced filter update
@@ -487,7 +529,7 @@ const StudentList = () => {
   const handleSelectChange = (selectedOption, { name }) => {
     debouncedSetFilters((prev) => ({
       ...prev,
-      [name]: selectedOption ? selectedOption.value : '',
+      [name]: selectedOption ? selectedOption.value : "",
     }));
   };
 
@@ -518,7 +560,7 @@ const StudentList = () => {
   // Handle edit button click
   const handleEditClick = (student) => {
     if (!hasChangePermission) {
-      toast.error('ছাত্রের তথ্য সম্পাদনা করার অনুমতি নেই।');
+      toast.error("ছাত্রের তথ্য সম্পাদনা করার অনুমতি নেই।");
       return;
     }
     setEditStudentId(student.id);
@@ -535,37 +577,37 @@ const StudentList = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (!hasChangePermission) {
-      toast.error('ছাত্রের তথ্য আপডেট করার অনুমতি নেই।');
+      toast.error("ছাত্রের তথ্য আপডেট করার অনুমতি নেই।");
       return;
     }
     if (!editStudentData.name.trim()) {
-      toast.error('অনুগ্রহ করে ছাত্রের নাম লিখুন');
+      toast.error("অনুগ্রহ করে ছাত্রের নাম লিখুন");
       return;
     }
     try {
       await updateStudent({ id: editStudentId, ...editStudentData }).unwrap();
-      toast.success('ছাত্রের তথ্য সফলভাবে আপডেট হয়েছে!');
+      toast.success("ছাত্রের তথ্য সফলভাবে আপডেট হয়েছে!");
       setEditStudentId(null);
       setEditStudentData({
-        name: '',
-        user_id: '',
-        class_name: '',
-        section_name: '',
-        shift_name: '',
+        name: "",
+        user_id: "",
+        class_name: "",
+        section_name: "",
+        shift_name: "",
       });
     } catch (err) {
-      console.error('Error updating student:', err);
-      toast.error(`ছাত্রের তথ্য আপডেট ব্যর্থ: ${err.status || 'অজানা ত্রুটি'}`);
+      console.error("Error updating student:", err);
+      toast.error(`ছাত্রের তথ্য আপডেট ব্যর্থ: ${err.status || "অজানা ত্রুটি"}`);
     }
   };
 
   // Handle delete
   const handleDelete = (id) => {
     if (!hasDeletePermission) {
-      toast.error('ছাত্র মুছে ফেলার অনুমতি নেই।');
+      toast.error("ছাত্র মুছে ফেলার অনুমতি নেই।");
       return;
     }
-    setModalAction('delete');
+    setModalAction("delete");
     setModalData({ id });
     setIsModalOpen(true);
   };
@@ -573,17 +615,17 @@ const StudentList = () => {
   // Confirm modal action
   const confirmAction = async () => {
     try {
-      if (modalAction === 'delete') {
+      if (modalAction === "delete") {
         if (!hasDeletePermission) {
-          toast.error('ছাত্র মুছে ফেলার অনুমতি নেই।');
+          toast.error("ছাত্র মুছে ফেলার অনুমতি নেই।");
           return;
         }
         await deleteStudent(modalData.id).unwrap();
-        toast.success('ছাত্র সফলভাবে মুছে ফেলা হয়েছে!');
+        toast.success("ছাত্র সফলভাবে মুছে ফেলা হয়েছে!");
       }
     } catch (err) {
-      console.error('Error deleting student:', err);
-      toast.error(`ছাত্র মুছে ফেলা ব্যর্থ: ${err.status || 'অজানা ত্রুটি'}`);
+      console.error("Error deleting student:", err);
+      toast.error(`ছাত্র মুছে ফেলা ব্যর্থ: ${err.status || "অজানা ত্রুটি"}`);
     } finally {
       setIsModalOpen(false);
       setModalAction(null);
@@ -594,7 +636,7 @@ const StudentList = () => {
   // Handle Profile PDF Download
   const handleDownloadProfile = async (student) => {
     if (!hasViewPermission) {
-      toast.error('প্রোফাইল দেখার অনুমতি নেই।');
+      toast.error("প্রোফাইল দেখার অনুমতি নেই।");
       return;
     }
 
@@ -602,18 +644,22 @@ const StudentList = () => {
       const doc = <StudentProfilePDF student={student} />;
       const blob = await pdf(doc).toBlob();
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      
-      const fileName = `ছাত্র_প্রোফাইল_${student.name || 'অজানা'}_${student.user_id || 'N/A'}_${new Date().toLocaleDateString('bn-BD')}.pdf`;
-      
+
+      const fileName = `ছাত্র_প্রোফাইল_${student.name || "অজানা"}_${
+        student.user_id || "N/A"
+      }_${new Date().toLocaleDateString("bn-BD")}.pdf`;
+
       link.download = fileName;
       link.click();
       URL.revokeObjectURL(url);
-      toast.success('প্রোফাইল সফলভাবে ডাউনলোড হয়েছে!');
+      toast.success("প্রোফাইল সফলভাবে ডাউনলোড হয়েছে!");
     } catch (error) {
-      console.error('PDF generation error:', error);
-      toast.error(`প্রতিবেদন তৈরিতে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
+      console.error("PDF generation error:", error);
+      toast.error(
+        `প্রতিবেদন তৈরিতে ত্রুটি: ${error.message || "অজানা ত্রুটি"}`
+      );
     }
   };
 
@@ -621,45 +667,56 @@ const StudentList = () => {
   const customSelectStyles = {
     control: (provided) => ({
       ...provided,
-      background: 'rgba(255, 255, 255, 0.1)',
-      borderColor: '#9d9087',
-      borderRadius: '0.5rem',
-      padding: '0.2rem',
-      color: '#441a05',
-      boxShadow: 'none',
-      backdropFilter: 'blur(10px)',
-      '&:hover': {
-        borderColor: '#DB9E30',
+      background: "rgba(255, 255, 255, 0.1)",
+      borderColor: "#9d9087",
+      borderRadius: "0.5rem",
+      padding: "0.2rem",
+      color: "#441a05",
+      boxShadow: "none",
+      backdropFilter: "blur(10px)",
+      "&:hover": {
+        borderColor: "#DB9E30",
       },
     }),
     option: (provided, state) => ({
       ...provided,
-      backgroundColor: state.isSelected ? '#DB9E30' : state.isFocused ? '#DB9E30' : 'rgba(255, 255, 255, 0.9)',
-      color: state.isSelected || state.isFocused ? '#fff' : '#441a05',
-      '&:hover': {
-        backgroundColor: '#94640f',
-        color: '#fff',
+      backgroundColor: state.isSelected
+        ? "#DB9E30"
+        : state.isFocused
+        ? "#DB9E30"
+        : "rgba(255, 255, 255, 0.9)",
+      color: state.isSelected || state.isFocused ? "#fff" : "#441a05",
+      "&:hover": {
+        backgroundColor: "#94640f",
+        color: "#fff",
       },
     }),
     singleValue: (provided) => ({
       ...provided,
-      color: '#441a05',
+      color: "#441a05",
     }),
     menu: (provided) => ({
       ...provided,
-      background: 'rgba(255, 255, 255, 0.95)',
-      backdropFilter: 'blur(10px)',
-      borderRadius: '0.5rem',
-      border: '1px solid #9d9087',
+      background: "rgba(255, 255, 255, 0.95)",
+      backdropFilter: "blur(10px)",
+      borderRadius: "0.5rem",
+      border: "1px solid #9d9087",
     }),
     placeholder: (provided) => ({
       ...provided,
-      color: '#441a05',
+      color: "#441a05",
       opacity: 0.7,
     }),
   };
 
-  if (isLoading || isClassesLoading || isSectionsLoading || isShiftsLoading || isAcademicYearsLoading || permissionsLoading) {
+  if (
+    isLoading ||
+    isClassesLoading ||
+    isSectionsLoading ||
+    isShiftsLoading ||
+    isAcademicYearsLoading ||
+    permissionsLoading
+  ) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="flex items-center gap-4 p-6 bg-white/10 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 animate-fadeIn">
@@ -682,21 +739,32 @@ const StudentList = () => {
 
   // Table headers
   const tableHeaders = [
-    { key: 'serial', label: 'ক্রমিক', fixed: true, width: '70px' },
-    { key: 'name', label: 'নাম', fixed: true, width: '150px' },
-    { key: 'user_id', label: 'ইউজার আইডি', fixed: true, width: '120px' },
-    { key: 'roll_no', label: 'রোল', fixed: false, width: '80px' },
-    { key: 'class_name', label: 'ক্লাস', fixed: false, width: '100px' },
-    { key: 'section_name', label: 'সেকশন', fixed: false, width: '100px' },
-    { key: 'shift_name', label: 'শিফট', fixed: false, width: '100px' },
+    { key: "serial", label: "ক্রমিক", fixed: true, width: "70px" },
+    { key: "name", label: "নাম", fixed: true, width: "150px" },
+    { key: "user_id", label: "ইউজার আইডি", fixed: true, width: "120px" },
+    { key: "roll_no", label: "রোল", fixed: false, width: "80px" },
+    { key: "class_name", label: "ক্লাস", fixed: false, width: "100px" },
+    { key: "section_name", label: "সেকশন", fixed: false, width: "100px" },
+    { key: "shift_name", label: "শিফট", fixed: false, width: "100px" },
     // { key: 'status', label: 'স্ট্যাটাস', fixed: false, width: '100px' },
-    { key: 'phone_number', label: 'ফোন নম্বর', fixed: false, width: '120px' },
-    { key: 'dob', label: 'জন্ম তারিখ', fixed: false, width: '120px' },
-    { key: 'gender', label: 'লিঙ্গ', fixed: false, width: '80px' },
-    { key: 'father_name', label: 'বাবার নাম', fixed: false, width: '120px' },
-    { key: 'mother_name', label: 'মায়ের নাম', fixed: false, width: '120px' },
-    { key: 'admission_year', label: 'ভর্তির বছর', fixed: false, width: '120px' },
-    { key: 'actions', label: 'কার্যক্রম', fixed: false, width: '120px', actions: true },
+    { key: "phone_number", label: "ফোন নম্বর", fixed: false, width: "120px" },
+    { key: "dob", label: "জন্ম তারিখ", fixed: false, width: "120px" },
+    { key: "gender", label: "লিঙ্গ", fixed: false, width: "80px" },
+    { key: "father_name", label: "বাবার নাম", fixed: false, width: "120px" },
+    { key: "mother_name", label: "মায়ের নাম", fixed: false, width: "120px" },
+    {
+      key: "admission_year",
+      label: "ভর্তির বছর",
+      fixed: false,
+      width: "120px",
+    },
+    {
+      key: "actions",
+      label: "কার্যক্রম",
+      fixed: false,
+      width: "120px",
+      actions: true,
+    },
   ];
 
   return (
@@ -749,17 +817,26 @@ const StudentList = () => {
           
           .fixed-col.serial { 
             left: 0px; 
-            background: rgba(68, 26, 5, 0.1);
+            background: rgba(68, 26, 5,);
             backdrop-filter: blur(10px);
           }
+            .serial{
+              background: white;
+            }
+            .name{
+              background: white;
+            }
+            .user_id{
+              background: white;
+            }
           .fixed-col.name { 
             left: 70px; 
-            background: rgba(68, 26, 5, 0.08);
+            background: rgba(68, 26, 5,);
             backdrop-filter: blur(10px);
           }
           .fixed-col.user_id { 
-            left: 200px; 
-            background: rgba(68, 26, 5, 0.06);
+            left: 150px; 
+            background: rgba(68, 26, 5,);
             backdrop-filter: blur(10px);
           }
           
@@ -968,7 +1045,10 @@ const StudentList = () => {
                 name="name"
                 value={editStudentData.name}
                 onChange={(e) =>
-                  setEditStudentData({ ...editStudentData, name: e.target.value })
+                  setEditStudentData({
+                    ...editStudentData,
+                    name: e.target.value,
+                  })
                 }
                 className="w-full bg-white/10 backdrop-blur-sm text-[#441a05] placeholder-[#441a05]/70 pl-3 py-2 border border-white/20 rounded-lg transition-all duration-300 animate-scaleIn focus:border-[#DB9E30] focus:bg-white/20"
                 placeholder="নাম"
@@ -1035,8 +1115,8 @@ const StudentList = () => {
                 disabled={isUpdating || !hasChangePermission}
                 className={`flex items-center justify-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn btn-glow ${
                   isUpdating || !hasChangePermission
-                    ? 'cursor-not-allowed opacity-70'
-                    : 'hover:text-white hover:shadow-md'
+                    ? "cursor-not-allowed opacity-70"
+                    : "hover:text-white hover:shadow-md"
                 }`}
               >
                 {isUpdating ? (
@@ -1053,11 +1133,11 @@ const StudentList = () => {
                 onClick={() => {
                   setEditStudentId(null);
                   setEditStudentData({
-                    name: '',
-                    user_id: '',
-                    class_name: '',
-                    section_name: '',
-                    shift_name: '',
+                    name: "",
+                    user_id: "",
+                    class_name: "",
+                    section_name: "",
+                    shift_name: "",
                   });
                 }}
                 className="flex items-center justify-center px-6 py-3 rounded-lg font-medium bg-gray-500/20 text-[#441a05] hover:bg-gray-500/30 hover:text-white transition-all duration-300 animate-scaleIn"
@@ -1067,7 +1147,7 @@ const StudentList = () => {
             </form>
             {updateError && (
               <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
-                ত্রুটি: {updateError?.status || 'অজানা'} -{' '}
+                ত্রুটি: {updateError?.status || "অজানা"} -{" "}
                 {JSON.stringify(updateError?.data || {})}
               </div>
             )}
@@ -1083,7 +1163,7 @@ const StudentList = () => {
             </div>
           ) : isError ? (
             <p className="p-4 text-red-400">
-              ত্রুটি: {error?.status || 'অজানা'} -{' '}
+              ত্রুটি: {error?.status || "অজানা"} -{" "}
               {JSON.stringify(error?.data || {})}
             </p>
           ) : students.length === 0 ? (
@@ -1094,10 +1174,16 @@ const StudentList = () => {
                 <tr>
                   {tableHeaders.map((header) => {
                     const isFixed = header.fixed;
-                    const headerClasses = `table-cell text-xs font-medium uppercase tracking-wider ${isFixed ? `fixed-col ${header.key}` : ''}`;
+                    const headerClasses = `table-cell text-xs font-medium uppercase tracking-wider  ${
+                      isFixed ? `fixed-col ${header.key}` : ""
+                    }`;
                     const style = { width: header.width };
                     return (
-                      <th key={header.key} className={headerClasses} style={style}>
+                      <th
+                        key={header.key}
+                        className={headerClasses}
+                        style={style}
+                      >
                         {header.label}
                       </th>
                     );
@@ -1108,7 +1194,7 @@ const StudentList = () => {
                 {students.map((student, index) => {
                   const serial = (page - 1) * pageSize + index + 1;
                   const rowClasses = `table-row ${
-                    editStudentId === student.id ? 'table-row-edit' : ''
+                    editStudentId === student.id ? "table-row-edit" : ""
                   } animate-fadeIn`;
 
                   return (
@@ -1118,32 +1204,55 @@ const StudentList = () => {
                       style={{ animationDelay: `${index * 0.05}s` }}
                     >
                       {/* Fixed Columns */}
-                      <td className="table-cell fixed-col serial" style={{ width: '70px' }}>
+                      <td
+                        className="table-cell fixed-col serial"
+                        style={{ width: "70px" }}
+                      >
                         {serial}
                       </td>
-                      <td className="table-cell fixed-col name" style={{ width: '150px' }}>
+                      <td
+                        className="table-cell fixed-col name "
+                        style={{ width: "150px" }}
+                      >
                         <div className="font-semibold">{student.name}</div>
                         {student.name_in_bangla && (
-                          <div className="text-xs opacity-75">{student.name_in_bangla}</div>
+                          <div className="text-xs opacity-75">
+                            {student.name_in_bangla}
+                          </div>
                         )}
                       </td>
-                      <td className="table-cell fixed-col user_id" style={{ width: '120px' }}>
-                        <span className="font-mono bg-white/20 px- py-1 rounded text-xs">
+                      <td
+                        className="table-cell fixed-col user_id "
+                        style={{ width: "120px" }}
+                      >
+                        <span className="font-mono /20 px- py-1 rounded text-xs">
                           {student.user_id}
                         </span>
                       </td>
 
                       {/* Scrollable Columns */}
-                      <td className="table-cell" style={{ width: '80px' }}>
-                        {student.roll_no || 'N/A'}
+                      <td
+                        className="table-cell "
+                        style={{ width: "80px" }}
+                      >
+                        {student.roll_no || "N/A"}
                       </td>
-                      <td className="table-cell" style={{ width: '100px' }}>
+                      <td
+                        className="table-cell "
+                        style={{ width: "100px" }}
+                      >
                         {student.class_name}
                       </td>
-                      <td className="table-cell" style={{ width: '100px' }}>
+                      <td
+                        className="table-cell "
+                        style={{ width: "100px" }}
+                      >
                         {student.section_name}
                       </td>
-                      <td className="table-cell" style={{ width: '100px' }}>
+                      <td
+                        className="table-cell "
+                        style={{ width: "100px" }}
+                      >
                         {student.shift_name}
                       </td>
                       {/* <td className="table-cell" style={{ width: '100px' }}>
@@ -1151,28 +1260,48 @@ const StudentList = () => {
                           {student.status === 'active' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}
                         </span>
                       </td> */}
-                      <td className="table-cell" style={{ width: '120px' }}>
-                        {student.phone_number || 'N/A'}
+                      <td
+                        className="table-cell  "
+                        style={{ width: "120px" }}
+                      >
+                        {student.phone_number || "N/A"}
                       </td>
-                      <td className="table-cell" style={{ width: '120px' }}>
-                        {student.dob || 'N/A'}
+                      <td
+                        className="table-cell "
+                        style={{ width: "120px" }}
+                      >
+                        {student.dob || "N/A"}
                       </td>
-                      <td className="table-cell" style={{ width: '80px' }}>
-                        {student.gender || 'N/A'}
+                      <td
+                        className="table-cell "
+                        style={{ width: "80px" }}
+                      >
+                        {student.gender || "N/A"}
                       </td>
-                      <td className="table-cell" style={{ width: '120px' }}>
-                        {student.father_name || 'N/A'}
+                      <td
+                        className="table-cell "
+                        style={{ width: "120px" }}
+                      >
+                        {student.father_name || "N/A"}
                       </td>
-                      <td className="table-cell" style={{ width: '120px' }}>
-                        {student.mother_name || 'N/A'}
+                      <td
+                        className="table-cell "
+                        style={{ width: "120px" }}
+                      >
+                        {student.mother_name || "N/A"}
                       </td>
-                      <td className="table-cell" style={{ width: '120px' }}>
-                        {student.admission_year || 'N/A'}
+                      <td
+                        className="table-cell"
+                        style={{ width: "120px" }}
+                      >
+                        {student.admission_year || "N/A"}
                       </td>
 
                       {/* Actions */}
-                      {(hasChangePermission || hasDeletePermission || hasViewPermission) && (
-                        <td className="table-cell" style={{ width: '120px' }}>
+                      {(hasChangePermission ||
+                        hasDeletePermission ||
+                        hasViewPermission) && (
+                        <td className="table-cell" style={{ width: "120px" }}>
                           <div className="flex space-x-2">
                             <button
                               onClick={() => handleDownloadProfile(student)}
@@ -1214,10 +1343,10 @@ const StudentList = () => {
           {(isDeleting || deleteError) && (
             <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
               {isDeleting
-                ? 'ছাত্র মুছছে...'
-                : `ছাত্র মুছতে ত্রুটি: ${deleteError?.status || 'অজানা'} - ${JSON.stringify(
-                    deleteError?.data || {}
-                  )}`}
+                ? "ছাত্র মুছছে..."
+                : `ছাত্র মুছতে ত্রুটি: ${
+                    deleteError?.status || "অজানা"
+                  } - ${JSON.stringify(deleteError?.data || {})}`}
             </div>
           )}
         </div>
@@ -1230,8 +1359,8 @@ const StudentList = () => {
               disabled={!hasPreviousPage}
               className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 btn-glow ${
                 !hasPreviousPage
-                  ? 'bg-gray-500/20 text-[#441a05]/30 cursor-not-allowed'
-                  : 'bg-[#DB9E30] text-[#441a05] hover:text-white backdrop-blur-sm'
+                  ? "bg-gray-500/20 text-[#441a05]/30 cursor-not-allowed"
+                  : "bg-[#DB9E30] text-[#441a05] hover:text-white backdrop-blur-sm"
               }`}
             >
               পূর্ববর্তী
@@ -1242,8 +1371,8 @@ const StudentList = () => {
                 onClick={() => handlePageChange(pageNumber)}
                 className={`px-3 py-1 rounded-lg font-medium transition-all duration-300 backdrop-blur-sm ${
                   page === pageNumber
-                    ? 'bg-[#DB9E30] text-white'
-                    : 'bg-white/20 text-[#441a05] hover:bg-white/30'
+                    ? "bg-[#DB9E30] text-white"
+                    : "bg-white/20 text-[#441a05] hover:bg-white/30"
                 }`}
               >
                 {pageNumber}
@@ -1254,8 +1383,8 @@ const StudentList = () => {
               disabled={!hasNextPage}
               className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 btn-glow ${
                 !hasNextPage
-                  ? 'bg-gray-500/20 text-[#441a05]/30 cursor-not-allowed'
-                  : 'bg-[#DB9E30] text-[#441a05] hover:text-white backdrop-blur-sm'
+                  ? "bg-gray-500/20 text-[#441a05]/30 cursor-not-allowed"
+                  : "bg-[#DB9E30] text-[#441a05] hover:text-white backdrop-blur-sm"
               }`}
             >
               পরবর্তী
@@ -1285,7 +1414,9 @@ const StudentList = () => {
                 onClick={confirmAction}
                 disabled={isDeleting}
                 className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg transition-colors duration-300 btn-glow backdrop-blur-sm ${
-                  isDeleting ? 'cursor-not-allowed opacity-60' : 'hover:text-white'
+                  isDeleting
+                    ? "cursor-not-allowed opacity-60"
+                    : "hover:text-white"
                 }`}
               >
                 {isDeleting ? (
@@ -1294,7 +1425,7 @@ const StudentList = () => {
                     <span>মুছছে...</span>
                   </span>
                 ) : (
-                  'নিশ্চিত করুন'
+                  "নিশ্চিত করুন"
                 )}
               </button>
             </div>

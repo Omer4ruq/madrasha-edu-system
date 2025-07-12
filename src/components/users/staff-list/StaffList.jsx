@@ -420,7 +420,7 @@ const StaffList = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
-  const pageSize = 10;
+  const pageSize = 20;
 
   // Permissions hook
   const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
@@ -689,7 +689,7 @@ const StaffList = () => {
             backdrop-filter: blur(10px);
           }
           .fixed-col.user_id { 
-            left: 220px; 
+            // left: 200px; 
             background: rgba(68, 26, 5, 0.06);
             backdrop-filter: blur(10px);
           }

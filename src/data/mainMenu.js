@@ -168,12 +168,12 @@ const mainMenu = [
       },
       {
         id: "05/07",
-        title: "পিরিয়ড",
+        title: "পিরিয়ড / ঘন্টা",
         link: "/talimat/periods",
         children: [
           {
             id: "05/07/01",
-            title: "পিরিয়ড",
+            title: "পিরিয়ড / ঘন্টা",
             link: "/talimat/periods",
           },
         ],
