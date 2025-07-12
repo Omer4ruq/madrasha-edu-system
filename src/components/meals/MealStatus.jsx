@@ -1,17 +1,132 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { FaEdit, FaSpinner, FaTrash } from 'react-icons/fa';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { FaEdit, FaSpinner, FaTrash, FaFilePdf } from 'react-icons/fa';
 import { IoAdd, IoAddCircle } from 'react-icons/io5';
 import Select from 'react-select';
 import { Toaster, toast } from 'react-hot-toast';
 import { useGetMealStatusesQuery, useCreateMealStatusMutation, useUpdateMealStatusMutation, useDeleteMealStatusMutation } from '../../redux/features/api/meal/mealStatusApi';
 import { useSearchJointUsersQuery } from '../../redux/features/api/jointUsers/jointUsersApi';
-import selectStyles from '../../utilitis/selectStyles'; // Assuming this path is correct
-import { useSelector } from 'react-redux'; // Import useSelector
-import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi'; // Import permission hook
+import selectStyles from '../../utilitis/selectStyles';
+import { useSelector } from 'react-redux';
+import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi';
 
+// Component to fetch and display individual user data
+const UserInfoCell = ({ userId }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [userInfo, setUserInfo] = useState(null);
+  
+  const { data: users = [], isLoading } = useSearchJointUsersQuery(searchTerm, {
+    skip: !searchTerm,
+  });
+
+  useEffect(() => {
+    setSearchTerm(userId.toString());
+  }, [userId]);
+
+  useEffect(() => {
+    if (users && users.length > 0) {
+      const foundUser = users.find(user => user.id === userId || user.user_id === userId);
+      if (foundUser) {
+        setUserInfo(foundUser);
+      } else if (searchTerm === userId.toString()) {
+        setSearchTerm("");
+      }
+    }
+  }, [users, userId, searchTerm]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center space-x-2">
+        <FaSpinner className="animate-spin text-sm" />
+        <span>লোড হচ্ছে...</span>
+      </div>
+    );
+  }
+
+  if (!userInfo) {
+    return (
+      <div>
+        <div className="font-medium text-red-500">ইউজার পাওয়া যায়নি</div>
+        <div className="text-xs text-[#441a05]/70">ID: {userId}</div>
+      </div>
+    );
+  }
+
+  const getUserDisplay = () => {
+    if (userInfo.student_profile) {
+      return {
+        name: userInfo.name,
+        details: `${userInfo.student_profile.class_name || "অজানা"} ${userInfo.student_profile.roll_no ? `(রোল: ${userInfo.student_profile.roll_no})` : ""}`,
+        type: "student"
+      };
+    } else if (userInfo.staff_profile) {
+      return {
+        name: userInfo.name,
+        details: userInfo.staff_profile.designation || "অজানা",
+        type: "staff"
+      };
+    }
+
+    return {
+      name: userInfo.name,
+      details: "অজানা",
+      type: "unknown"
+    };
+  };
+
+  const displayInfo = getUserDisplay();
+
+  return (
+    <div>
+      <div className="font-medium">{displayInfo.name}</div>
+      <div className="text-xs text-[#441a05]/70">{displayInfo.details}</div>
+    </div>
+  );
+};
+
+// Component for user type badge
+const UserTypeBadge = ({ userId }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [userType, setUserType] = useState("unknown");
+  
+  const { data: users = [] } = useSearchJointUsersQuery(searchTerm, {
+    skip: !searchTerm,
+  });
+
+  useEffect(() => {
+    setSearchTerm(userId.toString());
+  }, [userId]);
+
+  useEffect(() => {
+    if (users && users.length > 0) {
+      const foundUser = users.find(user => user.id === userId || user.user_id === userId);
+      if (foundUser) {
+        if (foundUser.student_profile) {
+          setUserType("student");
+        } else if (foundUser.staff_profile) {
+          setUserType("staff");
+        }
+      } else if (searchTerm === userId.toString()) {
+        setSearchTerm("");
+      }
+    }
+  }, [users, userId, searchTerm]);
+
+  return (
+    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+      userType === 'student' 
+        ? 'bg-blue-100 text-blue-800' 
+        : userType === 'staff'
+        ? 'bg-green-100 text-green-800'
+        : 'bg-gray-100 text-gray-800'
+    }`}>
+      {userType === 'student' ? 'শিক্ষার্থী' : 
+       userType === 'staff' ? 'কর্মী' : 'অজানা'}
+    </span>
+  );
+};
 
 const MealStatus = () => {
-  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
+  const { user, group_id } = useSelector((state) => state.auth);
   const [formData, setFormData] = useState({
     start_time: '',
     end_time: '',
@@ -38,7 +153,6 @@ const MealStatus = () => {
   const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_meal_status') || false;
   const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_meal_status') || false;
 
-
   // Fetch data
   const { data: mealStatuses = [], isLoading: statusesLoading, error: statusesError, refetch } = useGetMealStatusesQuery(undefined, { skip: !hasViewPermission });
   const { data: jointUsers = [], isLoading: usersLoading } = useSearchJointUsersQuery(searchTerm, { skip: searchTerm.length < 3 || !hasViewPermission });
@@ -47,6 +161,12 @@ const MealStatus = () => {
   const [createMealStatus, { isLoading: isCreating, error: createError }] = useCreateMealStatusMutation();
   const [updateMealStatus, { isLoading: isUpdating, error: updateError }] = useUpdateMealStatusMutation();
   const [deleteMealStatus, { isLoading: isDeleting, error: deleteError }] = useDeleteMealStatusMutation();
+
+  // Get unique user IDs from meal statuses for fetching user details
+  const userIds = useMemo(() => {
+    if (!mealStatuses || mealStatuses.length === 0) return [];
+    return [...new Set(mealStatuses.map(status => status.meal_user))];
+  }, [mealStatuses]);
 
   // Handle clicks outside dropdown
   useEffect(() => {
@@ -100,7 +220,7 @@ const MealStatus = () => {
   // Handle date click
   const handleDateClick = (e) => {
     if (e.target.type === 'date') {
-      e.target.showPicker(); // Trigger calendar dropdown on click
+      e.target.showPicker();
     }
   };
 
@@ -226,6 +346,74 @@ const MealStatus = () => {
     }
   };
 
+  // Generate PDF Report
+  const generatePDFReport = () => {
+    const printWindow = window.open('', '_blank');
+    
+    let htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>খাবারের স্থিতি রিপোর্ট</title>
+        <meta charset="UTF-8">
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background-color: #f2f2f2; font-weight: bold; }
+          .header { text-align: center; margin-bottom: 20px; }
+          .date { margin-top: 20px; text-align: right; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h2>খাবারের স্থিতি রিপোর্ট</h2>
+          <h3>Meal Status Report</h3>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>আইডি (ID)</th>
+              <th>ব্যবহারকারী ID (User ID)</th>
+              <th>শুরুর তারিখ (Start Date)</th>
+              <th>শেষের তারিখ (End Date)</th>
+              <th>স্থিতি (Status)</th>
+              <th>মন্তব্য (Remarks)</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    mealStatuses.forEach(status => {
+      htmlContent += `
+        <tr>
+          <td>${status.id}</td>
+          <td>${status.meal_user}</td>
+          <td>${status.start_time}</td>
+          <td>${status.end_time}</td>
+          <td>${status.status === 'ACTIVE' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</td>
+          <td>${status.remarks || 'N/A'}</td>
+        </tr>
+      `;
+    });
+
+    htmlContent += `
+          </tbody>
+        </table>
+        <div class="date">
+          রিপোর্ট তৈরির তারিখ: ${new Date().toLocaleDateString('bn-BD')}
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.print();
+    
+    toast.success("PDF রিপোর্ট তৈরি হয়েছে!");
+  };
+
   // Status options
   const statusOptions = [
     { value: 'ACTIVE', label: 'সক্রিয়' },
@@ -347,7 +535,7 @@ const MealStatus = () => {
                           onClick={() => handleUserSelect(user)}
                           className="px-4 py-2 hover:bg-white/10 cursor-pointer text-sm text-[#441a05]"
                         >
-                          {user.name || user.user_id}
+                          {user.name || user.user_id} ({user?.student_profile?.class_name || user?.staff_profile?.designation || "N/A"})
                         </div>
                       ))
                     ) : (
@@ -483,7 +671,24 @@ const MealStatus = () => {
 
         {/* Meal Statuses Table */}
         <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
-          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">খাবারের স্থিতির তালিকা</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">খাবারের স্থিতির তালিকা</h3>
+            <button
+              onClick={generatePDFReport}
+              disabled={!mealStatuses || mealStatuses.length === 0}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                !mealStatuses || mealStatuses.length === 0
+                  ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                  : "bg-[#DB9E30] text-[#441a05] hover:text-white btn-glow"
+              }`}
+              aria-label="PDF রিপোর্ট ডাউনলোড"
+              title="PDF রিপোর্ট ডাউনলোড করুন"
+            >
+              <FaFilePdf className="text-lg" />
+              <span>PDF রিপোর্ট</span>
+            </button>
+          </div>
+
           {statusesLoading ? (
             <p className="p-4 text-[#441a05]/70">খাবারের স্থিতি লোড হচ্ছে...</p>
           ) : statusesError ? (
@@ -501,7 +706,10 @@ const MealStatus = () => {
                       আইডি
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ব্যবহারকারীর নাম
+                      ব্যবহারকারী
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      ধরন
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       শুরুর তারিখ
@@ -521,7 +729,7 @@ const MealStatus = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       আপডেটের সময়
                     </th>
-                    {(hasChangePermission || hasDeletePermission) && ( // Conditionally render actions column
+                    {(hasChangePermission || hasDeletePermission) && (
                       <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                         ক্রিয়াকলাপ
                       </th>
@@ -530,18 +738,20 @@ const MealStatus = () => {
                 </thead>
                 <tbody className="divide-y divide-white/20">
                   {mealStatuses?.map((status, index) => {
-                    const user = jointUsers.find((u) => u.id === status.meal_user);
                     return (
                       <tr
                         key={status.id}
-                        className="bg-white/5 animate-fadeIn"
+                        className="bg-white/5 animate-fadeIn hover:bg-white/10 transition-colors duration-200"
                         style={{ animationDelay: `${index * 0.1}s` }}
                       >
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
                           {status.id}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                          {user ? user.name : status.meal_user}
+                          <UserInfoCell userId={status.meal_user} />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                          <UserTypeBadge userId={status.meal_user} />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
                           {status.start_time}
@@ -558,7 +768,7 @@ const MealStatus = () => {
                               className="hidden"
                               aria-label={`স্থিতি ${status.status === 'ACTIVE' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}`}
                               title={`স্থিতি ${status.status === 'ACTIVE' ? 'সক্রিয়' : 'নিষ্ক্রিয়'} / Status ${status.status}`}
-                              disabled={!hasChangePermission} // Disable if no change permission
+                              disabled={!hasChangePermission}
                             />
                             <span
                               className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${
@@ -595,7 +805,7 @@ const MealStatus = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
                           {new Date(status.updated_at).toLocaleString('bn-BD')}
                         </td>
-                        {(hasChangePermission || hasDeletePermission) && ( // Conditionally render action buttons
+                        {(hasChangePermission || hasDeletePermission) && (
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             {hasChangePermission && (
                               <button
@@ -609,10 +819,17 @@ const MealStatus = () => {
                             {hasDeletePermission && (
                               <button
                                 onClick={() => handleDelete(status.id)}
+                                disabled={isDeleting}
                                 title="খাবারের স্থিতি মুছুন / Delete meal status"
-                                className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                                className={`transition-colors duration-300 ${
+                                  isDeleting ? "text-gray-400 cursor-not-allowed" : "text-[#441a05] hover:text-red-500"
+                                }`}
                               >
-                                <FaTrash className="w-5 h-5" />
+                                {isDeleting ? (
+                                  <FaSpinner className="w-5 h-5 animate-spin" />
+                                ) : (
+                                  <FaTrash className="w-5 h-5" />
+                                )}
                               </button>
                             )}
                           </td>
@@ -639,7 +856,7 @@ const MealStatus = () => {
         </div>
 
         {/* Confirmation Modal */}
-        {isModalOpen && (hasAddPermission || hasChangePermission || hasDeletePermission) && ( // Only show if user has relevant permissions
+        {isModalOpen && (hasAddPermission || hasChangePermission || hasDeletePermission) && (
           <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[10000]">
             <div
               className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp"

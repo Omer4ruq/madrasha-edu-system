@@ -1,44 +1,66 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Select from "react-select";
-import { FaSpinner, FaCalendarAlt, FaTrash, FaSave } from "react-icons/fa";
+import { FaSpinner, FaCalendarAlt } from "react-icons/fa";
 import { IoAdd } from "react-icons/io5";
 import { Toaster, toast } from "react-hot-toast";
 import { useGetExamApiQuery } from "../../../redux/features/api/exam/examApi";
 import { useGetAcademicYearApiQuery } from "../../../redux/features/api/academic-year/academicYearApi";
 import {
   useCreateExamSchedulesMutation,
-  useDeleteExamSchedulesMutation,
   useGetExamSchedulesQuery,
-  useUpdateExamSchedulesMutation,
 } from "../../../redux/features/api/routines/examRoutineApi";
 import { useGetClassSubjectsByClassIdQuery } from "../../../redux/features/api/class-subjects/classSubjectsApi";
 import selectStyles from "../../../utilitis/selectStyles";
 import { useGetStudentClassApIQuery } from "../../../redux/features/api/student/studentClassApi";
+import ExamRoutineTable from "./ExamRoutineTable"; // Import the new table component
+
+// Academic time slots for better user experience
+const timeSlots = [
+  { value: "08:00", label: "সকাল ৮:০০ (8:00 AM)" },
+  { value: "08:30", label: "সকাল ৮:৩০ (8:30 AM)" },
+  { value: "09:00", label: "সকাল ৯:০০ (9:00 AM)" },
+  { value: "09:30", label: "সকাল ৯:৩০ (9:30 AM)" },
+  { value: "10:00", label: "সকাল ১০:০০ (10:00 AM)" },
+  { value: "10:30", label: "সকাল ১০:৩০ (10:30 AM)" },
+  { value: "11:00", label: "সকাল ১১:০০ (11:00 AM)" },
+  { value: "11:30", label: "সকাল ১১:৩০ (11:30 AM)" },
+  { value: "12:00", label: "দুপুর ১২:০০ (12:00 PM)" },
+  { value: "12:30", label: "দুপুর ১২:৩০ (12:30 PM)" },
+  { value: "13:00", label: "দুপুর ১:০০ (1:00 PM)" },
+  { value: "13:30", label: "দুপুর ১:৩০ (1:30 PM)" },
+  { value: "14:00", label: "দুপুর ২:০০ (2:00 PM)" },
+  { value: "14:30", label: "দুপুর ২:৩০ (2:30 PM)" },
+  { value: "15:00", label: "দুপুর ৩:০০ (3:00 PM)" },
+  { value: "15:30", label: "দুপুর ৩:৩০ (3:30 PM)" },
+  { value: "16:00", label: "বিকাল ৪:০০ (4:00 PM)" },
+  { value: "16:30", label: "বিকাল ৪:৩০ (4:30 PM)" },
+  { value: "17:00", label: "বিকাল ৫:০০ (5:00 PM)" },
+];
+
+// Exam duration options
+const durationOptions = [
+  { value: 60, label: "১ ঘন্টা (1 Hour)" },
+  { value: 90, label: "১.৫ ঘন্টা (1.5 Hours)" },
+  { value: 120, label: "২ ঘন্টা (2 Hours)" },
+  { value: 150, label: "২.৫ ঘন্টা (2.5 Hours)" },
+  { value: 180, label: "৩ ঘন্টা (3 Hours)" },
+  { value: 210, label: "৩.৫ ঘন্টা (3.5 Hours)" },
+  { value: 240, label: "৪ ঘন্টা (4 Hours)" },
+];
 
 // Custom CSS for animations and styling
 const customStyles = `
   @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-  @keyframes slideDown { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100%); opacity: 0; } }
-  @keyframes ripple { 0% { transform: scale(0); opacity: 0.5; } 100% { transform: scale(4); opacity: 0; } }
-  @keyframes iconHover { to { transform: scale(1.1); } }
   .animate-fadeIn { animation: fadeIn 0.6s ease-out forwards; }
   .animate-scaleIn { animation: scaleIn 0.4s ease-out forwards; }
   .animate-slideUp { animation: slideUp 0.4s ease-out forwards; }
-  .animate-slideDown { animation: slideDown 0.4s ease-out forwards; }
   .btn-glow:hover { box-shadow: 0 0 15px rgba(219, 158, 48, 0.3); }
-  .input-icon:hover svg { animation: iconHover 0.3s ease-out forwards; }
-  .btn-ripple { position: relative; overflow: hidden; }
-  .btn-ripple::after { content: ''; position: absolute; top: 50%; left: 50%; width: 5px; height: 5px; background: rgba(255, 255, 255, 0.5); opacity: 0; border-radius: 100%; transform: scale(1); transform-origin: 50% 50%; animation: none; }
-  .btn-ripple:active::after { animation: ripple 0.6s ease-out; }
   ::-webkit-scrollbar { width: 8px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(157, 144, 135, 0.5); border-radius: 10px; }
   ::-webkit-scrollbar-thumb:hover { background: #441a05; }
-  .table-header { background: #DB9E30; color: #441a05; font-weight: bold; }
-  .table-cell { transition: background-color 0.3s ease; }
-  .table-cell:hover { background: #f3e8d7; }
   .card { transition: all 0.3s ease; }
   .card:hover { box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); }
 `;
@@ -49,9 +71,9 @@ const ExamRoutine = () => {
   const [activeTab, setActiveTab] = useState(null);
   const [schedules, setSchedules] = useState({});
   const [submittedRoutines, setSubmittedRoutines] = useState({});
-  const [editingSchedule, setEditingSchedule] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Fetch data
   const {
@@ -59,16 +81,19 @@ const ExamRoutine = () => {
     isLoading: isExamLoading,
     error: examError,
   } = useGetExamApiQuery();
+  
   const {
     data: academicYears = [],
     isLoading: isYearLoading,
     error: yearError,
   } = useGetAcademicYearApiQuery();
+  
   const {
     data: classes = [],
     isLoading: isClassLoading,
     error: classError,
   } = useGetStudentClassApIQuery();
+  
   const {
     data: subjects = [],
     isLoading: isSubjectsLoading,
@@ -76,10 +101,12 @@ const ExamRoutine = () => {
   } = useGetClassSubjectsByClassIdQuery(activeTab || "", {
     skip: !activeTab,
   });
+  
   const {
     data: existingSchedulesData = [],
     isLoading: isScheduleLoading,
     error: scheduleError,
+    refetch: refetchSchedules,
   } = useGetExamSchedulesQuery(
     {
       exam_name: selectedExam?.value,
@@ -90,15 +117,26 @@ const ExamRoutine = () => {
       skip: !selectedExam || !activeTab || !selectedYear,
     }
   );
+
+  // Fetch all exam schedules for the table component
+  const {
+    data: allExamSchedules = [],
+    isLoading: isAllSchedulesLoading,
+    refetch: refetchAllSchedules,
+  } = useGetExamSchedulesQuery(
+    {
+      exam_name: selectedExam?.value,
+      academic_year: selectedYear?.value,
+    },
+    {
+      skip: !selectedExam || !selectedYear,
+    }
+  );
+  
   const [
     createExamSchedules,
     { isLoading: isCreateLoading, error: createError },
   ] = useCreateExamSchedulesMutation();
-  const [
-    updateExamSchedules,
-    { isLoading: isUpdateLoading, error: updateError },
-  ] = useUpdateExamSchedulesMutation();
-  const [deleteExamSchedules] = useDeleteExamSchedulesMutation();
 
   const existingSchedules = useMemo(
     () =>
@@ -113,10 +151,37 @@ const ExamRoutine = () => {
     () => exams.map((exam) => ({ value: exam.id, label: exam.name })),
     [exams]
   );
+  
   const yearOptions = useMemo(
     () => academicYears.map((year) => ({ value: year.id, label: year.name })),
     [academicYears]
   );
+
+  // Function to calculate end time based on start time and duration
+  const calculateEndTime = (startTime, duration) => {
+    if (!startTime || !duration) return "";
+    const [hours, minutes] = startTime.split(":").map(Number);
+    const totalMinutes = hours * 60 + minutes + duration;
+    const endHours = Math.floor(totalMinutes / 60) % 24;
+    const endMinutes = totalMinutes % 60;
+    return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+  };
+
+  // Function to format time for display
+  const formatTimeForDisplay = (time) => {
+    if (!time) return "";
+    const [hours, minutes] = time.split(":").map(Number);
+    const period = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
+    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+  };
+
+  // Refresh callback for the table component
+  const handleTableRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+    refetchSchedules();
+    refetchAllSchedules();
+  };
 
   // Initialize activeTab
   useEffect(() => {
@@ -190,8 +255,6 @@ const ExamRoutine = () => {
     if (scheduleError) toast.error("পরীক্ষার রুটিন লোড করতে ব্যর্থ হয়েছে!");
     if (createError)
       toast.error(`রুটিন তৈরিতে ত্রুটি: ${createError.status || "অজানা"}`);
-    if (updateError)
-      toast.error(`রুটিন আপডেটে ত্রুটি: ${updateError.status || "অজানা"}`);
   }, [
     examError,
     yearError,
@@ -199,7 +262,6 @@ const ExamRoutine = () => {
     subjectsError,
     scheduleError,
     createError,
-    updateError,
   ]);
 
   // Handle schedule input changes
@@ -216,122 +278,26 @@ const ExamRoutine = () => {
     }));
   };
 
+  // Handle start time and duration change
+  const handleTimeChange = (classId, subjectId, startTime, duration) => {
+    const endTime = calculateEndTime(startTime, duration);
+    setSchedules((prev) => ({
+      ...prev,
+      [classId]: {
+        ...(prev[classId] || {}),
+        [subjectId]: {
+          ...(prev[classId]?.[subjectId] || {}),
+          start_time: startTime,
+          end_time: endTime,
+        },
+      },
+    }));
+  };
+
   // Handle date picker click
   const handleDateClick = (e) => {
     if (e.target.type === "date") {
       e.target.showPicker();
-    }
-  };
-
-  // Handle update schedule for specific subject
-  const handleUpdate = async (scheduleId, subjectId, subjectName) => {
-    if (!selectedExam || !selectedYear) {
-      toast.error("অনুগ্রহ করে পরীক্ষা এবং শিক্ষাবর্ষ নির্বাচন করুন।");
-      return;
-    }
-
-    const schedule = schedules[activeTab]?.[subjectId];
-    if (!schedule) {
-      toast.error(`${subjectName} এর জন্য কোনো শিডিউল পাওয়া যায়নি।`);
-      return;
-    }
-
-    // Validate inputs
-    if (!schedule.exam_date || !schedule.start_time || !schedule.end_time) {
-      toast.error(
-        `অনুগ্রহ করে ${subjectName} এর জন্য তারিখ, শুরুর সময় এবং শেষ সময় পূরণ করুন।`
-      );
-      return;
-    }
-
-    // Validate time logic
-    const startTime = new Date(`1970-01-01T${schedule.start_time}:00`);
-    const endTime = new Date(`1970-01-01T${schedule.end_time}:00`);
-    if (endTime <= startTime) {
-      toast.error(
-        `${subjectName} এর শেষ সময় অবশ্যই শুরুর সময়ের পরে হতে হবে।`
-      );
-      return;
-    }
-
-    // Validate date format
-    const examDate = new Date(schedule.exam_date);
-    if (isNaN(examDate.getTime())) {
-      toast.error(`${subjectName} এর জন্য বৈধ তারিখ নির্বাচন করুন।`);
-      return;
-    }
-
-    // Format times to match API requirement (e.g., "12:17:00.000Z")
-    const formatTimeToUTC = (time) => {
-      const [hours, minutes] = time.split(":");
-      return `${hours}:${minutes}:00.000Z`;
-    };
-
-    const updatedSchedule = {
-      // id: scheduleId,
-      exam_date: schedule.exam_date,
-      start_time: formatTimeToUTC(schedule.start_time),
-      end_time: formatTimeToUTC(schedule.end_time),
-      exam_name: selectedExam.value,
-      class_name: activeTab,
-      subject_id: subjectId,
-      academic_year: selectedYear.value,
-    };
-
-    try {
-      await updateExamSchedules(updatedSchedule).unwrap();
-      setSubmittedRoutines((prev) => ({
-        ...prev,
-        [activeTab]: (prev[activeTab] || []).map((s) =>
-          s.id === scheduleId ? { ...s, ...updatedSchedule } : s
-        ),
-      }));
-      setSchedules((prev) => ({
-        ...prev,
-        [activeTab]: {
-          ...prev[activeTab],
-          [subjectId]: {
-            ...prev[activeTab][subjectId],
-            id: scheduleId,
-            exam_date: schedule.exam_date,
-            start_time: schedule.start_time,
-            end_time: schedule.end_time,
-          },
-        },
-      }));
-      setEditingSchedule(null);
-      toast.success(`${subjectName} এর রুটিন সফলভাবে আপডেট হয়েছে!`);
-    } catch (error) {
-      toast.error(
-        `${subjectName} এর রুটিন আপডেট করতে ব্যর্থ হয়েছে: ${
-          error?.data?.detail || "অজানা ত্রুটি"
-        }`
-      );
-    }
-  };
-
-  // Handle delete schedule
-  const handleDelete = async (scheduleId, subjectName) => {
-    try {
-      await deleteExamSchedules(scheduleId).unwrap();
-      setSubmittedRoutines((prev) => ({
-        ...prev,
-        [activeTab]: (prev[activeTab] || []).filter((s) => s.id !== scheduleId),
-      }));
-      setSchedules((prev) => ({
-        ...prev,
-        [activeTab]: {
-          ...prev[activeTab],
-          [scheduleId]: {},
-        },
-      }));
-      toast.success(`${subjectName} এর রুটিন সফলভাবে মুছে ফেলা হয়েছে!`);
-    } catch (error) {
-      toast.error(
-        `${subjectName} এর রুটিন মুছতে ব্যর্থ হয়েছে: ${
-          error?.data?.detail || "অজানা ত্রুটি"
-        }`
-      );
     }
   };
 
@@ -383,6 +349,9 @@ const ExamRoutine = () => {
         [activeTab]: [...(prev[activeTab] || []), ...modalData.schedules],
       }));
       toast.success("পরীক্ষার রুটিন সফলভাবে সাবমিট হয়েছে!");
+      
+      // Refresh data after successful submission
+      handleTableRefresh();
     } catch (error) {
       toast.error("পরীক্ষার রুটিন সাবমিট করতে ব্যর্থ হয়েছে।");
     } finally {
@@ -398,20 +367,7 @@ const ExamRoutine = () => {
     isClassLoading ||
     isSubjectsLoading ||
     isScheduleLoading ||
-    isCreateLoading ||
-    isUpdateLoading;
-
-  // Sort schedules by exam_date
-  const sortedSchedules = useMemo(
-    () =>
-      [...(submittedRoutines[activeTab] || []), ...existingSchedules]
-        .filter(
-          (schedule, index, self) =>
-            self.findIndex((s) => s.id === schedule.id) === index
-        )
-        .sort((a, b) => a.exam_date.localeCompare(b.exam_date)),
-    [submittedRoutines, existingSchedules, activeTab]
-  );
+    isCreateLoading;
 
   return (
     <div className="py-8 w-full relative">
@@ -480,8 +436,6 @@ const ExamRoutine = () => {
                 title="শিক্ষাবর্ষ নির্বাচন করুন / Select academic year"
               />
             </div>
-
-            {/* Submit Button */}
           </div>
         </div>
 
@@ -519,11 +473,7 @@ const ExamRoutine = () => {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {subjects.map((subject, index) => {
-                        const schedule =
-                          schedules[activeTab]?.[subject.id] || {};
-                        const existing = existingSchedules.find(
-                          (s) => s.subject_id === subject.id
-                        );
+                        const schedule = schedules[activeTab]?.[subject.id] || {};
                         return (
                           <div
                             key={subject.id}
@@ -534,13 +484,14 @@ const ExamRoutine = () => {
                               {subject.name}
                             </h4>
                             <div className="space-y-4">
-                              <div className="relative input-icon">
-                                <label className="text-sm">
-                                  তারিখ <span className="text-red-500">*</span>
+                              {/* Date Selection */}
+                              <div className="relative">
+                                <label className="text-sm font-medium text-[#441a05] mb-1 block">
+                                  পরীক্ষার তারিখ <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                   type="date"
-                                  // value={schedule.exam_date || ""}
+                                  value={schedule.exam_date || ""}
                                   onChange={(e) =>
                                     handleScheduleChange(
                                       activeTab,
@@ -550,110 +501,74 @@ const ExamRoutine = () => {
                                     )
                                   }
                                   onClick={handleDateClick}
-                                  className="w-full p-3 pl-10 bg-transparent text-[#441a05] border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#441a05] focus:ring-2 focus:ring-[#441a05] transition-all duration-300"
+                                  className="w-full p-3 bg-transparent text-[#441a05] border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#441a05] focus:ring-2 focus:ring-[#441a05] transition-all duration-300"
                                   disabled={isLoading}
                                   aria-label={`তারিখ নির্বাচন: ${subject.name}`}
                                   title={`তারিখ নির্বাচন করুন: ${subject.name} / Select date for ${subject.name}`}
                                 />
-                                <FaCalendarAlt className="absolute left-3 top-10 text-[#DB9E30]" />
                               </div>
-                              <div className="flex space-x-4">
-                                <div className="w-full">
-                                  <label className="text-sm">
-                                    শুরুর সময়{" "}
-                                    <span className="text-red-500">*</span>
-                                  </label>
-                                  <input
-                                    type="time"
-                                    // value={schedule.start_time || ""}
-                                    onChange={(e) =>
-                                      handleScheduleChange(
-                                        activeTab,
-                                        subject.id,
-                                        "start_time",
-                                        e.target.value
-                                      )
-                                    }
-                                    className="w-full p-3 bg-transparent text-[#441a05] border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#441a05] focus:ring-2 focus:ring-[#441a05] transition-all duration-300"
-                                    disabled={isLoading}
-                                    aria-label={`শুরুর সময়: ${subject.name}`}
-                                    title={`শুরুর সময় নির্বাচন করুন: ${subject.name} / Select start time for ${subject.name}`}
-                                  />
-                                </div>
-                                <div className="w-full">
-                                  <label className="text-sm">
-                                    শেষের সময়{" "}
-                                    <span className="text-red-500">*</span>
-                                  </label>
-                                  <input
-                                    type="time"
-                                    // value={schedule.end_time || ""}
-                                    onChange={(e) =>
-                                      handleScheduleChange(
-                                        activeTab,
-                                        subject.id,
-                                        "end_time",
-                                        e.target.value
-                                      )
-                                    }
-                                    className="w-full p-3 bg-transparent text-[#441a05] border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#441a05] focus:ring-2 focus:ring-[#441a05] transition-all duration-300"
-                                    disabled={isLoading}
-                                    aria-label={`শেষ সময়: ${subject.name}`}
-                                    title={`শেষ সময় নির্বাচন করুন: ${subject.name} / Select end time for ${subject.name}`}
-                                  />
-                                </div>
+
+                              {/* Start Time Selection */}
+                              <div>
+                                <label className="text-sm font-medium text-[#441a05] mb-1 block">
+                                  শুরুর সময় <span className="text-red-500">*</span>
+                                </label>
+                                <Select
+                                  options={timeSlots}
+                                  value={timeSlots.find(slot => slot.value === schedule.start_time) || null}
+                                  onChange={(selected) => {
+                                    const startTime = selected ? selected.value : "";
+                                    const currentDuration = schedule.duration || 120; // Default 2 hours
+                                    handleTimeChange(activeTab, subject.id, startTime, currentDuration);
+                                  }}
+                                  placeholder="শুরুর সময় নির্বাচন করুন"
+                                  className="react-select-container"
+                                  classNamePrefix="react-select"
+                                  styles={selectStyles}
+                                  menuPortalTarget={document.body}
+                                  menuPosition="fixed"
+                                  isClearable
+                                  isDisabled={isLoading}
+                                />
                               </div>
-                              {/* <div className="flex space-x-3">
-                                {existing && (
-                                  <button
-                                    onClick={() =>
-                                      setEditingSchedule(existing.id)
+
+                              {/* Duration Selection */}
+                              <div>
+                                <label className="text-sm font-medium text-[#441a05] mb-1 block">
+                                  পরীক্ষার সময়কাল <span className="text-red-500">*</span>
+                                </label>
+                                <Select
+                                  options={durationOptions}
+                                  value={durationOptions.find(opt => opt.value === schedule.duration) || durationOptions[1]} // Default 2 hours
+                                  onChange={(selected) => {
+                                    const duration = selected ? selected.value : 120;
+                                    const currentStartTime = schedule.start_time || "";
+                                    handleScheduleChange(activeTab, subject.id, "duration", duration);
+                                    if (currentStartTime) {
+                                      handleTimeChange(activeTab, subject.id, currentStartTime, duration);
                                     }
-                                    className="flex-1 px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white btn-glow transition-all duration-300 btn-ripple"
-                                    aria-label={`সম্পাদনা করুন: ${subject.name}`}
-                                    title={`সম্পাদনা করুন: ${subject.name} / Edit schedule for ${subject.name}`}
-                                  >
-                                    সম্পাদনা
-                                  </button>
-                                )}
-                                {editingSchedule === existing?.id && (
-                                  <>
-                                    <button
-                                      onClick={() =>
-                                        handleUpdate(existing.id, subject.id, subject.name)
-                                      }
-                                      className={`flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 btn-glow transition-all duration-300 btn-ripple ${
-                                        isUpdateLoading
-                                          ? "cursor-not-allowed opacity-70"
-                                          : ""
-                                      }`}
-                                      disabled={isUpdateLoading}
-                                      aria-label={`সংরক্ষণ করুন: ${subject.name}`}
-                                      title={`সংরক্ষণ করুন: ${subject.name} / Save schedule for ${subject.name}`}
-                                    >
-                                      {isUpdateLoading ? (
-                                        <>
-                                          <FaSpinner className="animate-spin text-lg mr-2" />
-                                          সংরক্ষণ হচ্ছে...
-                                        </>
-                                      ) : (
-                                        <>
-                                          <FaSave className="inline-block mr-2" />
-                                          সংরক্ষণ
-                                        </>
-                                      )}
-                                    </button>
-                                    <button
-                                      onClick={() => setEditingSchedule(null)}
-                                      className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 btn-glow transition-all duration-300 btn-ripple"
-                                      aria-label={`বাতিল করুন: ${subject.name}`}
-                                      title={`বাতিল করুন: ${subject.name} / Cancel edit for ${subject.name}`}
-                                    >
-                                      বাতিল
-                                    </button>
-                                  </>
-                                )}
-                              </div> */}
+                                  }}
+                                  placeholder="সময়কাল নির্বাচন করুন"
+                                  className="react-select-container"
+                                  classNamePrefix="react-select"
+                                  styles={selectStyles}
+                                  menuPortalTarget={document.body}
+                                  menuPosition="fixed"
+                                  isDisabled={isLoading}
+                                />
+                              </div>
+
+                              {/* End Time Display */}
+                              {schedule.end_time && (
+                                <div>
+                                  <label className="text-sm font-medium text-[#441a05] mb-1 block">
+                                    শেষের সময়
+                                  </label>
+                                  <div className="w-full p-3 bg-gray-100/50 text-[#441a05] border border-[#9d9087] rounded-lg">
+                                    {formatTimeForDisplay(schedule.end_time)}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         );
@@ -663,7 +578,7 @@ const ExamRoutine = () => {
                       <button
                         onClick={handleSubmit}
                         disabled={isLoading}
-                        className={`w-fit mx-auto mt-5 flex items-center justify-center px-6 py-3 rounded-lg font-semibold text-lg bg-gradient-to-r from-[#DB9E30] to-[#F4B840] text-[#441a05] transition-all duration-300 animate-scaleIn btn-ripple ${
+                        className={`w-fit mx-auto mt-5 flex items-center justify-center px-6 py-3 rounded-lg font-semibold text-lg bg-gradient-to-r from-[#DB9E30] to-[#F4B840] text-[#441a05] transition-all duration-300 animate-scaleIn ${
                           isLoading
                             ? "cursor-not-allowed opacity-70"
                             : "hover:text-white btn-glow"
@@ -686,132 +601,15 @@ const ExamRoutine = () => {
                     </div>
                   </div>
 
-                  {/* Routine Table */}
-                  <div>
-                    <h3 className="text-xl font-semibold text-[#441a05] mb-6 animate-fadeIn">
-                      পরীক্ষার রুটিন:{" "}
-                      {
-                        classes.find(
-                          (cls) => cls.student_class.id === activeTab
-                        )?.student_class.name
-                      }
-                    </h3>
-
-                    {sortedSchedules.length > 0 ? (
-                      <div className="overflow-x-auto rounded-xl border border-[#db9e30] animate-fadeIn">
-                        <table className="w-full border-collapse min-w-[600px]">
-                          <thead>
-                            <tr className="bg-[#db9e30] text-[#441a05] text-left text-sm uppercase font-semibold">
-                              <th className="p-4 rounded-tl-xl">বিষয়</th>
-                              <th className="p-4 text-center">তারিখ</th>
-                              <th className="p-4 text-center">সময়</th>
-                              <th className="p-4 rounded-tr-xl text-center">
-                                ক্রিয়া
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {sortedSchedules.map((schedule, index) => {
-                              const subjectName =
-                                subjects.find(
-                                  (s) => s.id === schedule.subject_id
-                                )?.name || schedule.subject_id;
-                              const isEditing = editingSchedule === schedule.id;
-
-                              return (
-                                <tr
-                                  key={schedule.id || index}
-                                  className={`${
-                                    index % 2 === 1
-                                      ? "bg-white/5"
-                                      : "bg-white/10"
-                                  } text-[#441a05] animate-scaleIn`}
-                                  style={{ animationDelay: `${index * 0.05}s` }}
-                                >
-                                  <td className="p-4">{subjectName}</td>
-                                  <td className="p-4 text-center">
-                                    {schedule.exam_date}
-                                  </td>
-                                  <td className="p-4 text-center">{`${schedule.start_time} - ${schedule.end_time}`}</td>
-                                  <td className="p-4 text-center">
-                                    {isEditing ? (
-                                      <div className="flex justify-center gap-2">
-                                        <button
-                                          onClick={() =>
-                                            handleUpdate(
-                                              schedule.id,
-                                              schedule.subject_id,
-                                              subjectName
-                                            )
-                                          }
-                                          className={`px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition btn-glow btn-ripple ${
-                                            isUpdateLoading
-                                              ? "cursor-not-allowed opacity-70"
-                                              : ""
-                                          }`}
-                                          disabled={isUpdateLoading}
-                                          title={`সংরক্ষণ করুন / Save ${subjectName}`}
-                                        >
-                                          {isUpdateLoading ? (
-                                            <>
-                                              <FaSpinner className="animate-spin text-lg mr-2" />
-                                              সংরক্ষণ হচ্ছে...
-                                            </>
-                                          ) : (
-                                            <>
-                                              <FaSave className="inline-block mr-2" />
-                                              সংরক্ষণ
-                                            </>
-                                          )}
-                                        </button>
-                                        <button
-                                          onClick={() =>
-                                            setEditingSchedule(null)
-                                          }
-                                          className="px-3 py-1 bg-gray-400 text-white rounded hover:bg-gray-500 transition btn-glow btn-ripple"
-                                          title="বাতিল করুন / Cancel"
-                                        >
-                                          বাতিল
-                                        </button>
-                                      </div>
-                                    ) : (
-                                      <div className="flex justify-center gap-2">
-                                        {/* <button
-                                          onClick={() =>
-                                            setEditingSchedule(schedule.id)
-                                          }
-                                          className="px-3 py-1 bg-[#db9e30] text-[#441a05] rounded hover:bg-[#c48c22] hover:text-white transition btn-glow btn-ripple"
-                                          title={`সম্পাদনা করুন / Edit ${subjectName}`}
-                                        >
-                                          সম্পাদনা
-                                        </button> */}
-                                        <button
-                                          onClick={() =>
-                                            handleDelete(
-                                              schedule.id,
-                                              subjectName
-                                            )
-                                          }
-                                          className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition btn-glow btn-ripple"
-                                          title={`মুছুন / Delete ${subjectName}`}
-                                        >
-                                          <FaTrash className="inline-block" />
-                                        </button>
-                                      </div>
-                                    )}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      <p className="text-[#441a05]/70 animate-scaleIn mt-4 text-center">
-                        🤷‍♂️ কোনো রুটিন উপলব্ধ নেই।
-                      </p>
-                    )}
-                  </div>
+                  {/* Exam Routine Table Component */}
+                  <ExamRoutineTable
+                    allExamSchedules={allExamSchedules}
+                    classes={classes}
+                    selectedExam={selectedExam}
+                    selectedYear={selectedYear}
+                    isAllSchedulesLoading={isAllSchedulesLoading}
+                    onRefresh={handleTableRefresh}
+                  />
                 </div>
               )}
           </div>
@@ -852,7 +650,9 @@ const ExamRoutine = () => {
                         <td className="p-2 text-[#441a05]">
                           {schedule.exam_date}
                         </td>
-                        <td className="p-2 text-[#441a05]">{`${schedule.start_time} - ${schedule.end_time}`}</td>
+                        <td className="p-2 text-[#441a05]">
+                          {`${formatTimeForDisplay(schedule.start_time)} - ${formatTimeForDisplay(schedule.end_time)}`}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -861,7 +661,7 @@ const ExamRoutine = () => {
               <div className="flex justify-end space-x-4">
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="px-6 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-all duration-300 btn-ripple"
+                  className="px-6 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-all duration-300"
                   aria-label="বাতিল করুন"
                   title="বাতিল করুন / Cancel"
                 >
@@ -869,7 +669,7 @@ const ExamRoutine = () => {
                 </button>
                 <button
                   onClick={confirmSubmitRoutine}
-                  className="px-6 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white btn-glow transition-all duration-300 btn-ripple"
+                  className="px-6 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white btn-glow transition-all duration-300"
                   aria-label="নিশ্চিত করুন"
                   title="নিশ্চিত করুন / Confirm"
                 >
