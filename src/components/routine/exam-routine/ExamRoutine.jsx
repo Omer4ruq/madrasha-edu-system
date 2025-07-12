@@ -160,10 +160,11 @@ const ExamRoutine = () => {
 
       setSchedules((prev) => {
         const currentSchedules = prev[activeTab] || {};
-        if (
-          JSON.stringify(currentSchedules) !== JSON.stringify(newSchedules)
-        ) {
-          return { ...prev, [activeTab]: { ...currentSchedules, ...newSchedules } };
+        if (JSON.stringify(currentSchedules) !== JSON.stringify(newSchedules)) {
+          return {
+            ...prev,
+            [activeTab]: { ...currentSchedules, ...newSchedules },
+          };
         }
         return prev;
       });
@@ -206,9 +207,9 @@ const ExamRoutine = () => {
     setSchedules((prev) => ({
       ...prev,
       [classId]: {
-        ...prev[classId] || {},
+        ...(prev[classId] || {}),
         [subjectId]: {
-          ...prev[classId]?.[subjectId] || {},
+          ...(prev[classId]?.[subjectId] || {}),
           [field]: value,
         },
       },
@@ -237,7 +238,9 @@ const ExamRoutine = () => {
 
     // Validate inputs
     if (!schedule.exam_date || !schedule.start_time || !schedule.end_time) {
-      toast.error(`অনুগ্রহ করে ${subjectName} এর জন্য তারিখ, শুরুর সময় এবং শেষ সময় পূরণ করুন।`);
+      toast.error(
+        `অনুগ্রহ করে ${subjectName} এর জন্য তারিখ, শুরুর সময় এবং শেষ সময় পূরণ করুন।`
+      );
       return;
     }
 
@@ -245,7 +248,9 @@ const ExamRoutine = () => {
     const startTime = new Date(`1970-01-01T${schedule.start_time}:00`);
     const endTime = new Date(`1970-01-01T${schedule.end_time}:00`);
     if (endTime <= startTime) {
-      toast.error(`${subjectName} এর শেষ সময় অবশ্যই শুরুর সময়ের পরে হতে হবে।`);
+      toast.error(
+        `${subjectName} এর শেষ সময় অবশ্যই শুরুর সময়ের পরে হতে হবে।`
+      );
       return;
     }
 
@@ -263,7 +268,7 @@ const ExamRoutine = () => {
     };
 
     const updatedSchedule = {
-      id: scheduleId,
+      // id: scheduleId,
       exam_date: schedule.exam_date,
       start_time: formatTimeToUTC(schedule.start_time),
       end_time: formatTimeToUTC(schedule.end_time),
@@ -297,7 +302,11 @@ const ExamRoutine = () => {
       setEditingSchedule(null);
       toast.success(`${subjectName} এর রুটিন সফলভাবে আপডেট হয়েছে!`);
     } catch (error) {
-      toast.error(`${subjectName} এর রুটিন আপডেট করতে ব্যর্থ হয়েছে: ${error?.data?.detail || "অজানা ত্রুটি"}`);
+      toast.error(
+        `${subjectName} এর রুটিন আপডেট করতে ব্যর্থ হয়েছে: ${
+          error?.data?.detail || "অজানা ত্রুটি"
+        }`
+      );
     }
   };
 
@@ -318,7 +327,11 @@ const ExamRoutine = () => {
       }));
       toast.success(`${subjectName} এর রুটিন সফলভাবে মুছে ফেলা হয়েছে!`);
     } catch (error) {
-      toast.error(`${subjectName} এর রুটিন মুছতে ব্যর্থ হয়েছে: ${error?.data?.detail || "অজানা ত্রুটি"}`);
+      toast.error(
+        `${subjectName} এর রুটিন মুছতে ব্যর্থ হয়েছে: ${
+          error?.data?.detail || "অজানা ত্রুটি"
+        }`
+      );
     }
   };
 
@@ -391,10 +404,7 @@ const ExamRoutine = () => {
   // Sort schedules by exam_date
   const sortedSchedules = useMemo(
     () =>
-      [
-        ...(submittedRoutines[activeTab] || []),
-        ...existingSchedules,
-      ]
+      [...(submittedRoutines[activeTab] || []), ...existingSchedules]
         .filter(
           (schedule, index, self) =>
             self.findIndex((s) => s.id === schedule.id) === index
@@ -418,7 +428,7 @@ const ExamRoutine = () => {
 
         {/* Form */}
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl card">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Exam Selection */}
             <div className="relative">
               <label
@@ -472,31 +482,6 @@ const ExamRoutine = () => {
             </div>
 
             {/* Submit Button */}
-            <div className="flex items-end">
-              <button
-                onClick={handleSubmit}
-                disabled={isLoading}
-                className={`w-full flex items-center justify-center px-6 py-3 rounded-lg font-semibold text-lg bg-gradient-to-r from-[#DB9E30] to-[#F4B840] text-[#441a05] transition-all duration-300 animate-scaleIn btn-ripple ${
-                  isLoading
-                    ? "cursor-not-allowed opacity-70"
-                    : "hover:text-white btn-glow"
-                }`}
-                aria-label="রুটিন সাবমিট করুন"
-                title="রুটিন সাবমিট করুন / Submit routine"
-              >
-                {isLoading ? (
-                  <>
-                    <FaSpinner className="animate-spin text-lg mr-2" />
-                    সাবমিট হচ্ছে...
-                  </>
-                ) : (
-                  <>
-                    <IoAdd className="w-6 h-6 mr-2" />
-                    রুটিন সাবমিট করুন
-                  </>
-                )}
-              </button>
-            </div>
           </div>
         </div>
 
@@ -534,7 +519,8 @@ const ExamRoutine = () => {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {subjects.map((subject, index) => {
-                        const schedule = schedules[activeTab]?.[subject.id] || {};
+                        const schedule =
+                          schedules[activeTab]?.[subject.id] || {};
                         const existing = existingSchedules.find(
                           (s) => s.subject_id === subject.id
                         );
@@ -554,7 +540,7 @@ const ExamRoutine = () => {
                                 </label>
                                 <input
                                   type="date"
-                                  value={schedule.exam_date || ""}
+                                  // value={schedule.exam_date || ""}
                                   onChange={(e) =>
                                     handleScheduleChange(
                                       activeTab,
@@ -574,11 +560,12 @@ const ExamRoutine = () => {
                               <div className="flex space-x-4">
                                 <div className="w-full">
                                   <label className="text-sm">
-                                    শুরুর সময় <span className="text-red-500">*</span>
+                                    শুরুর সময়{" "}
+                                    <span className="text-red-500">*</span>
                                   </label>
                                   <input
                                     type="time"
-                                    value={schedule.start_time || ""}
+                                    // value={schedule.start_time || ""}
                                     onChange={(e) =>
                                       handleScheduleChange(
                                         activeTab,
@@ -595,11 +582,12 @@ const ExamRoutine = () => {
                                 </div>
                                 <div className="w-full">
                                   <label className="text-sm">
-                                    শেষের সময় <span className="text-red-500">*</span>
+                                    শেষের সময়{" "}
+                                    <span className="text-red-500">*</span>
                                   </label>
                                   <input
                                     type="time"
-                                    value={schedule.end_time || ""}
+                                    // value={schedule.end_time || ""}
                                     onChange={(e) =>
                                       handleScheduleChange(
                                         activeTab,
@@ -615,7 +603,7 @@ const ExamRoutine = () => {
                                   />
                                 </div>
                               </div>
-                              <div className="flex space-x-3">
+                              {/* <div className="flex space-x-3">
                                 {existing && (
                                   <button
                                     onClick={() =>
@@ -665,11 +653,36 @@ const ExamRoutine = () => {
                                     </button>
                                   </>
                                 )}
-                              </div>
+                              </div> */}
                             </div>
                           </div>
                         );
                       })}
+                    </div>
+                    <div className="flex items-end">
+                      <button
+                        onClick={handleSubmit}
+                        disabled={isLoading}
+                        className={`w-fit mx-auto mt-5 flex items-center justify-center px-6 py-3 rounded-lg font-semibold text-lg bg-gradient-to-r from-[#DB9E30] to-[#F4B840] text-[#441a05] transition-all duration-300 animate-scaleIn btn-ripple ${
+                          isLoading
+                            ? "cursor-not-allowed opacity-70"
+                            : "hover:text-white btn-glow"
+                        }`}
+                        aria-label="রুটিন সাবমিট করুন"
+                        title="রুটিন সাবমিট করুন / Submit routine"
+                      >
+                        {isLoading ? (
+                          <>
+                            <FaSpinner className="animate-spin text-lg mr-2" />
+                            সাবমিট হচ্ছে...
+                          </>
+                        ) : (
+                          <>
+                            <IoAdd className="w-6 h-6 mr-2" />
+                            রুটিন সাবমিট করুন
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
 
@@ -725,7 +738,11 @@ const ExamRoutine = () => {
                                       <div className="flex justify-center gap-2">
                                         <button
                                           onClick={() =>
-                                            handleUpdate(schedule.id, schedule.subject_id, subjectName)
+                                            handleUpdate(
+                                              schedule.id,
+                                              schedule.subject_id,
+                                              subjectName
+                                            )
                                           }
                                           className={`px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition btn-glow btn-ripple ${
                                             isUpdateLoading
@@ -759,7 +776,7 @@ const ExamRoutine = () => {
                                       </div>
                                     ) : (
                                       <div className="flex justify-center gap-2">
-                                        <button
+                                        {/* <button
                                           onClick={() =>
                                             setEditingSchedule(schedule.id)
                                           }
@@ -767,10 +784,13 @@ const ExamRoutine = () => {
                                           title={`সম্পাদনা করুন / Edit ${subjectName}`}
                                         >
                                           সম্পাদনা
-                                        </button>
+                                        </button> */}
                                         <button
                                           onClick={() =>
-                                            handleDelete(schedule.id, subjectName)
+                                            handleDelete(
+                                              schedule.id,
+                                              subjectName
+                                            )
                                           }
                                           className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition btn-glow btn-ripple"
                                           title={`মুছুন / Delete ${subjectName}`}

@@ -1227,13 +1227,13 @@ const StudentList = () => {
                     >
                       {/* Fixed Columns */}
                       <td
-                        className="table-cell fixed-col serial"
+                        className="table-cell fixed-col serialbg-white"
                         style={{ width: "70px" }}
                       >
                         {serial}
                       </td>
                       <td
-                        className="table-cell fixed-col name "
+                        className="table-cell fixed-col name bg-white"
                         style={{ width: "150px" }}
                       >
                         <div className="font-semibold">{student.name}</div>
@@ -1244,7 +1244,7 @@ const StudentList = () => {
                         )}
                       </td>
                       <td
-                        className="table-cell fixed-col user_id "
+                        className="table-cell fixed-col user_id bg-white"
                         style={{ width: "120px" }}
                       >
                         <span className="font-mono /20 px- py-1 rounded text-xs">
@@ -1260,19 +1260,19 @@ const StudentList = () => {
                         {student.roll_no || "N/A"}
                       </td>
                       <td
-                        className="table-cell "
+                        className="table-cell bg-white"
                         style={{ width: "100px" }}
                       >
                         {student.class_name}
                       </td>
                       <td
-                        className="table-cell "
+                        className="table-cell bg-white"
                         style={{ width: "100px" }}
                       >
                         {student.section_name}
                       </td>
                       <td
-                        className="table-cell "
+                        className="table-cell bg-white"
                         style={{ width: "100px" }}
                       >
                         {student.shift_name}
