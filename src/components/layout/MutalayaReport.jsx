@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import { FaSpinner, FaDownload } from "react-icons/fa";
@@ -27,11 +28,14 @@ Font.register({
 });
 Font.registerHyphenationCallback((word) => [word]); // Prevent text splitting issues
 
+// Estimate row height for rowSpan calculations
+const ROW_HEIGHT = 20; // Approximately 9pt font + 4px vertical padding + borders
+
 // PDF styles synced with frontend layout
 const styles = StyleSheet.create({
   page: {
-    padding: 20,
-    fontSize: 8, // Match frontend text-xs (approx 8pt at 96dpi)
+    padding: 20, // Matches frontend 20px padding (approx 15pt, but keeping 20 for visual similarity)
+    fontSize: 9, // Adjusted from 8 to 9, closer to text-xs (12px / 0.75 = 9pt)
     fontFamily: "NotoSansBengali",
     color: "#000000",
     backgroundColor: "#FFF",
@@ -43,42 +47,113 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    fontSize: 14, // Match frontend text-lg (approx 14pt at 96dpi)
+    fontSize: 16, // Adjusted from 14, closer to text-lg (18px / 0.75 = 13.5pt, but aiming for larger visual impact)
     fontWeight: "bold",
     color: "#000000",
   },
   subHeader: {
-    fontSize: 10, // Match frontend text-sm (approx 10pt at 96dpi)
+    fontSize: 12, // Adjusted from 10, closer to text-sm (14px / 0.75 = 10.5pt, aiming for better readability)
     color: "#000000",
     marginTop: 4,
   },
   table: {
-    border: "1px solid #000",
-    borderCollapse: "collapse",
+    display: "flex",
+    flexDirection: "column",
+    width: "100%",
+    border: "1px solid #000", // Outer table border
   },
-  tableHeader: {
-    flexDirection: "row",
-    backgroundColor: "#FFF",
-    borderBottom: "1px solid #000",
-  },
-  tableRow: {
-    flexDirection: "row",
-    borderBottom: "1px solid #000",
-  },
-  cell: {
-    flex: 1,
-    padding: 4, // Match frontend py-1 px-2
-    fontSize: 8,
+  // Base style for all cells, including borders
+  cellBase: {
+    paddingVertical: 4, // Matches py-1 (4px)
+    paddingHorizontal: 8, // Matches px-2 (8px)
+    fontSize: 9, // Consistent with page font size
     color: "#000",
     textAlign: "center",
     borderRight: "1px solid #000",
+    borderBottom: "1px solid #000", // Default cell border
+    alignItems: "center",
+    justifyContent: "center", // Center content vertically
+  },
+  // Styles for row-spanning header cells
+  headerCellRowSpan: {
+    minHeight: ROW_HEIGHT * 3, // Span 3 header rows
+    justifyContent: "center",
+    alignItems: "center",
+    borderBottom: "1px solid #000", // All row-spanning cells get bottom border
+  },
+  rollCell: {
+    flex: 0.5, // Adjusted flex for a narrower column
+  },
+  nameCell: {
+    flex: 1.5, // Adjusted flex for broader column
+  },
+  subjectCell: {
+    flex: 1.2, // Adjusted flex
+  },
+  totalCell: {
+    flex: 1, // Adjusted flex
+    borderRight: "none", // Last cell in row usually doesn't have right border
+  },
+
+  // NEW: Table Header Container (holds all header rows/cells)
+  tableHeaderContainer: {
+    flexDirection: "row",
+    backgroundColor: "#FFF",
+    borderBottom: "1px solid #000", // Outer header bottom border
+    alignItems: "stretch", // Ensure cells stretch to fill row height
+  },
+  // NEW: Container for all dynamic date columns (takes remaining flex space)
+  dynamicDatesHeaderContainer: {
+    flexGrow: 1, // Take up remaining horizontal space
+    flexDirection: "column", // Stack day, date, sobok/mutalaya vertically
+    borderLeft: "1px solid #000", // Border to separate from subject column
+    borderRight: "1px solid #000", // Border to separate from total column
+  },
+  // NEW: Row for day/date/sobok-mutalaya within dynamicDatesHeaderContainer
+  dynamicDatesHeaderRow: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    borderBottom: "1px solid #000", // Separator for each date header row
+    minHeight: ROW_HEIGHT,
+  },
+  // Specific styling for cells within dynamic date header rows
+  dateDayHeader: {
+    flexGrow: 1, // Will be overridden by flex calculated in component
+    justifyContent: "center",
+    alignItems: "center",
+    borderRight: "1px solid #000",
+  },
+  dateDateHeader: {
+    flexGrow: 1, // Will be overridden by flex calculated in component
+    justifyContent: "center",
+    alignItems: "center",
+    borderRight: "1px solid #000",
+  },
+  sobokMutalayaHeaderCell: {
+    flexGrow: 1, // Will be overridden by flex calculated in component
+    justifyContent: "center",
+    alignItems: "center",
+    borderRight: "1px solid #000",
+    borderBottom: "none", // This is the last header row, so no internal bottom border
+  },
+  // NEW: Table body rows
+  tableRow: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    minHeight: ROW_HEIGHT,
+    borderBottom: "1px solid #000", // Default row bottom border
+  },
+  // NEW: Individual cell style for data rows
+  dataCell: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    fontSize: 9,
+    color: "#000",
+    textAlign: "center",
+    borderRight: "1px solid #000",
+    justifyContent: "center",
     alignItems: "center",
   },
-  rollCell: { flex: 0.8, alignItems: "center" },
-  nameCell: { flex: 1.5, alignItems: "center" },
-  subjectCell: { flex: 1.5, alignItems: "center" },
-  dateCell: { flex: 0.6, alignItems: "center" }, // Smaller width for date columns
-  totalCell: { flex: 1, alignItems: "center" },
 });
 
 const MutalayaReport = () => {
@@ -165,6 +240,7 @@ const MutalayaReport = () => {
     if (students && subjects && selectedClassConfig && startDate && endDate) {
       const dynamicData = students.map((student) => ({
         name: student.name,
+        roll_no: student.roll_no || student.username,
         subjects: subjects.map((subject) => ({
           name: subject.name,
           attendance: simulateAttendance(student.id, subject.name),
@@ -187,7 +263,10 @@ const MutalayaReport = () => {
     }
 
     const dynamicDates = generateDynamicDates();
-    
+    // Calculate flex for date columns based on number of dates
+    const dateColFlex = 1 / dynamicDates.length; // Flex for a single colSpan=2 date header
+    const attendanceCellFlex = dateColFlex / 2; // Flex for a single sobok/mutalaya cell
+
     // Split data into chunks to fit on A4 pages
     const rowsPerPage = 20; // Estimated rows per page based on font size and spacing
     const rows = dynamicReportData.flatMap((student, sIdx) =>
@@ -215,82 +294,96 @@ const MutalayaReport = () => {
             </View>
 
             <View style={styles.table}>
-              {/* Table Header */}
-              <View style={styles.tableHeader}>
-                <Text style={[styles.cell, styles.rollCell]} rowSpan={3}>
+              {/* Table Header - Consolidated */}
+              <View style={styles.tableHeaderContainer}>
+                {/* Fixed Header Cells (rowSpan=3 effect) */}
+                <Text style={[styles.cellBase, styles.headerCellRowSpan, styles.rollCell]}>
                   ক্রমিক
                 </Text>
-                <Text style={[styles.cell, styles.nameCell]} rowSpan={3}>
+                <Text style={[styles.cellBase, styles.headerCellRowSpan, styles.nameCell]}>
                   নাম
                 </Text>
-                <Text style={[styles.cell, styles.subjectCell]} rowSpan={3}>
-                  বিষয়
+                <Text style={[styles.cellBase, styles.headerCellRowSpan, styles.subjectCell]}>
+                  বিষয়
                 </Text>
-                {dynamicDates.map((d, i) => (
-                  <Text
-                    key={i}
-                    style={[styles.cell, styles.dateCell]}
-                    colSpan={2}
-                  >
-                    {d.day}
-                  </Text>
-                ))}
-                <Text style={[styles.cell, styles.totalCell]} rowSpan={3}>
+
+                {/* Dynamic Date Columns Header Container */}
+                <View style={styles.dynamicDatesHeaderContainer}>
+                  {/* Row 1: Day Header */}
+                  <View style={[styles.dynamicDatesHeaderRow, { borderBottom: "1px solid #000" }]}>
+                    {dynamicDates.map((d, i) => (
+                      <Text key={i} style={[styles.cellBase, styles.dateDayHeader, { flex: dateColFlex, borderRight: i === dynamicDates.length - 1 ? "none" : "1px solid #000" }]}>
+                        {d.day}
+                      </Text>
+                    ))}
+                  </View>
+                  {/* Row 2: Date Header */}
+                  <View style={[styles.dynamicDatesHeaderRow, { borderBottom: "1px solid #000" }]}>
+                    {dynamicDates.map((d, i) => (
+                      <Text key={i} style={[styles.cellBase, styles.dateDateHeader, { flex: dateColFlex, borderRight: i === dynamicDates.length - 1 ? "none" : "1px solid #000" }]}>
+                        {d.date}
+                      </Text>
+                    ))}
+                  </View>
+                  {/* Row 3: Sobok/Mutalaya Header */}
+                  <View style={[styles.dynamicDatesHeaderRow, { borderBottom: "none" }]}>
+                    {dynamicDates.map((_, i) => (
+                      <React.Fragment key={i}>
+                        <Text style={[styles.cellBase, styles.sobokMutalayaHeaderCell, { flex: attendanceCellFlex }]}>
+                          সবক
+                        </Text>
+                        <Text style={[styles.cellBase, styles.sobokMutalayaHeaderCell, { flex: attendanceCellFlex, borderRight: i === dynamicDates.length - 1 ? "none" : "1px solid #000" }]}>
+                          মুতালায়া
+                        </Text>
+                      </React.Fragment>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Fixed Header Cell for Montobyo (rowSpan=3 effect) */}
+                <Text style={[styles.cellBase, styles.headerCellRowSpan, styles.totalCell]}>
                   মন্তব্য
                 </Text>
               </View>
-              <View style={styles.tableRow}>
-                {dynamicDates.map((d, i) => (
-                  <Text
-                    key={i}
-                    style={[styles.cell, styles.dateCell]}
-                    colSpan={2}
-                  >
-                    {d.date}
-                  </Text>
-                ))}
-              </View>
-              <View style={styles.tableRow}>
-                {dynamicDates.map((_, i) => (
-                  <React.Fragment key={i}>
-                    <Text style={[styles.cell, styles.dateCell]}>সবক</Text>
-                    <Text style={[styles.cell, styles.dateCell]}>মুতালায়া</Text>
-                  </React.Fragment>
-                ))}
-              </View>
+
               {/* Table Body */}
               {pageRows.map(({ student, sIdx, subjIdx }, rowIdx) => (
                 <View key={`${pageIdx}-${rowIdx}`} style={styles.tableRow}>
+                  {/* Roll No (rowSpan effect) */}
                   {subjIdx === 0 && (
-                    <>
-                      <Text
-                        style={[styles.cell, styles.rollCell]}
-                        rowSpan={student.subjects.length}
-                      >
-                        {sIdx + 1}
-                      </Text>
-                      <Text
-                        style={[styles.cell, styles.nameCell]}
-                        rowSpan={student.subjects.length}
-                      >
-                        {student.name}
-                      </Text>
-                    </>
+                    <Text
+                      style={[styles.dataCell, styles.rollCell, { borderLeft: "1px solid #000", borderRight: "1px solid #000", borderBottom: rowIdx === pageRows.length - 1 ? "none" : "1px solid #000" }]}
+                      minHeight={ROW_HEIGHT * student.subjects.length} // Set height to span subjects
+                    >
+                      {student.roll_no}
+                    </Text>
                   )}
-                  <Text style={[styles.cell, styles.subjectCell]}>
+                  {/* Student Name (rowSpan effect) */}
+                  {subjIdx === 0 && (
+                    <Text
+                      style={[styles.dataCell, styles.nameCell, { borderRight: "1px solid #000", borderBottom: rowIdx === pageRows.length - 1 ? "none" : "1px solid #000" }]}
+                      minHeight={ROW_HEIGHT * student.subjects.length} // Set height to span subjects
+                    >
+                      {student.name}
+                    </Text>
+                  )}
+                  {/* Subject Name */}
+                  <Text style={[styles.dataCell, styles.subjectCell, { borderRight: "1px solid #000", borderBottom: rowIdx === pageRows.length - 1 ? "none" : "1px solid #000" }]}>
                     {student.subjects[subjIdx].name}
                   </Text>
-                  {dynamicDates.map((d) => (
+                  {/* Dynamic Attendance Data */}
+                  {dynamicDates.map((d, i) => (
                     <React.Fragment key={d.date}>
-                      <Text style={[styles.cell, styles.dateCell]}>
+                      <Text style={[styles.dataCell, { flex: attendanceCellFlex, borderRight: "1px solid #000", borderBottom: rowIdx === pageRows.length - 1 ? "none" : "1px solid #000" }]}>
                         {student.subjects[subjIdx].attendance[d.date]?.sobok || ""}
                       </Text>
-                      <Text style={[styles.cell, styles.dateCell]}>
+                      <Text style={[styles.dataCell, { flex: attendanceCellFlex, borderRight: i === dynamicDates.length - 1 ? "none" : "1px solid #000", borderBottom: rowIdx === pageRows.length - 1 ? "none" : "1px solid #000" }]}>
                         {student.subjects[subjIdx].attendance[d.date]?.mutalaya || ""}
                       </Text>
                     </React.Fragment>
                   ))}
-                  <Text style={[styles.cell, styles.totalCell]} />
+                  {/* Remarks */}
+                  <Text style={[styles.dataCell, styles.totalCell, { borderRight: "none", borderBottom: rowIdx === pageRows.length - 1 ? "none" : "1px solid #000" }]} />
                 </View>
               ))}
             </View>
@@ -542,7 +635,7 @@ const MutalayaReport = () => {
                           rowSpan={student.subjects.length}
                           className="border border-black text-center align-top text-[8px]"
                         >
-                          {sIdx + 1}
+                          {student.roll_no}
                         </td>
                       )}
                       {subjIdx === 0 && (
@@ -559,9 +652,12 @@ const MutalayaReport = () => {
                       {generateDynamicDates().map((d) => (
                         <React.Fragment key={d.date}>
                           <td className="border border-black text-center text-[8px]">
-
+                            {/* Frontend intentionally left blank for attendance, PDF should show data */}
+                       
                           </td>
                           <td className="border border-black text-center text-[8px]">
+                            {/* Frontend intentionally left blank for attendance, PDF should show data */}
+      
                           </td>
                         </React.Fragment>
                       ))}

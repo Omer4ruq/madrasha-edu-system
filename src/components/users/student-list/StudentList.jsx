@@ -786,58 +786,73 @@ const StudentList = () => {
           .table-container {
             position: relative;
             max-height: 70vh;
-            overflow: auto;
+            overflow: auto; /* Handles both vertical and horizontal scrolling */
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border-radius: 1rem;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
           }
+
+          table {
+            width: 100%; /* Ensure table takes full width of container, allowing horizontal scroll if content overflows */
+            border-collapse: separate; /* Required for sticky positioning on cells */
+            border-spacing: 0;
+          }
           
           .sticky-header th {
             position: sticky;
             top: 0;
-            background: rgba(68, 26, 5, 0.95);
+            background: rgba(68, 26, 5, 0.95); /* Slightly less opaque to show blur */
             backdrop-filter: blur(10px);
-            z-index: 20;
+            z-index: 20; /* Higher than fixed-col cells */
             border-bottom: 2px solid rgba(219, 158, 48, 0.3);
             color: rgba(255, 255, 255, 0.9);
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            text-align: left; /* Ensure text alignment is consistent */
+            padding: 12px 16px; /* Consistent padding */
           }
 
+          /* Styles for fixed columns (both header and body cells) */
           .fixed-col {
             position: sticky;
-            z-index: 15;
+            z-index: 10; /* Lower than header (20), but higher than regular cells */
+            /* Default background for fixed columns - can be overridden by specific ones below */
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border-right: 1px solid rgba(255, 255, 255, 0.2);
           }
           
+          /* Specific left positioning for each fixed column */
           .fixed-col.serial { 
             left: 0px; 
-            background: rgba(68, 26, 5,);
-            backdrop-filter: blur(10px);
+            /* Using a slightly darker/more opaque background for the first fixed column for distinction */
+            background: rgba(68, 26, 5, 0.85); /* Corrected RGBA with alpha */
+            color: rgba(255, 255, 255, 0.9); /* Lighter text for contrast */
           }
-            .serial{
-              background: white;
-            }
-            .name{
-              background: white;
-            }
-            .user_id{
-              background: white;
-            }
           .fixed-col.name { 
-            left: 70px; 
-            background: rgba(68, 26, 5,);
-            backdrop-filter: blur(10px);
+            left: 70px; /* Width of serial column */
+            background: rgba(255, 255, 255, 0.15); /* Slightly different background for visual separation */
           }
           .fixed-col.user_id { 
-            left: 150px; 
-            background: rgba(68, 26, 5,);
-            backdrop-filter: blur(10px);
+            left: 220px; /* Width of serial (70) + name (150) */
+            background: rgba(255, 255, 255, 0.2); /* Slightly different background for visual separation */
+          }
+
+          /* Ensure fixed header cells also use the specific backgrounds */
+          .sticky-header .fixed-col.serial {
+            background: rgba(68, 26, 5, 0.95); /* Match header background */
+            color: rgba(255, 255, 255, 0.9);
+          }
+          .sticky-header .fixed-col.name {
+            background: rgba(68, 26, 5, 0.95); /* Match header background */
+            color: rgba(255, 255, 255, 0.9);
+          }
+          .sticky-header .fixed-col.user_id {
+            background: rgba(68, 26, 5, 0.95); /* Match header background */
+            color: rgba(255, 255, 255, 0.9);
           }
           
           .table-row {
@@ -864,6 +879,13 @@ const StudentList = () => {
             color: #441a05;
             font-weight: 500;
             border-right: 1px solid rgba(255, 255, 255, 0.1);
+            /* This is important for separating sticky cells from the next scrolling cell */
+            border-left: 1px solid rgba(255, 255, 255, 0.1); /* Added for better separation */
+          }
+
+          /* Ensure table cells don't have white background that conflicts with fixed-col */
+          td {
+            background: transparent; /* Cells should not have a solid background by default if they are inside a transparent row */
           }
           
           .status-badge {
@@ -1169,7 +1191,7 @@ const StudentList = () => {
           ) : students.length === 0 ? (
             <p className="p-4 text-[#441a05]/70">কোনো ছাত্র পাওয়া যায়নি।</p>
           ) : (
-            <table className="min-w-full">
+            <table className="min-w-full" style={{ borderCollapse: 'separate', borderSpacing: '0' }}>
               <thead className="sticky-header">
                 <tr>
                   {tableHeaders.map((header) => {
@@ -1205,13 +1227,13 @@ const StudentList = () => {
                     >
                       {/* Fixed Columns */}
                       <td
-                        className="table-cell fixed-col serial"
+                        className="table-cell fixed-col serialbg-white"
                         style={{ width: "70px" }}
                       >
                         {serial}
                       </td>
                       <td
-                        className="table-cell fixed-col name "
+                        className="table-cell fixed-col name bg-white"
                         style={{ width: "150px" }}
                       >
                         <div className="font-semibold">{student.name}</div>
@@ -1222,7 +1244,7 @@ const StudentList = () => {
                         )}
                       </td>
                       <td
-                        className="table-cell fixed-col user_id "
+                        className="table-cell fixed-col user_id bg-white"
                         style={{ width: "120px" }}
                       >
                         <span className="font-mono /20 px- py-1 rounded text-xs">
@@ -1238,19 +1260,19 @@ const StudentList = () => {
                         {student.roll_no || "N/A"}
                       </td>
                       <td
-                        className="table-cell "
+                        className="table-cell bg-white"
                         style={{ width: "100px" }}
                       >
                         {student.class_name}
                       </td>
                       <td
-                        className="table-cell "
+                        className="table-cell bg-white"
                         style={{ width: "100px" }}
                       >
                         {student.section_name}
                       </td>
                       <td
-                        className="table-cell "
+                        className="table-cell bg-white"
                         style={{ width: "100px" }}
                       >
                         {student.shift_name}
