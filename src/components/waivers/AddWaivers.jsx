@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import Select from "react-select";
-import { FaEdit, FaSpinner, FaTrash } from "react-icons/fa";
+import { FaEdit, FaSpinner, FaTrash, FaFilePdf } from "react-icons/fa";
 import { IoAdd, IoAddCircle } from "react-icons/io5";
 import toast, { Toaster } from "react-hot-toast";
 import { useGetclassConfigApiQuery } from "../../redux/features/api/class/classConfigApi";
@@ -16,6 +16,172 @@ import {
 import { useGetFundsQuery } from "../../redux/features/api/funds/fundsApi";
 import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi";
 import { useSelector } from "react-redux";
+import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
+
+// Register Noto Sans Bengali font (Used for PDF generation)
+try {
+  Font.register({
+    family: 'NotoSansBengali',
+    src: 'https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf',
+  });
+} catch (error) {
+  console.error('Font registration failed:', error);
+  Font.register({
+    family: 'Helvetica',
+    src: 'https://fonts.gstatic.com/s/helvetica/v13/Helvetica.ttf',
+  });
+}
+
+// PDF styles
+const styles = StyleSheet.create({
+  page: {
+    padding: 40,
+    fontFamily: 'NotoSansBengali',
+    fontSize: 10,
+    color: '#222',
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  schoolName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#441a05',
+  },
+  headerText: {
+    fontSize: 10,
+    marginTop: 4,
+  },
+  title: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    marginTop: 6,
+    marginBottom: 10,
+    color: '#441a05',
+    textDecoration: 'underline',
+  },
+  metaContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    fontSize: 9,
+    marginBottom: 8,
+  },
+  divider: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#441a05',
+    marginVertical: 6,
+  },
+  table: {
+    display: 'table',
+    width: 'auto',
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderColor: '#441a05',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#441a05',
+  },
+  tableHeader: {
+    backgroundColor: '#441a05',
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    textAlign: 'center',
+    borderRightWidth: 1,
+    borderRightColor: '#fff',
+  },
+  tableCell: {
+    paddingVertical: 5,
+    paddingHorizontal: 4,
+    fontSize: 9,
+    borderRightWidth: 1,
+    borderRightColor: '#ddd',
+    flex: 1,
+    textAlign: 'left',
+  },
+  tableCellCenter: {
+    textAlign: 'center',
+  },
+  tableRowAlternate: {
+    backgroundColor: '#f2f2f2',
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 40,
+    right: 40,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    fontSize: 8,
+    color: '#555',
+  },
+});
+
+// PDF Document Component for Waivers
+const PDFDocument = ({ waivers, students, academicYears, feeHeads, funds }) => {
+  const getStudentName = (studentId) => {
+    return students?.find((s) => s.id === studentId)?.name || `ছাত্র ${studentId}`;
+  };
+
+  const getAcademicYearName = (yearId) => {
+    return academicYears?.find((y) => y.id === yearId)?.name || `বছর ${yearId}`;
+  };
+
+  const getFundName = (fundId) => {
+    return funds?.find((f) => f.id === fundId)?.name || `ফান্ড ${fundId}`;
+  };
+
+  const getFeeTypeNames = (feeTypeIds) => {
+    return feeTypeIds.map(id => feeHeads?.find(f => f.id === id)?.name || `ফি ${id}`).join(", ");
+  };
+
+  return (
+    <Document>
+      <Page size="A4" orientation="landscape" style={styles.page}>
+        <View style={styles.header}>
+          <Text style={styles.schoolName}>আদর্শ বিদ্যালয়</Text>
+          <Text style={styles.headerText}>ঢাকা, বাংলাদেশ</Text>
+          <Text style={styles.title}>ওয়েভার প্রতিবেদন</Text>
+          <View style={styles.metaContainer}>
+            <Text style={styles.metaText}>
+              তৈরির তারিখ: {new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
+            </Text>
+          </View>
+          <View style={styles.divider} />
+        </View>
+        <View style={styles.table}>
+          <View style={styles.tableRow}>
+            <Text style={[styles.tableHeader, { flex: 1.5 }]}>ছাত্র</Text>
+            <Text style={[styles.tableHeader, { flex: 1 }]}>বৃত্তির পরিমাণ (%)</Text>
+            <Text style={[styles.tableHeader, { flex: 1.5 }]}>শিক্ষাবর্ষ</Text>
+            <Text style={[styles.tableHeader, { flex: 2 }]}>ফি প্রকার</Text>
+            <Text style={[styles.tableHeader, { flex: 1.5 }]}>ফান্ড</Text>
+            <Text style={[styles.tableHeader, { flex: 2 }]}>বর্ণনা</Text>
+          </View>
+          {waivers.map((waiver, index) => (
+            <View key={waiver.id} style={[styles.tableRow, index % 2 === 1 && styles.tableRowAlternate]}>
+              <Text style={[styles.tableCell, { flex: 1.5 }]}>{getStudentName(waiver.student_id)}</Text>
+              <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{waiver.waiver_amount}</Text>
+              <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1.5 }]}>{getAcademicYearName(waiver.academic_year)}</Text>
+              <Text style={[styles.tableCell, { flex: 2 }]}>{getFeeTypeNames(waiver.fee_types)}</Text>
+              <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1.5 }]}>{getFundName(waiver.fund_id)}</Text>
+              <Text style={[styles.tableCell, { flex: 2 }]}>{waiver.description || '-'}</Text>
+            </View>
+          ))}
+        </View>
+        <View style={styles.footer} fixed>
+          <Text>প্রতিবেদনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে।</Text>
+          <Text render={({ pageNumber, totalPages }) => `পৃষ্ঠা ${pageNumber} এর ${totalPages}`} />
+        </View>
+      </Page>
+    </Document>
+  );
+};
 
 const AddWaivers = () => {
   const { group_id } = useSelector((state) => state.auth);
@@ -35,6 +201,12 @@ const AddWaivers = () => {
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteWaiverId, setDeleteWaiverId] = useState(null);
+
+  // State for Waiver List filters
+  const [waiverListFilters, setWaiverListFilters] = useState({
+    studentSearch: '',
+    feeTypeId: null,
+  });
 
   // API hooks
   const { data: classes, isLoading: isClassLoading } = useGetclassConfigApiQuery();
@@ -56,14 +228,6 @@ const AddWaivers = () => {
   const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_waiver') || false;
   const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_waiver') || false;
 
-  // Current time in ISO format for +06:00
-  const getCurrentTimeISO = () => {
-    const date = new Date();
-    const offset = 6 * 60; // +06:00 in minutes
-    const localTime = new Date(date.getTime() + offset * 60 * 1000);
-    return localTime.toISOString().replace("Z", "+06:00");
-  };
-
   // Class options
   const classOptions =
     classes?.map((cls) => ({
@@ -78,7 +242,21 @@ const AddWaivers = () => {
       label: fund.name,
     })) || [];
 
-  // Filtered students
+  // Fee type options
+  const feeTypeOptions =
+    feeHeads?.map((fee) => ({
+      value: fee.id,
+      label: fee.name || `ফি ${fee.id}`,
+    })) || [];
+
+  // Academic year options
+  const academicYearOptions =
+    academicYears?.map((year) => ({
+      value: year.id,
+      label: year.year || year.name || `বছর ${year.id}`,
+    })) || [];
+
+  // Filtered students for Add Waiver section (based on class and search query)
   const filteredStudents = useMemo(() => {
     if (!students || !selectedClassId) return [];
     return students.filter(
@@ -89,20 +267,36 @@ const AddWaivers = () => {
     );
   }, [students, selectedClassId, searchQuery]);
 
-  // Fee type and academic year options
-  const feeTypeOptions =
-    feeHeads?.map((fee) => ({
-      value: fee.id,
-      label: fee.name || `ফি ${fee.id}`,
-    })) || [];
+  // Filtered waivers for Waiver List section (based on student search and fee type filter)
+  const filteredWaivers = useMemo(() => {
+    if (!waivers) return [];
 
-  const academicYearOptions =
-    academicYears?.map((year) => ({
-      value: year.id,
-      label: year.year || year.name || `বছর ${year.id}`,
-    })) || [];
+    return waivers.filter(waiver => {
+      // 1. Student Name/User ID filter
+      if (waiverListFilters.studentSearch) {
+        const student = students?.find(s => s.id === waiver.student_id);
+        const searchLower = waiverListFilters.studentSearch.toLowerCase();
+        const studentMatch = student && (
+          student.name.toLowerCase().includes(searchLower) ||
+          student.user_id.toString().includes(searchLower)
+        );
+        if (!studentMatch) {
+          return false;
+        }
+      }
 
-  // Handle student selection toggle
+      // 2. Fee Type filter
+      if (waiverListFilters.feeTypeId !== null) {
+        if (!waiver.fee_types.includes(waiverListFilters.feeTypeId)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [waivers, students, waiverListFilters]);
+
+  // Handle student selection toggle (for Add Waiver section)
   const handleStudentToggle = (studentId) => {
     if (!hasAddPermission && isAdd) {
       toast.error('ওয়েভার যোগ করার অনুমতি নেই।');
@@ -131,7 +325,7 @@ const AddWaivers = () => {
     });
   };
 
-  // Handle waiver data change
+  // Handle waiver data change (for Add Waiver section)
   const handleWaiverChange = (studentId, field, value) => {
     if (field === "waiver_amount" && value > 100) {
       toast.error("ওয়েভার পরিমাণ ১০০% এর বেশি হতে পারবে না।");
@@ -307,6 +501,45 @@ const AddWaivers = () => {
     }
   };
 
+  // Generate PDF report
+  const generatePDFReport = async () => {
+    if (!hasViewPermission) {
+      toast.error('ওয়েভার প্রতিবেদন দেখার অনুমতি নেই।');
+      return;
+    }
+
+    if (isWaiverLoading || isStudentLoading || isAcademicYearLoading || isFeeHeadsLoading || isFundsLoading) {
+      toast.error('তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন।');
+      return;
+    }
+    
+    if (filteredWaivers.length === 0) {
+      toast.error('নির্বাচিত ফিল্টারে কোনো ওয়েভার পাওয়া যায়নি।');
+      return;
+    }
+
+    try {
+      const doc = <PDFDocument
+        waivers={filteredWaivers}
+        students={students}
+        academicYears={academicYears}
+        feeHeads={feeHeads}
+        funds={funds}
+      />;
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `ওয়েভার_প্রতিবেদন_${new Date().toLocaleDateString('bn-BD')}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success('প্রতিবেদন সফলভাবে ডাউনলোড হয়েছে!');
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error(`প্রতিবেদন তৈরিতে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
+    }
+  };
+
   const selectStyles = {
     control: (provided) => ({
       ...provided,
@@ -344,19 +577,6 @@ const AddWaivers = () => {
     }),
   };
 
-  // Date format
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString("bn-BD", {
-      timeZone: "Asia/Dhaka",
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      hour12: true,
-    });
-  };
-
   // View-only mode for users with only view permission
   if (hasViewPermission && !hasAddPermission && !hasChangePermission && !hasDeletePermission) {
     return (
@@ -375,78 +595,110 @@ const AddWaivers = () => {
             error: { style: { background: "rgba(239, 68, 68, 0.1)", borderColor: "#ef4444" } },
           }}
         />
-        <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
-          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">
-            ওয়েভার তালিকা
-          </h3>
-          {isWaiverLoading ? (
-            <p className="p-4 text-[#441a05]/70">ওয়েভার লোড হচ্ছে...</p>
-          ) : waivers?.length === 0 ? (
-            <p className="p-4 text-[#441a05]/70">কোনো ওয়েভার পাওয়া যায়নি।</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-white/20">
-                <thead className="bg-white/5">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ছাত্র
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      বৃত্তির পরিমাণ (%)
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      শিক্ষাবর্ষ
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ফি প্রকার
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ফান্ড
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      বর্ণনা
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/20">
-                  {waivers?.map((waiver, index) => (
-                    <tr
-                      key={waiver.id}
-                      className="bg-white/5 animate-fadeIn"
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                        {students?.find((s) => s.id === waiver.student_id)?.name ||
-                          `ছাত্র ${waiver.student_id}`}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                        {waiver.waiver_amount}%
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                        {academicYears?.find((y) => y.id === waiver.academic_year)?.name ||
-                          `বছর ${waiver.academic_year}`}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                        {waiver.fee_types
-                          .map(
-                            (id) =>
-                              feeTypeOptions.find((opt) => opt.value === id)?.label || `ফি ${id}`
-                          )
-                          .join(", ")}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                        {fundOptions.find((opt) => opt.value === waiver.fund_id)?.label ||
-                          `ফান্ড ${waiver.fund_id}`}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                        {waiver.description || "-"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn py-2 px-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 border-b border-white/20">
+            <h3 className="text-lg font-semibold text-[#441a05]">ওয়েভার তালিকা</h3>
+            
+            {/* Filter Section (View Only Mode) */}
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+              <input
+                type="text"
+                value={waiverListFilters.studentSearch}
+                onChange={(e) => setWaiverListFilters({...waiverListFilters, studentSearch: e.target.value})}
+                className="w-full sm:w-auto bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
+                placeholder="ছাত্রের নাম বা আইডি অনুসন্ধান"
+              />
+              <select
+                value={waiverListFilters.feeTypeId || ""}
+                onChange={(e) => setWaiverListFilters({...waiverListFilters, feeTypeId: e.target.value ? parseInt(e.target.value) : null})}
+                className="bg-transparent min-w-[150px] text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg w-full sm:w-auto"
+              >
+                <option value="">ফি প্রকার নির্বাচন</option>
+                {feeTypeOptions.map((fee) => (
+                  <option key={fee.value} value={fee.value}>{fee.label}</option>
+                ))}
+              </select>
+              <button
+                onClick={generatePDFReport}
+                className="report-button w-full sm:w-auto bg-[#441a05] text-white py-2 px-4 rounded-lg hover:bg-[#5a2e0a] transition-colors"
+                title="Download Waiver Report"
+              >
+                <FaFilePdf className="inline-block mr-2"/> রিপোর্ট
+              </button>
             </div>
-          )}
+          </div>
+
+          {/* Waiver List Table (View Only Mode) */}
+          <div className="overflow-y-auto max-h-[60vh]">
+            {isWaiverLoading || isStudentLoading || isAcademicYearLoading || isFeeHeadsLoading || isFundsLoading ? (
+              <p className="p-4 text-[#441a05]/70">ওয়েভার লোড হচ্ছে...</p>
+            ) : filteredWaivers.length === 0 ? (
+              <p className="p-4 text-[#441a05]/70">কোনো ওয়েভার পাওয়া যায়নি।</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-white/20">
+                  <thead className="bg-white/5">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        ছাত্র
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        বৃত্তির পরিমাণ (%)
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        শিক্ষাবর্ষ
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        ফি প্রকার
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        ফান্ড
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        বর্ণনা
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/20">
+                    {filteredWaivers.map((waiver, index) => (
+                      <tr
+                        key={waiver.id}
+                        className="bg-white/5 animate-fadeIn"
+                        style={{ animationDelay: `${index * 0.1}s` }}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                          {students?.find((s) => s.id === waiver.student_id)?.name ||
+                            `ছাত্র ${waiver.student_id}`}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                          {waiver.waiver_amount}%
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                          {academicYears?.find((y) => y.id === waiver.academic_year)?.name ||
+                            `বছর ${waiver.academic_year}`}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                          {waiver.fee_types
+                            .map(
+                              (id) =>
+                                feeTypeOptions.find((opt) => opt.value === id)?.label || `ফি ${id}`
+                            )
+                            .join(", ")}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                          {fundOptions.find((opt) => opt.value === waiver.fund_id)?.label ||
+                            `ফান্ড ${waiver.fund_id}`}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                          {waiver.description || "-"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -501,6 +753,16 @@ const AddWaivers = () => {
           }
           .btn-glow:hover {
             box-shadow: 0 0 15px rgba(219, 158, 48, 0.3);
+          }
+          .report-button {
+            background-color: #441a05;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+          }
+          .report-button:hover {
+            background-color: #5a2e0a;
           }
           ::-webkit-scrollbar {
             width: 8px;
@@ -1123,107 +1385,139 @@ const AddWaivers = () => {
       )}
 
       {/* Waiver List */}
-      <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
-        <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">
-          ওয়েভার তালিকা
-        </h3>
-        {isWaiverLoading ? (
-          <p className="p-4 text-[#441a05]/70">ওয়েভার লোড হচ্ছে...</p>
-        ) : waivers?.length === 0 ? (
-          <p className="p-4 text-[#441a05]/70">কোনো ওয়েভার পাওয়া যায়নি।</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-white/20">
-              <thead className="bg-white/5">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    ছাত্র
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    বৃত্তির পরিমাণ (%)
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    শিক্ষাবর্ষ
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    ফি প্রকার
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    ফান্ড
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    বর্ণনা
-                  </th>
-                  {(hasChangePermission || hasDeletePermission) && (
+      <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn py-2 px-6">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 border-b border-white/20">
+          <h3 className="text-lg font-semibold text-[#441a05]">
+            ওয়েভার তালিকা
+          </h3>
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            {/* Student Search Filter */}
+            <input
+              type="text"
+              value={waiverListFilters.studentSearch}
+              onChange={(e) => setWaiverListFilters({...waiverListFilters, studentSearch: e.target.value})}
+              className="w-full sm:w-auto bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
+              placeholder="ছাত্রের নাম বা আইডি অনুসন্ধান"
+            />
+            {/* Fee Type Filter */}
+            <select
+              value={waiverListFilters.feeTypeId || ""}
+              onChange={(e) => setWaiverListFilters({...waiverListFilters, feeTypeId: e.target.value ? parseInt(e.target.value) : null})}
+              className="bg-transparent min-w-[150px] text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg w-full sm:w-auto"
+            >
+              <option value="">ফি প্রকার নির্বাচন</option>
+              {feeTypeOptions.map((fee) => (
+                <option key={fee.value} value={fee.value}>{fee.label}</option>
+              ))}
+            </select>
+            <button
+              onClick={generatePDFReport}
+              className="report-button w-full sm:w-auto"
+              title="Download Waiver Report"
+            >
+              <FaFilePdf className="inline-block mr-2"/> রিপোর্ট
+            </button>
+          </div>
+        </div>
+        <div className="overflow-y-auto max-h-[60vh]">
+          {isWaiverLoading || isStudentLoading || isAcademicYearLoading || isFeeHeadsLoading || isFundsLoading ? (
+            <p className="p-4 text-[#441a05]/70">ওয়েভার লোড হচ্ছে...</p>
+          ) : filteredWaivers.length === 0 ? (
+            <p className="p-4 text-[#441a05]/70">কোনো ওয়েভার পাওয়া যায়নি।</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-white/20">
+                <thead className="bg-white/5 sticky top-0 z-10">
+                  <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      অ্যাকশন
+                      ছাত্র
                     </th>
-                  )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/20">
-                {waivers?.map((waiver, index) => (
-                  <tr
-                    key={waiver.id}
-                    className="bg-white/5 animate-fadeIn"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                      {students?.find((s) => s.id === waiver.student_id)?.name ||
-                        `ছাত্র ${waiver.student_id}`}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {waiver.waiver_amount}%
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {academicYears?.find((y) => y.id === waiver.academic_year)?.name ||
-                        `বছর ${waiver.academic_year}`}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {waiver.fee_types
-                        .map(
-                          (id) =>
-                            feeTypeOptions.find((opt) => opt.value === id)?.label || `ফি ${id}`
-                        )
-                        .join(", ")}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {fundOptions.find((opt) => opt.value === waiver.fund_id)?.label ||
-                        `ফান্ড ${waiver.fund_id}`}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {waiver.description || "-"}
-                    </td>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      বৃত্তির পরিমাণ (%)
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      শিক্ষাবর্ষ
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      ফি প্রকার
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      ফান্ড
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      বর্ণনা
+                    </th>
                     {(hasChangePermission || hasDeletePermission) && (
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        {hasChangePermission && (
-                          <button
-                            onClick={() => handleEditClick(waiver)}
-                            title="ওয়েভার সম্পাদনা করুন"
-                            className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
-                            aria-label="ওয়েভার সম্পাদনা করুন"
-                          >
-                            <FaEdit className="w-5 h-5" />
-                          </button>
-                        )}
-                        {hasDeletePermission && (
-                          <button
-                            onClick={() => handleDelete(waiver.id)}
-                            title="ওয়েভার মুছুন"
-                            className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
-                            aria-label="ওয়েভার মুছুন"
-                          >
-                            <FaTrash className="w-5 h-5" />
-                          </button>
-                        )}
-                      </td>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        অ্যাকশন
+                      </th>
                     )}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody className="divide-y divide-white/20">
+                  {filteredWaivers.map((waiver, index) => (
+                    <tr
+                      key={waiver.id}
+                      className="bg-white/5 animate-fadeIn"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                        {students?.find((s) => s.id === waiver.student_id)?.name ||
+                          `ছাত্র ${waiver.student_id}`}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {waiver.waiver_amount}%
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {academicYears?.find((y) => y.id === waiver.academic_year)?.name ||
+                          `বছর ${waiver.academic_year}`}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {waiver.fee_types
+                          .map(
+                            (id) =>
+                              feeTypeOptions.find((opt) => opt.value === id)?.label || `ফি ${id}`
+                          )
+                          .join(", ")}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {fundOptions.find((opt) => opt.value === waiver.fund_id)?.label ||
+                          `ফান্ড ${waiver.fund_id}`}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {waiver.description || "-"}
+                      </td>
+                      {(hasChangePermission || hasDeletePermission) && (
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          {hasChangePermission && (
+                            <button
+                              onClick={() => handleEditClick(waiver)}
+                              title="ওয়েভার সম্পাদনা করুন"
+                              className="text-[#441a05] hover:text-blue-500 mr-4 transition-colors duration-300"
+                              aria-label="ওয়েভার সম্পাদনা করুন"
+                            >
+                              <FaEdit className="w-5 h-5" />
+                            </button>
+                          )}
+                          {hasDeletePermission && (
+                            <button
+                              onClick={() => handleDelete(waiver.id)}
+                              title="ওয়েভার মুছুন"
+                              className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                              aria-label="ওয়েভার মুছুন"
+                            >
+                              <FaTrash className="w-5 h-5" />
+                            </button>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
         {(isDeleting || deleteError) && (
           <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
             {isDeleting ? "মুছছে..." : `ওয়েভার মুছতে ত্রুটি: ${deleteError?.status || "অজানা"} - ${JSON.stringify(deleteError?.data || {})}`}

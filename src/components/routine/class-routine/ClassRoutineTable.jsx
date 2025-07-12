@@ -324,16 +324,18 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
 
   const filteredRoutines = getFilteredRoutines();
 
-  // Get periods to display
+  // FIXED: Get periods to display - Create a copy before sorting
   const getPeriodsToShow = () => {
     if (searchType === 'class' && classPeriods.length > 0) {
-      return classPeriods.sort((a, b) => a.start_time.localeCompare(b.start_time));
+      // Create a copy of the array before sorting to avoid mutating read-only array
+      return [...classPeriods].sort((a, b) => a.start_time.localeCompare(b.start_time));
     } else if (searchType === 'teacher') {
       // Get all unique periods from teacher's routines
       const teacherPeriodIds = [...new Set(filteredRoutines.map(r => r.period_id))];
       return teacherPeriodIds.map(id => ({ id, start_time: '', end_time: '' }));
-    } else if (periods) {
-      return periods.sort((a, b) => a.start_time.localeCompare(b.start_time));
+    } else if (periods && periods.length > 0) {
+      // Create a copy of the array before sorting to avoid mutating read-only array
+      return [...periods].sort((a, b) => a.start_time.localeCompare(b.start_time));
     }
     return [];
   };

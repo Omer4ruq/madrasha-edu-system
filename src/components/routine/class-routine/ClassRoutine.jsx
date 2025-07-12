@@ -7,14 +7,13 @@ import { useGetclassConfigApiQuery } from "../../../redux/features/api/class/cla
 import { useGetTeacherStaffProfilesQuery } from "../../../redux/features/api/roleStaffProfile/roleStaffProfileApi";
 import { useGetTeacherSubjectAssignsByClassAndSubjectQuery } from "../../../redux/features/api/teacherSubjectAssigns/teacherSubjectAssignsApi";
 import { useGetClassPeriodsByClassIdQuery } from "../../../redux/features/api/periods/classPeriodsApi";
-import { useGetClassSubjectsQuery } from "../../../redux/features/api/class-subjects/classSubjectsApi";
+import { useGetClassSubjectsByClassIdQuery } from "../../../redux/features/api/class-subjects/classSubjectsApi"; // Fixed import
 import { useCreateRoutineMutation } from "../../../redux/features/api/routines/routinesApi";
-import { useSelector } from "react-redux"; // Import useSelector
-import { useGetGroupPermissionsQuery } from "../../../redux/features/api/permissionRole/groupsApi"; // Import permission hook
-
+import { useSelector } from "react-redux";
+import { useGetGroupPermissionsQuery } from "../../../redux/features/api/permissionRole/groupsApi";
 
 export default function ClassRoutine() {
-  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
+  const { user, group_id } = useSelector((state) => state.auth);
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState(null);
@@ -32,7 +31,6 @@ export default function ClassRoutine() {
   const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_routine') || false;
   const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_routine') || false;
 
-
   const dayMap = {
     Saturday: "শনিবার",
     Sunday: "রবিবার",
@@ -41,7 +39,6 @@ export default function ClassRoutine() {
     Wednesday: "বুধবার",
     Thursday: "বৃহস্পতিবার",
   };
-
 
   // Validate class_id
   const isValidId = (id) =>
@@ -91,17 +88,21 @@ export default function ClassRoutine() {
     { skip: !selectedClass || !isValidId(selectedClass.id) }
   );
 
-  // Fetch subjects
-  const { data: classSubjects = [], isLoading: subjectsLoading } =
-    useGetClassSubjectsQuery(
-      selectedClass && isValidId(selectedClass.class_id)
-        ? selectedClass.class_id
-        : undefined,
-      { skip: !selectedClass || !isValidId(selectedClass.class_id) }
-    );
+  // Fetch subjects by class ID - FIXED
+  const { 
+    data: classSubjects = [], 
+    isLoading: subjectsLoading,
+    error: subjectsError 
+  } = useGetClassSubjectsByClassIdQuery(
+    selectedClass && isValidId(selectedClass.class_id) ? selectedClass.class_id : undefined,
+    { skip: !selectedClass || !isValidId(selectedClass.class_id) }
+  );
 
   // Filter active subjects
-  const activeSubjects = classSubjects.filter((subject) => subject.is_active);
+  const activeSubjects = useMemo(() => {
+    if (!Array.isArray(classSubjects)) return [];
+    return classSubjects.filter((subject) => subject.is_active);
+  }, [classSubjects]);
 
   // Mutation for creating routine
   const [createRoutine, { isLoading: createLoading, error: createError }] =
@@ -118,7 +119,8 @@ export default function ClassRoutine() {
     setSelectedTeacher(null);
     setSelectedDay(null);
   };
-
+console.log("classes", classes)
+console.log("selectedClass", selectedClass)
   const handleCreateRoutine = async () => {
     if (!hasAddPermission) {
       toast.error('রুটিন তৈরি করার অনুমতি নেই।');
@@ -180,8 +182,6 @@ export default function ClassRoutine() {
       setModalData(null);
     }
   };
-
-
 
   if (classesLoading || allteachersLoading || teachersLoading || periodsLoading || subjectsLoading || permissionsLoading) {
     return (
@@ -280,14 +280,14 @@ export default function ClassRoutine() {
                   key={cls.id}
                   onClick={() => handleClassSelect(cls)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                    selectedClass?.id === cls.id
+                    selectedClass?.id === cls?.id
                       ? "bg-[#DB9E30] hover:text-white"
                       : "bg-white/10 hover:bg-[#441a05]/10"
                   }`}
                   style={{ animationDelay: `${index * 0.1}s` }}
                   title={`শ্রেণি নির্বাচন করুন: ${cls.class_name} ${cls.section_name}`}
                 >
-                  {cls.class_name} {cls.section_name}
+                  {cls?.class_name} {cls?.section_name} {cls?.shift_name}
                 </button>
               ))
             )}
@@ -411,13 +411,21 @@ export default function ClassRoutine() {
               )}
             </div>
 
-            {/* Subjects Section */}
+            {/* Subjects Section - FIXED */}
             <div>
               <h3 className="text-lg font-semibold text-[#441a05] mb-3">
                 বিষয় নির্বাচন করুন
               </h3>
               {subjectsLoading ? (
                 <p className="text-[#441a05]/70 animate-fadeIn">লোড হচ্ছে...</p>
+              ) : subjectsError ? (
+                <div className="text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
+                  বিষয় লোড করতে ত্রুটি: {subjectsError.status || "অজানা"} - {JSON.stringify(subjectsError.data || {})}
+                </div>
+              ) : activeSubjects.length === 0 ? (
+                <p className="text-red-400 animate-fadeIn">
+                  এই ক্লাসের জন্য কোনো বিষয় পাওয়া যায়নি
+                </p>
               ) : (
                 <div className="flex flex-col gap-2">
                   {activeSubjects.map((subject, index) => (

@@ -8,6 +8,7 @@ import { useCreateStaffsBulkRegistrationApiMutation } from '../../../redux/featu
 import { useCreateStaffRegistrationApiMutation } from '../../../redux/features/api/staff/staffRegistration';
 import { useSelector } from 'react-redux'; // Import useSelector
 import { useGetGroupPermissionsQuery } from '../../../redux/features/api/permissionRole/groupsApi'; // Import permission hook
+import { useGetGroupListQuery } from '../../../redux/features/api/permissionRole/groupListApi';
 
 
 const StaffRegistrationForm = () => {
@@ -51,7 +52,11 @@ const StaffRegistrationForm = () => {
   const [file, setFile] = useState(null);
   const [createStaff, { isLoading, error }] = useCreateStaffRegistrationApiMutation();
   const [createStaffsBulkRegistration, { isLoading: isBulkLoading, error: bulkError }] = useCreateStaffsBulkRegistrationApiMutation();
-
+  const {
+    data: groups,
+    isLoading: isGroupsLoading,
+    error: groupsError,
+  } = useGetGroupListQuery();
   // Permissions hook
   const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
     skip: !group_id,
@@ -958,21 +963,23 @@ const StaffRegistrationForm = () => {
                     ভূমিকা <span className="text-[#DB9E30]">*</span>
                   </label>
                   <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                  <select
-                    id="role_id"
-                    name="role_id"
-                    value={formData.role_id}
-                    onChange={handleChange}
-                    className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
-                    required
-                    aria-label="ভূমিকা"
-                    disabled={!hasAddPermission} // Disable if no add permission
-                  >
-                    <option value="">ভূমিকা নির্বাচন করুন</option>
-                    <option value="1">শিক্ষক</option>
-                    <option value="2">প্রশাসক</option>
-                    <option value="3">সহায়ক কর্মী</option>
-                  </select>
+        <select
+  id="role_id"
+  name="role_id"
+  value={formData.role_id}
+  onChange={handleChange}
+  className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
+  required
+  aria-label="ভূমিকা"
+  disabled={!hasAddPermission} // Disable if no add permission
+>
+  <option value="">ভূমিকা নির্বাচন করুন</option>
+  {groups?.map((group) => (
+    <option key={group.id} value={group.id}>
+      {group.name.charAt(0).toUpperCase() + group.name.slice(1)}
+    </option>
+  ))}
+</select>
                 </div>
                 <div className="relative input-icon">
                   <label htmlFor="department_id" className="block text-lg font-medium text-[#441a05]">

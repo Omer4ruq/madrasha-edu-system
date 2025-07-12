@@ -24,7 +24,7 @@ const RolePermissions = () => {
     isLoading: isGroupsLoading,
     error: groupsError,
   } = useGetGroupListQuery();
-
+console.log("groups", groups)
   // Fetch all permissions
   const {
     data: permissions,

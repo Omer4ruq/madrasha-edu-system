@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Select from "react-select";
-import { FaSpinner, FaTrash } from "react-icons/fa";
+import { FaSpinner } from "react-icons/fa";
 import { IoAdd, IoAddCircle } from "react-icons/io5";
 import { toast, Toaster } from "react-hot-toast";
 import {
@@ -9,12 +9,14 @@ import {
 import {
   useCreateLeaveRequestApiMutation,
   useGetLeaveRequestApiQuery,
-  useDeleteLeaveRequestApiMutation,
 } from "../../redux/features/api/leave/leaveRequestApi";
 import { useGetLeaveApiQuery } from "../../redux/features/api/leave/leaveApi";
 import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
 import { useCreateMealStatusMutation } from '../../redux/features/api/meal/mealStatusApi';
 import selectStyles from '../../utilitis/selectStyles';
+import LeaveRequestTable from "./LeaveRequestTable";
+
+
 
 const AddLeaveRequest = () => {
   const [formData, setFormData] = useState({
@@ -29,8 +31,6 @@ const AddLeaveRequest = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [errors, setErrors] = useState({});
-  const [showModal, setShowModal] = useState(false);
-  const [deleteId, setDeleteId] = useState(null);
 
   // API Hooks
   const { data: users = [], isLoading: usersLoading } = useSearchJointUsersQuery(searchTerm, {
@@ -41,9 +41,7 @@ const AddLeaveRequest = () => {
   const { data: leaveRequests = [], isLoading: leaveRequestsLoading, error: leaveRequestsError } = useGetLeaveRequestApiQuery();
   const [createLeaveRequestApi, { isLoading: isCreatingLeave, error: createLeaveError }] = useCreateLeaveRequestApiMutation();
   const [createMealStatus, { isLoading: isCreatingMeal, error: createMealError }] = useCreateMealStatusMutation();
-  const [deleteLeaveRequestApi, { isLoading: isDeleting, error: deleteError }] = useDeleteLeaveRequestApiMutation();
-console.log("leaveRequests",leaveRequests)
-console.log("users",users)
+
   // Format select options
   const leaveTypeOptions = leaveTypes.map((type) => ({
     value: type.id,
@@ -75,16 +73,16 @@ console.log("users",users)
     setSelectedUser(user);
     setFormData((prev) => ({
       ...prev,
-      user_id: user.user_id,
+      user_id: user.id,
     }));
-    setSearchTerm(`${user.name} (${user?.student_profile?.class_name || "N/A"})`);
+    setSearchTerm(`${user.name} (${user?.student_profile?.class_name || user?.staff_profile?.designation || "N/A"})`);
     setShowDropdown(false);
     setErrors((prev) => ({ ...prev, user_id: null }));
   };
 
   const handleDateClick = (e) => {
     if (e.target.type === "date") {
-      e.target.showPicker(); // Trigger calendar dropdown on click
+      e.target.showPicker();
     }
   };
 
@@ -121,13 +119,11 @@ console.log("users",users)
         meal_user: parseInt(formData.user_id),
         start_time: formData.start_date,
         end_time: formData.end_date,
-        status: "ACTIVE", // Default to DEACTIVATE for leave periods
+        status: "ACTIVE",
         remarks: formData.leave_description || "Leave-related meal status",
       };
 
-      // Post to Leave Request API
       await createLeaveRequestApi(leavePayload).unwrap();
-      // Post to Meal Status API
       await createMealStatus(mealPayload).unwrap();
 
       toast.success("ছুটির আবেদন এবং খাবারের স্থিতি সফলভাবে জমা হয়েছে!");
@@ -151,30 +147,6 @@ console.log("users",users)
     }
   };
 
-  const handleDelete = (id) => {
-    setDeleteId(id);
-    setShowModal(true);
-  };
-
-  const confirmDelete = async () => {
-    try {
-      await deleteLeaveRequestApi(deleteId).unwrap();
-      toast.success("ছুটির আবেদন সফলভাবে মুছে ফেলা হয়েছে!");
-      setShowModal(false);
-      setDeleteId(null);
-    } catch (err) {
-      console.error("Delete error:", err);
-      toast.error(`ছুটির আবেদন মুছতে ব্যর্থ: ${err.status || "অজানা"}`);
-      setShowModal(false);
-      setDeleteId(null);
-    }
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    setDeleteId(null);
-  };
-
   return (
     <div className="py-8 w-full">
       <Toaster position="top-right" />
@@ -193,45 +165,6 @@ console.log("users",users)
           ::-webkit-scrollbar-thumb:hover { background: rgba(10, 13, 21, 0.44); }
         `}
       </style>
-
-      {/* Confirmation Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
-          <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
-            <h3 className="text-lg font-semibold text-[#441a05] mb-4">
-              ছুটির আবেদন মুছে ফেলা নিশ্চিত করুন
-            </h3>
-            <p className="text-[#441a05] mb-6">
-              আপনি কি নিশ্চিত যে এই ছুটির আবেদনটি মুছে ফেলতে চান?
-            </p>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={closeModal}
-                className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
-              >
-                বাতিল
-              </button>
-              <button
-                onClick={confirmDelete}
-                disabled={isDeleting}
-                className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg transition-colors duration-300 btn-glow ${
-                  isDeleting ? "cursor-not-allowed opacity-60" : "hover:text-white"
-                }`}
-                aria-label="ছুটির আবেদন মুছুন নিশ্চিত করুন"
-              >
-                {isDeleting ? (
-                  <span className="flex items-center space-x-2">
-                    <FaSpinner className="animate-spin text-lg" />
-                    <span>মুছছে...</span>
-                  </span>
-                ) : (
-                  "নিশ্চিত করুন"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Form to Add Leave Request */}
       <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
@@ -280,7 +213,7 @@ console.log("users",users)
                         role="option"
                         aria-selected={selectedUser?.id == user.id}
                       >
-                        {user.name} ({user?.student_profile?.class_name || "N/A"})
+                        {user.name} ({user?.student_profile?.class_name || user?.staff_profile?.designation || "N/A"})
                       </div>
                     ))
                   ) : (
@@ -437,64 +370,13 @@ console.log("users",users)
         )}
       </div>
 
-      {/* Leave Requests Table */}
-      <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] p-6">
-        <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">জমাকৃত ছুটির আবেদনসমূহ</h3>
-        {leaveRequestsLoading ? (
-          <p className="p-4 text-[#441a05]/70">লোড হচ্ছে...</p>
-        ) : leaveRequestsError ? (
-          <p className="p-4 text-red-400">ত্রুটি: {leaveRequestsError.status || "অজানা"} - {JSON.stringify(leaveRequestsError.data || {})}</p>
-        ) : leaveRequests.length === 0 ? (
-          <p className="p-4 text-[#441a05]/70">কোনো ছুটির আবেদন উপলব্ধ নেই।</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-white/20">
-              <thead className="bg-white/5">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ইউজার</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ছুটির ধরন</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">শুরুর তারিখ</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">শেষের তারিখ</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">বিবরণ</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">অবস্থা</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ক্রিয়াকলাপ</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/20">
-                {leaveRequests.map((request, index) => (
-                  <tr key={request.id} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {request.user?.name || "অজানা"} ({request.user?.student_profile?.class_name || "অজানা"})
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {leaveTypes.find((lt) => lt.id === request.leave_type)?.name || "অজানা"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{request.start_date}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{request.end_date}</td>
-                    <td className="px-6 py-4 text-sm text-[#441a05]">{request.leave_description}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{request.status}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button
-                        onClick={() => handleDelete(request.id)}
-                        className="text-[#441a05] hover:text-red-500 transition-all duration-300"
-                        aria-label={`ছুটির আবেদন মুছুন ${request.id}`}
-                        title="ছুটির আবেদন মুছুন / Delete leave request"
-                      >
-                        <FaTrash className="w-5 h-5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        {(isDeleting || deleteError) && (
-          <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
-            {isDeleting ? "মুছছে..." : `ত্রুটি: ${deleteError?.status || "অজানা"} - ${JSON.stringify(deleteError?.data || {})} `}
-          </div>
-        )}
-      </div>
+      {/* Leave Requests Table Component */}
+      <LeaveRequestTable
+        leaveRequests={leaveRequests}
+        leaveRequestsLoading={leaveRequestsLoading}
+        leaveRequestsError={leaveRequestsError}
+        leaveTypes={leaveTypes}
+      />
     </div>
   );
 };

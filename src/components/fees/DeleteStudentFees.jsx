@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { FaSpinner, FaTrash, FaEdit } from 'react-icons/fa';
+import React, { useState, useMemo } from 'react';
+import { FaSpinner, FaTrash, FaEdit, FaFilePdf } from 'react-icons/fa';
 import { IoAddCircle } from 'react-icons/io5';
 import Select from 'react-select';
 import { Toaster, toast } from 'react-hot-toast';
@@ -9,6 +9,168 @@ import { useGetFeesNamesQuery } from '../../redux/features/api/fees-name/feesNam
 import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
 import { useCreateDeleteFeeMutation, useGetDeleteFeesQuery, useUpdateDeleteFeeMutation, useDeleteFeeMutation } from '../../redux/features/api/deleteFees/deleteFeesApi';
 import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi';
+import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
+
+// Register Noto Sans Bengali font (Used for PDF generation)
+try {
+  Font.register({
+    family: 'NotoSansBengali',
+    src: 'https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf',
+  });
+} catch (error) {
+  console.error('Font registration failed:', error);
+  // Fallback font registration if Bengali font fails
+  Font.register({
+    family: 'Helvetica',
+    src: 'https://fonts.gstatic.com/s/helvetica/v13/Helvetica.ttf',
+  });
+}
+
+// PDF styles
+const styles = StyleSheet.create({
+  page: {
+    padding: 40,
+    fontFamily: 'NotoSansBengali',
+    fontSize: 10,
+    color: '#222',
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  schoolName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#441a05',
+  },
+  headerText: {
+    fontSize: 10,
+    marginTop: 4,
+  },
+  title: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    marginTop: 6,
+    marginBottom: 10,
+    color: '#441a05',
+    textDecoration: 'underline',
+  },
+  metaContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    fontSize: 9,
+    marginBottom: 8,
+  },
+  divider: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#441a05',
+    marginVertical: 6,
+  },
+  table: {
+    display: 'table',
+    width: 'auto',
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderColor: '#441a05',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#441a05',
+  },
+  tableHeader: {
+    backgroundColor: '#441a05',
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    textAlign: 'center',
+    borderRightWidth: 1,
+    borderRightColor: '#fff',
+  },
+  tableCell: {
+    paddingVertical: 5,
+    paddingHorizontal: 4,
+    fontSize: 9,
+    borderRightWidth: 1,
+    borderRightColor: '#ddd',
+    flex: 1,
+    textAlign: 'left',
+  },
+  tableCellCenter: {
+    textAlign: 'center',
+  },
+  tableRowAlternate: {
+    backgroundColor: '#f2f2f2',
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 40,
+    right: 40,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    fontSize: 8,
+    color: '#555',
+  },
+});
+
+// PDF Document Component for Deleted Fees
+const PDFDocument = ({ deletedFees, studentsData, feesData, academicYearsData }) => {
+  const getStudentDetails = (studentId) => {
+    return studentsData?.find(s => s.id === studentId);
+  };
+
+  const getFeeNames = (feeIds) => {
+    return feeIds.map(id => feesData?.find(f => f.id === id)?.fees_title || 'অজানা').join(', ');
+  };
+
+  const getAcademicYearName = (yearId) => {
+    return academicYearsData?.find(y => y.id === yearId)?.name || 'অজানা';
+  };
+
+  return (
+    <Document>
+      <Page size="A4" orientation="portrait" style={styles.page}>
+        <View style={styles.header}>
+          <Text style={styles.schoolName}>আদর্শ বিদ্যালয়</Text>
+          <Text style={styles.headerText}>ঢাকা, বাংলাদেশ</Text>
+          <Text style={styles.title}>মুছে ফেলা ফি প্রতিবেদন</Text>
+          <View style={styles.metaContainer}>
+            <Text style={styles.metaText}>
+              তৈরির তারিখ: {new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
+            </Text>
+          </View>
+          <View style={styles.divider} />
+        </View>
+        <View style={styles.table}>
+          <View style={styles.tableRow}>
+            <Text style={[styles.tableHeader, { flex: 1.5 }]}>ছাত্রের নাম (ইউজার আইডি)</Text>
+            <Text style={[styles.tableHeader, { flex: 2 }]}>ফি প্রকার</Text>
+            <Text style={[styles.tableHeader, { flex: 1 }]}>একাডেমিক বছর</Text>
+          </View>
+          {deletedFees.map((fee, index) => {
+            const student = getStudentDetails(fee.student_id);
+            return (
+              <View key={fee.id} style={[styles.tableRow, index % 2 === 1 && styles.tableRowAlternate]}>
+                <Text style={[styles.tableCell, { flex: 1.5 }]}>
+                  {(student ? `${student.name} (${student.user_id})` : `ID: ${fee.student_id}`)}
+                </Text>
+                <Text style={[styles.tableCell, { flex: 2 }]}>{getFeeNames(fee.feetype_id)}</Text>
+                <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{getAcademicYearName(fee.academic_year)}</Text>
+              </View>
+            );
+          })}
+        </View>
+        <View style={styles.footer} fixed>
+          <Text>প্রতিবেদনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে।</Text>
+          <Text render={({ pageNumber, totalPages }) => `পৃষ্ঠা ${pageNumber} এর ${totalPages}`} />
+        </View>
+      </Page>
+    </Document>
+  );
+};
 
 const DeleteStudentFees = () => {
   const { group_id } = useSelector((state) => state.auth);
@@ -140,8 +302,46 @@ const DeleteStudentFees = () => {
     }
   };
 
+  // Filter deleted fees based on selected student (if any)
   const filteredDeletedFees = selectedStudent ? deletedFeesData?.filter(fee => fee.student_id === selectedStudent.value) : deletedFeesData || [];
   const studentDetails = selectedStudent ? studentsData?.find(student => student.id === selectedStudent.value) : null;
+
+  const generatePDFReport = async () => {
+    if (!hasViewPermission) {
+      toast.error('মুছে ফেলা ফি প্রতিবেদন দেখার অনুমতি নেই।');
+      return;
+    }
+
+    if (deletedFeesLoading || studentsLoading || academicYearsLoading || feesLoading) {
+      toast.error('তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন।');
+      return;
+    }
+
+    if (filteredDeletedFees.length === 0) {
+      toast.error('নির্বাচিত ফিল্টারে কোনো মুছে ফেলা ফি পাওয়া যায়নি।');
+      return;
+    }
+
+    try {
+      const doc = <PDFDocument 
+        deletedFees={filteredDeletedFees} 
+        studentsData={studentsData} 
+        feesData={feesData} 
+        academicYearsData={academicYearsData} 
+      />;
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `মুছে_ফেলা_ফি_প্রতিবেদন_${new Date().toLocaleDateString('bn-BD')}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success('প্রতিবেদন সফলভাবে ডাউনলোড হয়েছে!');
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error(`প্রতিবেদন তৈরিতে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
+    }
+  };
 
   // --- Start of Permission-based Rendering ---
   if (permissionsLoading) {
@@ -187,12 +387,23 @@ const DeleteStudentFees = () => {
           {studentDetails && (<div className="bg-black/10 backdrop-blur-sm border border-white/20 p-4 rounded-lg animate-fadeIn"><h3 className="text-lg font-semibold text-[#441a05] mb-2">ছাত্রের তথ্য</h3><p><strong>নাম:</strong> {studentDetails.name || 'অজানা'}</p><p><strong>রোল নং:</strong> {studentDetails.roll_no || 'অজানা'}</p><p><strong>পিতার নাম:</strong> {studentDetails.father_name || 'অজানা'}</p><p><strong>মাতার নাম:</strong> {studentDetails.mother_name || 'অজানা'}</p></div>)}
           {searchTerm && !studentDetails && !studentsLoading && (<p className="text-red-400 animate-fadeIn">কোনো ছাত্র পাওয়া যায়নি: {searchTerm}</p>)}
         </div>
+        
         <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
-          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">মুছে ফেলা ফি ইতিহাস</h3>
+          <div className="flex justify-between items-center p-4 border-b border-white/20">
+            <h3 className="text-lg font-semibold text-[#441a05]">মুছে ফেলা ফি ইতিহাস</h3>
+            <button
+              onClick={generatePDFReport}
+              className="report-button px-4 py-2 bg-[#441a05] text-white rounded-lg hover:bg-[#5a2e0a] transition-colors"
+              title="Download Deleted Fees Report"
+            >
+              <FaFilePdf className="inline-block mr-2"/> রিপোর্ট
+            </button>
+          </div>
+          
           {deletedFeesLoading ? (<p className="text-[#441a05]/70 p-4 animate-fadeIn">লোড হচ্ছে...</p>) : filteredDeletedFees.length === 0 ? (<p className="text-[#441a05]/70 p-4 animate-fadeIn">{selectedStudent ? 'এই ছাত্রের জন্য কোনো মুছে ফেলা ফি পাওয়া যায়নি' : 'কোনো মুছে ফেলা ফি পাওয়া যায়নি'}</p>) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-white/20">
-                <thead className="bg-white/5">
+                <thead className="bg-white/5 sticky top-0 z-10">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ছাত্র আইডি</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ফি প্রকার</th>
