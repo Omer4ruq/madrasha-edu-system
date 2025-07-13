@@ -6,6 +6,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-hot-toast';
 import bgImg from '../../../public/images/bg.png';
 import { FaSignInAlt, FaSpinner } from 'react-icons/fa';
+import { useLocation } from "react-router-dom";
+
 
 const Login = () => {
   const { user } = useSelector((state) => state.auth);
@@ -13,14 +15,27 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-
   const [loginUser] = useLoginUserMutation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/dashboard";
+  console.log(from);
+
+  // useEffect(() => {
+  //   if (user) {
+  //     navigate("/dashboard");
+  //   }
+  // }, [user, navigate]);
+
 
   useEffect(() => {
-    if (user) {
-      navigate('/dashboard');
+    const fromStorage = localStorage.getItem("redirect_after_login");
+    if (user && fromStorage) {
+      navigate(fromStorage, { replace: true });
+      localStorage.removeItem("redirect_after_login");
+    } else if (user) {
+      navigate("/dashboard");
     }
   }, [user, navigate]);
 
@@ -42,11 +57,12 @@ const Login = () => {
         username: result.username,
         group_name: result.group_name,
         group_id: result.group_id,
-        
+
       }));
 
       toast.success('সফলভাবে লগইন হয়েছে!');
-      navigate('/dashboard');
+      // navigate('/dashboard');
+      navigate(from, { replace: true });
     } catch (err) {
       setError('লগইন ব্যর্থ! ব্যবহারকারীর নাম বা পাসওয়ার্ড ভুল হতে পারে।');
       toast.error('লগইন ব্যর্থ! ব্যবহারকারীর নাম বা পাসওয়ার্ড ভুল হতে পারে।');
@@ -54,6 +70,8 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+
 
   return (
     <div
