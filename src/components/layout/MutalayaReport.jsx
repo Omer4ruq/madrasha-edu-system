@@ -635,7 +635,7 @@ const MutalayaReport = () => {
                           rowSpan={student.subjects.length}
                           className="border border-black text-center align-top text-[8px]"
                         >
-                          {student.roll_no}
+                          {sIdx +1}
                         </td>
                       )}
                       {subjIdx === 0 && (
