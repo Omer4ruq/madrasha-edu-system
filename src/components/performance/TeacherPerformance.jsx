@@ -11,6 +11,8 @@ import selectStyles from '../../utilitis/selectStyles';
 import { useSelector } from 'react-redux';
 import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi';
 import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
+import useInstituteInfo from '../../redux/features/api/institute/useInstituteInfo';
+import { useGetInstituteLatestQuery } from '../../redux/features/api/institute/instituteLatestApi';
 
 // Register Noto Sans Bengali font
 try {
@@ -29,82 +31,88 @@ try {
 // PDF styles
 const styles = StyleSheet.create({
   page: {
-    padding: 30,
+    padding: 40,
     fontFamily: 'NotoSansBengali',
-    fontSize: 10,
-    color: '#2c3e50',
-    backgroundColor: '#ffffff',
+    fontSize: 11,
+    color: '#1A2A44',
+    backgroundColor: '#FFFFFF',
+    lineHeight: 1.5,
   },
   headerContainer: {
-    backgroundColor: '#441a05',
-    marginHorizontal: -30,
-    marginTop: -30,
-    paddingHorizontal: 30,
-    paddingVertical: 25,
-    marginBottom: 25,
+    backgroundColor: '#2A3F5F',
+    marginHorizontal: -40,
+    marginTop: -40,
+    paddingHorizontal: 40,
+    paddingVertical: 20,
+    marginBottom: 30,
+    borderBottom: '5px solid #DB9E30',
   },
   header: {
     textAlign: 'center',
   },
   schoolName: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#ffffff',
-    marginBottom: 5,
+    color: '#FFFFFF',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    paddingHorizontal: 20,
+    wordWrap: 'break-word',
   },
   headerText: {
-    fontSize: 12,
-    color: '#f8f9fa',
-    marginBottom: 8,
+    fontSize: 10,
+    color: '#E9ECEF',
+    marginBottom: 6,
+    fontWeight: 'normal',
   },
   title: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#DB9E30',
     textAlign: 'center',
+    marginTop: 10,
+    textTransform: 'uppercase',
   },
   metaContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     fontSize: 9,
-    marginBottom: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#DB9E30',
+    marginBottom: 25,
+    padding: 10,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 6,
+    borderLeft: '4px solid #DB9E30',
   },
   metaText: {
-    color: '#6c757d',
+    color: '#495057',
+    fontWeight: 'medium',
   },
   performanceInfoCard: {
-    marginBottom: 20,
+    marginBottom: 25,
     padding: 15,
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    border: '1px solid #E9ECEF',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
   },
   performanceInfoTitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 'bold',
-    color: '#441a05',
-    marginBottom: 10,
+    color: '#2A3F5F',
+    marginBottom: 12,
     textAlign: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-    paddingBottom: 5,
+    borderBottom: '1px solid #E9ECEF',
+    paddingBottom: 8,
   },
   performanceInfoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
-    paddingVertical: 4,
+    marginBottom: 10,
+    paddingVertical: 5,
   },
   performanceLabel: {
     fontSize: 10,
@@ -115,41 +123,38 @@ const styles = StyleSheet.create({
   performanceValue: {
     fontSize: 10,
     color: '#212529',
-    fontWeight: '500',
+    fontWeight: 'medium',
     flex: 1,
     textAlign: 'right',
   },
   table: {
     borderRadius: 8,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    marginBottom: 20,
+    border: '1px solid #DEE2E6',
+    marginBottom: 25,
+    breakInside: 'avoid',
   },
   tableRow: {
     flexDirection: 'row',
+    borderBottom: '1px solid #E9ECEF',
   },
   tableHeader: {
-    backgroundColor: '#441a05',
-    color: '#ffffff',
+    backgroundColor: '#2A3F5F',
+    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 11,
     paddingVertical: 12,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     textAlign: 'center',
-    borderRightWidth: 1,
-    borderRightColor: 'rgba(255,255,255,0.2)',
+    borderRight: '1px solid rgba(255,255,255,0.2)',
   },
   tableCell: {
-    paddingVertical: 10,
-    paddingHorizontal: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
     fontSize: 10,
-    borderRightWidth: 1,
-    borderRightColor: '#e9ecef',
+    borderRight: '1px solid #E9ECEF',
     flex: 1,
     textAlign: 'left',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f8f9fa',
   },
   tableCellCenter: {
     textAlign: 'center',
@@ -157,10 +162,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tableRowAlternate: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F8F9FA',
   },
   tableRowEven: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FFFFFF',
   },
   statusIcon: {
     fontSize: 14,
@@ -168,33 +173,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   statusCompleted: {
-    color: '#28a745',
+    color: '#28A745',
   },
   statusPending: {
-    color: '#dc3545',
-  },
-  statusText: {
-    fontSize: 9,
-    marginTop: 2,
-    textAlign: 'center',
+    color: '#DC3545',
   },
   summarySection: {
     marginTop: 25,
     padding: 20,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-    borderLeftWidth: 5,
-    borderLeftColor: '#441a05',
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    border: '1px solid #E9ECEF',
+    borderLeft: '5px solid #2A3F5F',
+    breakInside: 'avoid',
   },
   summaryTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: 'bold',
-    color: '#441a05',
+    color: '#2A3F5F',
     marginBottom: 15,
     textAlign: 'center',
-    textDecoration: 'underline',
+    textTransform: 'uppercase',
   },
   summaryGrid: {
     flexDirection: 'row',
@@ -204,69 +203,74 @@ const styles = StyleSheet.create({
   summaryItem: {
     width: '48%',
     marginBottom: 12,
-    padding: 10,
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
+    padding: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 6,
+    border: '1px solid #E9ECEF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   summaryLabel: {
     fontSize: 9,
-    color: '#6c757d',
-    marginBottom: 4,
+    color: '#6C757D',
+    marginBottom: 6,
     textAlign: 'center',
+    textTransform: 'uppercase',
   },
   summaryValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#441a05',
+    color: '#2A3F5F',
     textAlign: 'center',
   },
   progressBar: {
-    height: 8,
-    backgroundColor: '#e9ecef',
-    borderRadius: 4,
+    height: 10,
+    backgroundColor: '#E9ECEF',
+    borderRadius: 5,
     marginTop: 15,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#28a745',
-    borderRadius: 4,
+    backgroundColor: '#28A745',
+    borderRadius: 5,
   },
   progressText: {
     textAlign: 'center',
-    marginTop: 5,
+    marginTop: 8,
     fontSize: 10,
     color: '#495057',
     fontWeight: 'bold',
   },
   footer: {
     position: 'absolute',
-    bottom: 20,
-    left: 30,
-    right: 30,
+    bottom: 30,
+    left: 40,
+    right: 40,
     flexDirection: 'row',
     justifyContent: 'space-between',
     fontSize: 8,
-    color: '#6c757d',
+    color: '#6C757D',
     paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#e9ecef',
+    borderTop: '1px solid #E9ECEF',
   },
   watermark: {
     position: 'absolute',
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%) rotate(-45deg)',
-    fontSize: 60,
-    color: 'rgba(68, 26, 5, 0.05)',
+    fontSize: 80,
+    color: 'rgba(42, 63, 95, 0.05)',
+    fontWeight: 'bold',
     zIndex: -1,
+    textTransform: 'uppercase',
   },
 });
 
 // PDF Document Component
-const PDFDocument = ({ performanceData, performanceMetrics, selectedTeacher, selectedMonth, selectedAcademicYear }) => {
+const PDFDocument = ({ performanceData, performanceMetrics, selectedTeacher, selectedMonth, selectedAcademicYear,institute }) => {
   const completedCount = Object.values(performanceData).filter(Boolean).length;
   const totalCount = performanceMetrics.length;
   const pendingCount = totalCount - completedCount;
@@ -281,9 +285,9 @@ const PDFDocument = ({ performanceData, performanceMetrics, selectedTeacher, sel
         {/* Header Section */}
         <View style={styles.headerContainer}>
           <View style={styles.header}>
-            <Text style={styles.schoolName}>আদর্শ বিদ্যালয়</Text>
-            <Text style={styles.headerText}>ঢাকা, বাংলাদেশ</Text>
-            <Text style={styles.headerText}>ফোন: ০১৭xxxxxxxx | ইমেইল: info@school.edu.bd</Text>
+            <Text style={styles.schoolName}>{institute.institute_name}</Text>
+            <Text style={styles.headerText}>{institute?.institute_address}</Text>
+            <Text style={styles.headerText}>{institute?.institute_email_address} | {institute?.headmaster_mobile}</Text>
             <Text style={styles.title}>শিক্ষক কর্মক্ষমতা মূল্যায়ন প্রতিবেদন</Text>
           </View>
         </View>
@@ -417,7 +421,7 @@ const TeacherPerformance = () => {
   const { data: academicYears = [], isLoading: isAcademicYearsLoading, error: academicYearsError } = useGetAcademicYearApiQuery();
   const [createTeacherPerformance, { isLoading: isCreating }] = useCreateTeacherPerformanceApiMutation();
   const [patchTeacherPerformance, { isLoading: isUpdating }] = useUpdateTeacherPerformanceApiMutation();
-
+const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
   // Permission Logic
   const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, { skip: !group_id });
    const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_teacher_performance') || false;
@@ -514,6 +518,7 @@ const TeacherPerformance = () => {
         selectedTeacher={selectedTeacher}
         selectedMonth={selectedMonth}
         selectedAcademicYear={selectedAcademicYear}
+        institute={institute}
       />;
       
       const blob = await pdf(doc).toBlob();

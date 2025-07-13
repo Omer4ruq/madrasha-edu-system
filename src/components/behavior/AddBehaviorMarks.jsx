@@ -10,6 +10,7 @@ import { useGetGroupPermissionsQuery } from '../../redux/features/api/permission
 import { FaSpinner, FaCheck, FaExclamationTriangle, FaTimes, FaGraduationCap, FaDownload } from 'react-icons/fa';
 import { IoAddCircle, IoCheckmarkCircle, IoCloseCircle } from 'react-icons/io5';
 import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
+import { useGetInstituteLatestQuery } from '../../redux/features/api/institute/instituteLatestApi';
 
 // Register Noto Sans Bengali font
 try {
@@ -178,8 +179,11 @@ const BehaviorMarksReportPDF = ({
   behaviorReports, 
   classInfo, 
   examInfo, 
-  academicYearInfo 
+  academicYearInfo,
+  institute
 }) => {
+  
+  
   // Calculate summary statistics
   const calculateSummary = () => {
     let totalStudents = students.length;
@@ -230,9 +234,9 @@ const BehaviorMarksReportPDF = ({
       <Page size="A4" orientation="landscape" style={reportStyles.page}>
         {/* Header */}
         <View style={reportStyles.header}>
-          <Text style={reportStyles.schoolName}>আদর্শ বিদ্যালয়</Text>
-          <Text style={reportStyles.headerText}>ঢাকা, বাংলাদেশ</Text>
-          <Text style={reportStyles.headerText}>ফোন: ০১৭xxxxxxxx | ইমেইল: info@school.edu.bd</Text>
+          <Text style={reportStyles.schoolName}>{institute.institute_name}</Text>
+          <Text style={reportStyles.headerText}>{institute.address}</Text>
+          <Text style={reportStyles.headerText}>{institute?.institute_email_address} | {institute?.headmaster_mobile}</Text>
           <Text style={reportStyles.reportTitle}>আচরণ নম্বর প্রতিবেদন</Text>
         </View>
 
@@ -323,6 +327,7 @@ const AddBehaviorMarks = () => {
   const [toastType, setToastType] = useState('error');
 
   // API Queries
+  const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
   const { data: academicYears, isLoading: academicYearsLoading } = useGetAcademicYearApiQuery();
   const { data: classes, isLoading: classesLoading } = useGetclassConfigApiQuery();
   const { data: exams, isLoading: examsLoading } = useGetExamApiQuery();
@@ -851,6 +856,7 @@ const AddBehaviorMarks = () => {
         classInfo={classInfoText}
         examInfo={examInfoText}
         academicYearInfo={academicYearInfoText}
+        institute={institute}
       />;
 
       const blob = await pdf(doc).toBlob();

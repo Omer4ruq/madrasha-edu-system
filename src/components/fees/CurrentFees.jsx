@@ -239,7 +239,7 @@ const FeeVoucherPDF = ({
       {/* Header */}
       <View style={voucherStyles.header}>
         <Text style={voucherStyles.schoolName}>{institute?.institute_name}</Text>
-        <Text style={voucherStyles.headerText}>{institute?.address}</Text>
+        <Text style={voucherStyles.headerText}>{institute?.institute_address}</Text>
         <Text style={voucherStyles.headerText}>{institute?.institute_email_address} | {institute?.institute_mobile}</Text>
         <Text style={voucherStyles.voucherTitle}>ফি পেমেন্ট ভাউচার</Text>
         <Text style={voucherStyles.voucherNumber}>ভাউচার নং: {voucherNumber}</Text>
@@ -838,7 +838,7 @@ console.log("institute", institute)
         </div>
         
         {/* Fee History Table - Using the new component */}
-        {feesData?.fees_records?.length > 0 && (
+        {/* {feesData?.fees_records?.length > 0 && (
           <div className="mt-8">
             <FeeHistoryTable
               feeRecords={feesData.fees_records}
@@ -851,7 +851,7 @@ console.log("institute", institute)
               calculatePayableAmount={calculatePayableAmount}
             />
           </div>
-        )}
+        )} */}
       </div>
     );
   }
@@ -1243,6 +1243,7 @@ console.log("institute", institute)
             calculatePayableAmount={calculatePayableAmount}
             isUpdating={isUpdating}
             isDeleting={isDeleting}
+            institute={institute}
           />
         )}
 

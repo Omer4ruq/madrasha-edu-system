@@ -11,6 +11,7 @@ import { useGetExpenseHeadsQuery } from "../../redux/features/api/expense-heads/
 import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi";
 import { useSelector } from "react-redux";
 import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
+import { useGetInstituteLatestQuery } from "../../redux/features/api/institute/instituteLatestApi";
 
 // Register Noto Sans Bengali font
 try {
@@ -117,12 +118,13 @@ const styles = StyleSheet.create({
 });
 
 // PDF Document Component
-const PDFDocument = ({ expenseItems, expenseTypes, fundTypes, academicYears, startDate, endDate }) => (
+const PDFDocument = ({ expenseItems, expenseTypes, fundTypes, academicYears, startDate, endDate, institute }) => (
+
   <Document>
     <Page size="A4" orientation="landscape" style={styles.page}>
       <View style={styles.header}>
-        <Text style={styles.schoolName}>আদর্শ বিদ্যালয়</Text>
-        <Text style={styles.headerText}>ঢাকা, বাংলাদেশ</Text>
+        <Text style={styles.schoolName}>{institute.institute_name}</Text>
+        <Text style={styles.headerText}>{institute?.institute_address}</Text>
         <Text style={styles.title}>ব্যয় আইটেম প্রতিবেদন</Text>
         <View style={styles.metaContainer}>
           <Text>
@@ -178,7 +180,7 @@ const ExpenseItemsList = ({ onEditClick }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState(null);
   const [dateFilter, setDateFilter] = useState({ start_date: "", end_date: "", fund_id: "", expensetype_id: "" });
-
+const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
   const { data: expenseTypes = [], isLoading: isTypesLoading } = useGetExpenseHeadsQuery();
   const { data: fundTypes = [], isLoading: isFundLoading, error: fundError } = useGetFundsQuery();
   const { data: academicYears = [], isLoading: isYearsLoading } = useGetAcademicYearApiQuery();
@@ -191,7 +193,7 @@ const ExpenseItemsList = ({ onEditClick }) => {
   const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
     skip: !group_id,
   });
-
+console.log(institute)
   // Check permissions
   const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_expenseitemlist') || false;
   const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_expenseitemlist') || false;
@@ -290,6 +292,7 @@ const ExpenseItemsList = ({ onEditClick }) => {
           academicYears={academicYears}
           startDate={activeTab === "date" ? dateFilter.start_date : null}
           endDate={activeTab === "date" ? dateFilter.end_date : null}
+          institute={institute}
         />
       );
       const blob = await pdf(doc).toBlob();

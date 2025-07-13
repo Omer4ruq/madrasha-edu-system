@@ -6,23 +6,26 @@ import { useGetClassListApiQuery } from "../../redux/features/api/class/classLis
 import {
   useCreateStudentClassApIMutation,
   useGetStudentClassApIQuery,
+  useDeleteStudentClassApIMutation, // Added import for delete mutation
 } from "../../redux/features/api/student/studentClassApi";
 import { Toaster, toast } from "react-hot-toast";
-import { useSelector } from "react-redux"; // Import useSelector
-import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi"; // Import permission hook
+import { useSelector } from "react-redux";
+import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi";
 
 const AddClass = () => {
   const navigate = useNavigate();
-  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
+  const { user, group_id } = useSelector((state) => state.auth);
   const { data: classData, isLoading, error } = useGetClassListApiQuery();
   const {
     data: classList,
     isLoading: isListLoading,
     error: listError,
   } = useGetStudentClassApIQuery();
-  console.log("নির্বাচিত ক্লাসের তালিকা", classList);
-  console.log("class data", classData);
+  
+  // Initialize mutation hooks
   const [createClass, { isLoading: isCreating }] = useCreateStudentClassApIMutation();
+  const [deleteClass, { isLoading: isDeleting }] = useDeleteStudentClassApIMutation(); // Initialized delete mutation hook
+
   const [selectedClasses, setSelectedClasses] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -63,42 +66,72 @@ const AddClass = () => {
     }
     setIsModalOpen(true);
   };
-  console.log("selected class id", selectedClasses);
+
   const confirmSubmit = async () => {
     if (!hasAddPermission) {
       toast.error('ক্লাস তৈরি করার অনুমতি নেই।');
       setIsModalOpen(false);
       return;
     }
-    try {
-      const existingClassIds = classList
-        ? classList.map((item) => item.student_class.id)
-        : [];
-      const classesToCreate = Object.keys(selectedClasses)
-        .filter(
-          (classId) =>
-            selectedClasses[classId] &&
-            !existingClassIds.includes(parseInt(classId))
-        )
-        .map((classId) => ({
-          student_class_id: parseInt(classId),
-          is_active: true,
-        }));
 
+    try {
+      // 1. Map existing classes to their API IDs (needed for deletion)
+      const existingClassesMap = (classList || []).reduce((acc, item) => {
+        // We use student_class.id as the key, and item.id (the API ID) as the value
+        acc[item.student_class.id] = item.id;
+        return acc;
+      }, {});
+      
+      const existingClassIds = Object.keys(existingClassesMap).map(Number);
+      const classesToCreate = [];
+      const classesToDelete = [];
+
+      // 2. Determine classes to create (selected but not existing) and classes to delete (existing but deselected)
+      Object.keys(selectedClasses).forEach((classIdStr) => {
+        const classId = parseInt(classIdStr);
+        const isSelected = selectedClasses[classId];
+        const isExisting = existingClassIds.includes(classId);
+
+        if (isSelected && !isExisting) {
+          // Add: Selected in UI, but not in the existing list
+          classesToCreate.push({
+            student_class_id: classId,
+            is_active: true,
+          });
+        } else if (!isSelected && isExisting) {
+          // Delete: Existing in the list, but now deselected in UI
+          const apiId = existingClassesMap[classId];
+          classesToDelete.push(apiId);
+        }
+      });
+
+      const promises = [];
+
+      // 3. Execute creation mutations
       if (classesToCreate.length > 0) {
-        await Promise.all(
-          classesToCreate.map((classData) => createClass(classData).unwrap())
-        );
-        toast.success("নির্বাচিত ক্লাসগুলো সফলভাবে যোগ করা হয়েছে!");
-      } else if (Object.values(selectedClasses).some((v) => v)) {
-        toast.error("সব নির্বাচিত ক্লাস ইতিমধ্যে যোগ করা হয়েছে!");
+        classesToCreate.forEach((classData) => {
+          promises.push(createClass(classData).unwrap());
+        });
+      }
+
+      // 4. Execute deletion mutations
+      if (classesToDelete.length > 0) {
+        classesToDelete.forEach((apiId) => {
+          promises.push(deleteClass(apiId).unwrap());
+        });
+      }
+
+      if (promises.length > 0) {
+        // Wait for all creations and deletions to complete
+        await Promise.all(promises);
+        toast.success("নির্বাচিত ক্লাসগুলো সফলভাবে হালনাগাদ করা হয়েছে!");
       } else {
-        toast.error("অন্তত একটি ক্লাস নির্বাচন করুন");
+        toast.error("কোনো পরিবর্তন সনাক্ত করা হয়নি।");
       }
     } catch (err) {
-      console.error("ক্লাস যোগ করতে ত্রুটি:", err);
+      console.error("ক্লাস হালনাগাদ করতে ত্রুটি:", err);
       toast.error(
-        `ক্লাস যোগ করতে ব্যর্থ: ${err.status || "অজানা"} - ${JSON.stringify(
+        `ক্লাস হালনাগাদ করতে ব্যর্থ: ${err.status || "অজানা"} - ${JSON.stringify(
           err.data || {}
         )}`
       );
@@ -111,7 +144,8 @@ const AddClass = () => {
     navigate("/class-management/view-classes/subjects");
   };
 
-  if (isLoading || isListLoading || permissionsLoading) {
+  // Ensure loading state checks for all relevant operations
+  if (isLoading || isListLoading || permissionsLoading || isCreating || isDeleting) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="flex items-center gap-4 p-6 bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 animate-fadeIn">
@@ -295,7 +329,7 @@ const AddClass = () => {
                       <span className="text-[#441a05] font-medium">
                         {classItem?.name}
                       </span>
-                      {hasAddPermission && ( // Only show trash if has add permission to remove
+                      {hasAddPermission && (
                         <button
                           onClick={() => handleToggle(id)}
                           title="ক্লাস সরান"
@@ -313,15 +347,16 @@ const AddClass = () => {
           {hasAddPermission && (
             <div className="flex justify-end mt-6">
               <button
+                // Use isCreating or isDeleting to disable the button while processing
                 onClick={handleSubmit}
-                disabled={isCreating}
+                disabled={isCreating || isDeleting}
                 className={`relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                  isCreating
+                  (isCreating || isDeleting)
                     ? "cursor-not-allowed opacity-60"
                     : "hover:text-white btn-glow"
                 }`}
               >
-                {isCreating ? (
+                {(isCreating || isDeleting) ? (
                   <span className="flex items-center space-x-3">
                     <FaSpinner className="animate-spin text-lg" />
                     <span>জমা দেওয়া হচ্ছে...</span>

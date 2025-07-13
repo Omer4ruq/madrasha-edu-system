@@ -10,13 +10,14 @@ import {
 } from '../../redux/features/api/clean/cleanReportApi';
 import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
 import { useGetCleanReportTypeApiQuery } from '../../redux/features/api/clean/cleanReportTypeApi';
+import { useGetInstituteLatestQuery } from '../../redux/features/api/institute/instituteLatestApi';
 import { IoAddCircle } from 'react-icons/io5';
 import selectStyles from '../../utilitis/selectStyles';
 import { useSelector } from 'react-redux';
 import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi';
 import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
 
-// Register Noto Sans Bengali font (Used for PDF generation)
+// Register Noto Sans Bengali font
 try {
   Font.register({
     family: 'NotoSansBengali',
@@ -30,85 +31,91 @@ try {
   });
 }
 
-// PDF Styles (Similar to TeacherPerformance, adapted for CleanReport)
+// PDF Styles
 const styles = StyleSheet.create({
   page: {
-    padding: 30,
+    padding: 40,
     fontFamily: 'NotoSansBengali',
-    fontSize: 10,
-    color: '#2c3e50',
-    backgroundColor: '#ffffff',
+    fontSize: 11,
+    color: '#1A2A44',
+    backgroundColor: '#FFFFFF',
+    lineHeight: 1.5,
   },
   headerContainer: {
-    backgroundColor: '#441a05',
-    marginHorizontal: -30,
-    marginTop: -30,
-    paddingHorizontal: 30,
-    paddingVertical: 25,
-    marginBottom: 25,
+    backgroundColor: '#2A3F5F',
+    marginHorizontal: -40,
+    marginTop: -40,
+    paddingHorizontal: 40,
+    paddingVertical: 20,
+    marginBottom: 30,
+    borderBottom: '5px solid #DB9E30',
   },
   header: {
     textAlign: 'center',
   },
   schoolName: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#ffffff',
-    marginBottom: 5,
+    color: '#FFFFFF',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    paddingHorizontal: 20, // Prevent text cutoff
+    wordWrap: 'break-word',
   },
   headerText: {
-    fontSize: 12,
-    color: '#f8f9fa',
-    marginBottom: 8,
+    fontSize: 10,
+    color: '#E9ECEF',
+    marginBottom: 6,
+    fontWeight: 'normal',
   },
   title: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#DB9E30',
     textAlign: 'center',
+    marginTop: 10,
+    textTransform: 'uppercase',
   },
   metaContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     fontSize: 9,
-    marginBottom: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#DB9E30',
+    marginBottom: 25,
+    padding: 10,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 6,
+    borderLeft: '4px solid #DB9E30',
   },
   metaText: {
-    color: '#6c757d',
+    color: '#495057',
+    fontWeight: 'medium',
   },
   reportInfoCard: {
-    marginBottom: 20,
+    marginBottom: 25,
     padding: 15,
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    border: '1px solid #E9ECEF',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
   },
   reportInfoTitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 'bold',
-    color: '#441a05',
-    marginBottom: 10,
+    color: '#2A3F5F',
+    marginBottom: 12,
     textAlign: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-    paddingBottom: 5,
+    borderBottom: '1px solid #E9ECEF',
+    paddingBottom: 8,
   },
   reportInfoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
-    paddingVertical: 4,
+    marginBottom: 10,
+    paddingVertical: 5,
   },
   reportLabel: {
     fontSize: 10,
@@ -119,41 +126,38 @@ const styles = StyleSheet.create({
   reportValue: {
     fontSize: 10,
     color: '#212529',
-    fontWeight: '500',
+    fontWeight: 'medium',
     flex: 1,
     textAlign: 'right',
   },
   table: {
     borderRadius: 8,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    marginBottom: 20,
+    border: '1px solid #DEE2E6',
+    marginBottom: 25,
+    breakInside: 'avoid', // Prevent table from splitting across pages
   },
   tableRow: {
     flexDirection: 'row',
+    borderBottom: '1px solid #E9ECEF',
   },
   tableHeader: {
-    backgroundColor: '#441a05',
-    color: '#ffffff',
+    backgroundColor: '#2A3F5F',
+    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 11,
     paddingVertical: 12,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     textAlign: 'center',
-    borderRightWidth: 1,
-    borderRightColor: 'rgba(255,255,255,0.2)',
+    borderRight: '1px solid rgba(255,255,255,0.2)',
   },
   tableCell: {
-    paddingVertical: 10,
-    paddingHorizontal: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
     fontSize: 10,
-    borderRightWidth: 1,
-    borderRightColor: '#e9ecef',
+    borderRight: '1px solid #E9ECEF',
     flex: 1,
     textAlign: 'left',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f8f9fa',
   },
   tableCellCenter: {
     textAlign: 'center',
@@ -161,10 +165,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tableRowAlternate: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F8F9FA',
   },
   tableRowEven: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FFFFFF',
   },
   statusIcon: {
     fontSize: 14,
@@ -172,33 +176,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   statusClean: {
-    color: '#28a745',
+    color: '#28A745',
   },
   statusDirty: {
-    color: '#dc3545',
-  },
-  statusText: {
-    fontSize: 9,
-    marginTop: 2,
-    textAlign: 'center',
+    color: '#DC3545',
   },
   summarySection: {
     marginTop: 25,
     padding: 20,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-    borderLeftWidth: 5,
-    borderLeftColor: '#441a05',
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    border: '1px solid #E9ECEF',
+    borderLeft: '5px solid #2A3F5F',
+    breakInside: 'avoid', // Prevent summary from splitting
   },
   summaryTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: 'bold',
-    color: '#441a05',
+    color: '#2A3F5F',
     marginBottom: 15,
     textAlign: 'center',
-    textDecoration: 'underline',
+    textTransform: 'uppercase',
   },
   summaryGrid: {
     flexDirection: 'row',
@@ -208,75 +206,79 @@ const styles = StyleSheet.create({
   summaryItem: {
     width: '48%',
     marginBottom: 12,
-    padding: 10,
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
+    padding: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 6,
+    border: '1px solid #E9ECEF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   summaryLabel: {
     fontSize: 9,
-    color: '#6c757d',
-    marginBottom: 4,
+    color: '#6C757D',
+    marginBottom: 6,
     textAlign: 'center',
+    textTransform: 'uppercase',
   },
   summaryValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#441a05',
+    color: '#2A3F5F',
     textAlign: 'center',
   },
   progressBar: {
-    height: 8,
-    backgroundColor: '#e9ecef',
-    borderRadius: 4,
+    height: 10,
+    backgroundColor: '#E9ECEF',
+    borderRadius: 5,
     marginTop: 15,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#28a745',
-    borderRadius: 4,
+    backgroundColor: '#28A745',
+    borderRadius: 5,
   },
   progressText: {
     textAlign: 'center',
-    marginTop: 5,
+    marginTop: 8,
     fontSize: 10,
     color: '#495057',
     fontWeight: 'bold',
   },
   footer: {
     position: 'absolute',
-    bottom: 20,
-    left: 30,
-    right: 30,
+    bottom: 30,
+    left: 40,
+    right: 40,
     flexDirection: 'row',
     justifyContent: 'space-between',
     fontSize: 8,
-    color: '#6c757d',
+    color: '#6C757D',
     paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#e9ecef',
+    borderTop: '1px solid #E9ECEF',
   },
   watermark: {
     position: 'absolute',
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%) rotate(-45deg)',
-    fontSize: 60,
-    color: 'rgba(68, 26, 5, 0.05)',
+    fontSize: 80,
+    color: 'rgba(42, 63, 95, 0.05)',
+    fontWeight: 'bold',
     zIndex: -1,
+    textTransform: 'uppercase',
   },
 });
 
 // PDF Document Component
-const PDFDocument = ({ cleanReportTypes, filteredReports, selectedClass, selectedDate, cleanReportData }) => {
-  
+const PDFDocument = ({ cleanReportTypes, filteredReports, selectedClass, selectedDate, cleanReportData, institute }) => {
   const totalReports = cleanReportTypes.length;
   const cleanCount = filteredReports.filter(report => report.is_clean).length;
   const dirtyCount = totalReports - cleanCount;
   const cleanPercentage = totalReports > 0 ? ((cleanCount / totalReports) * 100).toFixed(1) : 0;
-  
+
   // Format the selected date for display
   const formatDate = (dateString) => {
     try {
@@ -289,16 +291,19 @@ const PDFDocument = ({ cleanReportTypes, filteredReports, selectedClass, selecte
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" style={styles.page} wrap>
         {/* Watermark */}
-        <Text style={styles.watermark}>আদর্শ বিদ্যালয়</Text>
+        <Text style={styles.watermark}>{institute?.institute_name || 'আদর্শ বিদ্যালয়'}</Text>
         
         {/* Header Section */}
-        <View style={styles.headerContainer}>
+        <View style={styles.headerContainer} fixed>
           <View style={styles.header}>
-            <Text style={styles.schoolName}>আদর্শ বিদ্যালয়</Text>
-            <Text style={styles.headerText}>ঢাকা, বাংলাদেশ</Text>
-            <Text style={styles.headerText}>ফোন: ০১৭xxxxxxxx | ইমেইল: info@school.edu.bd</Text>
+            <Text style={styles.schoolName}>{institute?.institute_name || 'আদর্শ বিদ্যালয়'}</Text>
+            <Text style={styles.headerText}>{institute?.institute_address || 'ঢাকা, বাংলাদেশ'}</Text>
+            <Text style={styles.headerText}>
+              {institute?.institute_email_address ? `ইমেইল: ${institute.institute_email_address}` : ''} 
+              {institute?.headmaster_mobile ? ` | ফোন: ${institute.headmaster_mobile}` : ''}
+            </Text>
             <Text style={styles.title}>পরিচ্ছন্নতা মূল্যায়ন প্রতিবেদন</Text>
           </View>
         </View>
@@ -335,7 +340,7 @@ const PDFDocument = ({ cleanReportTypes, filteredReports, selectedClass, selecte
         </View>
 
         {/* Cleanliness Report Table */}
-        <View style={styles.table}>
+        <View style={styles.table} wrap={false}>
           <View style={styles.tableRow}>
             <Text style={[styles.tableHeader, { flex: 3 }]}>পরিচ্ছন্নতার ধরন</Text>
             <Text style={[styles.tableHeader, { flex: 1 }]}>স্থিতি</Text>
@@ -350,7 +355,7 @@ const PDFDocument = ({ cleanReportTypes, filteredReports, selectedClass, selecte
               ]}>
                 <Text style={[styles.tableCell, { flex: 3 }]}>{type.name}</Text>
                 <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
-                  {isClean ? 'পরিষ্কার' : 'অপরিষ্কার'}
+                  {isClean ? 'পরিষ্কার' : 'অপরিষ্ক2ার'}
                 </Text>
                 <View style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
                   <Text style={[
@@ -366,7 +371,7 @@ const PDFDocument = ({ cleanReportTypes, filteredReports, selectedClass, selecte
         </View>
 
         {/* Cleanliness Summary */}
-        <View style={styles.summarySection}>
+        <View style={styles.summarySection} wrap={false}>
           <Text style={styles.summaryTitle}>পরিচ্ছন্নতা সারাংশ</Text>
           <View style={styles.summaryGrid}>
             <View style={styles.summaryItem}>
@@ -375,15 +380,15 @@ const PDFDocument = ({ cleanReportTypes, filteredReports, selectedClass, selecte
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>পরিষ্কার</Text>
-              <Text style={[styles.summaryValue, { color: '#28a745' }]}>{cleanCount}</Text>
+              <Text style={[styles.summaryValue, { color: '#28A745' }]}>{cleanCount}</Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>অপরিষ্কার</Text>
-              <Text style={[styles.summaryValue, { color: '#dc3545' }]}>{dirtyCount}</Text>
+              <Text style={[styles.summaryValue, { color: '#DC3545' }]}>{dirtyCount}</Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>সাফল্যের হার</Text>
-              <Text style={[styles.summaryValue, { color: '#441a05' }]}>{cleanPercentage}%</Text>
+              <Text style={[styles.summaryValue, { color: '#2A3F5F' }]}>{cleanPercentage}%</Text>
             </View>
           </View>
           
@@ -398,14 +403,13 @@ const PDFDocument = ({ cleanReportTypes, filteredReports, selectedClass, selecte
 
         {/* Footer */}
         <View style={styles.footer} fixed>
-          <Text>এই প্রতিবেদনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে | আদর্শ বিদ্যালয় - পরিচ্ছন্নতা ব্যবস্থাপনা সিস্টেম</Text>
+          <Text>এই প্রতিবেদনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে | {institute?.institute_name || 'আদর্শ বিদ্যালয়'} - পরিচ্ছন্নতা ব্যবস্থাপনা সিস্টেম</Text>
           <Text render={({ pageNumber, totalPages }) => `পৃষ্ঠা ${pageNumber} এর ${totalPages}`} />
         </View>
       </Page>
     </Document>
   );
 };
-
 
 const CleanReport = () => {
   // State for form inputs
@@ -425,6 +429,7 @@ const CleanReport = () => {
     useGetclassConfigApiQuery();
   const { data: cleanReportTypes = [], isLoading: isTypesLoading, error: typesError } =
     useGetCleanReportTypeApiQuery();
+  const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
   const [createCleanReport, { isLoading: isCreating }] = useCreateCleanReportApiMutation();
   const [updateCleanReport, { isLoading: isUpdating }] = useUpdateCleanReportApiMutation();
   const [deleteCleanReport, { isLoading: isDeleting, error: deleteError }] = useDeleteCleanReportApiMutation();
@@ -581,6 +586,7 @@ const CleanReport = () => {
         selectedClass={selectedClass}
         selectedDate={selectedDate}
         cleanReportData={cleanReportData}
+        institute={institute}
       />;
       
       const blob = await pdf(doc).toBlob();
@@ -601,12 +607,20 @@ const CleanReport = () => {
   };
 
   // Permission-based Rendering
-  if (permissionsLoading) {
-    return <div className="p-4 text-center">অনুমতি লোড হচ্ছে...</div>;
+  if (permissionsLoading || instituteLoading) {
+    return <div className="p-4 text-center">অনুমতি এবং প্রতিষ্ঠানের তথ্য লোড হচ্ছে...</div>;
   }
 
   if (!hasViewPermission) {
     return <div className="p-4 text-center text-red-500">এই পৃষ্ঠাটি দেখার অনুমতি আপনার নেই।</div>;
+  }
+
+  if (instituteError) {
+    return (
+      <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
+        প্রতিষ্ঠানের তথ্য ত্রুটি: {instituteError.status || 'অজানা'} - {JSON.stringify(instituteError.data || {})}
+      </div>
+    );
   }
 
   // Render clean report table
@@ -761,7 +775,7 @@ const CleanReport = () => {
             box-shadow: 0 0 15px rgba(219, 158, 48, 0.3);
           }
           .report-button {
-            background-color: #441a05;
+            background-color: #2A3F5F;
             color: white;
             padding: 8px 16px;
             border-radius: 8px;
@@ -772,7 +786,7 @@ const CleanReport = () => {
             font-weight: 500;
           }
           .report-button:hover {
-            background-color: #5a2e0a;
+            background-color: #3B567D;
             box-shadow: 0 0 15px rgba(219, 158, 48, 0.3);
           }
           .report-button:disabled {
@@ -798,19 +812,19 @@ const CleanReport = () => {
       {(hasAddPermission || hasChangePermission) && (
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
           <div className="flex items-center space-x-2 mb-6">
-            <IoAddCircle className="text-3xl text-[#441a05]" />
-            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">পরিচ্ছন্নতার রিপোর্ট</h3>
+            <IoAddCircle className="text-3xl text-[#2A3F5F]" />
+            <h3 className="sm:text-2xl text-xl font-bold text-[#2A3F5F] tracking-tight">পরিচ্ছন্নতার রিপোর্ট</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <label className="flex items-center space-x-4 animate-fadeIn">
-              <span className="text-[#441a05] sm:text-base text-xs font-medium text-nowrap">তারিখ নির্বাচন করুন:</span>
+              <span className="text-[#2A3F5F] sm:text-base text-xs font-medium text-nowrap">তারিখ নির্বাচন করুন:</span>
               <div className="w-full">
                 <input
                   type="date"
                   value={selectedDate}
                   onChange={handleDateChange}
                   onClick={(e) => e.target.showPicker()}
-                  className="w-full bg-transparent text-[#441a05] pl-3 py-1.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
+                  className="w-full bg-transparent text-[#2A3F5F] pl-3 py-1.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   disabled={isCreating || isUpdating}
                   aria-label="তারিখ"
                   title="তারিখ নির্বাচন করুন / Select date"
@@ -818,7 +832,7 @@ const CleanReport = () => {
               </div>
             </label>
             <label className="flex items-center space-x-4 animate-fadeIn">
-              <span className="text-[#441a05] sm:text-base text-xs font-medium text-nowrap">ক্লাস নির্বাচন করুন:</span>
+              <span className="text-[#2A3F5F] sm:text-base text-xs font-medium text-nowrap">ক্লাস নির্বাচন করুন:</span>
               <div className="w-full">
                 <Select
                   options={classOptions}
@@ -853,7 +867,7 @@ const CleanReport = () => {
           )}
 
           {isClassesLoading && (
-            <div className="flex items-center space-x-2 text-[#441a05]/70 animate-fadeIn mt-4">
+            <div className="flex items-center space-x-2 text-[#2A3F5F]/70 animate-fadeIn mt-4">
               <FaSpinner className="animate-spin text-lg" />
               <span>ক্লাস লোড হচ্ছে...</span>
             </div>
@@ -871,7 +885,7 @@ const CleanReport = () => {
 
       <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 border-b border-white/20">
-          <h3 className="text-lg font-semibold text-[#441a05]">পরিচ্ছন্নতা রিপোর্টের ধরন</h3>
+          <h3 className="text-lg font-semibold text-[#2A3F5F]">পরিচ্ছন্নতা রিপোর্টের ধরন</h3>
           {/* Additional PDF Report Button in table header */}
           {selectedClass && selectedDate && cleanReportTypes.length > 0 && (
             <button
@@ -893,23 +907,23 @@ const CleanReport = () => {
           <div
             className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border-t border-white/20 animate-slideUp"
           >
-            <h3 className="text-lg font-semibold text-[#441a05] mb-4">
+            <h3 className="text-lg font-semibold text-[#2A3F5F] mb-4">
               পরিচ্ছন্নতা রিপোর্ট মুছে ফেলা নিশ্চিত করুন
             </h3>
-            <p className="text-[#441a05] mb-6">
+            <p className="text-[#2A3F5F] mb-6">
               আপনি কি নিশ্চিত যে এই পরিচ্ছন্নতা রিপোর্টটি মুছে ফেলতে চান?
             </p>
             <div className="flex justify-end space-x-4">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
+                className="px-4 py-2 bg-gray-500/20 text-[#2A3F5F] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
                 title="বাতিল করুন"
               >
                 বাতিল
               </button>
               <button
                 onClick={confirmAction}
-                className="px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white transition-colors duration-300 btn-glow"
+                className="px-4 py-2 bg-[#DB9E30] text-[#2A3F5F] rounded-lg hover:text-white transition-colors duration-300 btn-glow"
                 title="নিশ্চিত করুন"
               >
                 নিশ্চিত করুন

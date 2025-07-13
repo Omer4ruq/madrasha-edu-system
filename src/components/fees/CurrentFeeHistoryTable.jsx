@@ -108,14 +108,16 @@ const styles = StyleSheet.create({
 });
 
 // PDF Document Component
-const PDFDocument = ({ feeRecords, filterType, startDate, endDate, selectedStudent }) => (
+const PDFDocument = ({ feeRecords, filterType, startDate, endDate, selectedStudent, institute }) => (
   <Document>
     <Page size="A4" orientation="landscape" style={styles.page}>
       <View style={styles.header}>
-        <Text style={styles.schoolName}>আদর্শ বিদ্যালয়</Text>
-        <Text style={styles.headerText}>ঢাকা, বাংলাদেশ</Text>
+        <Text style={styles.schoolName}>{institute?.institute_name}</Text>
+        <Text style={styles.headerText}>{institute?.institute_address}</Text>
+        <Text style={styles.headerText}>{institute?.institute_email_address} | {institute?.institute_mobile}</Text>
+          
         <Text style={styles.title}>
-          ফি ইতিহাস প্রতিবেদন - {filterType === 'due' ? 'বকেয়া ফি' : filterType === 'paid' ? 'পরিশোধিত ফি' : 'সমস্ত ফি'}
+          ফি ইতিহাস প্রতিবেদন - {filterType === 'due' ? 'বকেয়া ফি' : filterType === 'paid' ? 'পরিশোধিত ' : 'সমস্ত ফি'}
         </Text>
         {selectedStudent && (
           <Text style={styles.headerText}>
@@ -176,7 +178,8 @@ const CurrentFeeHistoryTable = ({
   onDeleteFee = () => {},
   calculatePayableAmount = () => ({ waiverAmount: '0.00' }),
   isUpdating = false,
-  isDeleting = false
+  isDeleting = false,
+  institute
 }) => {
   const [filterType, setFilterType] = useState('all'); // 'all', 'due', 'paid'
   const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
@@ -242,6 +245,7 @@ console.log("feeRecords", feeRecords)
         startDate={dateFilter.startDate}
         endDate={dateFilter.endDate}
         selectedStudent={selectedStudent}
+        institute={institute}
       />;
       
       const blob = await pdf(doc).toBlob();

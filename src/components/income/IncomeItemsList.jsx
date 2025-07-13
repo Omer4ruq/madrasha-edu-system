@@ -11,6 +11,7 @@ import { useGetIncomeHeadsQuery } from "../../redux/features/api/income-heads/in
 import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi";
 import { useSelector } from "react-redux";
 import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
+import { useGetInstituteLatestQuery } from "../../redux/features/api/institute/instituteLatestApi";
 
 // Register Noto Sans Bengali font
 try {
@@ -117,12 +118,12 @@ const styles = StyleSheet.create({
 });
 
 // PDF Document Component
-const PDFDocument = ({ incomeItems, incomeTypes, fundTypes, academicYears, startDate, endDate }) => (
+const PDFDocument = ({ incomeItems, incomeTypes, fundTypes, academicYears, startDate, endDate, institute }) => (
   <Document>
     <Page size="A4" orientation="landscape" style={styles.page}>
       <View style={styles.header}>
-        <Text style={styles.schoolName}>আদর্শ বিদ্যালয়</Text>
-        <Text style={styles.headerText}>ঢাকা, বাংলাদেশ</Text>
+        <Text style={styles.schoolName}>{institute.institute_name}</Text>
+        <Text style={styles.headerText}>{institute?.institute_address}</Text>
         <Text style={styles.title}>আয় আইটেম প্রতিবেদন</Text>
         <View style={styles.metaContainer}>
           <Text style={styles.metaText}>
@@ -178,7 +179,7 @@ const IncomeItemsList = ({ onEditClick, onDelete }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState(null);
   const [dateFilter, setDateFilter] = useState({ start_date: "", end_date: "", fund_id: "", incometype_id: "" });
-
+const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
   const { data: incomeTypes = [], isLoading: isTypesLoading } = useGetIncomeHeadsQuery();
   const { data: fundTypes = [], isLoading: isFundLoading, error: fundError } = useGetFundsQuery();
   const { data: academicYears = [], isLoading: isYearsLoading } = useGetAcademicYearApiQuery();
@@ -289,6 +290,7 @@ const IncomeItemsList = ({ onEditClick, onDelete }) => {
         academicYears={academicYears}
         startDate={activeTab === "date" ? dateFilter.start_date : null}
         endDate={activeTab === "date" ? dateFilter.end_date : null}
+        institute={institute}
       />;
       const blob = await pdf(doc).toBlob();
       const url = URL.createObjectURL(blob);

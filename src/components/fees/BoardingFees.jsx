@@ -3,6 +3,7 @@ import { FaEdit, FaSpinner, FaTrash } from 'react-icons/fa';
 import { IoAdd, IoAddCircle } from 'react-icons/io5';
 import Select from 'react-select';
 import { Toaster, toast } from 'react-hot-toast';
+import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
 import { useGetStudentActiveApiQuery } from '../../redux/features/api/student/studentActiveApi';
 import { useGetStudentCurrentFeesQuery } from '../../redux/features/api/studentFeesCurrentApi/studentFeesCurrentApi';
 import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
@@ -12,6 +13,175 @@ import { useCreateFeeMutation, useUpdateFeeMutation, useDeleteFeeMutation } from
 import selectStyles from '../../utilitis/selectStyles'; // Assuming this path is correct
 import { useSelector } from 'react-redux'; // Import useSelector
 import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi'; // Import permission hook
+import { useGetInstituteLatestQuery } from '../../redux/features/api/institute/instituteLatestApi';
+
+// Register Noto Sans Bengali font
+try {
+  Font.register({
+    family: 'NotoSansBengali',
+    src: 'https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf',
+  });
+} catch (error) {
+  console.error('Font registration failed:', error);
+  Font.register({
+    family: 'Helvetica',
+    src: 'https://fonts.gstatic.com/s/helvetica/v13/Helvetica.ttf',
+  });
+}
+
+// PDF styles
+const styles = StyleSheet.create({
+  page: {
+    padding: 40,
+    fontFamily: 'NotoSansBengali',
+    fontSize: 10,
+    color: '#222',
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  schoolName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#441a05',
+  },
+  headerText: {
+    fontSize: 10,
+    marginTop: 4,
+  },
+  title: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    marginTop: 6,
+    marginBottom: 10,
+    color: '#441a05',
+    textDecoration: 'underline',
+  },
+  metaContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    fontSize: 9,
+    marginBottom: 8,
+  },
+  divider: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#441a05',
+    marginVertical: 6,
+  },
+  table: {
+    display: 'table',
+    width: 'auto',
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderColor: '#441a05',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#441a05',
+  },
+  tableHeader: {
+    backgroundColor: '#441a05',
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    textAlign: 'center',
+    borderRightWidth: 1,
+    borderRightColor: '#fff',
+  },
+  tableCell: {
+    paddingVertical: 5,
+    paddingHorizontal: 4,
+    fontSize: 9,
+    borderRightWidth: 1,
+    borderRightColor: '#ddd',
+    flex: 1,
+    textAlign: 'left',
+  },
+  tableCellCenter: {
+    textAlign: 'center',
+  },
+  tableRowAlternate: {
+    backgroundColor: '#f2f2f2',
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 40,
+    right: 40,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    fontSize: 8,
+    color: '#555',
+  },
+});
+
+// PDF Document Component
+const PDFDocument = ({ feeRecords, filterType, feeTypeFilter, startDate, endDate, selectedStudent, institute }) => (
+  <Document>
+    <Page size="A4" orientation="landscape" style={styles.page}>
+      <View style={styles.header}>
+        <Text style={styles.schoolName}>{institute?.institute_name}</Text>
+        <Text style={styles.headerText}>{institute?.institute_address}</Text>
+        <Text style={styles.headerText}>{institute?.institute_email_address} | {institute?.institute_mobile}</Text>
+          
+        <Text style={styles.title}>
+          বোর্ডিং ফি ইতিহাস প্রতিবেদন - {filterType === 'due' ? 'বকেয়া ' : filterType === 'paid' ? 'পরিশোধিত ফি' : 'সমস্ত ফি'}
+        </Text>
+        {selectedStudent && (
+          <Text style={styles.headerText}>
+            ছাত্র: {selectedStudent.name} (রোল: {selectedStudent.roll_no || 'অজানা'})
+          </Text>
+        )}
+        {feeTypeFilter && (
+          <Text style={styles.headerText}>
+            ফি প্রকার: {feeTypeFilter}
+          </Text>
+        )}
+        <View style={styles.metaContainer}>
+          <Text>
+            তারিখ পরিসীমা: {startDate ? new Date(startDate).toLocaleDateString('bn-BD') : 'শুরু'} থেকে {endDate ? new Date(endDate).toLocaleDateString('bn-BD') : 'শেষ'}
+          </Text>
+          <Text>
+            তৈরির তারিখ: {new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
+          </Text>
+        </View>
+        <View style={styles.divider} />
+      </View>
+      <View style={styles.table}>
+        <View style={styles.tableRow}>
+          <Text style={[styles.tableHeader, { flex: 1.5 }]}>ফি প্রকার</Text>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>মোট প্রদান পরিমাণ</Text>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>ওয়েভার পরিমাণ</Text>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>ডিসকাউন্ট পরিমাণ</Text>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>স্থিতি</Text>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>তৈরির তারিখ</Text>
+        </View>
+        {feeRecords.map((fee, index) => (
+          <View key={fee.id} style={[styles.tableRow, index % 2 === 1 && styles.tableRowAlternate]}>
+            <Text style={[styles.tableCell, { flex: 1.5 }]}>{fee.feetype_name}</Text>
+            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{fee.amount}</Text>
+            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{fee.waiver_amount || '0.00'}</Text>
+            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{fee.discount_amount}</Text>
+            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
+              {fee.status === 'PAID' ? 'প্রদান' : fee.status === 'PARTIAL' ? 'আংশিক' : 'অপ্রদান'}
+            </Text>
+            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
+              {fee.created_at ? new Date(fee.created_at).toLocaleDateString('bn-BD') : 'অজানা'}
+            </Text>
+          </View>
+        ))}
+      </View>
+      <View style={styles.footer} fixed>
+        <Text>প্রতিবেদনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে।</Text>
+        <Text render={({ pageNumber, totalPages }) => `পৃষ্ঠা ${pageNumber} এর ${totalPages}`} />
+      </View>
+    </Page>
+  </Document>
+);
 
 const BoardingFees = () => {
   const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
@@ -27,6 +197,13 @@ const BoardingFees = () => {
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
   const [selectAll, setSelectAll] = useState(false); // State for Select All checkbox
+  
+  // History filter states
+  const [historyFilterType, setHistoryFilterType] = useState('all'); // 'all', 'due', 'paid'
+  const [historyFeeTypeFilter, setHistoryFeeTypeFilter] = useState(''); // Filter by fee type
+  const [historyDateFilter, setHistoryDateFilter] = useState({ startDate: '', endDate: '' });
+  const [historyDateFilterType, setHistoryDateFilterType] = useState(''); // 'date', 'month'
+  
   const dropdownRef = useRef(null);
 
   // Permissions hook
@@ -40,8 +217,8 @@ const BoardingFees = () => {
   const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_fees') || false;
   const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_fees') || false;
 
-
   // API Queries
+  const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
   const { data: studentData, isLoading: studentLoading, error: studentError } = useGetStudentActiveApiQuery(
     userId ? { user_id: userId } : undefined,
     { skip: !userId || !hasViewPermission } // Skip query if no view permission
@@ -116,6 +293,120 @@ const BoardingFees = () => {
         del.feetype.some((df) => df.id === fee.id)
       )
   ) || [];
+
+  // Get boarding fee history records with filters
+  const getBoardingFeeHistory = () => {
+    if (!feesData?.fees_records) return [];
+    
+    return feesData.fees_records.filter((fee) => {
+      const feeNameRecord = feesData.fees_name_records?.find(
+        (f) => f.id === fee.feetype_id
+      );
+      
+      // Only boarding fees
+      if (!feeNameRecord?.is_boarding) return false;
+      
+      // Status filter
+      if (historyFilterType === 'due' && fee.status === 'PAID') return false;
+      if (historyFilterType === 'paid' && fee.status !== 'PAID') return false;
+      
+      // Fee type filter
+      if (historyFeeTypeFilter && fee.feetype_name !== historyFeeTypeFilter) return false;
+      
+      // Date filter
+      if (historyDateFilterType && historyDateFilter.startDate && historyDateFilter.endDate) {
+        const feeDate = new Date(fee.created_at || fee.updated_at);
+        const startDate = new Date(historyDateFilter.startDate);
+        const endDate = new Date(historyDateFilter.endDate);
+        
+        if (historyDateFilterType === 'month') {
+          const feeMonth = feeDate.getMonth();
+          const feeYear = feeDate.getFullYear();
+          const startMonth = startDate.getMonth();
+          const startYear = startDate.getFullYear();
+          const endMonth = endDate.getMonth();
+          const endYear = endDate.getFullYear();
+          
+          if (feeYear < startYear || feeYear > endYear) return false;
+          if (feeYear === startYear && feeMonth < startMonth) return false;
+          if (feeYear === endYear && feeMonth > endMonth) return false;
+        } else {
+          if (feeDate < startDate || feeDate > endDate) return false;
+        }
+      }
+      
+      return true;
+    });
+  };
+
+  // Get unique fee types for filter dropdown
+  const getUniqueFeeTypes = () => {
+    if (!feesData?.fees_records) return [];
+    
+    const boardingFeeTypes = feesData.fees_records
+      .filter((fee) => {
+        const feeNameRecord = feesData.fees_name_records?.find(
+          (f) => f.id === fee.feetype_id
+        );
+        return feeNameRecord?.is_boarding === true;
+      })
+      .map((fee) => fee.feetype_name)
+      .filter((value, index, self) => self.indexOf(value) === index);
+    
+    return boardingFeeTypes;
+  };
+
+  // Generate PDF report for history
+  const generateHistoryPDFReport = async () => {
+    if (!hasViewPermission) {
+      toast.error('বোর্ডিং ফি ইতিহাস প্রতিবেদন দেখার অনুমতি নেই।');
+      return;
+    }
+    
+    const filteredRecords = getBoardingFeeHistory();
+    
+    if (filteredRecords.length === 0) {
+      toast.error('নির্বাচিত ফিল্টারে কোনো বোর্ডিং ফি রেকর্ড পাওয়া যায়নি।');
+      return;
+    }
+
+    try {
+      const doc = <PDFDocument
+        feeRecords={filteredRecords}
+        filterType={historyFilterType}
+        feeTypeFilter={historyFeeTypeFilter}
+        startDate={historyDateFilter.startDate}
+        endDate={historyDateFilter.endDate}
+        selectedStudent={selectedStudent}
+        institute={institute}
+      />;
+      
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      const filterName = historyFilterType === 'due' ? 'বকেয়া' : historyFilterType === 'paid' ? 'পরিশোধিত' : 'সমস্ত';
+      const feeTypeFilterName = historyFeeTypeFilter ? `_${historyFeeTypeFilter}` : '';
+      const dateRange = historyDateFilterType && historyDateFilter.startDate && historyDateFilter.endDate 
+        ? `_${historyDateFilter.startDate}_থেকে_${historyDateFilter.endDate}` 
+        : '';
+      
+      link.download = `বোর্ডিং_ফি_ইতিহাস_${filterName}${feeTypeFilterName}_${selectedStudent?.name || 'সব_ছাত্র'}${dateRange}_${new Date().toLocaleDateString('bn-BD')}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success('বোর্ডিং ফি প্রতিবেদন সফলভাবে ডাউনলোড হয়েছে!');
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error(`প্রতিবেদন তৈরিতে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
+    }
+  };
+
+  // Handle history date filter change
+  const handleHistoryDateFilterChange = (e) => {
+    const { name, value } = e.target;
+    setHistoryDateFilter(prev => ({ ...prev, [name]: value }));
+  };
 
   // Get latest fee status and amounts
   const getFeeStatus = (fee) => {
@@ -429,6 +720,63 @@ const BoardingFees = () => {
           }
           ::-webkit-scrollbar-thumb:hover {
             background: rgba(10, 13, 21, 0.44);
+          }
+          .filter-button {
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid #9d9087;
+          }
+          .filter-button-active {
+            background-color: #DB9E30;
+            color: #441a05;
+            font-weight: bold;
+            border-color: #DB9E30;
+          }
+          .filter-button-inactive {
+            background-color: transparent;
+            color: #441a05;
+            border-color: #9d9087;
+          }
+          .filter-button-inactive:hover {
+            background-color: rgba(219, 158, 48, 0.1);
+            border-color: #DB9E30;
+          }
+          .date-filter-button {
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.875rem;
+          }
+          .date-filter-active {
+            background-color: #441a05;
+            color: white;
+          }
+          .date-filter-inactive {
+            background-color: transparent;
+            color: #441a05;
+            border: 1px solid #9d9087;
+          }
+          .date-filter-inactive:hover {
+            background-color: rgba(68, 26, 5, 0.1);
+          }
+          .report-button {
+            background-color: #441a05;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+            border: none;
+            cursor: pointer;
+          }
+          .report-button:hover {
+            background-color: #5a2e0a;
+          }
+          .report-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
           }
         `}
       </style>
@@ -750,45 +1098,160 @@ const BoardingFees = () => {
           <p className="text-[#441a05]/70 mb-8 animate-fadeIn">এই ছাত্রের জন্য কোনো বোর্ডিং ফি উপলব্ধ নেই।</p>
         )}
 
-        {/* Boarding Fee History Table */}
-        {feesData?.fees_records?.length > 0 && (
+        {/* Boarding Fee History Table with Filters */}
+        {getBoardingFeeHistory().length > 0 && (
           <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
-            <h2 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">বোর্ডিং ফি ইতিহাস</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-white/20">
-                <thead className="bg-white/5">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ফি প্রকার
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      মোট প্রদান পরিমাণ
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ওয়েভার পরিমাণ
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ডিসকাউন্ট পরিমাণ
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      স্থিতি
-                    </th>
-                    {(hasChangePermission || hasDeletePermission) && ( // Conditionally render actions column
+            {/* Header with filters */}
+            <div className="flex flex-col gap-4 p-4 border-b border-white/20">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <h2 className="text-lg font-semibold text-[#441a05]">বোর্ডিং ফি ইতিহাস</h2>
+                
+                {/* Main filter buttons */}
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setHistoryFilterType('all')}
+                    className={`filter-button ${historyFilterType === 'all' ? 'filter-button-active' : 'filter-button-inactive'}`}
+                  >
+                    সমস্ত
+                  </button>
+                  <button
+                    onClick={() => setHistoryFilterType('due')}
+                    className={`filter-button ${historyFilterType === 'due' ? 'filter-button-active' : 'filter-button-inactive'}`}
+                  >
+                    বকেয়া
+                  </button>
+                  <button
+                    onClick={() => setHistoryFilterType('paid')}
+                    className={`filter-button ${historyFilterType === 'paid' ? 'filter-button-active' : 'filter-button-inactive'}`}
+                  >
+                    পরিশোধিত
+                  </button>
+                </div>
+              </div>
+
+              {/* Secondary filters - only show if a status filter is active */}
+              {historyFilterType !== 'all' && (
+                <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
+                  {/* Fee type filter */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-[#441a05]">ফি প্রকার:</label>
+                    <select
+                      value={historyFeeTypeFilter}
+                      onChange={(e) => setHistoryFeeTypeFilter(e.target.value)}
+                      className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg"
+                    >
+                      <option value="">সমস্ত ফি প্রকার</option>
+                      {getUniqueFeeTypes().map((feeType) => (
+                        <option key={feeType} value={feeType}>
+                          {feeType}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Date filter buttons */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setHistoryDateFilterType(historyDateFilterType === 'date' ? '' : 'date')}
+                      className={`date-filter-button ${historyDateFilterType === 'date' ? 'date-filter-active' : 'date-filter-inactive'}`}
+                    >
+                      তারিখ অনুযায়ী
+                    </button>
+                    <button
+                      onClick={() => setHistoryDateFilterType(historyDateFilterType === 'month' ? '' : 'month')}
+                      className={`date-filter-button ${historyDateFilterType === 'month' ? 'date-filter-active' : 'date-filter-inactive'}`}
+                    >
+                      মাস অনুযায়ী
+                    </button>
+                  </div>
+
+                  {/* Date inputs and report button */}
+                  {historyDateFilterType && (
+                    <div className="flex gap-3 items-center">
+                      <input
+                        type={historyDateFilterType === 'month' ? 'month' : 'date'}
+                        name="startDate"
+                        value={historyDateFilter.startDate}
+                        onChange={handleHistoryDateFilterChange}
+                        className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg"
+                        placeholder="শুরু"
+                      />
+                      <span className="text-[#441a05]">থেকে</span>
+                      <input
+                        type={historyDateFilterType === 'month' ? 'month' : 'date'}
+                        name="endDate"
+                        value={historyDateFilter.endDate}
+                        onChange={handleHistoryDateFilterChange}
+                        className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg"
+                        placeholder="শেষ"
+                      />
+                      <button
+                        onClick={generateHistoryPDFReport}
+                        className="report-button"
+                        disabled={!historyDateFilter.startDate || !historyDateFilter.endDate}
+                        title="বোর্ডিং ফি প্রতিবেদন ডাউনলোড করুন"
+                      >
+                        রিপোর্ট
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Simple report button for non-date filters */}
+              {historyFilterType !== 'all' && !historyDateFilterType && (
+                <div className="flex justify-end">
+                  <button
+                    onClick={generateHistoryPDFReport}
+                    className="report-button"
+                    title="বোর্ডিং ফি প্রতিবেদন ডাউনলোড করুন"
+                  >
+                    রিপোর্ট
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* History Table */}
+            {getBoardingFeeHistory().length === 0 ? (
+              <p className="p-4 text-[#441a05]/70 text-center">
+                {historyFilterType === 'all' 
+                  ? 'এই ছাত্রের জন্য কোনো বোর্ডিং ফি ইতিহাস উপলব্ধ নেই।' 
+                  : `${historyFilterType === 'due' ? 'বকেয়া' : 'পরিশোধিত'} বোর্ডিং ফি পাওয়া যায়নি।`
+                }
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-white/20">
+                  <thead className="bg-white/5">
+                    <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                        ক্রিয়াকলাপ
+                        ফি প্রকার
                       </th>
-                    )}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/20">
-                  {feesData.fees_records
-                    .filter((fee) => {
-                      const feeNameRecord = feesData.fees_name_records?.find(
-                        (f) => f.id === fee.feetype_id
-                      );
-                      return feeNameRecord?.is_boarding === true;
-                    })
-                    .map((fee, index) => {
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        মোট প্রদান পরিমাণ
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        ওয়েভার পরিমাণ
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        ডিসকাউন্ট পরিমাণ
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        স্থিতি
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        তৈরির তারিখ
+                      </th>
+                      {(hasChangePermission || hasDeletePermission) && ( // Conditionally render actions column
+                        <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                          ক্রিয়াকলাপ
+                        </th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/20">
+                    {getBoardingFeeHistory().map((fee, index) => {
                       const feeNameRecord = feesData.fees_name_records?.find(
                         (f) => f.id === fee.feetype_id
                       );
@@ -826,6 +1289,9 @@ const BoardingFees = () => {
                               {fee.status === 'PAID' ? 'প্রদান' : fee.status === 'PARTIAL' ? 'আংশিক' : 'অপ্রদান'}
                             </span>
                           </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                            {fee.created_at ? new Date(fee.created_at).toLocaleDateString('bn-BD') : 'অজানা'}
+                          </td>
                           {(hasChangePermission || hasDeletePermission) && ( // Conditionally render action buttons
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                               {hasChangePermission && (
@@ -858,9 +1324,12 @@ const BoardingFees = () => {
                         </tr>
                       );
                     })}
-                </tbody>
-              </table>
-            </div>
+                  </tbody>
+                </table>
+              </div>
+            )}
+            
+            {/* Loading/Error states */}
             {(isDeleting || isUpdating) && (
               <div
                 className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
@@ -873,7 +1342,7 @@ const BoardingFees = () => {
             )}
           </div>
         )}
-        {feesData?.fees_records?.length === 0 && selectedStudent && (
+        {getBoardingFeeHistory().length === 0 && selectedStudent && historyFilterType === 'all' && (
           <p className="text-[#441a05]/70 animate-fadeIn">এই ছাত্রের জন্য কোনো বোর্ডিং ফি ইতিহাস উপলব্ধ নেই।</p>
         )}
 
