@@ -416,7 +416,7 @@ const ResultSheet = () => {
     }
 
     const institute = instituteData; // Assuming the first institute is used
-    const printWindow = window.open(" ", "_blank");
+    const printWindow = window.open("", "_blank");
 
     let htmlContent = `
       <!DOCTYPE html>

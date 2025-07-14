@@ -428,7 +428,7 @@ const PersonalMarkSheet = () => {
   }
 
   const institute = instituteData;
-  const printWindow = window.open(" ", "_blank");
+  const printWindow = window.open("", "_blank");
 
   let htmlContent = `
     <!DOCTYPE html>
@@ -442,7 +442,7 @@ const PersonalMarkSheet = () => {
           font-family: 'Noto Sans Bengali', Arial, sans-serif;
           font-size: 12px;
           margin: 0;
-          padding: 20px;
+          padding: 0;
           background-color: #ffffff;
         }
         .head {
