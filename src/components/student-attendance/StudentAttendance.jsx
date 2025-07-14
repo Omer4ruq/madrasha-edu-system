@@ -722,7 +722,7 @@ const StudentAttendance = () => {
                 ? `${selectedStudent.name || "N/A"} এর উপস্থিতি বিস্তারিত`
                 : "উপস্থিতি তালিকা"}
             </h3>
-            {selectedStudent && (
+            {/* {selectedStudent && (
               <button
                 onClick={handleBackClick}
                 className="flex items-center px-4 py-2 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 btn-ripple hover:text-white btn-glow"
@@ -732,7 +732,7 @@ const StudentAttendance = () => {
                 <FaArrowLeft className="mr-2" />
                 পিছনে ফিরুন
               </button>
-            )}
+            )} */}
           </div>
           {isLoading ? (
             <p className="p-4 text-[#441a05]/70 animate-scaleIn">
