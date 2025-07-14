@@ -1,160 +1,13 @@
-
 import React, { useState, useEffect } from "react";
+import ReactDOM from "react-dom/client";
 import { Toaster, toast } from "react-hot-toast";
-import { FaSpinner, FaDownload } from "react-icons/fa";
-import {
-  PDFViewer,
-  Document,
-  Page,
-  Text,
-  View,
-  StyleSheet,
-  pdf,
-  Font,
-} from "@react-pdf/renderer";
+import { FaSpinner, FaDownload, FaFilePdf } from "react-icons/fa";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
 import { useGetclassConfigApiQuery } from "../../redux/features/api/class/classConfigApi";
 import { useGetStudentActiveByClassQuery } from "../../redux/features/api/student/studentActiveApi";
 import { useGetClassSubjectsByClassIdQuery } from "../../redux/features/api/class-subjects/classSubjectsApi";
-
-// Register Bangla font with alternative source and fallback
-Font.register({
-  family: "NotoSansBengali",
-  src: "https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf",
-});
-Font.register({
-  family: "ArialUnicodeMS",
-  src: "https://cdn.jsdelivr.net/npm/arial-unicode-ms/ArialUnicodeMS.ttf",
-});
-Font.registerHyphenationCallback((word) => [word]); // Prevent text splitting issues
-
-// Estimate row height for rowSpan calculations
-const ROW_HEIGHT = 20; // Approximately 9pt font + 4px vertical padding + borders
-
-// PDF styles synced with frontend layout
-const styles = StyleSheet.create({
-  page: {
-    padding: 20, // Matches frontend 20px padding (approx 15pt, but keeping 20 for visual similarity)
-    fontSize: 9, // Adjusted from 8 to 9, closer to text-xs (12px / 0.75 = 9pt)
-    fontFamily: "NotoSansBengali",
-    color: "#000000",
-    backgroundColor: "#FFF",
-    width: 595.28, // A4 portrait width at 72dpi
-    height: 841.89, // A4 portrait height at 72dpi
-  },
-  header: {
-    textAlign: "center",
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 16, // Adjusted from 14, closer to text-lg (18px / 0.75 = 13.5pt, but aiming for larger visual impact)
-    fontWeight: "bold",
-    color: "#000000",
-  },
-  subHeader: {
-    fontSize: 12, // Adjusted from 10, closer to text-sm (14px / 0.75 = 10.5pt, aiming for better readability)
-    color: "#000000",
-    marginTop: 4,
-  },
-  table: {
-    display: "flex",
-    flexDirection: "column",
-    width: "100%",
-    border: "1px solid #000", // Outer table border
-  },
-  // Base style for all cells, including borders
-  cellBase: {
-    paddingVertical: 4, // Matches py-1 (4px)
-    paddingHorizontal: 8, // Matches px-2 (8px)
-    fontSize: 9, // Consistent with page font size
-    color: "#000",
-    textAlign: "center",
-    borderRight: "1px solid #000",
-    borderBottom: "1px solid #000", // Default cell border
-    alignItems: "center",
-    justifyContent: "center", // Center content vertically
-  },
-  // Styles for row-spanning header cells
-  headerCellRowSpan: {
-    minHeight: ROW_HEIGHT * 3, // Span 3 header rows
-    justifyContent: "center",
-    alignItems: "center",
-    borderBottom: "1px solid #000", // All row-spanning cells get bottom border
-  },
-  rollCell: {
-    flex: 0.5, // Adjusted flex for a narrower column
-  },
-  nameCell: {
-    flex: 1.5, // Adjusted flex for broader column
-  },
-  subjectCell: {
-    flex: 1.2, // Adjusted flex
-  },
-  totalCell: {
-    flex: 1, // Adjusted flex
-    borderRight: "none", // Last cell in row usually doesn't have right border
-  },
-
-  // NEW: Table Header Container (holds all header rows/cells)
-  tableHeaderContainer: {
-    flexDirection: "row",
-    backgroundColor: "#FFF",
-    borderBottom: "1px solid #000", // Outer header bottom border
-    alignItems: "stretch", // Ensure cells stretch to fill row height
-  },
-  // NEW: Container for all dynamic date columns (takes remaining flex space)
-  dynamicDatesHeaderContainer: {
-    flexGrow: 1, // Take up remaining horizontal space
-    flexDirection: "column", // Stack day, date, sobok/mutalaya vertically
-    borderLeft: "1px solid #000", // Border to separate from subject column
-    borderRight: "1px solid #000", // Border to separate from total column
-  },
-  // NEW: Row for day/date/sobok-mutalaya within dynamicDatesHeaderContainer
-  dynamicDatesHeaderRow: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    borderBottom: "1px solid #000", // Separator for each date header row
-    minHeight: ROW_HEIGHT,
-  },
-  // Specific styling for cells within dynamic date header rows
-  dateDayHeader: {
-    flexGrow: 1, // Will be overridden by flex calculated in component
-    justifyContent: "center",
-    alignItems: "center",
-    borderRight: "1px solid #000",
-  },
-  dateDateHeader: {
-    flexGrow: 1, // Will be overridden by flex calculated in component
-    justifyContent: "center",
-    alignItems: "center",
-    borderRight: "1px solid #000",
-  },
-  sobokMutalayaHeaderCell: {
-    flexGrow: 1, // Will be overridden by flex calculated in component
-    justifyContent: "center",
-    alignItems: "center",
-    borderRight: "1px solid #000",
-    borderBottom: "none", // This is the last header row, so no internal bottom border
-  },
-  // NEW: Table body rows
-  tableRow: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    minHeight: ROW_HEIGHT,
-    borderBottom: "1px solid #000", // Default row bottom border
-  },
-  // NEW: Individual cell style for data rows
-  dataCell: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    fontSize: 9,
-    color: "#000",
-    textAlign: "center",
-    borderRight: "1px solid #000",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
 
 const MutalayaReport = () => {
   const [selectedClassConfig, setSelectedClassConfig] = useState("");
@@ -162,6 +15,7 @@ const MutalayaReport = () => {
   const [endDate, setEndDate] = useState("");
   const [reportData, setReportData] = useState([]);
   const [dynamicReportData, setDynamicReportData] = useState([]);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Fetch APIs
   const { data: classConfigs, isLoading: classConfigsLoading } =
@@ -208,28 +62,32 @@ const MutalayaReport = () => {
     }
   }, [students, subjects, selectedClassConfig, startDate, endDate]);
 
-  // Generate dynamic dates based on date range
+  // Generate dynamic dates based on date range (skip Fridays)
   const generateDynamicDates = () => {
     if (!startDate || !endDate) return [];
     const start = new Date(startDate);
     const end = new Date(endDate);
     const dates = [];
+    
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      const bnDate = d.toLocaleDateString("bn-BD", { day: "numeric" });
-      const bnDay = d.toLocaleDateString("bn-BD", { weekday: "long" });
-      dates.push({ day: bnDay, date: bnDate });
+      // Skip Friday (day 5 in JavaScript Date.getDay() where Sunday = 0)
+      if (d.getDay() !== 5) {
+        const bnDate = d.toLocaleDateString("bn-BD", { day: "numeric" });
+        const bnDay = d.toLocaleDateString("bn-BD", { weekday: "long" });
+        dates.push({ day: bnDay, date: bnDate });
+      }
     }
     return dates;
   };
 
-  // Simulate attendance data
+  // Simulate attendance data (keeping empty for PDF)
   const simulateAttendance = (studentId, subjectName) => {
     const dynamicDates = generateDynamicDates();
     const attendance = {};
     dynamicDates.forEach((d) => {
       attendance[d.date] = {
-        sobok: Math.random() > 0.3 ? "✓" : Math.floor(Math.random() * 10).toString(),
-        mutalaya: Math.random() > 0.5 ? "✓" : Math.random() > 0.7 ? "১/২" : "",
+        sobok: "", // Keep empty
+        mutalaya: "", // Keep empty
       };
     });
     return attendance;
@@ -250,163 +108,327 @@ const MutalayaReport = () => {
     }
   }, [students, subjects, selectedClassConfig, startDate, endDate]);
 
-  // Function to download PDF
-  const downloadPDF = async () => {
-    if (
-      !selectedClassConfig ||
-      !startDate ||
-      !endDate ||
-      dynamicReportData.length === 0
-    ) {
-      toast.error("দয়া করে ক্লাস এবং তারিখের রেঞ্জ নির্বাচন করুন।");
+  // Enhanced PDF generation using print window approach (like ExamRoutineTable)
+  const generateMutalayaPDF = () => {
+    if (!selectedClassConfig || !startDate || !endDate) {
+      toast.error("ক্লাস, শুরুর তারিখ এবং শেষের তারিখ নির্বাচন করুন");
       return;
     }
 
-    const dynamicDates = generateDynamicDates();
-    // Calculate flex for date columns based on number of dates
-    const dateColFlex = 1 / dynamicDates.length; // Flex for a single colSpan=2 date header
-    const attendanceCellFlex = dateColFlex / 2; // Flex for a single sobok/mutalaya cell
-
-    // Split data into chunks to fit on A4 pages
-    const rowsPerPage = 20; // Estimated rows per page based on font size and spacing
-    const rows = dynamicReportData.flatMap((student, sIdx) =>
-      student.subjects.map((subject, subjIdx) => ({ student, sIdx, subjIdx }))
-    );
-    const pages = [];
-    for (let i = 0; i < rows.length; i += rowsPerPage) {
-      pages.push(rows.slice(i, i + rowsPerPage));
+    if (dynamicReportData.length === 0) {
+      toast.error("রিপোর্ট ডেটা খুঁজে পাওয়া যায়নি!");
+      return;
     }
 
-    const PdfDocument = (
-      <Document>
-        {pages.map((pageRows, pageIdx) => (
-          <Page key={pageIdx} size="A4" style={styles.page}>
-            <View style={styles.header}>
-              <Text style={styles.title}>মুতালায়া ও সবক শুনানোর রিপোর্ট</Text>
-              <Text style={styles.subHeader}>
-                জামাত:{" "}
-                {
-                  classConfigs?.find((c) => c.id === Number(selectedClassConfig))
-                    ?.class_name
-                }{" "}
-                | মাস: {new Date(startDate).toLocaleDateString("bn-BD", { month: "long" })} - ২০২৫
-              </Text>
-            </View>
-
-            <View style={styles.table}>
-              {/* Table Header - Consolidated */}
-              <View style={styles.tableHeaderContainer}>
-                {/* Fixed Header Cells (rowSpan=3 effect) */}
-                <Text style={[styles.cellBase, styles.headerCellRowSpan, styles.rollCell]}>
-                  ক্রমিক
-                </Text>
-                <Text style={[styles.cellBase, styles.headerCellRowSpan, styles.nameCell]}>
-                  নাম
-                </Text>
-                <Text style={[styles.cellBase, styles.headerCellRowSpan, styles.subjectCell]}>
-                  বিষয়
-                </Text>
-
-                {/* Dynamic Date Columns Header Container */}
-                <View style={styles.dynamicDatesHeaderContainer}>
-                  {/* Row 1: Day Header */}
-                  <View style={[styles.dynamicDatesHeaderRow, { borderBottom: "1px solid #000" }]}>
-                    {dynamicDates.map((d, i) => (
-                      <Text key={i} style={[styles.cellBase, styles.dateDayHeader, { flex: dateColFlex, borderRight: i === dynamicDates.length - 1 ? "none" : "1px solid #000" }]}>
-                        {d.day}
-                      </Text>
-                    ))}
-                  </View>
-                  {/* Row 2: Date Header */}
-                  <View style={[styles.dynamicDatesHeaderRow, { borderBottom: "1px solid #000" }]}>
-                    {dynamicDates.map((d, i) => (
-                      <Text key={i} style={[styles.cellBase, styles.dateDateHeader, { flex: dateColFlex, borderRight: i === dynamicDates.length - 1 ? "none" : "1px solid #000" }]}>
-                        {d.date}
-                      </Text>
-                    ))}
-                  </View>
-                  {/* Row 3: Sobok/Mutalaya Header */}
-                  <View style={[styles.dynamicDatesHeaderRow, { borderBottom: "none" }]}>
-                    {dynamicDates.map((_, i) => (
-                      <React.Fragment key={i}>
-                        <Text style={[styles.cellBase, styles.sobokMutalayaHeaderCell, { flex: attendanceCellFlex }]}>
-                          সবক
-                        </Text>
-                        <Text style={[styles.cellBase, styles.sobokMutalayaHeaderCell, { flex: attendanceCellFlex, borderRight: i === dynamicDates.length - 1 ? "none" : "1px solid #000" }]}>
-                          মুতালায়া
-                        </Text>
-                      </React.Fragment>
-                    ))}
-                  </View>
-                </View>
-
-                {/* Fixed Header Cell for Montobyo (rowSpan=3 effect) */}
-                <Text style={[styles.cellBase, styles.headerCellRowSpan, styles.totalCell]}>
-                  মন্তব্য
-                </Text>
-              </View>
-
-              {/* Table Body */}
-              {pageRows.map(({ student, sIdx, subjIdx }, rowIdx) => (
-                <View key={`${pageIdx}-${rowIdx}`} style={styles.tableRow}>
-                  {/* Roll No (rowSpan effect) */}
-                  {subjIdx === 0 && (
-                    <Text
-                      style={[styles.dataCell, styles.rollCell, { borderLeft: "1px solid #000", borderRight: "1px solid #000", borderBottom: rowIdx === pageRows.length - 1 ? "none" : "1px solid #000" }]}
-                      minHeight={ROW_HEIGHT * student.subjects.length} // Set height to span subjects
-                    >
-                      {student.roll_no}
-                    </Text>
-                  )}
-                  {/* Student Name (rowSpan effect) */}
-                  {subjIdx === 0 && (
-                    <Text
-                      style={[styles.dataCell, styles.nameCell, { borderRight: "1px solid #000", borderBottom: rowIdx === pageRows.length - 1 ? "none" : "1px solid #000" }]}
-                      minHeight={ROW_HEIGHT * student.subjects.length} // Set height to span subjects
-                    >
-                      {student.name}
-                    </Text>
-                  )}
-                  {/* Subject Name */}
-                  <Text style={[styles.dataCell, styles.subjectCell, { borderRight: "1px solid #000", borderBottom: rowIdx === pageRows.length - 1 ? "none" : "1px solid #000" }]}>
-                    {student.subjects[subjIdx].name}
-                  </Text>
-                  {/* Dynamic Attendance Data */}
-                  {dynamicDates.map((d, i) => (
-                    <React.Fragment key={d.date}>
-                      <Text style={[styles.dataCell, { flex: attendanceCellFlex, borderRight: "1px solid #000", borderBottom: rowIdx === pageRows.length - 1 ? "none" : "1px solid #000" }]}>
-                        {student.subjects[subjIdx].attendance[d.date]?.sobok || ""}
-                      </Text>
-                      <Text style={[styles.dataCell, { flex: attendanceCellFlex, borderRight: i === dynamicDates.length - 1 ? "none" : "1px solid #000", borderBottom: rowIdx === pageRows.length - 1 ? "none" : "1px solid #000" }]}>
-                        {student.subjects[subjIdx].attendance[d.date]?.mutalaya || ""}
-                      </Text>
-                    </React.Fragment>
-                  ))}
-                  {/* Remarks */}
-                  <Text style={[styles.dataCell, styles.totalCell, { borderRight: "none", borderBottom: rowIdx === pageRows.length - 1 ? "none" : "1px solid #000" }]} />
-                </View>
-              ))}
-            </View>
-          </Page>
-        ))}
-      </Document>
-    );
-
+    setIsDownloading(true);
+    
     try {
-      const asPdf = pdf(PdfDocument);
-      const blob = await asPdf.toBlob();
-      saveAs(
-        blob,
-        `Mutalaya_Sobok_Mutalaya_Report_${selectedClassConfig}_${new Date().toLocaleString(
-          "bn-BD",
-          { timeZone: "Asia/Dhaka" }
-        )}.pdf`
-      );
-      toast.success("PDF ডাউনলোড সম্পন্ন!");
+      const printWindow = window.open('', '_blank');
+      
+      const selectedClass = classConfigs?.find((c) => c.id === Number(selectedClassConfig));
+      const className = selectedClass?.class_name;
+      const monthName = new Date(startDate).toLocaleDateString("bn-BD", { month: "long" });
+      const dynamicDates = generateDynamicDates();
+
+      let htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>মুতালায়া রিপোর্ট - ${className}</title>
+          <meta charset="UTF-8">
+          <style>
+            body { 
+              font-family: 'Noto Sans Bengali', 'SutonnyMJ', 'Kalpurush', Arial, sans-serif; 
+              margin: 0; 
+              padding: 20px; 
+              background: white;
+              font-size: 12px;
+              line-height: 1.4;
+            }
+            .header { 
+              text-align: center; 
+              margin-bottom: 25px; 
+              border-bottom: 2px solid #333;
+              padding-bottom: 15px;
+            }
+            .institution { 
+              font-size: 20px; 
+              font-weight: bold; 
+              margin-bottom: 8px; 
+              color: #1a1a1a;
+            }
+            .report-title { 
+              font-size: 18px; 
+              font-weight: bold;
+              margin: 8px 0; 
+              color: #2c3e50;
+            }
+            .class-info { 
+              font-size: 14px; 
+              color: #555; 
+              margin: 5px 0;
+            }
+            .report-table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin: 15px 0; 
+              border: 2px solid #333;
+              font-size: 10px;
+            }
+            .report-table th, .report-table td { 
+              border: 1px solid #333; 
+              padding: 6px 4px; 
+              text-align: center;
+              vertical-align: middle;
+            }
+            .report-table th { 
+              background-color: #f8f9fa; 
+              font-weight: bold; 
+              font-size: 9px;
+              color: #2c3e50;
+            }
+            .report-table td {
+              font-size: 9px;
+              min-height: 25px;
+            }
+            .student-name {
+              text-align: left;
+              padding-left: 8px;
+              font-weight: 500;
+              writing-mode: vertical-lr;
+              text-orientation: mixed;
+              width: 25px;
+              min-height: 80px;
+              line-height: 1.2;
+            }
+            .subject-name {
+              text-align: left;
+              padding-left: 8px;
+              font-weight: 500;
+            }
+            .roll-number {
+              font-weight: bold;
+              background-color: #f0f8ff;
+            }
+            .day-header {
+              background-color: #e3f2fd;
+              font-weight: bold;
+              color: #1565c0;
+            }
+            .date-header {
+              background-color: #f5f5f5;
+              font-weight: bold;
+              color: #424242;
+            }
+            .attendance-cell {
+              background-color: #fafafa;
+              min-width: 30px;
+              height: 25px;
+            }
+            .comments-cell {
+              background-color: #fff9c4;
+              min-width: 80px;
+            }
+            .footer {
+              margin-top: 30px;
+              display: flex;
+              justify-content: space-between;
+              font-size: 10px;
+              color: #666;
+              border-top: 1px solid #ddd;
+              padding-top: 15px;
+            }
+            .signature-section {
+              margin-top: 50px;
+              display: flex;
+              justify-content: space-between;
+              padding: 0 20px;
+            }
+            .signature-box {
+              text-align: center;
+              border-top: 1px solid #333;
+              padding-top: 8px;
+              width: 180px;
+              font-size: 11px;
+              color: #444;
+            }
+            .notes-section {
+              margin-top: 20px;
+              padding: 15px;
+              background-color: #f8f9fa;
+              border: 1px solid #dee2e6;
+              border-radius: 5px;
+              font-size: 10px;
+              color: #495057;
+            }
+            .notes-title {
+              font-weight: bold;
+              margin-bottom: 8px;
+              color: #2c3e50;
+            }
+            @media print {
+              body { 
+                margin: 0; 
+                padding: 15px;
+              }
+              .no-print { display: none; }
+              .report-table {
+                font-size: 8px;
+              }
+              .report-table th, .report-table td {
+                padding: 4px 2px;
+                font-size: 8px;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="institution">[প্রতিষ্ঠানের নাম]</div>
+            <div class="report-title">মুতালায়া ও সবক শুনানোর রিপোর্ট</div>
+            <div class="class-info">
+              জামাত: ${className} | 
+              সেকশন: ${selectedClass?.section_name || ''} | 
+              শিফট: ${selectedClass?.shift_name || ''} | 
+              মাস: ${monthName} - ২০২৫
+            </div>
+          </div>
+
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th rowspan="3" style="width: 8%;">ক্রমিক</th>
+                <th rowspan="3" style="width: 15%;">নাম</th>
+                <th rowspan="3" style="width: 12%;">বিষয়</th>
+      `;
+
+      // Generate dynamic date headers
+      dynamicDates.forEach((d) => {
+        htmlContent += `<th colspan="2" class="day-header" style="width: ${Math.floor(65 / dynamicDates.length)}%;">${d.day}</th>`;
+      });
+
+      htmlContent += `
+                <th rowspan="3" style="width: 10%;">মন্তব্য</th>
+              </tr>
+              <tr>
+      `;
+
+      // Generate date row
+      dynamicDates.forEach((d) => {
+        htmlContent += `<th colspan="2" class="date-header">${d.date}</th>`;
+      });
+
+      htmlContent += `
+              </tr>
+              <tr>
+      `;
+
+      // Generate sobok/mutalaya headers
+      dynamicDates.forEach(() => {
+        htmlContent += `
+          <th style="width: 4%;">সবক</th>
+          <th style="width: 4%;">মুতালায়া</th>
+        `;
+      });
+
+      htmlContent += `
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      // Generate table body
+      dynamicReportData.forEach((student, sIdx) => {
+        student.subjects.forEach((subject, subjIdx) => {
+          htmlContent += `<tr>`;
+          
+          // Roll number (only for first subject)
+          if (subjIdx === 0) {
+            htmlContent += `
+              <td rowspan="${student.subjects.length}" class="roll-number">
+                ${student.roll_no}
+              </td>
+            `;
+          }
+          
+          // Student name (only for first subject)
+          if (subjIdx === 0) {
+            htmlContent += `
+              <td rowspan="${student.subjects.length}" class="student-name">
+                ${student.name}
+              </td>
+            `;
+          }
+          
+          // Subject name
+          htmlContent += `<td class="subject-name">${subject.name}</td>`;
+          
+          // Attendance cells for each date
+          dynamicDates.forEach(() => {
+            htmlContent += `
+              <td class="attendance-cell"></td>
+              <td class="attendance-cell"></td>
+            `;
+          });
+          
+          // Comments cell
+          htmlContent += `<td class="comments-cell"></td>`;
+          htmlContent += `</tr>`;
+        });
+      });
+
+      htmlContent += `
+            </tbody>
+          </table>
+
+          <div class="notes-section">
+            <div class="notes-title">নির্দেশনা:</div>
+            <ul style="margin: 0; padding-left: 20px;">
+              <li>সবক কলামে দৈনিক পঠিত পৃষ্ঠা সংখ্যা লিখুন</li>
+              <li>মুতালায়া কলামে পুনরায় অধ্যয়নের বিষয় উল্লেখ করুন</li>
+              <li>অনুপস্থিতির ক্ষেত্রে 'অ' এবং ছুটির ক্ষেত্রে 'ছ' লিখুন</li>
+              <li>বিশেষ মন্তব্য থাকলে মন্তব্য কলামে লিখুন</li>
+            </ul>
+          </div>
+
+          <div class="footer">
+            <div>রিপোর্ট তৈরির তারিখ: ${new Date().toLocaleDateString('bn-BD')}</div>
+            <div>মুদ্রণের তারিখ: ${new Date().toLocaleDateString('bn-BD')}</div>
+          </div>
+          
+          <div class="signature-section">
+            <div class="signature-box">
+              শ্রেণি শিক্ষকের স্বাক্ষর
+            </div>
+            <div class="signature-box">
+              বিভাগীয় প্রধানের স্বাক্ষর
+            </div>
+            <div class="signature-box">
+              প্রধান শিক্ষকের স্বাক্ষর
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.print();
+
+      const filename = `মুতালায়া_রিপোর্ট_${className}_${monthName}_২০২৫`;
+      toast.success(`${filename} PDF সফলভাবে তৈরি হয়েছে!`);
+      
     } catch (error) {
-      console.error("PDF Download Error:", error);
-      toast.error(`PDF ডাউনলোডে ত্রুটি: ${error.message || "অজানা ত্রুটি"}`);
+      console.error("PDF generation error:", error);
+      toast.error("PDF তৈরি করতে সমস্যা হয়েছে!");
+    } finally {
+      setIsDownloading(false);
     }
+  };
+
+  // Legacy PDF download function (keeping for backward compatibility)
+  const downloadPDF = async () => {
+    generateMutalayaPDF();
   };
 
   return (
@@ -481,6 +503,12 @@ const MutalayaReport = () => {
             background-color: #9D9087;
             cursor: not-allowed;
           }
+          .btn-glow {
+            box-shadow: 0 0 15px rgba(219, 158, 48, 0.3);
+          }
+          .btn-glow:hover {
+            box-shadow: 0 0 20px rgba(219, 158, 48, 0.5);
+          }
           ::-webkit-scrollbar {
             width: 8px;
           }
@@ -533,18 +561,32 @@ const MutalayaReport = () => {
             placeholder="শেষের তারিখ"
           />
         </div>
+        
+        {/* Enhanced PDF Download Button */}
         <button
-          onClick={downloadPDF}
-          className="download-btn"
-          disabled={
-            reportData.length === 0 ||
-            classConfigsLoading ||
-            studentsLoading ||
-            subjectsLoading
-          }
-        >
-          <FaDownload /> PDF ডাউনলোড
-        </button>
+            onClick={generateMutalayaPDF}
+            className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+              !selectedClassConfig || !startDate || !endDate || classConfigsLoading || studentsLoading || subjectsLoading || isDownloading
+                ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                : "bg-red-600 text-white hover:bg-red-700 btn-glow"
+            }`}
+            disabled={
+              !selectedClassConfig || !startDate || !endDate || classConfigsLoading || studentsLoading || subjectsLoading || isDownloading
+            }
+            title="মুতালায়া রিপোর্ট PDF ডাউনলোড করুন"
+          >
+            {isDownloading ? (
+              <>
+                <FaSpinner className="animate-spin text-lg" />
+                <span>PDF তৈরি হচ্ছে...</span>
+              </>
+            ) : (
+              <>
+                <FaFilePdf className="text-lg" />
+                <span>PDF ডাউনলোড</span>
+              </>
+            )}
+          </button>
       </div>
 
       {/* Report Preview */}
@@ -584,7 +626,7 @@ const MutalayaReport = () => {
                     rowSpan="3"
                     className="border border-black px-2 py-1 text-[8px]"
                   >
-                    বিষয়
+                    বিষয়
                   </th>
                   {generateDynamicDates().map((d, i) => (
                     <th
@@ -642,6 +684,14 @@ const MutalayaReport = () => {
                         <td
                           rowSpan={student.subjects.length}
                           className="border border-black align-top px-1 text-center text-[8px]"
+                          style={{ 
+                            transform: 'rotate(180deg)',
+                            writingMode: 'vertical-rl', 
+                            textOrientation: 'mixed',
+                            width: '25px',
+                            minHeight: '80px',
+                            lineHeight: '1.2'
+                          }}
                         >
                           {student.name}
                         </td>
@@ -652,12 +702,10 @@ const MutalayaReport = () => {
                       {generateDynamicDates().map((d) => (
                         <React.Fragment key={d.date}>
                           <td className="border border-black text-center text-[8px]">
-                            {/* Frontend intentionally left blank for attendance, PDF should show data */}
-                       
+                            {/* Empty cell for manual entry */}
                           </td>
                           <td className="border border-black text-center text-[8px]">
-                            {/* Frontend intentionally left blank for attendance, PDF should show data */}
-      
+                            {/* Empty cell for manual entry */}
                           </td>
                         </React.Fragment>
                       ))}
