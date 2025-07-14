@@ -416,7 +416,7 @@ const ResultSheet = () => {
     }
 
     const institute = instituteData; // Assuming the first institute is used
-    const printWindow = window.open("", "_blank");
+    const printWindow = window.open(" ", "_blank");
 
     let htmlContent = `
       <!DOCTYPE html>
@@ -816,7 +816,7 @@ const ResultSheet = () => {
         </div>
 
         {/* Result Display (aligned with PDF layout) */}
-        <div className="bg-white a4-landscape">
+        <div className="">
           {isLoading ? (
             <p className="p-4 text-[#441a05]/70 animate-scaleIn flex justify-center items-center h-full">
               <FaSpinner className="animate-spin text-lg mr-2" />
@@ -831,7 +831,7 @@ const ResultSheet = () => {
               কোনো ফলাফল পাওয়া যায়নি।
             </p>
           ) : (
-            <>
+            <div className="a4-landscape">
               <div className="head">
                 <div className="institute-info">
                   <h1>{instituteData?.institute_name || "অজানা ইনস্টিটিউট"}</h1>
@@ -946,7 +946,7 @@ const ResultSheet = () => {
               <div className="date">
                 রিপোর্ট তৈরির তারিখ: {new Date().toLocaleDateString("bn-BD")}
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>

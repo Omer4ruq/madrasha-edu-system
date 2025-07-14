@@ -428,7 +428,7 @@ const PersonalMarkSheet = () => {
   }
 
   const institute = instituteData;
-  const printWindow = window.open("", "_blank");
+  const printWindow = window.open(" ", "_blank");
 
   let htmlContent = `
     <!DOCTYPE html>
@@ -447,7 +447,7 @@ const PersonalMarkSheet = () => {
         }
         .head {
           text-align: center;
-          margin-top: 30px;
+          // margin-top: 30px;
           margin-bottom: 15px;
           padding-bottom: 10px;
         }
@@ -805,7 +805,7 @@ const PersonalMarkSheet = () => {
         </div>
 
         {/* Result Display (aligned with ResultSheet.jsx) */}
-        <div className="bg-white a4-portrait">
+        <div>
           {isLoading ? (
             <p className="p-4 text-[#441a05]/70 animate-scaleIn flex justify-center items-center h-full">
               <FaSpinner className="animate-spin text-lg mr-2" />
@@ -824,7 +824,7 @@ const PersonalMarkSheet = () => {
               কোনো ফলাফল পাওয়া যায়নি।
             </p>
           ) : (
-            <>
+            <div className="bg-white a4-portrait">
               <div className="head">
                 <div className="institute-info">
                   <h1>{instituteData?.institute_name || "অজানা ইনস্টিটিউট"}</h1>
@@ -926,7 +926,7 @@ const PersonalMarkSheet = () => {
               <div className="date">
                 রিপোর্ট তৈরির তারিখ: {new Date().toLocaleDateString("bn-BD")}
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>
