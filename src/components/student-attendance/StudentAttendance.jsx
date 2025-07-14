@@ -313,7 +313,8 @@ const StudentAttendance = () => {
           body { 
             font-family: 'Noto Sans Bengali', Arial, sans-serif;  
             font-size: 12px; 
-            margin:0;
+              margin:0;
+            padding:0;
           }
           table { 
             width: 100%; 
