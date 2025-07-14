@@ -565,7 +565,7 @@ const MutalayaReport = () => {
         {/* Enhanced PDF Download Button */}
         <button
             onClick={generateMutalayaPDF}
-            className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+            className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-300 mt-4 ${
               !selectedClassConfig || !startDate || !endDate || classConfigsLoading || studentsLoading || subjectsLoading || isDownloading
                 ? "bg-gray-400 text-gray-600 cursor-not-allowed"
                 : "bg-red-600 text-white hover:bg-red-700 btn-glow"
