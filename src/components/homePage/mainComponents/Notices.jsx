@@ -1,27 +1,19 @@
 import React from 'react';
 import SingleNotice from '../cards/SingleNotice';
+import dayjs from 'dayjs'; // install if not already: npm i dayjs
+import { useGetEventsQuery } from '../../../redux/features/api/event/eventApi';
 
 export default function Notices() {
-  const notices = [
-    {
-      id: '01',
-      date: '১৬ জুন, ২০২৪',
-      type: 'info',
-      content: 'মাদ্রাসার বার্ষিক পরীক্ষার সময়সূচি প্রকাশিত হয়েছে। বিস্তারিত জানতে অফিসে যোগাযোগ করুন।',
-    },
-    {
-      id: '02',
-      date: '১৬ জুন, ২০২৪',
-      type: 'warning',
-      content: 'শিক্ষার্থীদের সময়মতো ক্লাসে উপস্থিত থাকার জন্য অনুরোধ করা হচ্ছে।',
-    },
-    {
-      id: '03',
-      date: '১৬ জুন, ২০২৪',
-      type: 'vacation',
-      content: 'ঈদ-উল-আযহা উপলক্ষে মাদ্রাসা ১৭-২২ জুন পর্যন্ত বন্ধ থাকবে।',
-    },
-  ];
+  const { data: events = [], isLoading, isError } = useGetEventsQuery();
+
+  // সর্বশেষ ৩টি ইভেন্ট সিলেক্ট করো (তারিখ অনুসারে descending)
+  const sortedEvents = [...events]
+    .sort((a, b) => new Date(b.start) - new Date(a.start))
+    .slice(0, 3);
+
+  const convertToBanglaDate = (dateStr) => {
+    return dayjs(dateStr).format('D MMMM, YYYY').replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[d]);
+  };
 
   return (
     <div className="bg-black/10 backdrop-blur-sm col-span-1 order-3 sm:order-2 lg:order-3 rounded-2xl relative shadow-xl animate-fadeIn">
@@ -52,24 +44,38 @@ export default function Notices() {
         নোটিশ ও ইভেন্ট
       </h3>
 
-      {/* Notices */}
       <div className="divide-y-1 divide-[#9d9087] p-4">
-        {notices.map((notice, index) => (
-          <div key={notice.id} className="animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
-            <SingleNotice notice={notice} />
-          </div>
-        ))}
+        {isLoading && <p className="text-[#441a05]">লোড হচ্ছে...</p>}
+        {isError && <p className="text-red-500">ডেটা আনতে সমস্যা হয়েছে।</p>}
+
+        {!isLoading &&
+          sortedEvents.map((event, index) => (
+            <div
+              key={event.id}
+              className="animate-fadeIn"
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
+              <SingleNotice
+                notice={{
+                  id: event.id,
+                  date: convertToBanglaDate(event.start),
+                  type: 'info',
+                  content: event.title,
+                }}
+              />
+            </div>
+          ))}
       </div>
 
       {/* View more button */}
-      <div className="flex justify-end p-4">
+      {/* <div className="flex justify-end p-4">
         <button
           className="bg-[#DB9E30] text-[#441a05] text-sm font-medium shadow py-2 px-4 rounded-lg absolute bottom-3 right-3 transition-all duration-300 hover:text-white btn-glow animate-scaleIn"
           title="সব দেখুন / View All"
         >
           সব দেখুন
         </button>
-      </div>
+      </div> */}
     </div>
   );
 }

@@ -38,7 +38,7 @@ export default function SectionHeader({ title, className, titleClassName, iconCl
         aria-label="অতিরিক্ত বিকল্প / More Options"
         title="অতিরিক্ত বিকল্প / More Options"
       >
-        <HiDotsCircleHorizontal className="w-7 h-7" />
+        {/* <HiDotsCircleHorizontal className="w-7 h-7" /> */}
       </button>
     </div>
   );

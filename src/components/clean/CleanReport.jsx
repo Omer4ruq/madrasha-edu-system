@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     lineHeight: 1.5,
   },
   headerContainer: {
-    backgroundColor: '#2A3F5F',
+    backgroundColor: '#441a05',
     marginHorizontal: -40,
     marginTop: -40,
     paddingHorizontal: 40,
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   reportInfoTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#2A3F5F',
+    color: '#441a05',
     marginBottom: 12,
     textAlign: 'center',
     borderBottom: '1px solid #E9ECEF',
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     borderBottom: '1px solid #E9ECEF',
   },
   tableHeader: {
-    backgroundColor: '#2A3F5F',
+    backgroundColor: '#441a05',
     color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 11,
@@ -187,13 +187,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
     borderRadius: 8,
     border: '1px solid #E9ECEF',
-    borderLeft: '5px solid #2A3F5F',
+    borderLeft: '5px solid #441a05',
     breakInside: 'avoid', // Prevent summary from splitting
   },
   summaryTitle: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: '#2A3F5F',
+    color: '#441a05',
     marginBottom: 15,
     textAlign: 'center',
     textTransform: 'uppercase',
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#2A3F5F',
+    color: '#441a05',
     textAlign: 'center',
   },
   progressBar: {
@@ -388,7 +388,7 @@ const PDFDocument = ({ cleanReportTypes, filteredReports, selectedClass, selecte
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>সাফল্যের হার</Text>
-              <Text style={[styles.summaryValue, { color: '#2A3F5F' }]}>{cleanPercentage}%</Text>
+              <Text style={[styles.summaryValue, { color: '#441a05' }]}>{cleanPercentage}%</Text>
             </View>
           </View>
           
@@ -775,7 +775,7 @@ const CleanReport = () => {
             box-shadow: 0 0 15px rgba(219, 158, 48, 0.3);
           }
           .report-button {
-            background-color: #2A3F5F;
+            background-color: #441a05;
             color: white;
             padding: 8px 16px;
             border-radius: 8px;
@@ -812,19 +812,19 @@ const CleanReport = () => {
       {(hasAddPermission || hasChangePermission) && (
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
           <div className="flex items-center space-x-2 mb-6">
-            <IoAddCircle className="text-3xl text-[#2A3F5F]" />
-            <h3 className="sm:text-2xl text-xl font-bold text-[#2A3F5F] tracking-tight">পরিচ্ছন্নতার রিপোর্ট</h3>
+            <IoAddCircle className="text-3xl text-[#441a05]" />
+            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">পরিচ্ছন্নতার রিপোর্ট</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <label className="flex items-center space-x-4 animate-fadeIn">
-              <span className="text-[#2A3F5F] sm:text-base text-xs font-medium text-nowrap">তারিখ নির্বাচন করুন:</span>
+              <span className="text-[#441a05] sm:text-base text-xs font-medium text-nowrap">তারিখ নির্বাচন করুন:</span>
               <div className="w-full">
                 <input
                   type="date"
                   value={selectedDate}
                   onChange={handleDateChange}
                   onClick={(e) => e.target.showPicker()}
-                  className="w-full bg-transparent text-[#2A3F5F] pl-3 py-1.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
+                  className="w-full bg-transparent text-[#441a05] pl-3 py-1.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
                   disabled={isCreating || isUpdating}
                   aria-label="তারিখ"
                   title="তারিখ নির্বাচন করুন / Select date"
@@ -832,7 +832,7 @@ const CleanReport = () => {
               </div>
             </label>
             <label className="flex items-center space-x-4 animate-fadeIn">
-              <span className="text-[#2A3F5F] sm:text-base text-xs font-medium text-nowrap">ক্লাস নির্বাচন করুন:</span>
+              <span className="text-[#441a05] sm:text-base text-xs font-medium text-nowrap">ক্লাস নির্বাচন করুন:</span>
               <div className="w-full">
                 <Select
                   options={classOptions}
@@ -867,7 +867,7 @@ const CleanReport = () => {
           )}
 
           {isClassesLoading && (
-            <div className="flex items-center space-x-2 text-[#2A3F5F]/70 animate-fadeIn mt-4">
+            <div className="flex items-center space-x-2 text-[#441a05]/70 animate-fadeIn mt-4">
               <FaSpinner className="animate-spin text-lg" />
               <span>ক্লাস লোড হচ্ছে...</span>
             </div>
@@ -885,18 +885,7 @@ const CleanReport = () => {
 
       <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 border-b border-white/20">
-          <h3 className="text-lg font-semibold text-[#2A3F5F]">পরিচ্ছন্নতা রিপোর্টের ধরন</h3>
-          {/* Additional PDF Report Button in table header */}
-          {selectedClass && selectedDate && cleanReportTypes.length > 0 && (
-            <button
-              onClick={generatePDFReport}
-              className="report-button btn-glow"
-              disabled={isTypesLoading || isReportsLoading}
-              title="পরিচ্ছন্নতা প্রতিবেদন ডাউনলোড করুন"
-            >
-              রিপোর্ট ডাউনলোড
-            </button>
-          )}
+          <h3 className="text-lg font-semibold text-[#441a05]">পরিচ্ছন্নতা রিপোর্টের ধরন</h3>
         </div>
         {renderCleanReportTable()}
       </div>
@@ -907,23 +896,23 @@ const CleanReport = () => {
           <div
             className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border-t border-white/20 animate-slideUp"
           >
-            <h3 className="text-lg font-semibold text-[#2A3F5F] mb-4">
+            <h3 className="text-lg font-semibold text-[#441a05] mb-4">
               পরিচ্ছন্নতা রিপোর্ট মুছে ফেলা নিশ্চিত করুন
             </h3>
-            <p className="text-[#2A3F5F] mb-6">
+            <p className="text-[#441a05] mb-6">
               আপনি কি নিশ্চিত যে এই পরিচ্ছন্নতা রিপোর্টটি মুছে ফেলতে চান?
             </p>
             <div className="flex justify-end space-x-4">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 bg-gray-500/20 text-[#2A3F5F] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
+                className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
                 title="বাতিল করুন"
               >
                 বাতিল
               </button>
               <button
                 onClick={confirmAction}
-                className="px-4 py-2 bg-[#DB9E30] text-[#2A3F5F] rounded-lg hover:text-white transition-colors duration-300 btn-glow"
+                className="px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white transition-colors duration-300 btn-glow"
                 title="নিশ্চিত করুন"
               >
                 নিশ্চিত করুন

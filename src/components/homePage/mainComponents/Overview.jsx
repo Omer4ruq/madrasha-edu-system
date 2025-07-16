@@ -3,9 +3,23 @@ import { FaUserFriends, FaUserTie } from 'react-icons/fa';
 import { FaGoogleScholar } from 'react-icons/fa6';
 import { RiUserSettingsFill } from 'react-icons/ri';
 
+import { useGetStudentActiveApiQuery } from '../../../redux/features/api/student/studentActiveApi';
+import { useGetRoleStaffProfileApiQuery, useGetTeacherStaffProfilesQuery } from '../../../redux/features/api/roleStaffProfile/roleStaffProfileApi';
+
+
 export default function Overview() {
+  const { data: activeStudent, isLoading: activeStudentLoading } = useGetStudentActiveApiQuery();
+  const { data: allStaff, isLoading: staffLoading } = useGetRoleStaffProfileApiQuery();
+  const { data: teachers, isLoading: teacherLoading } = useGetTeacherStaffProfilesQuery();
+
+  const toBn = (n) => n.toLocaleString("bn-BD");
+
+  const studentCount = toBn(activeStudent?.length || 0);
+  const teacherCount = teachers?.length || 0;
+  const staffCount = (allStaff?.length || 0) - teacherCount;
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
       <style>
         {`
           @keyframes fadeIn {
@@ -29,49 +43,31 @@ export default function Overview() {
       </style>
 
       {/* Total Students */}
-      <div
-        className="bg-black/10 backdrop-blur-sm border border-white/20 p-4 sm:p-6 rounded-2xl flex items-center shadow-xl animate-fadeIn"
-        style={{ animationDelay: '0s' }}
-      >
-        <div className="w-14 h-14 flex items-center justify-center rounded-full mr-4 bg-[#DB9E30] animate-scaleIn">
-          <FaGoogleScholar className="w-8 h-8 text-[#441a05]" />
-        </div>
-        <div className="border-l-2 border-[#9d9087] pl-4">
-          <h4 className="text-[#441a05] font-medium text-sm">মোট শিক্ষার্থী</h4>
-          <h4 className="text-xl font-bold text-[#441a05]">৫৩০</h4>
-        </div>
-      </div>
+      <Card
+        icon={<FaGoogleScholar className="w-8 h-8 text-[#441a05]" />}
+        title="মোট শিক্ষার্থী"
+        value={activeStudentLoading ? "লোড হচ্ছে..." : studentCount}
+        delay="0s"
+      />
 
       {/* Total Teachers */}
-      <div
-        className="bg-black/10 backdrop-blur-sm border border-white/20 p-4 sm:p-6 rounded-2xl flex items-center shadow-xl animate-fadeIn"
-        style={{ animationDelay: '0.1s' }}
-      >
-        <div className="w-14 h-14 flex items-center justify-center rounded-full mr-4 bg-[#DB9E30] animate-scaleIn">
-          <FaUserTie className="w-8 h-8 text-[#441a05]" />
-        </div>
-        <div className="border-l-2 border-[#9d9087] pl-4">
-          <h4 className="text-[#441a05] font-medium text-sm">মোট শিক্ষক</h4>
-          <h4 className="text-xl font-bold text-[#441a05]">৩০</h4>
-        </div>
-      </div>
+      <Card
+        icon={<FaUserTie className="w-8 h-8 text-[#441a05]" />}
+        title="মোট শিক্ষক"
+        value={staffLoading || teacherLoading ? "লোড হচ্ছে..." : toBn(teacherCount)}
+        delay="0.1s"
+      />
 
       {/* Total Staff */}
-      <div
-        className="bg-black/10 backdrop-blur-sm border border-white/20 p-4 sm:p-6 rounded-2xl flex items-center shadow-xl animate-fadeIn"
-        style={{ animationDelay: '0.2s' }}
-      >
-        <div className="w-14 h-14 flex items-center justify-center rounded-full mr-4 bg-[#DB9E30] animate-scaleIn">
-          <RiUserSettingsFill className="w-8 h-8 text-[#441a05]" />
-        </div>
-        <div className="border-l-2 border-[#9d9087] pl-4">
-          <h4 className="text-[#441a05] font-medium text-sm">মোট কর্মী</h4>
-          <h4 className="text-xl font-bold text-[#441a05]">১০</h4>
-        </div>
-      </div>
+      <Card
+        icon={<RiUserSettingsFill className="w-8 h-8 text-[#441a05]" />}
+        title="মোট কর্মী"
+        value={staffLoading || teacherLoading ? "লোড হচ্ছে..." : toBn(staffCount)}
+        delay="0.2s"
+      />
 
       {/* Total Parents */}
-      <div
+      {/* <div
         className="bg-black/10 backdrop-blur-sm border border-white/20 p-4 sm:p-6 rounded-2xl flex items-center shadow-xl animate-fadeIn"
         style={{ animationDelay: '0.3s' }}
       >
@@ -82,7 +78,24 @@ export default function Overview() {
           <h4 className="text-[#441a05] font-medium text-sm">মোট অভিভাবক</h4>
           <h4 className="text-xl font-bold text-[#441a05]">৫০০</h4>
         </div>
+      </div> */}
+   
       </div>
-    </div>
+
   );
 }
+
+const Card = ({ icon, title, value, delay }) => (
+  <div
+    className="bg-black/10 backdrop-blur-sm border border-white/20 p-4 sm:p-6 rounded-2xl flex items-center shadow-xl animate-fadeIn"
+    style={{ animationDelay: delay }}
+  >
+    <div className="w-14 h-14 flex items-center justify-center rounded-full mr-4 bg-[#DB9E30] animate-scaleIn">
+      {icon}
+    </div>
+    <div className="border-l-2 border-[#9d9087] pl-4">
+      <h4 className="text-[#441a05] font-medium text-sm">{title}</h4>
+      <h4 className="text-xl font-bold text-[#441a05]">{value}</h4>
+    </div>
+  </div>
+);

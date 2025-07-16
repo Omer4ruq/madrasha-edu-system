@@ -40,7 +40,7 @@ export default function AttendanceInfo() {
           <StudentAttendance />
 
           {/* Graph title */}
-          <h5 className="text-center text-[#DB9E30] text-lg font-medium animate-scaleIn">
+          <h5 className="text-center text-[#441a05] text-lg font-medium animate-scaleIn">
             শিক্ষার্থী
           </h5>
 
@@ -48,21 +48,22 @@ export default function AttendanceInfo() {
           <div className="flex text-center divide-x-2 divide-[#9d9087]">
             <div className="w-1/2">
               <h5 className="text-[#441a05] font-medium">উপস্থিত</h5>
-              <h5 className="text-[#441a05] font-bold">৩০০</h5>
+              <h5 className="text-[#441a05] font-bold">০</h5>
             </div>
             <div className="w-1/2">
               <h5 className="text-[#441a05] font-medium">অনুপস্থিত</h5>
-              <h5 className="text-[#441a05] font-bold">৪৫</h5>
+              <h5 className="text-[#441a05] font-bold">o
+              </h5>
             </div>
           </div>
 
           {/* Link icon */}
-          <button
+          {/* <button
             title="বিস্তারিত দেখুন / View Details"
             className="absolute top-2 right-2 text-[#9d9087] hover:text-[#DB9E30] transition-colors duration-300 animate-scaleIn btn-glow"
           >
             <PiDotsThreeCircleFill className="w-7 h-7" />
-          </button>
+          </button> */}
         </div>
 
         {/* Teachers graph */}
@@ -70,7 +71,7 @@ export default function AttendanceInfo() {
           <TeacherAttendance />
 
           {/* Graph title */}
-          <h5 className="text-center text-[#DB9E30] text-lg font-medium animate-scaleIn">
+          <h5 className="text-center text-[#441a05] text-lg font-medium animate-scaleIn">
             শিক্ষক
           </h5>
 
@@ -78,21 +79,21 @@ export default function AttendanceInfo() {
           <div className="flex text-center divide-x-2 divide-[#9d9087]">
             <div className="w-1/2">
               <h5 className="text-[#441a05] font-medium">উপস্থিত</h5>
-              <h5 className="text-[#441a05] font-bold">৩০</h5>
+              <h5 className="text-[#441a05] font-bold">০</h5>
             </div>
             <div className="w-1/2">
               <h5 className="text-[#441a05] font-medium">অনুপস্থিত</h5>
-              <h5 className="text-[#441a05] font-bold">২</h5>
+              <h5 className="text-[#441a05] font-bold">o</h5>
             </div>
           </div>
 
           {/* Link icon */}
-          <button
+          {/* <button
             title="বিস্তারিত দেখুন / View Details"
             className="absolute top-2 right-2 text-[#9d9087] hover:text-[#DB9E30] transition-colors duration-300 animate-scaleIn btn-glow"
           >
             <PiDotsThreeCircleFill className="w-7 h-7" />
-          </button>
+          </button> */}
         </div>
       </div>
     </div>
