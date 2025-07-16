@@ -412,11 +412,6 @@ const CleanReport = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                 পরিচ্ছন্নতা রিপোর্টের ধরন
               </th>
-              {hasDeletePermission && (
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                  ক্রিয়াকলাপ
-                </th>
-              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-white/20">
@@ -456,20 +451,6 @@ const CleanReport = () => {
                     </label>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">{type.name}</td>
-                  {hasDeletePermission && (
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      {report && (
-                        <button
-                          onClick={() => handleDelete(report.id)}
-                          title="পরিচ্ছন্নতা রিপোর্ট মুছুন"
-                          className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
-                          disabled={isDeleting}
-                        >
-                          <FaTrash className="w-5 h-5" />
-                        </button>
-                      )}
-                    </td>
-                  )}
                 </tr>
               );
             })}
