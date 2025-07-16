@@ -768,7 +768,6 @@ const AddBehaviorMarks = () => {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           }
           .input-field:focus {
-            transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
           }
           .status-indicator {
@@ -783,7 +782,7 @@ const AddBehaviorMarks = () => {
             top: 50%;
             right: 6px;
             transform: translateY(-50%);
-            transition: all 0.3s ease;
+
             opacity: 0;
             visibility: hidden;
           }
@@ -980,7 +979,7 @@ const AddBehaviorMarks = () => {
                                   onKeyDown={(e) => handleKeyDown(e, student.id, bt.id, studentIndex, behaviorIndex)}
                                   onBlur={(e) => handleMarkSubmit(student.id, bt.id, e.target.value)}
                                   disabled={!hasAddPermission && !hasChangePermission}
-                                  className={`w-24 p-3 pr-10 text-center border-2 rounded-xl bg-transparent input-field font-medium transition-all duration-300 ${isInvalid ? 'border-red-400 bg-red-50 text-red-700 shadow-red-200' :
+                                  className={`w-24 p-3 pr-10 text-center border-2 outline-none rounded-xl bg-transparent input-field font-medium transition-all duration-300 ${isInvalid ? 'border-red-400 bg-red-50 text-red-700 shadow-red-200' :
                                     currentMarkStatus === 'success' ? 'border-green-400 bg-green-50 text-green-700 shadow-green-200' :
                                       currentMarkStatus === 'error' ? 'border-red-400 bg-red-50 text-red-700 shadow-red-200' :
                                         currentMarkStatus === 'loading' ? 'border-blue-400 bg-blue-50 text-blue-700 shadow-blue-200' :
@@ -1013,7 +1012,7 @@ const AddBehaviorMarks = () => {
                                 {currentValue && currentValue !== '' && (hasChangePermission || hasDeletePermission) && (
                                   <button
                                     onClick={() => handleClearMark(student.id, bt.id)}
-                                    className="clear-button w-6 h-6 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-full flex items-center justify-center shadow-lg transform hover:scale-110 transition-all duration-200"
+                                    className="clear-button w-6 h-6 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-full flex items-center justify-center shadow-lg transform transition-all duration-200"
                                     title="নম্বর মুছে ফেলুন"
                                     type="button"
                                   >
