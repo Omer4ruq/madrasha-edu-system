@@ -980,7 +980,7 @@ const AddBehaviorMarks = () => {
                                   onKeyDown={(e) => handleKeyDown(e, student.id, bt.id, studentIndex, behaviorIndex)}
                                   onBlur={(e) => handleMarkSubmit(student.id, bt.id, e.target.value)}
                                   disabled={!hasAddPermission && !hasChangePermission}
-                                  className={`w-24 p-3 pr-10 text-center border-2 rounded-xl input-field font-medium transition-all duration-300 ${isInvalid ? 'border-red-400 bg-red-50 text-red-700 shadow-red-200' :
+                                  className={`w-24 p-3 pr-10 text-center border-2 rounded-xl bg-transparent input-field font-medium transition-all duration-300 ${isInvalid ? 'border-red-400 bg-red-50 text-red-700 shadow-red-200' :
                                     currentMarkStatus === 'success' ? 'border-green-400 bg-green-50 text-green-700 shadow-green-200' :
                                       currentMarkStatus === 'error' ? 'border-red-400 bg-red-50 text-red-700 shadow-red-200' :
                                         currentMarkStatus === 'loading' ? 'border-blue-400 bg-blue-50 text-blue-700 shadow-blue-200' :
