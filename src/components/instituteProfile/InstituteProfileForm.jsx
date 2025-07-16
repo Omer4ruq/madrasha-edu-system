@@ -367,7 +367,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                 </div>
                 <div className="relative input-icon">
                   <label htmlFor="institute_gender_type" className="block text-lg font-medium text-[#441a05]">
-                    লিঙ্গের ধরন
+                    শিক্ষার্থীর ধরন
                   </label>
                   <FaInfoCircle className="absolute left-3 top-[50px] text-[#DB9E30]" />
                   <select
@@ -376,12 +376,12 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     value={formData.institute_gender_type}
                     onChange={handleChange}
                     className="mt-1 block w-full bg-white/10 text-[#441a05] pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
-                    aria-label="লিঙ্গের ধরন"
+                    aria-label="প্রতিষ্ঠানের ধরন"
                     disabled={isFormDisabled}
                   >
                     <option value="Combined">মিশ্র</option>
-                    <option value="Male">পুরুষ</option>
-                    <option value="Female">নারী</option>
+                    <option value="Boys">ছেলে </option>
+                    <option value="Girls">মেয়ে</option>
                   </select>
                 </div>
                 <div className="relative input-icon">
