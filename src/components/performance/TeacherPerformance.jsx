@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useGetPerformanceApiQuery } from '../../redux/features/api/performance/performanceApi';
 import Select from 'react-select';
-import { FaSpinner } from 'react-icons/fa';
+import { FaSpinner, FaPrint } from 'react-icons/fa';
 import toast, { Toaster } from 'react-hot-toast';
 import { useGetRoleStaffProfileApiQuery } from '../../redux/features/api/roleStaffProfile/roleStaffProfileApi';
 import { useCreateTeacherPerformanceApiMutation, useGetTeacherPerformanceApiQuery, useUpdateTeacherPerformanceApiMutation } from '../../redux/features/api/performance/teacherPerformanceApi';
@@ -10,401 +10,23 @@ import { IoAddCircle } from 'react-icons/io5';
 import selectStyles from '../../utilitis/selectStyles';
 import { useSelector } from 'react-redux';
 import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi';
-import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
-import useInstituteInfo from '../../redux/features/api/institute/useInstituteInfo';
 import { useGetInstituteLatestQuery } from '../../redux/features/api/institute/instituteLatestApi';
 
-// Register Noto Sans Bengali font
-try {
-  Font.register({
-    family: 'NotoSansBengali',
-    src: 'https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf',
-  });
-} catch (error) {
-  console.error('Font registration failed:', error);
-  Font.register({
-    family: 'Helvetica',
-    src: 'https://fonts.gstatic.com/s/helvetica/v13/Helvetica.ttf',
-  });
-}
-
-// PDF styles
-const styles = StyleSheet.create({
-  page: {
-    padding: 40,
-    fontFamily: 'NotoSansBengali',
-    fontSize: 11,
-    color: '#1A2A44',
-    backgroundColor: '#FFFFFF',
-    lineHeight: 1.5,
-  },
-  headerContainer: {
-    backgroundColor: '#2A3F5F',
-    marginHorizontal: -40,
-    marginTop: -40,
-    paddingHorizontal: 40,
-    paddingVertical: 20,
-    marginBottom: 30,
-    borderBottom: '5px solid #DB9E30',
-  },
-  header: {
-    textAlign: 'center',
-  },
-  schoolName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    paddingHorizontal: 20,
-    wordWrap: 'break-word',
-  },
-  headerText: {
-    fontSize: 10,
-    color: '#E9ECEF',
-    marginBottom: 6,
-    fontWeight: 'normal',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#DB9E30',
-    textAlign: 'center',
-    marginTop: 10,
-    textTransform: 'uppercase',
-  },
-  metaContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontSize: 9,
-    marginBottom: 25,
-    padding: 10,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 6,
-    borderLeft: '4px solid #DB9E30',
-  },
-  metaText: {
-    color: '#495057',
-    fontWeight: 'medium',
-  },
-  performanceInfoCard: {
-    marginBottom: 25,
-    padding: 15,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    border: '1px solid #E9ECEF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-  },
-  performanceInfoTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#2A3F5F',
-    marginBottom: 12,
-    textAlign: 'center',
-    borderBottom: '1px solid #E9ECEF',
-    paddingBottom: 8,
-  },
-  performanceInfoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-    paddingVertical: 5,
-  },
-  performanceLabel: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#495057',
-    flex: 1,
-  },
-  performanceValue: {
-    fontSize: 10,
-    color: '#212529',
-    fontWeight: 'medium',
-    flex: 1,
-    textAlign: 'right',
-  },
-  table: {
-    borderRadius: 8,
-    overflow: 'hidden',
-    border: '1px solid #DEE2E6',
-    marginBottom: 25,
-    breakInside: 'avoid',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    borderBottom: '1px solid #E9ECEF',
-  },
-  tableHeader: {
-    backgroundColor: '#2A3F5F',
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 11,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    textAlign: 'center',
-    borderRight: '1px solid rgba(255,255,255,0.2)',
-  },
-  tableCell: {
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    fontSize: 10,
-    borderRight: '1px solid #E9ECEF',
-    flex: 1,
-    textAlign: 'left',
-  },
-  tableCellCenter: {
-    textAlign: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tableRowAlternate: {
-    backgroundColor: '#F8F9FA',
-  },
-  tableRowEven: {
-    backgroundColor: '#FFFFFF',
-  },
-  statusIcon: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  statusCompleted: {
-    color: '#28A745',
-  },
-  statusPending: {
-    color: '#DC3545',
-  },
-  summarySection: {
-    marginTop: 25,
-    padding: 20,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 8,
-    border: '1px solid #E9ECEF',
-    borderLeft: '5px solid #2A3F5F',
-    breakInside: 'avoid',
-  },
-  summaryTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#2A3F5F',
-    marginBottom: 15,
-    textAlign: 'center',
-    textTransform: 'uppercase',
-  },
-  summaryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  summaryItem: {
-    width: '48%',
-    marginBottom: 12,
-    padding: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 6,
-    border: '1px solid #E9ECEF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  summaryLabel: {
-    fontSize: 9,
-    color: '#6C757D',
-    marginBottom: 6,
-    textAlign: 'center',
-    textTransform: 'uppercase',
-  },
-  summaryValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2A3F5F',
-    textAlign: 'center',
-  },
-  progressBar: {
-    height: 10,
-    backgroundColor: '#E9ECEF',
-    borderRadius: 5,
-    marginTop: 15,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#28A745',
-    borderRadius: 5,
-  },
-  progressText: {
-    textAlign: 'center',
-    marginTop: 8,
-    fontSize: 10,
-    color: '#495057',
-    fontWeight: 'bold',
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 30,
-    left: 40,
-    right: 40,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontSize: 8,
-    color: '#6C757D',
-    paddingTop: 10,
-    borderTop: '1px solid #E9ECEF',
-  },
-  watermark: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%) rotate(-45deg)',
-    fontSize: 80,
-    color: 'rgba(42, 63, 95, 0.05)',
-    fontWeight: 'bold',
-    zIndex: -1,
-    textTransform: 'uppercase',
-  },
-});
-
-// PDF Document Component
-const PDFDocument = ({ performanceData, performanceMetrics, selectedTeacher, selectedMonth, selectedAcademicYear,institute }) => {
-  const completedCount = Object.values(performanceData).filter(Boolean).length;
-  const totalCount = performanceMetrics.length;
-  const pendingCount = totalCount - completedCount;
-  const completionPercentage = totalCount > 0 ? ((completedCount / totalCount) * 100).toFixed(1) : 0;
-
-  return (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        {/* Watermark */}
-        <Text style={styles.watermark}>আদর্শ বিদ্যালয়</Text>
-        
-        {/* Header Section */}
-        <View style={styles.headerContainer}>
-          <View style={styles.header}>
-            <Text style={styles.schoolName}>{institute.institute_name}</Text>
-            <Text style={styles.headerText}>{institute?.institute_address}</Text>
-            <Text style={styles.headerText}>{institute?.institute_email_address} | {institute?.headmaster_mobile}</Text>
-            <Text style={styles.title}>শিক্ষক কর্মক্ষমতা মূল্যায়ন প্রতিবেদন</Text>
-          </View>
-        </View>
-
-        {/* Meta Information */}
-        <View style={styles.metaContainer}>
-          <Text style={styles.metaText}>
-            প্রতিবেদনের তারিখ: {new Date().toLocaleDateString('bn-BD', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </Text>
-          <Text style={styles.metaText}>
-            সময়: {new Date().toLocaleTimeString('bn-BD', { 
-              hour: '2-digit', 
-              minute: '2-digit', 
-              hour12: true 
-            })}
-          </Text>
-        </View>
-
-        {/* Teacher Information Card */}
-        <View style={styles.performanceInfoCard}>
-          <Text style={styles.performanceInfoTitle}>শিক্ষকের তথ্য</Text>
-          <View style={styles.performanceInfoRow}>
-            <Text style={styles.performanceLabel}>শিক্ষকের নাম:</Text>
-            <Text style={styles.performanceValue}>{selectedTeacher?.label || 'অজানা'}</Text>
-          </View>
-          <View style={styles.performanceInfoRow}>
-            <Text style={styles.performanceLabel}>মূল্যায়নের মাস:</Text>
-            <Text style={styles.performanceValue}>{selectedMonth?.label || 'অজানা'}</Text>
-          </View>
-          <View style={styles.performanceInfoRow}>
-            <Text style={styles.performanceLabel}>শিক্ষাবর্ষ:</Text>
-            <Text style={styles.performanceValue}>{selectedAcademicYear?.label || 'অজানা'}</Text>
-          </View>
-          <View style={styles.performanceInfoRow}>
-            <Text style={styles.performanceLabel}>মূল্যায়নের তারিখ:</Text>
-            <Text style={styles.performanceValue}>
-              {new Date().toLocaleDateString('bn-BD', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
-            </Text>
-          </View>
-        </View>
-
-        {/* Performance Table */}
-        <View style={styles.table}>
-          <View style={styles.tableRow}>
-            <Text style={[styles.tableHeader, { flex: 3 }]}>কর্মক্ষমতা মেট্রিক</Text>
-            <Text style={[styles.tableHeader, { flex: 1 }]}>স্থিতি</Text>
-            <Text style={[styles.tableHeader, { flex: 1 }]}>চিহ্ন</Text>
-          </View>
-          {performanceMetrics.map((metric, index) => (
-            <View key={metric.id} style={[
-              styles.tableRow, 
-              index % 2 === 0 ? styles.tableRowEven : styles.tableRowAlternate
-            ]}>
-              <Text style={[styles.tableCell, { flex: 3 }]}>{metric.name}</Text>
-              <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
-                {performanceData[metric.name] ? 'সম্পন্ন' : 'অসম্পন্ন'}
-              </Text>
-              <View style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
-                <Text style={[
-                  styles.statusIcon,
-                  performanceData[metric.name] ? styles.statusCompleted : styles.statusPending
-                ]}>
-                  {performanceData[metric.name] ? '+' : 'X'}
-                </Text>
-              </View>
-            </View>
-          ))}
-        </View>
-
-        {/* Performance Summary */}
-        <View style={styles.summarySection}>
-          <Text style={styles.summaryTitle}>কর্মক্ষমতা সারাংশ</Text>
-          <View style={styles.summaryGrid}>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>মোট মেট্রিক্স</Text>
-              <Text style={styles.summaryValue}>{totalCount}</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>সম্পন্ন কাজ</Text>
-              <Text style={[styles.summaryValue, { color: '#28a745' }]}>{completedCount}</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>অসম্পন্ন কাজ</Text>
-              <Text style={[styles.summaryValue, { color: '#dc3545' }]}>{pendingCount}</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>সাফল্যের হার</Text>
-              <Text style={[styles.summaryValue, { color: '#441a05' }]}>{completionPercentage}%</Text>
-            </View>
-          </View>
-          
-          {/* Progress Bar */}
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${completionPercentage}%` }]} />
-          </View>
-          <Text style={styles.progressText}>
-            অগ্রগতি: {completedCount}/{totalCount} ({completionPercentage}%)
-          </Text>
-        </View>
-
-        {/* Footer */}
-        <View style={styles.footer} fixed>
-          <Text>এই প্রতিবেদনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে | আদর্শ বিদ্যালয় - শিক্ষক ব্যবস্থাপনা সিস্টেম</Text>
-          <Text render={({ pageNumber, totalPages }) => `পৃষ্ঠা ${pageNumber} এর ${totalPages}`} />
-        </View>
-      </Page>
-    </Document>
-  );
-};
+// Month options
+const monthOptions = [
+  { value: 'January', label: 'জানুয়ারি' },
+  { value: 'February', label: 'ফেব্রুয়ারি' },
+  { value: 'March', label: 'মার্চ' },
+  { value: 'April', label: 'এপ্রিল' },
+  { value: 'May', label: 'মে' },
+  { value: 'June', label: 'জুন' },
+  { value: 'July', label: 'জুলাই' },
+  { value: 'August', label: 'আগস্ট' },
+  { value: 'September', label: 'সেপ্টেম্বর' },
+  { value: 'October', label: 'অক্টোবর' },
+  { value: 'November', label: 'নভেম্বর' },
+  { value: 'December', label: 'ডিসেম্বর' },
+];
 
 const TeacherPerformance = () => {
   const [selectedTeacher, setSelectedTeacher] = useState(null);
@@ -421,35 +43,26 @@ const TeacherPerformance = () => {
   const { data: academicYears = [], isLoading: isAcademicYearsLoading, error: academicYearsError } = useGetAcademicYearApiQuery();
   const [createTeacherPerformance, { isLoading: isCreating }] = useCreateTeacherPerformanceApiMutation();
   const [patchTeacherPerformance, { isLoading: isUpdating }] = useUpdateTeacherPerformanceApiMutation();
-const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
+  const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
+
   // Permission Logic
   const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, { skip: !group_id });
-   const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_teacher_performance') || false;
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_teacher_performance') || false;
   const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_teacher_performance') || false;
   const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_teacher_performance') || false;
   const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_teacher_performance') || false;
-
-  // Month options
-  const monthOptions = [
-    { value: 'January', label: 'জানুয়ারি' },
-    { value: 'February', label: 'ফেব্রুয়ারি' },
-    { value: 'March', label: 'মার্চ' },
-    { value: 'April', label: 'এপ্রিল' },
-    { value: 'May', label: 'মে' },
-    { value: 'June', label: 'জুন' },
-    { value: 'July', label: 'জুলাই' },
-    { value: 'August', label: 'আগস্ট' },
-    { value: 'September', label: 'সেপ্টেম্বর' },
-    { value: 'October', label: 'অক্টোবর' },
-    { value: 'November', label: 'নভেম্বর' },
-    { value: 'December', label: 'ডিসেম্বর' },
-  ];
 
   // Academic year options
   const academicYearOptions = useMemo(() => academicYears.map((year) => ({
     value: year.id,
     label: year.name,
   })), [academicYears]);
+
+  // Transform teacher data for react-select
+  const teacherOptions = useMemo(() => teachers.map((teacher) => ({
+    value: teacher.id,
+    label: teacher.name,
+  })), [teachers]);
 
   // Filter performances for the selected teacher, month, and academic year
   const teacherPerformances = useMemo(() => {
@@ -475,12 +88,6 @@ const { data: institute, isLoading: instituteLoading, error: instituteError } = 
     return map;
   }, [teacherPerformances, performanceMetrics, selectedTeacher, selectedMonth, selectedAcademicYear]);
 
-  // Transform teacher data for react-select
-  const teacherOptions = useMemo(() => teachers.map((teacher) => ({
-    value: teacher.id,
-    label: teacher.name,
-  })), [teachers]);
-
   // Handle selections
   const handleTeacherSelect = (selectedOption) => {
     setSelectedTeacher(selectedOption);
@@ -494,8 +101,8 @@ const { data: institute, isLoading: instituteLoading, error: instituteError } = 
     setSelectedAcademicYear(selectedOption);
   };
 
-  // Generate PDF report
-  const generatePDFReport = async () => {
+  // Generate PDF Report (simplified Madrasa layout with check/cross)
+  const generatePDFReport = () => {
     if (!hasViewPermission) {
       toast.error('কর্মক্ষমতা প্রতিবেদন দেখার অনুমতি নেই।');
       return;
@@ -511,31 +118,191 @@ const { data: institute, isLoading: instituteLoading, error: instituteError } = 
       return;
     }
 
-    try {
-      const doc = <PDFDocument
-        performanceData={performanceData}
-        performanceMetrics={performanceMetrics}
-        selectedTeacher={selectedTeacher}
-        selectedMonth={selectedMonth}
-        selectedAcademicYear={selectedAcademicYear}
-        institute={institute}
-      />;
-      
-      const blob = await pdf(doc).toBlob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      
-      const fileName = `শিক্ষক_কর্মক্ষমতা_${selectedTeacher?.label || 'অজানা'}_${selectedMonth?.label || 'অজানা'}_${selectedAcademicYear?.label || 'অজানা'}_${new Date().toLocaleDateString('bn-BD')}.pdf`;
-      
-      link.download = fileName;
-      link.click();
-      URL.revokeObjectURL(url);
-      toast.success('প্রতিবেদন সফলভাবে ডাউনলোড হয়েছে!');
-    } catch (error) {
-      console.error('PDF generation error:', error);
-      toast.error(`প্রতিবেদন তৈরিতে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
+    if (instituteLoading) {
+      toast.error('ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!');
+      return;
     }
+
+    if (!institute) {
+      toast.error('ইনস্টিটিউট তথ্য পাওয়া যায়নি!');
+      return;
+    }
+
+    const totalMetrics = performanceMetrics.length;
+    const completedMetrics = Object.values(performanceData).filter(Boolean).length;
+    const averagePercentage = totalMetrics > 0 ? (completedMetrics / totalMetrics) * 100 : 0;
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>শিক্ষক কর্মক্ষমতা প্রতিবেদন</title>
+        <meta charset="UTF-8">
+        <style>
+          @page { size: A4 portrait; margin: 20mm; }
+          body {
+            font-family: 'Noto Sans Bengali', Arial, sans-serif;
+            font-size: 12px;
+            margin: 30px;
+            padding: 0;
+            color: #000;
+          }
+          .header {
+            text-align: center;
+            // margin-bottom: 20px;
+            // border-bottom: 2px solid #DB9E30;
+            // padding-bottom: 5px;
+          }
+          .header h1 {
+            font-size: 24px;
+            margin: 0;
+            color: #000;
+          }
+          .header p {
+            font-size: 14px;
+            margin: 5px 0;
+            color: #000;
+          }
+          .logo-placeholder {
+            text-align: center;
+            margin-bottom: 10px;
+          }
+          // .logo-placeholder::before {
+          //   content: '[লোগো এখানে স্থাপন করুন]';
+          //   font-style: italic;
+          //   color: #666;
+          // }
+          .teacher-details {
+               text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+          }
+          .teacher-details p {
+            margin: 5px 0;
+
+          }
+          .table-container {
+            width: 100%;
+            overflow-x: auto;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+          }
+          th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+          }
+          th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+            color: #000;
+          }
+          .check-mark::before { content: '✓'; color: green; font-weight: bold; }
+          .cross-mark::before { content: '✗'; color: red; font-weight: bold; }
+          .summary {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #000;
+            background-color: #F8F9FA;
+          }
+          .summary p {
+            margin: 5px 0;
+            font-weight: 600;
+          }
+          .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            border-top: 1px solid #000;
+            padding-top: 10px;
+          }
+          .footer p {
+            margin: 5px 0;
+          }
+          // .stamp-placeholder::before {
+          //   content: '[মোহর এখানে স্থাপন করুন]';
+          //   font-style: italic;
+          //   color: #666;
+          // }
+          .title{
+               text-align: center;
+               font-size: 20px;
+               font-weight: 600;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo-placeholder"></div>
+          <h1>${institute.institute_name || 'আদর্শ মাদ্রাসা'}</h1>
+          <p>${institute.institute_address || 'ঢাকা, বাংলাদেশ'}</p>
+        </div>
+
+        <h1 class='title'>শিক্ষকের কর্মক্ষমতার রিপোর্ট</h1>
+
+        <div class="teacher-details">
+          <p><strong>শিক্ষকের নাম:</strong> ${selectedTeacher?.label || 'অজানা'}</p>
+          <p><strong>পরিচয় নম্বর:</strong> ${selectedTeacher?.value || 'N/A'}</p>
+          <p><strong>বিভাগ/বিষয়:</strong> ${selectedTeacher?.department || 'নির্দিষ্ট নয়'}</p>
+          <p><strong>মূল্যায়নের মাস:</strong> ${selectedMonth?.label || 'অজানা'}</p>
+          <p><strong>শিক্ষাবর্ষ:</strong> ${selectedAcademicYear?.label || 'অজানা'}</p>
+          <p><strong>তারিখ:</strong> ${new Date().toLocaleDateString('bn')}</p>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ক্রমিক নং</th>
+                <th>কর্মক্ষমতা বিষয়</th>
+                <th>অবস্থা</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${performanceMetrics.map((metric, index) => `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>${metric.name}</td>
+                  <td class="${performanceData[metric.name] ? 'check-mark' : 'cross-mark'}"></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="summary">
+          <p><strong>মোট মেট্রিক্স:</strong> ${performanceMetrics.length}</p>
+          <p><strong>সম্পন্ন মেট্রিক্স:</strong> ${completedMetrics}</p>
+          <p><strong>গড় (%):</strong> ${averagePercentage.toFixed(2)}%</p>
+        </div>
+
+        <div class="footer">
+          <p>প্রধান শিক্ষকের স্বাক্ষর: ____________________</p>
+          <p>মুফতির স্বাক্ষর: ____________________</p>
+          <p class="stamp-placeholder"></p>
+          <p>তারিখ: ১৬ জুলাই, ২০২৫</p>
+        </div>
+
+        <script>
+          let printAttempted = false;
+          window.onbeforeprint = () => { printAttempted = true; };
+          window.onafterprint = () => { window.close(); };
+          window.addEventListener('beforeunload', (event) => {
+            if (!printAttempted) { window.close(); }
+          });
+          window.print();
+        </script>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open(' ', '_blank');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    toast.success('PDF রিপোর্ট তৈরি হয়েছে!');
   };
 
   // Handle checkbox change
@@ -601,12 +368,12 @@ const { data: institute, isLoading: instituteLoading, error: instituteError } = 
   // Render performance table
   const renderPerformanceTable = () => {
     if (!selectedTeacher || !selectedMonth || !selectedAcademicYear) return (
-      <p className="p-4 text-[#441a05]/70 animate-fadeIn">
+      <p className="p-4 text-[#441a05]/70 animate-fadeIn flex justify-center items-center h-full">
         শিক্ষক, মাস এবং শিক্ষাবর্ষ নির্বাচন করুন
       </p>
     );
     if (isMetricsLoading || isPerformanceLoading) return (
-      <p className="p-4 text-[#441a05]/70 animate-fadeIn">
+      <p className="p-4 text-[#441a05]/70 animate-fadeIn flex justify-center items-center h-full">
         <FaSpinner className="animate-spin text-lg mr-2" />
         কর্মক্ষমতা ডেটা লোড হচ্ছে...
       </p>
@@ -621,15 +388,15 @@ const { data: institute, isLoading: instituteLoading, error: instituteError } = 
         কর্মক্ষমতা ত্রুটি: {performanceError.status || 'অজানা'} - {JSON.stringify(performanceError.data || {})}
       </div>
     );
-    if (performanceMetrics.length === 0) return <p className="p-4 text-[#441a05]/70 animate-fadeIn">কোনো কর্মক্ষমতা মেট্রিক্স নেই</p>;
+    if (performanceMetrics.length === 0) return <p className="p-4 text-[#441a05]/70 animate-fadeIn flex justify-center items-center h-full">কোনো কর্মক্ষমতা মেট্রিক্স নেই</p>;
 
     return (
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-white/20">
-          <thead className="bg-white/5">
+        <table className="min-w-full divide-y divide-white/20 border-none">
+          <thead className="">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">চেকবক্স</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">কর্মক্ষমতা মেট্রিক</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]">চেকবক্স</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]">কর্মক্ষমতা মেট্রিক</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/20">
@@ -688,9 +455,12 @@ const { data: institute, isLoading: instituteLoading, error: instituteError } = 
             from { transform: scale(0.95); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
           }
-          @keyframes slideUp {
-            from { opacity: 0; transform: translateY(100%); }
-            to { opacity: 1; transform: translateY(0); }
+          @keyframes ripple {
+            0% { transform: scale(0); opacity: 0.5; }
+            100% { transform: scale(4); opacity: 0; }
+          }
+          @keyframes iconHover {
+            to { transform: scale(1.1); }
           }
           .animate-fadeIn {
             animation: fadeIn 0.6s ease-out forwards;
@@ -698,49 +468,68 @@ const { data: institute, isLoading: instituteLoading, error: instituteError } = 
           .animate-scaleIn {
             animation: scaleIn 0.4s ease-out forwards;
           }
-          .animate-slideUp {
-            animation: slideUp 0.4s ease-out forwards;
-          }
-          .tick-glow {
-            transition: all 0.3s ease;
-          }
-          .tick-glow:checked + span {
-            box-shadow: 0 0 10px rgba(219, 158, 48, 0.4);
-          }
           .btn-glow:hover {
             box-shadow: 0 0 15px rgba(219, 158, 48, 0.3);
           }
-          .report-button {
-            background-color: #441a05;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 8px;
-            transition: all 0.3s;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
+          .input-icon:hover svg {
+            animation: iconHover 0.3s ease-out forwards;
           }
-          .report-button:hover {
-            background-color: #5a2e0a;
-            box-shadow: 0 0 15px rgba(219, 158, 48, 0.3);
+          .btn-ripple {
+            position: relative;
+            overflow: hidden;
           }
-          .report-button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
+          .btn-ripple::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1);
+            transform-origin: 50% 50%;
+            animation: none;
+          }
+          .btn-ripple:active::after {
+            animation: ripple 0.6s ease-out;
           }
           ::-webkit-scrollbar {
             width: 8px;
+            height: 8px;
           }
           ::-webkit-scrollbar-track {
             background: transparent;
           }
           ::-webkit-scrollbar-thumb {
-            background: rgba(22, 31, 48, 0.26);
+            background: rgba(157, 144, 135, 0.5);
             border-radius: 10px;
           }
           ::-webkit-scrollbar-thumb:hover {
-            background: rgba(10, 13, 21, 0.44);
+            background: #441a05;
+          }
+          .table-container {
+            overflow-x: auto;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+          }
+          th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+          }
+          th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+            color: #000;
+            text-transform: uppercase;
+          }
+          td {
+            color: #000;
           }
         `}
       </style>
@@ -811,16 +600,21 @@ const { data: institute, isLoading: instituteLoading, error: instituteError } = 
             </label>
           </div>
           
-          {/* PDF Report Button - Show when all selections are made */}
+          {/* Report Button */}
           {selectedTeacher && selectedMonth && selectedAcademicYear && (
             <div className="flex justify-end mt-6 animate-fadeIn">
               <button
                 onClick={generatePDFReport}
-                className="report-button btn-glow"
-                disabled={!performanceMetrics.length || isMetricsLoading || isPerformanceLoading}
-                title="কর্মক্ষমতা প্রতিবেদন ডাউনলোড করুন"
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 btn-ripple ${
+                  isMetricsLoading || isPerformanceLoading || !performanceMetrics.length
+                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                    : 'bg-[#DB9E30] text-[#441a05] hover:text-white btn-glow'
+                }`}
+                aria-label="PDF রিপোর্ট ডাউনলোড"
+                title="PDF রিপোর্ট ডাউনলোড করুন"
               >
-                কর্মক্ষমতা রিপোর্ট
+                <FaPrint className="text-lg" />
+                <span>PDF রিপোর্ট</span>
               </button>
             </div>
           )}
@@ -853,18 +647,6 @@ const { data: institute, isLoading: instituteLoading, error: instituteError } = 
       <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 border-b border-white/20">
           <h3 className="text-lg font-semibold text-[#441a05]">কর্মক্ষমতা মেট্রিক্স</h3>
-          
-          {/* Additional PDF Report Button in table header */}
-          {selectedTeacher && selectedMonth && selectedAcademicYear && performanceMetrics.length > 0 && (
-            <button
-              onClick={generatePDFReport}
-              className="report-button btn-glow"
-              disabled={isMetricsLoading || isPerformanceLoading}
-              title="কর্মক্ষমতা প্রতিবেদন ডাউনলোড করুন"
-            >
-              রিপোর্ট ডাউনলোড
-            </button>
-          )}
         </div>
         {renderPerformanceTable()}
       </div>
