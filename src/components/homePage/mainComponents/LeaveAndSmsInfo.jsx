@@ -43,7 +43,7 @@ export default function LeaveAndSmsInfo() {
               <h4 className="text-[#441a05] text-[16px] font-medium">
                 শিক্ষার্থী ছুটি
               </h4>
-              <h4 className="text-xl font-bold text-[#DB9E30]">৫</h4>
+              <h4 className="text-xl font-bold text-[#DB9E30]">o</h4>
               {/* <h4 className="text-xs font-medium text-[#441a05]">
                 মোট শিক্ষার্থী: ৫৩০
               </h4> */}
@@ -59,7 +59,7 @@ export default function LeaveAndSmsInfo() {
               <h4 className="text-[#441a05] text-[16px] font-medium">
                 কর্মকর্তা ছুটি
               </h4>
-              <h4 className="text-xl font-bold text-[#DB9E30]">১</h4>
+              <h4 className="text-xl font-bold text-[#DB9E30]">o</h4>
               {/* <h4 className="text-xs font-medium text-[#441a05]">
                 মোট শিক্ষক: ৩০
               </h4> */}
