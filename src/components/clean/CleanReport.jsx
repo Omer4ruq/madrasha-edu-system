@@ -15,401 +15,6 @@ import { IoAddCircle } from 'react-icons/io5';
 import selectStyles from '../../utilitis/selectStyles';
 import { useSelector } from 'react-redux';
 import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi';
-import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
-
-// Register Noto Sans Bengali font
-try {
-  Font.register({
-    family: 'NotoSansBengali',
-    src: 'https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf',
-  });
-} catch (error) {
-  console.error('Font registration failed:', error);
-  Font.register({
-    family: 'Helvetica',
-    src: 'https://fonts.gstatic.com/s/helvetica/v13/Helvetica.ttf',
-  });
-}
-
-// PDF Styles
-const styles = StyleSheet.create({
-  page: {
-    padding: 40,
-    fontFamily: 'NotoSansBengali',
-    fontSize: 11,
-    color: '#1A2A44',
-    backgroundColor: '#FFFFFF',
-    lineHeight: 1.5,
-  },
-  headerContainer: {
-    backgroundColor: '#441a05',
-    marginHorizontal: -40,
-    marginTop: -40,
-    paddingHorizontal: 40,
-    paddingVertical: 20,
-    marginBottom: 30,
-    borderBottom: '5px solid #DB9E30',
-  },
-  header: {
-    textAlign: 'center',
-  },
-  schoolName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    paddingHorizontal: 20, // Prevent text cutoff
-    wordWrap: 'break-word',
-  },
-  headerText: {
-    fontSize: 10,
-    color: '#E9ECEF',
-    marginBottom: 6,
-    fontWeight: 'normal',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#DB9E30',
-    textAlign: 'center',
-    marginTop: 10,
-    textTransform: 'uppercase',
-  },
-  metaContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontSize: 9,
-    marginBottom: 25,
-    padding: 10,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 6,
-    borderLeft: '4px solid #DB9E30',
-  },
-  metaText: {
-    color: '#495057',
-    fontWeight: 'medium',
-  },
-  reportInfoCard: {
-    marginBottom: 25,
-    padding: 15,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    border: '1px solid #E9ECEF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-  },
-  reportInfoTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#441a05',
-    marginBottom: 12,
-    textAlign: 'center',
-    borderBottom: '1px solid #E9ECEF',
-    paddingBottom: 8,
-  },
-  reportInfoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-    paddingVertical: 5,
-  },
-  reportLabel: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#495057',
-    flex: 1,
-  },
-  reportValue: {
-    fontSize: 10,
-    color: '#212529',
-    fontWeight: 'medium',
-    flex: 1,
-    textAlign: 'right',
-  },
-  table: {
-    borderRadius: 8,
-    overflow: 'hidden',
-    border: '1px solid #DEE2E6',
-    marginBottom: 25,
-    breakInside: 'avoid', // Prevent table from splitting across pages
-  },
-  tableRow: {
-    flexDirection: 'row',
-    borderBottom: '1px solid #E9ECEF',
-  },
-  tableHeader: {
-    backgroundColor: '#441a05',
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 11,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    textAlign: 'center',
-    borderRight: '1px solid rgba(255,255,255,0.2)',
-  },
-  tableCell: {
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    fontSize: 10,
-    borderRight: '1px solid #E9ECEF',
-    flex: 1,
-    textAlign: 'left',
-  },
-  tableCellCenter: {
-    textAlign: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tableRowAlternate: {
-    backgroundColor: '#F8F9FA',
-  },
-  tableRowEven: {
-    backgroundColor: '#FFFFFF',
-  },
-  statusIcon: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  statusClean: {
-    color: '#28A745',
-  },
-  statusDirty: {
-    color: '#DC3545',
-  },
-  summarySection: {
-    marginTop: 25,
-    padding: 20,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 8,
-    border: '1px solid #E9ECEF',
-    borderLeft: '5px solid #441a05',
-    breakInside: 'avoid', // Prevent summary from splitting
-  },
-  summaryTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#441a05',
-    marginBottom: 15,
-    textAlign: 'center',
-    textTransform: 'uppercase',
-  },
-  summaryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  summaryItem: {
-    width: '48%',
-    marginBottom: 12,
-    padding: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 6,
-    border: '1px solid #E9ECEF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  summaryLabel: {
-    fontSize: 9,
-    color: '#6C757D',
-    marginBottom: 6,
-    textAlign: 'center',
-    textTransform: 'uppercase',
-  },
-  summaryValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#441a05',
-    textAlign: 'center',
-  },
-  progressBar: {
-    height: 10,
-    backgroundColor: '#E9ECEF',
-    borderRadius: 5,
-    marginTop: 15,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#28A745',
-    borderRadius: 5,
-  },
-  progressText: {
-    textAlign: 'center',
-    marginTop: 8,
-    fontSize: 10,
-    color: '#495057',
-    fontWeight: 'bold',
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 30,
-    left: 40,
-    right: 40,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontSize: 8,
-    color: '#6C757D',
-    paddingTop: 10,
-    borderTop: '1px solid #E9ECEF',
-  },
-  watermark: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%) rotate(-45deg)',
-    fontSize: 80,
-    color: 'rgba(42, 63, 95, 0.05)',
-    fontWeight: 'bold',
-    zIndex: -1,
-    textTransform: 'uppercase',
-  },
-});
-
-// PDF Document Component
-const PDFDocument = ({ cleanReportTypes, filteredReports, selectedClass, selectedDate, cleanReportData, institute }) => {
-  const totalReports = cleanReportTypes.length;
-  const cleanCount = filteredReports.filter(report => report.is_clean).length;
-  const dirtyCount = totalReports - cleanCount;
-  const cleanPercentage = totalReports > 0 ? ((cleanCount / totalReports) * 100).toFixed(1) : 0;
-
-  // Format the selected date for display
-  const formatDate = (dateString) => {
-    try {
-      const options = { year: 'numeric', month: 'long', day: 'numeric' };
-      return new Date(dateString).toLocaleDateString('bn-BD', options);
-    } catch (e) {
-      return dateString;
-    }
-  };
-
-  return (
-    <Document>
-      <Page size="A4" style={styles.page} wrap>
-        {/* Watermark */}
-        <Text style={styles.watermark}>{institute?.institute_name || 'আদর্শ বিদ্যালয়'}</Text>
-        
-        {/* Header Section */}
-        <View style={styles.headerContainer} fixed>
-          <View style={styles.header}>
-            <Text style={styles.schoolName}>{institute?.institute_name || 'আদর্শ বিদ্যালয়'}</Text>
-            <Text style={styles.headerText}>{institute?.institute_address || 'ঢাকা, বাংলাদেশ'}</Text>
-            <Text style={styles.headerText}>
-              {institute?.institute_email_address ? `ইমেইল: ${institute.institute_email_address}` : ''} 
-              {institute?.headmaster_mobile ? ` | ফোন: ${institute.headmaster_mobile}` : ''}
-            </Text>
-            <Text style={styles.title}>পরিচ্ছন্নতা মূল্যায়ন প্রতিবেদন</Text>
-          </View>
-        </View>
-
-        {/* Meta Information */}
-        <View style={styles.metaContainer}>
-          <Text style={styles.metaText}>
-            প্রতিবেদনের তারিখ: {new Date().toLocaleDateString('bn-BD', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </Text>
-          <Text style={styles.metaText}>
-            সময়: {new Date().toLocaleTimeString('bn-BD', { 
-              hour: '2-digit', 
-              minute: '2-digit', 
-              hour12: true 
-            })}
-          </Text>
-        </View>
-
-        {/* Report Information Card */}
-        <View style={styles.reportInfoCard}>
-          <Text style={styles.reportInfoTitle}>রিপোর্টের তথ্য</Text>
-          <View style={styles.reportInfoRow}>
-            <Text style={styles.reportLabel}>ক্লাস:</Text>
-            <Text style={styles.reportValue}>{selectedClass?.label || 'অজানা'}</Text>
-          </View>
-          <View style={styles.reportInfoRow}>
-            <Text style={styles.reportLabel}>তারিখ:</Text>
-            <Text style={styles.reportValue}>{formatDate(selectedDate)}</Text>
-          </View>
-        </View>
-
-        {/* Cleanliness Report Table */}
-        <View style={styles.table} wrap={false}>
-          <View style={styles.tableRow}>
-            <Text style={[styles.tableHeader, { flex: 3 }]}>পরিচ্ছন্নতার ধরন</Text>
-            <Text style={[styles.tableHeader, { flex: 1 }]}>স্থিতি</Text>
-            <Text style={[styles.tableHeader, { flex: 1 }]}>চিহ্ন</Text>
-          </View>
-          {cleanReportTypes.map((type, index) => {
-            const isClean = cleanReportData[type.id] || false;
-            return (
-              <View key={type.id} style={[
-                styles.tableRow, 
-                index % 2 === 0 ? styles.tableRowEven : styles.tableRowAlternate
-              ]}>
-                <Text style={[styles.tableCell, { flex: 3 }]}>{type.name}</Text>
-                <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
-                  {isClean ? 'পরিষ্কার' : 'অপরিষ্ক2ার'}
-                </Text>
-                <View style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
-                  <Text style={[
-                    styles.statusIcon,
-                    isClean ? styles.statusClean : styles.statusDirty
-                  ]}>
-                    {isClean ? '✓' : 'X'}
-                  </Text>
-                </View>
-              </View>
-            );
-          })}
-        </View>
-
-        {/* Cleanliness Summary */}
-        <View style={styles.summarySection} wrap={false}>
-          <Text style={styles.summaryTitle}>পরিচ্ছন্নতা সারাংশ</Text>
-          <View style={styles.summaryGrid}>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>মোট পরিচ্ছন্নতার ধরন</Text>
-              <Text style={styles.summaryValue}>{totalReports}</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>পরিষ্কার</Text>
-              <Text style={[styles.summaryValue, { color: '#28A745' }]}>{cleanCount}</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>অপরিষ্কার</Text>
-              <Text style={[styles.summaryValue, { color: '#DC3545' }]}>{dirtyCount}</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>সাফল্যের হার</Text>
-              <Text style={[styles.summaryValue, { color: '#441a05' }]}>{cleanPercentage}%</Text>
-            </View>
-          </View>
-          
-          {/* Progress Bar */}
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${cleanPercentage}%` }]} />
-          </View>
-          <Text style={styles.progressText}>
-            অগ্রগতি: {cleanCount}/{totalReports} ({cleanPercentage}%)
-          </Text>
-        </View>
-
-        {/* Footer */}
-        <View style={styles.footer} fixed>
-          <Text>এই প্রতিবেদনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে | {institute?.institute_name || 'আদর্শ বিদ্যালয়'} - পরিচ্ছন্নতা ব্যবস্থাপনা সিস্টেম</Text>
-          <Text render={({ pageNumber, totalPages }) => `পৃষ্ঠা ${pageNumber} এর ${totalPages}`} />
-        </View>
-      </Page>
-    </Document>
-  );
-};
 
 const CleanReport = () => {
   // State for form inputs
@@ -563,7 +168,7 @@ const CleanReport = () => {
   };
 
   // Generate PDF Report
-  const generatePDFReport = async () => {
+  const generatePDFReport = () => {
     if (!hasViewPermission) {
       toast.error('পরিচ্ছন্নতা প্রতিবেদন দেখার অনুমতি নেই।');
       return;
@@ -579,31 +184,173 @@ const CleanReport = () => {
       return;
     }
 
-    try {
-      const doc = <PDFDocument
-        cleanReportTypes={cleanReportTypes}
-        filteredReports={filteredReports}
-        selectedClass={selectedClass}
-        selectedDate={selectedDate}
-        cleanReportData={cleanReportData}
-        institute={institute}
-      />;
-      
-      const blob = await pdf(doc).toBlob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      
-      const fileName = `পরিচ্ছন্নতা_রিপোর্ট_${selectedClass?.label || 'অজানা'}_${selectedDate}.pdf`;
-      
-      link.download = fileName;
-      link.click();
-      URL.revokeObjectURL(url);
-      toast.success('প্রতিবেদন সফলভাবে ডাউনলোড হয়েছে!');
-    } catch (error) {
-      console.error('PDF generation error:', error);
-      toast.error(`প্রতিবেদন তৈরিতে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
+    if (instituteLoading) {
+      toast.error('ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!');
+      return;
     }
+
+    if (!institute) {
+      toast.error('ইনস্টিটিউট তথ্য পাওয়া যায়নি!');
+      return;
+    }
+
+    const totalReports = cleanReportTypes.length;
+    const cleanCount = Object.values(cleanReportData).filter(Boolean).length;
+    const averagePercentage = totalReports > 0 ? (cleanCount / totalReports) * 100 : 0;
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>পরিচ্ছন্নতা মূল্যায়ন প্রতিবেদন</title>
+        <meta charset="UTF-8">
+        <style>
+          @page { size: A4 portrait; margin: 20mm; }
+          body {
+            font-family: 'Noto Sans Bengali', Arial, sans-serif;
+            font-size: 12px;
+            margin: 30px;
+            padding: 0;
+            color: #000;
+          }
+          .header {
+            text-align: center;
+          }
+          .header h1 {
+            font-size: 24px;
+            margin: 0;
+            color: #000;
+          }
+          .header p {
+            font-size: 14px;
+            margin: 5px 0;
+            color: #000;
+          }
+          .logo-placeholder {
+            text-align: center;
+            margin-bottom: 10px;
+          }
+          .teacher-details {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+          }
+          .teacher-details p {
+            margin: 5px 0;
+          }
+          .table-container {
+            width: 100%;
+            overflow-x: auto;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+          }
+          th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+          }
+          th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+            color: #000;
+          }
+          .check-mark::before { content: '✓'; color: green; font-weight: bold; }
+          .cross-mark::before { content: '✗'; color: red; font-weight: bold; }
+          .summary {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #000;
+            background-color: #F8F9FA;
+          }
+          .summary p {
+            margin: 5px 0;
+            font-weight: 600;
+          }
+          .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            border-top: 1px solid #000;
+            padding-top: 10px;
+          }
+          .footer p {
+            margin: 5px 0;
+          }
+          .title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo-placeholder"></div>
+          <h1>${institute.institute_name || 'আদর্শ মাদ্রাসা'}</h1>
+          <p>${institute.institute_address || 'ঢাকা, বাংলাদেশ'}</p>
+        </div>
+
+        <h1 class='title'>পরিচ্ছন্নতা মূল্যায়ন রিপোর্ট</h1>
+
+        <div class="teacher-details">
+          <p><strong>ক্লাস:</strong> ${selectedClass?.label || 'অজানা'}</p>
+          <p><strong>তারিখ:</strong> ${selectedDate}</p>
+          <p><strong>প্রতিবেদনের তারিখ:</strong> ${new Date().toLocaleDateString('bn')}৬</p>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ক্রমিক নং</th>
+                <th>পরিচ্ছন্নতার ধরন</th>
+                <th>অবস্থা</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${cleanReportTypes.map((type, index) => `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>${type.name}</td>
+                  <td class="${cleanReportData[type.id] ? 'check-mark' : 'cross-mark'}"></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="summary">
+          <p><strong>মোট ধরন:</strong> ${cleanReportTypes.length}</p>
+          <p><strong>পরিষ্কার:</strong> ${cleanCount}</p>
+          <p><strong>গড় (%):</strong> ${averagePercentage.toFixed(2)}%</p>
+        </div>
+
+        <div class="footer">
+          <p>প্রধান শিক্ষকের স্বাক্ষর: ____________________</p>
+          <p>মুফতির স্বাক্ষর: ____________________</p>
+          <p>তারিখ: ${new Date().toLocaleDateString('bn')}</p>
+        </div>
+
+        <script>
+          let printAttempted = false;
+          window.onbeforeprint = () => { printAttempted = true; };
+          window.onafterprint = () => { window.close(); };
+          window.addEventListener('beforeunload', (event) => {
+            if (!printAttempted) { window.close(); }
+          });
+          window.print();
+        </script>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open(' ', '_blank');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    toast.success('পরিচ্ছন্নতা রিপোর্ট তৈরি হয়েছে!');
   };
 
   // Permission-based Rendering
@@ -688,9 +435,9 @@ const CleanReport = () => {
                         disabled={isCreating || isUpdating || (!cleanReportData[type.id] ? !hasAddPermission : !hasChangePermission)}
                       />
                       <span
-                        className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn ${
+                        className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${
                           cleanReportData[type.id]
-                            ? 'bg-[#DB9E30] border-[#DB9E30] tick-glow'
+                            ? 'bg-[#DB9E30] border-[#DB9E30]'
                             : 'bg-white/10 border-[#9d9087] hover:border-[#441a05]'
                         }`}
                       >

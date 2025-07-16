@@ -283,7 +283,7 @@ const TeacherPerformance = () => {
           <p>প্রধান শিক্ষকের স্বাক্ষর: ____________________</p>
           <p>মুফতির স্বাক্ষর: ____________________</p>
           <p class="stamp-placeholder"></p>
-          <p>তারিখ: ১৬ জুলাই, ২০২৫</p>
+          <p>তারিখ: ${new Date().toLocaleDateString('bn')}</p>
         </div>
 
         <script>
@@ -392,7 +392,7 @@ const TeacherPerformance = () => {
 
     return (
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-white/20 border-none">
+        <table className="min-w-full divide-y divide-white/20 !border-red-400">
           <thead className="">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]">চেকবক্স</th>
@@ -518,13 +518,12 @@ const TeacherPerformance = () => {
             font-size: 10px;
           }
           th, td {
-            border: 1px solid #000;
             padding: 8px;
-            text-align: center;
+            // text-align: center;
           }
           th {
-            background-color: #f5f5f5;
             font-weight: bold;
+             text-align: center;
             color: #000;
             text-transform: uppercase;
           }
