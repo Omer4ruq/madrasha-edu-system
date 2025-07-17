@@ -580,20 +580,20 @@ const StudentList = () => {
             position: relative;
             max-height: 70vh;
             overflow: auto; /* Handles both vertical and horizontal scrolling */
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 1rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.2);
           }
 
           table {
             width: 100%; /* Ensure table takes full width, allowing horizontal scroll */
             border-collapse: separate;
+            text-align:center !important;
             border-spacing: 0;
           }
           
           .sticky-header th {
+            text-align:center !important;
+            font-size: 12px !important;
+            text-wrap:nowrap;
             position: sticky;
             top: 0;
             background: #DB9E30;
@@ -604,14 +604,13 @@ const StudentList = () => {
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            text-align: left;
             padding: 12px 16px;
           }
 
           /* Styles for fixed columns (both header and body cells) */
           .fixed-col {
             position: sticky;
-          
+          font-size:14px;
             background: white;
             // backdrop-filter: blur(10px);
             border-right: 1px solid rgba(255, 255, 255, 0.2);
@@ -619,7 +618,7 @@ const StudentList = () => {
           }
           
           .fixed-col.serial { 
-      
+           font-size: 12px !important;
             left: 0px; 
             background: #DB9E30;
             color: rgba(255, 255, 255, 0.9);
@@ -672,11 +671,13 @@ const StudentList = () => {
           }
           
           .table-cell {
+          text-wrap:nowrap;
+          font-size:14px;
             padding: 12px 16px;
             color: #441a05;
             font-weight: 500;
            border-right: 1px solid rgba(219, 158, 64, 0.15);
-border-left: 1px solid rgba(219, 158, 64, 0.15);
+border: 1px solid rgba(0, 0, 0, 0.05);
 
           }
 

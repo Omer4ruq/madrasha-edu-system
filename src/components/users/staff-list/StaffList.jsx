@@ -649,49 +649,75 @@ const StaffList = () => {
           .table-container {
             position: relative;
             max-height: 70vh;
-            overflow: auto;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 1rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: auto; /* Handles both vertical and horizontal scrolling */
+            background: rgba(255, 255, 255, 0.2);
+          }
+
+          table {
+            width: 100%; /* Ensure table takes full width, allowing horizontal scroll */
+            border-collapse: separate;
+            text-align:center !important;
+            border-spacing: 0;
           }
           
           .sticky-header th {
+            text-align:center !important;
+            font-size: 12px !important;
+            text-wrap:nowrap;
             position: sticky;
             top: 0;
-            background: rgba(68, 26, 5, 0.95);
+            background: #DB9E30;
             backdrop-filter: blur(10px);
-            z-index: 20;
-            border-bottom: 2px solid rgba(219, 158, 48, 0.3);
+            z-index: 2;
             color: rgba(255, 255, 255, 0.9);
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            padding: 12px 16px;
           }
 
+          /* Styles for fixed columns (both header and body cells) */
           .fixed-col {
             position: sticky;
-            z-index: 15;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-right: 1px solid rgba(255, 255, 255, 0.2);
+          font-size:14px;
+            background: white;
+            // backdrop-filter: blur(10px);
+            transition: transform 0.3s ease; /* Smooth transition for fixed columns */
           }
           
           .fixed-col.serial { 
+           font-size: 12px !important;
             left: 0px; 
-            background: rgba(68, 26, 5, 0.1);
-            backdrop-filter: blur(10px);
+            background: #DB9E30;
+            color: rgba(255, 255, 255, 0.9);
+            
           }
           .fixed-col.name { 
-            left: 70px; 
-            background: rgba(68, 26, 5, 0.08);
-            backdrop-filter: blur(10px);
+      
+            left: 70px;
+            background: rgba(255, 255, 255);
           }
           .fixed-col.user_id { 
-            // left: 200px; 
-            background: rgba(68, 26, 5, 0.06);
-            backdrop-filter: blur(10px);
+            z-index:10px;
+            left: 220px;
+            background: rgba(255, 255, 255);
+          }
+
+          /* Ensure fixed header cells match the background */
+          .sticky-header .fixed-col.serial {
+            z-index: 10;
+            background: #DB9E30;
+            color: rgba(255, 255, 255);
+          }
+          .sticky-header .fixed-col.name {
+            z-index: 10;
+            background: #DB9E30;
+            color: rgba(255, 255, 255);
+          }
+          .sticky-header .fixed-col.user_id {
+            z-index: 10;
+            background: #DB9E30;
+            color: rgba(255, 255, 255);
           }
           
           .table-row {
@@ -714,10 +740,18 @@ const StaffList = () => {
           }
           
           .table-cell {
+          text-wrap:nowrap;
+          font-size:14px;
             padding: 12px 16px;
             color: #441a05;
             font-weight: 500;
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
+           border-right: 1px solid rgba(219, 158, 64, 0.15);
+border: 1px solid rgba(0, 0, 0, 0.05);
+
+          }
+
+          td {
+            background: transparent;
           }
           
           .status-badge {
@@ -736,8 +770,8 @@ const StaffList = () => {
           }
           
           .status-inactive {
-            background: rgba(239, 68, 68, 0.2);
-            color: #dc2626;
+            background: #DB9E30;
+            color: #000;
             border: 1px solid rgba(239, 68, 68, 0.3);
           }
           
@@ -773,15 +807,15 @@ const StaffList = () => {
           }
           
           .filter-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
+            background: rgba(0, 0, 0, 0.10);
+            backdrop-filter: blur(5px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
           }
           
           .edit-form-card {
             background: rgba(219, 158, 48, 0.1);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(5px);
             border: 1px solid rgba(219, 158, 48, 0.3);
             box-shadow: 0 8px 32px rgba(219, 158, 48, 0.1);
           }
@@ -802,7 +836,7 @@ const StaffList = () => {
               name="name"
               value={filters.name}
               onChange={handleFilterChange}
-              className="w-full bg-white/10 backdrop-blur-sm text-[#441a05] placeholder-[#441a05]/70 pl-3 py-2 outline-none border border-white/20 rounded-lg transition-all duration-300 focus:border-[#DB9E30] focus:bg-white/20"
+              className="w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-3 py-2 outline-none border border-black/20 rounded-lg transition-all duration-300 focus:border-[#DB9E30]"
               placeholder="নাম"
             />
             <input
@@ -810,7 +844,7 @@ const StaffList = () => {
               name="user_id"
               value={filters.user_id}
               onChange={handleFilterChange}
-              className="w-full bg-white/10 backdrop-blur-sm text-[#441a05] placeholder-[#441a05]/70 pl-3 py-2 outline-none border border-white/20 rounded-lg transition-all duration-300 focus:border-[#DB9E30] focus:bg-white/20"
+              className="w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-3 py-2 outline-none border border-black/20 rounded-lg transition-all duration-300 focus:border-[#DB9E30]"
               placeholder="ইউজার আইডি"
             />
             <input
@@ -818,7 +852,7 @@ const StaffList = () => {
               name="phone_number"
               value={filters.phone_number}
               onChange={handleFilterChange}
-              className="w-full bg-white/10 backdrop-blur-sm text-[#441a05] placeholder-[#441a05]/70 pl-3 py-2 outline-none border border-white/20 rounded-lg transition-all duration-300 focus:border-[#DB9E30] focus:bg-white/20"
+              className="w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-3 py-2 outline-none border border-black/20 rounded-lg transition-all duration-300 focus:border-[#DB9E30]"
               placeholder="ফোন নম্বর"
             />
             <input
@@ -826,7 +860,7 @@ const StaffList = () => {
               name="email"
               value={filters.email}
               onChange={handleFilterChange}
-              className="w-full bg-white/10 backdrop-blur-sm text-[#441a05] placeholder-[#441a05]/70 pl-3 py-2 outline-none border border-white/20 rounded-lg transition-all duration-300 focus:border-[#DB9E30] focus:bg-white/20"
+              className="w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-3 py-2 outline-none border border-black/20 rounded-lg transition-all duration-300 focus:border-[#DB9E30]"
               placeholder="ইমেইল"
             />
             <input
@@ -834,7 +868,7 @@ const StaffList = () => {
               name="designation"
               value={filters.designation}
               onChange={handleFilterChange}
-              className="w-full bg-white/10 backdrop-blur-sm text-[#441a05] placeholder-[#441a05]/70 pl-3 py-2 outline-none border border-white/20 rounded-lg transition-all duration-300 focus:border-[#DB9E30] focus:bg-white/20"
+              className="w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-3 py-2 outline-none border border-black/20 rounded-lg transition-all duration-300 focus:border-[#DB9E30]"
               placeholder="পদবী"
             />
           </div>
@@ -1033,7 +1067,7 @@ const StaffList = () => {
                       {/* Actions */}
                       {(hasChangePermission || hasDeletePermission || hasViewPermission) && (
                         <td className="table-cell" style={{ width: '120px' }}>
-                          <div className="flex space-x-2">
+                          <div className="flex justify-center space-x-2">
                             <button
                               onClick={() => handleDownloadProfile(staffMember)}
                               className="action-button action-view"
@@ -1042,26 +1076,7 @@ const StaffList = () => {
                             >
                               <FaDownload className="w-4 h-4" />
                             </button>
-                            {hasChangePermission && (
-                              <button
-                                onClick={() => handleEditClick(staffMember)}
-                                className="action-button action-edit"
-                                aria-label={`সম্পাদনা ${staffMember.name}`}
-                                title="সম্পাদনা করুন"
-                              >
-                                <FaEdit className="w-4 h-4" />
-                              </button>
-                            )}
-                            {hasDeletePermission && (
-                              <button
-                                onClick={() => handleDelete(staffMember.id)}
-                                className="action-button action-delete"
-                                aria-label={`মুছুন ${staffMember.name}`}
-                                title="মুছুন"
-                              >
-                                <FaTrash className="w-4 h-4" />
-                              </button>
-                            )}
+                            
                           </div>
                         </td>
                       )}
