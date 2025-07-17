@@ -569,8 +569,8 @@ const CleanReport = () => {
                   placeholder="ক্লাস নির্বাচন"
                   isLoading={isClassesLoading}
                   isDisabled={isClassesLoading || isCreating || isUpdating}
-                  styles={selectStyles}
                   className="animate-scaleIn"
+                  styles={selectStyles}
                   menuPortalTarget={document.body}
                   menuPosition="fixed"
                   isClearable
