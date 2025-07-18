@@ -1,12 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Select from 'react-select';
 import { useReactToPrint } from 'react-to-print';
-import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
 import moment from 'moment';
 import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
 import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
 import { useGetStudentActiveApiQuery } from '../../redux/features/api/student/studentActiveApi';
+import { useGetInstituteLatestQuery } from '../../redux/features/api/institute/instituteLatestApi';
 import { IoPrint, IoDownload } from 'react-icons/io5';
+import { toast } from 'react-toastify';
+import selectStyles from '../../utilitis/selectStyles';
 
 // Month options for selection (in Bangla)
 const monthOptions = [
@@ -25,151 +27,7 @@ const monthOptions = [
 ];
 
 // Bangla day names (shortened)
-const banglaDays = ['র', 'স', 'ম', 'ব', 'বৃ', 'শু', 'শ'];
-
-// Register Noto Sans Bengali font from URL
-try {
-  Font.register({
-    family: 'NotoSansBengali',
-    src: 'https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf',
-  });
-  console.log('Font registered successfully:', Font.getRegisteredFonts());
-} catch (error) {
-  console.error('Font registration failed:', error);
-  Font.register({
-    family: 'Helvetica',
-    src: 'https://fonts.gstatic.com/s/helvetica/v13/Helvetica.ttf',
-  });
-  console.log('Falling back to Helvetica font.');
-}
-
-// PDF styles
-const styles = StyleSheet.create({
-  page: {
-    padding: 10,
-    fontFamily: 'NotoSansBengali',
-    fontSize: 10,
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  schoolName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginTop: 5,
-  },
-  metaContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 5,
-  },
-  metaText: {
-    fontSize: 10,
-  },
-  table: {
-    width: '100%',
-    borderStyle: 'solid',
-    borderWidth: 1,
-    borderColor: '#000',
-  },
-  tableRow: {
-    flexDirection: 'row',
-  },
-  tableColHeader: {
-    width: '50mm', // Adjusted for roll and name
-    borderStyle: 'solid',
-    borderWidth: 1,
-    borderColor: '#000',
-    backgroundColor: '#f0f0f0',
-    padding: 5,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  tableColDayHeader: {
-    width: '10mm', // Adjusted for days
-    borderStyle: 'solid',
-    borderWidth: 1,
-    borderColor: '#000',
-    backgroundColor: '#f0f0f0',
-    padding: 5,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  tableCol: {
-    width: '50mm', // Adjusted for roll and name
-    borderStyle: 'solid',
-    borderWidth: 1,
-    borderColor: '#000',
-    padding: 5,
-    textAlign: 'center',
-  },
-  tableColDay: {
-    width: '10mm', // Adjusted for days
-    borderStyle: 'solid',
-    borderWidth: 1,
-    borderColor: '#000',
-    padding: 5,
-    textAlign: 'center',
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 10,
-    left: 10,
-    right: 10,
-    textAlign: 'center',
-    fontSize: 8,
-  },
-});
-
-// PDF Document Component
-const PDFDocument = ({ filteredStudents, getDaysInMonth, selectedClassConfig, selectedAcademicYear, academicYears, selectedMonth }) => (
-  <Document>
-    <Page size="A4" orientation="landscape" style={styles.page}>
-      <View style={styles.header}>
-        <Text style={styles.schoolName}>আদর্শ বিদ্যালয়, ঢাকা</Text>
-        <Text style={styles.title}>হাজিরা শীট</Text>
-        <View style={styles.metaContainer}>
-          <Text style={styles.metaText}>
-            শ্রেণি: {selectedClassConfig?.label || 'নির্বাচিত শ্রেণি'}
-          </Text>
-          <Text style={styles.metaText}>
-            শিক্ষাবর্ষ: {selectedAcademicYear && academicYears?.find(y => y.id === selectedAcademicYear.value)?.name || 'নির্বাচিত বছর'}
-          </Text>
-          <Text style={styles.metaText}>
-            মাস: {selectedMonth?.label || 'নির্বাচিত মাস'}
-          </Text>
-          <Text style={styles.metaText}>তারিখ: ২৯ জুন ২০২৫, বিকাল ৪:০৮ PM</Text>
-        </View>
-      </View>
-      <View style={styles.table}>
-        <View style={styles.tableRow}>
-          <Text style={styles.tableColHeader}>রোল</Text>
-          <Text style={styles.tableColHeader}>ছাত্র</Text>
-          {getDaysInMonth().map(({ day, dayName }) => (
-            <Text key={day} style={styles.tableColDayHeader}>{day}<br />{dayName}</Text>
-          ))}
-        </View>
-        {filteredStudents.map((student, index) => (
-          <View key={student.id} style={styles.tableRow}>
-            <Text style={styles.tableCol}>{student.roll_no || 'N/A'}</Text>
-            <Text style={styles.tableCol}>{student.name || 'N/A'}</Text>
-            {getDaysInMonth().map(({ day }) => (
-              <Text key={day} style={styles.tableColDay}></Text> // Placeholder for attendance
-            ))}
-          </View>
-        ))}
-      </View>
-      <View style={styles.footer}>
-        <Text>প্রতিবেদনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে।</Text>
-      </View>
-    </Page>
-  </Document>
-);
+const banglaDays = ['র', 'স', 'ম', 'বু', 'বৃ', 'শু', 'শ'];
 
 const AttendanceSheet = () => {
   // State for selections
@@ -181,10 +39,10 @@ const AttendanceSheet = () => {
   const { data: classConfigs, isLoading: classLoading } = useGetclassConfigApiQuery();
   const { data: academicYears, isLoading: yearLoading } = useGetAcademicYearApiQuery();
   const { data: students, isLoading: studentLoading } = useGetStudentActiveApiQuery();
+  const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
 
-  // Refs for print and PDF
+  // Refs for print
   const componentRef = useRef();
-  const pdfRef = useRef();
 
   // Handle print
   const handlePrint = useReactToPrint({
@@ -205,7 +63,7 @@ const AttendanceSheet = () => {
           font-size: 10pt;
         }
         .print-table th, .print-table td {
-          border: 1px solid #9d9087;
+          border: 1px solid #000;
           padding: 4px;
         }
         .print-container {
@@ -217,33 +75,164 @@ const AttendanceSheet = () => {
     `,
   });
 
-  // Handle PDF download
-  const handleDownloadPDF = async () => {
+  // Handle PDF download (HTML-based approach)
+  const handleDownloadPDF = () => {
+    if (instituteLoading) {
+      toast.error('ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!');
+      return;
+    }
+
+    if (!institute) {
+      toast.error('ইনস্টিটিউট তথ্য পাওয়া যায়নি!');
+      return;
+    }
+
     if (!selectedClassConfig || !selectedAcademicYear || !selectedMonth) {
       toast.error('ক্লাস, শিক্ষাবর্ষ এবং মাস নির্বাচন করুন!');
       return;
     }
-    try {
-      const doc = <PDFDocument 
-        filteredStudents={filteredStudents} 
-        getDaysInMonth={getDaysInMonth} 
-        selectedClassConfig={selectedClassConfig} 
-        selectedAcademicYear={selectedAcademicYear} 
-        academicYears={academicYears} 
-        selectedMonth={selectedMonth} 
-      />;
-      const blob = await pdf(doc).toBlob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `হাজিরা_শীট_${selectedClassConfig.label}_${selectedMonth.label}_${academicYears?.find(y => y.id === selectedAcademicYear.value)?.name}_${moment().format('DD_MMMM_YYYY_hh_mm_A')}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-      toast.success('PDF সফলভাবে ডাউনলোড হয়েছে!');
-    } catch (error) {
-      console.error('PDF generation error:', error);
-      toast.error(`PDF তৈরিতে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
-    }
+
+    const getDaysInMonth = () => {
+      if (!selectedMonth || !selectedAcademicYear) return [];
+      const year = academicYears?.find(y => y.id === selectedAcademicYear.value)?.name || moment().year();
+      const daysInMonth = moment(`${year}-${selectedMonth.value + 1}`, 'YYYY-MM').daysInMonth();
+      return Array.from({ length: daysInMonth }, (_, i) => {
+        const date = moment(`${year}-${selectedMonth.value + 1}-${i + 1}`, 'YYYY-MM-DD');
+        return {
+          day: i + 1,
+          dayName: banglaDays[date.day()],
+        };
+      });
+    };
+
+    const filteredStudents = students?.filter(student =>
+      selectedClassConfig?.value === student.class_id &&
+      selectedAcademicYear?.value === student.admission_year_id
+    ) || [];
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>হাজিরা শীট</title>
+        <meta charset="UTF-8">
+        <style>
+          @page { size: A4 landscape; margin: 15mm; }
+          body {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            margin: 20px 15px;
+            padding: 0;
+            color: #000;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+          }
+          .school-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 3px;
+          }
+          .school-address {
+            font-size: 10px;
+            opacity: 0.7;
+          }
+          .title {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 10px;
+          }
+          .meta-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 10px;
+          }
+          .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+          }
+          .table th, .table td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+          }
+          .table th {
+            font-weight: bold;
+          }
+          .roll-col { width: 5mm; text-wrap:nowrap; }
+          .name-col { width: 50mm; text-wrap:nowrap; }
+          .day-col { width: 10mm; text-wrap:nowrap; }
+          .footer {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            text-align: center;
+            font-size: 8px;
+            color: #666;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="school-name">${institute.institute_name || 'আদর্শ মাদ্রাসা'}</div>
+          <div class="school-address">${institute.institute_address || 'ঢাকা, বাংলাদেশ'}</div>
+          <div class="title">হাজিরা শীট</div>
+          <div class="meta-container">
+            <span>শ্রেণি: ${selectedClassConfig.label || 'নির্বাচিত শ্রেণি'}</span>
+            <span>শিক্ষাবর্ষ: ${academicYears?.find(y => y.id === selectedAcademicYear.value)?.name || 'নির্বাচিত বছর'}</span>
+            <span>মাস: ${selectedMonth.label || 'নির্বাচিত মাস'}</span>
+            <span>তারিখ: ${new Date().toLocaleDateString('bn')}</span>
+          </div>
+        </div>
+        <div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th class="roll-col">রোল</th>
+                <th class="name-col">ছাত্র</th>
+               ${getDaysInMonth()
+        .map(({ day, dayName }) => `
+    <th class="day-col">
+      ${day <= 9 ? String(day).padStart(2, '0') : day}<br>${dayName}
+    </th>
+  `)
+        .join('')}
+
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredStudents.map(student => `
+                <tr>
+                  <td class="roll-col">${student.roll_no || 'N/A'}</td>
+                  <td class="name-col">${student.name || 'N/A'}</td>
+                  ${getDaysInMonth().map(({ day }) => `<td class="day-col"></td>`).join('')}
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        <script>
+          let printAttempted = false;
+          window.onbeforeprint = () => { printAttempted = true; };
+          window.onafterprint = () => { window.close(); };
+          window.addEventListener('beforeunload', (event) => {
+            if (!printAttempted) { window.close(); }
+          });
+          window.print();
+        </script>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    toast.success('হাজিরা শীট তৈরি হয়েছে! প্রিন্ট বা সেভ করুন।');
   };
 
   // Format class config options
@@ -273,66 +262,13 @@ const AttendanceSheet = () => {
   };
 
   // Filter students based on selections
-  const filteredStudents = students?.filter(student => 
+  const filteredStudents = students?.filter(student =>
     selectedClassConfig?.value === student.class_id &&
     selectedAcademicYear?.value === student.admission_year_id
   ) || [];
 
-  // Custom styles for React Select
-  const selectStyles = {
-   control: (base) => ({
-      ...base,
-      background: 'transparent',
-      borderColor: '#9d9087',
-      borderRadius: '8px',
-      paddingLeft: '0.75rem',
-      padding:'3px',
-      color: '#441a05',
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-      transition: 'all 0.3s ease',
-      '&:hover': { borderColor: '#441a05' },
-      '&:focus': { outline: 'none', boxShadow: 'none' },
-    }),
-    placeholder: (base) => ({
-      ...base,
-      color: '#441a05',
-      opacity: 0.7,
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-    }),
-    singleValue: (base) => ({
-      ...base,
-      color: '#441a05',
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-    }),
-    menu: (base) => ({
-      ...base,
-      backgroundColor: 'rgba(0, 0, 0, 0.1)',
-      backdropFilter: 'blur(10px)',
-      border: '1px solid rgba(255, 255, 255, 0.2)',
-      borderRadius: '8px',
-      zIndex: 9999,
-      marginTop: '4px',
-    }),
-    menuPortal: (base) => ({
-      ...base,
-      zIndex: 9999,
-    }),
-    option: (base, { isFocused, isSelected }) => ({
-      ...base,
-      color: '#441a05',
-      fontFamily: "'Noto Sans Bengali', sans-serif",
-      fontSize: '16px',
-      backgroundColor: isSelected ? '#DB9E30' : isFocused ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
-      cursor: 'pointer',
-      '&:active': { backgroundColor: '#DB9E30' },
-    }),
-  };
-
   // Loading state
-  if (classLoading || yearLoading || studentLoading) {
+  if (classLoading || yearLoading || studentLoading || instituteLoading) {
     return (
       <div className="p-8 text-[#441a05]/70 animate-fadeIn">
         লোড হচ্ছে...
@@ -374,31 +310,29 @@ const AttendanceSheet = () => {
           ::-webkit-scrollbar-thumb:hover {
             background: rgba(10, 13, 21, 0.44);
           }
-          .pdf-hidden {
-            position: absolute;
-            left: -9999px;
-            top: 0;
-            width: 277mm;
-            background: white;
-            overflow: visible;
-            font-size: 8pt;
+          .print-container {
+            background: rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            padding: 32px;
           }
-          .pdf-hidden table {
-            table-layout: fixed;
+          .print-table {
             width: 100%;
+            border-collapse: collapse;
           }
-          .pdf-hidden th, .pdf-hidden td {
-            word-wrap: break-word;
-            overflow: hidden;
+          .print-table th, .print-table td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+            color: #000;
           }
-          .pdf-hidden .roll-col {
-            width: 30mm;
+          .print-table th {
+            font-weight: bold;
           }
-          .pdf-hidden .name-col {
-            width: 60mm;
-          }
-          .pdf-hidden .day-col {
-            width: 5mm;
+          .print-table tr {
+            background: transparent;
           }
         `}
       </style>
@@ -419,18 +353,18 @@ const AttendanceSheet = () => {
               onChange={setSelectedClassConfig}
               placeholder="ক্লাস নির্বাচন করুন..."
               isClearable
-               menuPortalTarget={document.body}
+              menuPortalTarget={document.body}
               styles={selectStyles}
               className="animate-scaleIn"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-[#441a05] mb-1">শিক্ষাবর্ষ</label>
             <Select
               options={academicYearOptions}
               value={selectedAcademicYear}
-               menuPortalTarget={document.body}
+              menuPortalTarget={document.body}
               onChange={setSelectedAcademicYear}
               placeholder="বছর নির্বাচন করুন..."
               isClearable
@@ -438,13 +372,13 @@ const AttendanceSheet = () => {
               className="animate-scaleIn"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-[#441a05] mb-1">মাস</label>
             <Select
               options={monthOptions}
               value={selectedMonth}
-               menuPortalTarget={document.body}
+              menuPortalTarget={document.body}
               onChange={setSelectedMonth}
               placeholder="মাস নির্বাচন করুন..."
               isClearable
@@ -457,22 +391,13 @@ const AttendanceSheet = () => {
         {/* Print and Download Buttons */}
         {selectedClassConfig && selectedAcademicYear && selectedMonth && (
           <div className="mt-6 flex gap-4 no-print">
-            {/* <button
-              onClick={handlePrint}
-              className="px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn hover:text-white btn-glow"
-            >
-              <span className="flex items-center space-x-2">
-                <IoPrint className="w-5 h-5" />
-                <span>হাজিরা শীট প্রিন্ট করুন</span>
-              </span>
-            </button> */}
             <button
               onClick={handleDownloadPDF}
               className="px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn hover:text-white btn-glow"
             >
               <span className="flex items-center space-x-2">
-                <IoDownload className="w-5 h-5" />
-                <span>পিডিএফ ডাউনলোড করুন</span>
+                <IoPrint className="w-5 h-5" />
+                <span>হাজিরা শীট প্রিন্ট করুন</span>
               </span>
             </button>
           </div>
@@ -480,7 +405,7 @@ const AttendanceSheet = () => {
       </div>
 
       {/* Visible Printable Area */}
-      <div ref={componentRef} className="bg-black/10 backdrop-blur-sm border border-white/20 mb-8 animate-fadeIn p-8 rounded-2xl shadow-xl print-container">
+      <div ref={componentRef} className="print-container">
         {selectedClassConfig && selectedAcademicYear && selectedMonth && (
           <>
             <div className="mb-6">
@@ -490,69 +415,31 @@ const AttendanceSheet = () => {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-white/20 print-table">
-                <thead className="bg-white/5">
+              <table className="print-table min-w-full">
+                <thead>
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider border border-black">রোল</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider border border-black">ছাত্র</th>
+                    <th className="px-4 py-2 text-center text-xs font-medium text-[#000] uppercase tracking-wider border border-black">রোল</th>
+                    <th className="px-4 py-2 text-center text-xs font-medium text-[#000] uppercase tracking-wider border border-black">ছাত্র</th>
                     {getDaysInMonth().map(({ day, dayName }) => (
-                      <th key={day} className="border-black px-2 py-2 text-center text-xs font-medium text-[#441a05]/70 uppercase tracking-wider border">
+                      <th key={day} className="px-2 py-2 text-center text-xs font-medium text-[#000] uppercase tracking-wider border border-black">
                         {day}<br />{dayName}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/20">
+                <tbody>
                   {filteredStudents.map((student, index) => (
-                    <tr key={student.id} className="bg-white/5 animate-fadeIn border border-black" style={{ animationDelay: `${index * 0.1}s` }}>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-[#441a05] border border-black">{student.roll_no || ''}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-[#441a05] border border-black">{student.name}</td>
+                    <tr key={student.id} className="animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-[#000] border border-black">{student.roll_no || ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-[#000] border border-black">{student.name}</td>
                       {getDaysInMonth().map(({ day }) => (
-                        <td key={day} className="px-2 py-2 whitespace-nowrap text-sm text-[#441a05] text-center border w-10 border-black"></td>
+                        <td key={day} className="px-2 py-2 whitespace-nowrap text-sm text-[#000] text-center border border-black"></td>
                       ))}
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </>
-        )}
-      </div>
-
-      {/* Hidden PDF Rendering Area */}
-      <div ref={pdfRef} className="pdf-hidden">
-        {selectedClassConfig && selectedAcademicYear && selectedMonth && (
-          <>
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-[#441a05]">
-                {selectedClassConfig.label} এর জন্য হাজিরা শীট - {selectedMonth.label} {academicYears?.find(y => y.id === selectedAcademicYear.value)?.name}
-              </h2>
-            </div>
-
-            <table className="min-w-full">
-              <thead className="bg-white/5">
-                <tr>
-                  <th className="px-2 py-1 text-left text-xs font-medium text-black uppercase tracking-wider border roll-col">রোল</th>
-                  <th className="px-2 py-1 text-left text-xs font-medium text-black uppercase tracking-wider border name-col">ছাত্র</th>
-                  {getDaysInMonth().map(({ day, dayName }) => (
-                    <th key={day} className="px-1 py-1 text-center text-xs font-medium text-black uppercase tracking-wider border day-col">
-                      {day}<br />{dayName}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/20">
-                {filteredStudents.map((student) => (
-                  <tr key={student.id} className="bg-white/5 border">
-                    <td className="px-2 py-1 whitespace-nowrap text-xs text-black border roll-col">{student.roll_no || ''}</td>
-                    <td className="px-2 py-1 whitespace-nowrap text-xs text-black border name-col">{student.name}</td>
-                    {getDaysInMonth().map(({ day }) => (
-                      <td key={day} className="px-1 py-1 whitespace-nowrap text-xs text-black text-center border day-col"></td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </>
         )}
       </div>

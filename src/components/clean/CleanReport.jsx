@@ -298,7 +298,7 @@ const CleanReport = () => {
         <div class="teacher-details">
           <p><strong>ক্লাস:</strong> ${selectedClass?.label || 'অজানা'}</p>
           <p><strong>তারিখ:</strong> ${selectedDate}</p>
-          <p><strong>প্রতিবেদনের তারিখ:</strong> ${new Date().toLocaleDateString('bn')}৬</p>
+          <p><strong>প্রতিবেদনের তারিখ:</strong> ${new Date().toLocaleDateString('bn')}</p>
         </div>
 
         <div class="table-container">
