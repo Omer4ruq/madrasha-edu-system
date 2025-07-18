@@ -157,7 +157,7 @@ const AttendanceSheet = () => {
           }
           .table th, .table td {
             border: 1px solid #000;
-            padding: 8px;
+            padding: 5px;
             text-align: center;
           }
           .table th {
