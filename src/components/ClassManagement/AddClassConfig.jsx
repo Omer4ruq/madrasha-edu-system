@@ -120,7 +120,7 @@ const AddClassConfig = () => {
       return;
     }
 
-    if (!classId || !sectionId || !shiftId) {
+    if (!classId && !sectionId && !shiftId) {
       toast.error("অনুগ্রহ করে একটি ক্লাস, সেকশন এবং শিফট নির্বাচন করুন");
       return;
     }
@@ -476,7 +476,7 @@ const AddClassConfig = () => {
                             <button
                               onClick={() => handleEdit(config)}
                               title="কনফিগারেশন সম্পাদনা করুন"
-                              className="text-[#441a05] hover:text-blue-500 transition-colors duration-300"
+                              className="text-[#441a05] hover:text-blue-500 transition-colors duration-300 mr-4"
                             >
                               <FaEdit className="w-5 h-5" />
                             </button>

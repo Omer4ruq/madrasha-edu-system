@@ -269,9 +269,9 @@ const ClassSubject = () => {
                 classes?.map((cls, index) => (
                   <button
                     key={cls.id}
-                    onClick={() => handleClassSelect(cls.id)}
+                    onClick={() => handleClassSelect(cls.student_class.id)}
                     className={`whitespace-nowrap py-2 px-4 font-medium text-sm rounded-md transition-all duration-300 animate-scaleIn ${
-                      selectedClassId === cls.id
+                      selectedClassId === cls.student_class.id
                         ? "bg-[#DB9E30] text-[#441a05] shadow-md"
                         : "text-[#441a05] hover:bg-white/10 hover:text-[#441a05]"
                     }`}

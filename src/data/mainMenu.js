@@ -115,7 +115,7 @@ const mainMenu = [
           },
           {
             id: "05/01/07",
-            title: "রেজাল্ট কনফিগারেশন",
+            title: "গ্রেড কনফিগারেশন",
             link: "/talimat/settings/result-config",
           },
         ],
