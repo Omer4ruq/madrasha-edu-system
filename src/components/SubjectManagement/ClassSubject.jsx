@@ -58,7 +58,7 @@ const ClassSubject = () => {
   // Set the first class as selected by default when classes are loaded
   useEffect(() => {
     if (classes.length > 0 && !selectedClassId) {
-      setSelectedClassId(classes[0].id);
+      setSelectedClassId(classes[0].student_class.id);
     }
   }, [classes, selectedClassId]);
 
