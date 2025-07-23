@@ -1326,14 +1326,14 @@ const AddWaivers = () => {
               type="text"
               value={waiverListFilters.studentSearch}
               onChange={(e) => setWaiverListFilters({...waiverListFilters, studentSearch: e.target.value})}
-              className="w-full sm:w-auto bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
+              className="w-[200px] bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
               placeholder="ছাত্রের নাম বা আইডি"
             />
             {/* Fee Type Filter */}
             <select
               value={waiverListFilters.feeTypeId || ""}
               onChange={(e) => setWaiverListFilters({...waiverListFilters, feeTypeId: e.target.value ? parseInt(e.target.value) : null})}
-              className="bg-transparent min-w-[150px] text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg w-full sm:w-auto"
+              className="bg-transparent min-w-[180px] text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg sm:w-auto"
             >
               <option value="">ফি প্রকার নির্বাচন</option>
               {feeTypeOptions.map((fee) => (

@@ -558,20 +558,6 @@ const IncomeItems = () => {
   if (hasViewPermission && !hasAddPermission && !hasChangePermission && !hasDeletePermission) {
     return (
       <div className="py-8 w-full relative">
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            style: {
-              background: "rgba(0, 0, 0, 0.1)",
-              color: "#441a05",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-              borderRadius: "0.5rem",
-              backdropFilter: "blur(4px)",
-            },
-            success: { style: { background: "rgba(219, 158, 48, 0.1)", borderColor: "#DB9E30" } },
-            error: { style: { background: "rgba(239, 68, 68, 0.1)", borderColor: "#ef4444" } },
-          }}
-        />
         <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] p-6">
           <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">আয় আইটেম তালিকা</h3>
           {isItemsLoading ? (
@@ -600,20 +586,6 @@ const IncomeItems = () => {
 
   return (
     <div className="py-8 w-full">
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          style: {
-            background: "rgba(0, 0, 0, 0.1)",
-            color: "#441a05",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-            borderRadius: "0.5rem",
-            backdropFilter: "blur(4px)",
-          },
-          success: { style: { background: "rgba(219, 158, 48, 0.1)", borderColor: "#DB9E30" } },
-          error: { style: { background: "rgba(239, 68, 68, 0.1)", borderColor: "#ef4444" } },
-          }}
-        />
         <style>
           {`
             @keyframes fadeIn {
@@ -1273,8 +1245,7 @@ const IncomeItems = () => {
         )}
 
         {/* Income Items Table */}
-        <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] p-6">
-          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">আয় আইটেম তালিকা</h3>
+        <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh]">
           {isItemsLoading ? (
             <p className="p-4 text-[#441a05]/70">লোড হচ্ছে...</p>
           ) : itemsError ? (
