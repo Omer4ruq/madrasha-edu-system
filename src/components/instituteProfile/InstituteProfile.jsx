@@ -10,6 +10,7 @@ import '../../styles/institute-profile.css' // Ensure this path is correct
 import { useGetInstitutesQuery } from "../../redux/features/api/institute/instituteApi.js";
 import { useSelector } from 'react-redux'; // Import useSelector
 import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi'; // Import permission hook
+import { toast } from "react-toastify";
 
 
 export default function InstituteProfile() {

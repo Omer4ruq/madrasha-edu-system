@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import Select from "react-select";
 import { FaSpinner, FaTrash, FaFilePdf } from "react-icons/fa";
 import { toast } from "react-hot-toast";
@@ -15,8 +15,12 @@ const ExamRoutineTable = ({
   onRefresh
 }) => {
   const [selectedClassForPDF, setSelectedClassForPDF] = useState(null);
-  const [classSubjects, setClassSubjects] = useState({});
-  const [loadingSubjects, setLoadingSubjects] = useState({});
+
+  // Fetch subjects only for the selected class (if any)
+  const { data: classSubjects = [], isLoading: isSubjectsLoading } = useGetClassSubjectsByClassIdQuery(
+    selectedClassForPDF || "",
+    { skip: !selectedClassForPDF }
+  );
 
   const [deleteExamSchedules] = useDeleteExamSchedulesMutation();
 
@@ -26,45 +30,17 @@ const ExamRoutineTable = ({
     return [...new Set(allExamSchedules.map(item => item.class_name).filter(Boolean))];
   }, [allExamSchedules]);
 
-  // Fetch subjects for each class using individual hooks
-  const classSubjectQueries = {};
-  classesWithSchedules.forEach(classId => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    classSubjectQueries[classId] = useGetClassSubjectsByClassIdQuery(classId, {
-      skip: false,
-    });
-  });
-
-  // Combine all subject data
-  useEffect(() => {
-    const newClassSubjects = {};
-    classesWithSchedules.forEach(classId => {
-      const query = classSubjectQueries[classId];
-      if (query?.data && !query.isLoading && !query.error) {
-        newClassSubjects[classId] = query.data;
-      }
-    });
-    
-    if (Object.keys(newClassSubjects).length > 0) {
-      setClassSubjects(prev => ({ ...prev, ...newClassSubjects }));
-    }
-  }, [classSubjectQueries, classesWithSchedules]);
-
   // Function to get subject name with proper fallback
   const getSubjectName = (subjectId, classId) => {
-    // Check if we have subjects for this class
-    if (classSubjects[classId]) {
-      const subject = classSubjects[classId].find(s => s.id === subjectId);
+    if (selectedClassForPDF === classId && classSubjects.length > 0) {
+      const subject = classSubjects.find(s => s.id === subjectId);
       if (subject) return subject.name;
     }
 
-    // Check if we're still loading subjects for this class
-    const query = classSubjectQueries[classId];
-    if (query?.isLoading) {
+    if (selectedClassForPDF === classId && isSubjectsLoading) {
       return `লোড হচ্ছে... (${subjectId})`;
     }
 
-    // Better fallback with class name
     const className = classes.find(c => c.student_class.id === classId)?.student_class.name;
     return className ? `${className} - বিষয় ${subjectId}` : `বিষয় ${subjectId}`;
   };
@@ -85,7 +61,6 @@ const ExamRoutineTable = ({
     let schedules = [];
     
     if (classId) {
-      // Filter for specific class
       const classData = allExamSchedules.find(item => item.class_name === classId);
       if (classData && classData.schedules) {
         schedules = classData.schedules.map(schedule => ({
@@ -95,7 +70,6 @@ const ExamRoutineTable = ({
         }));
       }
     } else {
-      // Get all schedules from all classes
       allExamSchedules.forEach(classData => {
         if (classData.schedules && classData.schedules.length > 0) {
           const className = classes.find(c => c.student_class.id === classData.class_name)?.student_class.name || 'Unknown Class';
@@ -127,7 +101,6 @@ const ExamRoutineTable = ({
       await deleteExamSchedules(scheduleId).unwrap();
       toast.success(`${subjectName} এর রুটিন সফলভাবে মুছে ফেলা হয়েছে!`);
       
-      // Call refresh callback to update parent component
       if (onRefresh) {
         onRefresh();
       }
@@ -295,7 +268,7 @@ const ExamRoutineTable = ({
       </head>
       <body>
         <div class="header">
-          <div class="institution">[প্রতিষ্ঠানের নাম]</div>
+          <div class="institution">Your Institution Name</div>
           <div class="exam-info">${examName} - ${isSpecificClass ? 'পরীক্ষার রুটিন' : 'সামগ্রিক পরীক্ষার রুটিন'}</div>
           ${isSpecificClass 
             ? `<div class="class-info">শ্রেণি: ${className} | শিক্ষাবর্ষ: ${yearName}</div>`
@@ -305,7 +278,6 @@ const ExamRoutineTable = ({
     `;
 
     if (isSpecificClass) {
-      // Single class routine format
       htmlContent += `
         <table>
           <thead>
@@ -326,7 +298,6 @@ const ExamRoutineTable = ({
         const startTime = formatTimeForDisplay(schedule.start_time);
         const endTime = formatTimeForDisplay(schedule.end_time);
         
-        // Calculate duration
         const [startHours, startMinutes] = schedule.start_time.split(':').map(Number);
         const [endHours, endMinutes] = schedule.end_time.split(':').map(Number);
         const durationMinutes = (endHours * 60 + endMinutes) - (startHours * 60 + startMinutes);
@@ -348,7 +319,6 @@ const ExamRoutineTable = ({
 
       htmlContent += `</tbody></table>`;
     } else {
-      // Comprehensive routine format (all classes)
       const groupedSchedules = groupSchedulesForPDF(schedulesData);
       
       htmlContent += `
@@ -422,17 +392,8 @@ const ExamRoutineTable = ({
     toast.success(message);
   };
 
-  // Check if any subjects are still loading
-  const areSubjectsLoading = useMemo(() => {
-    return classesWithSchedules.some(classId => {
-      const query = classSubjectQueries[classId];
-      return query?.isLoading;
-    });
-  }, [classSubjectQueries, classesWithSchedules]);
-
   return (
     <div>
-      {/* PDF Download Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h3 className="text-xl font-semibold text-[#441a05] animate-fadeIn">
           পরীক্ষার রুটিন:{" "}
@@ -442,9 +403,7 @@ const ExamRoutineTable = ({
           }
         </h3>
         
-        {/* PDF Controls */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          {/* Class Selection for PDF */}
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-[#441a05] whitespace-nowrap">
               PDF এর জন্য ক্লাস:
@@ -475,16 +434,15 @@ const ExamRoutineTable = ({
               menuPortalTarget={document.body}
               menuPosition="fixed"
               isClearable={false}
-              isDisabled={isAllSchedulesLoading || areSubjectsLoading}
+              isDisabled={isAllSchedulesLoading || isSubjectsLoading}
             />
           </div>
           
-          {/* PDF Download Button */}
           <button
             onClick={generateExamRoutinePDF}
-            disabled={!selectedExam || !selectedYear || isAllSchedulesLoading || areSubjectsLoading}
+            disabled={!selectedExam || !selectedYear || isAllSchedulesLoading || isSubjectsLoading}
             className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-              !selectedExam || !selectedYear || isAllSchedulesLoading || areSubjectsLoading
+              !selectedExam || !selectedYear || isAllSchedulesLoading || isSubjectsLoading
                 ? "bg-gray-400 text-gray-600 cursor-not-allowed"
                 : "bg-red-600 text-white hover:bg-red-700 btn-glow"
             }`}
@@ -495,7 +453,7 @@ const ExamRoutineTable = ({
                 : `${classes.find(cls => cls.student_class.id === selectedClassForPDF)?.student_class.name} এর পরীক্ষার রুটিন PDF ডাউনলোড করুন`
             }
           >
-            {isAllSchedulesLoading || areSubjectsLoading ? (
+            {isAllSchedulesLoading || isSubjectsLoading ? (
               <>
                 <FaSpinner className="animate-spin text-lg" />
                 <span>লোড হচ্ছে...</span>
@@ -512,17 +470,15 @@ const ExamRoutineTable = ({
         </div>
       </div>
 
-      {/* Loading indicator for subjects */}
-      {areSubjectsLoading && (
+      {isSubjectsLoading && selectedClassForPDF && (
         <div className="mb-4 p-3 bg-blue-100 border border-blue-300 rounded-lg">
           <p className="text-sm text-blue-800 flex items-center">
             <FaSpinner className="animate-spin mr-2" />
-            <strong>বিষয়ের তালিকা লোড হচ্ছে...</strong> সব ক্লাসের বিষয়ের নাম সঠিকভাবে দেখাতে কিছুক্ষণ অপেক্ষা করুন।
+            <strong>বিষয়ের তালিকা লোড হচ্ছে...</strong> নির্বাচিত ক্লাসের বিষয়ের নাম সঠিকভাবে দেখাতে কিছুক্ষণ অপেক্ষা করুন।
           </p>
         </div>
       )}
 
-      {/* Routine Table */}
       {displaySchedules.length > 0 ? (
         <div className="overflow-x-auto rounded-xl border border-[#db9e30] animate-fadeIn">
           <table className="w-full border-collapse min-w-[600px]">
@@ -543,7 +499,6 @@ const ExamRoutineTable = ({
               {displaySchedules.map((schedule, index) => {
                 const subjectName = getSubjectName(schedule.subject_id, schedule.classId);
                 
-                // Calculate duration for display
                 const [startHours, startMinutes] = schedule.start_time.split(':').map(Number);
                 const [endHours, endMinutes] = schedule.end_time.split(':').map(Number);
                 const durationMinutes = (endHours * 60 + endMinutes) - (startHours * 60 + startMinutes);
@@ -554,11 +509,7 @@ const ExamRoutineTable = ({
                 return (
                   <tr
                     key={`${schedule.id || index}-${schedule.className}-${schedule.subject_id}`}
-                    className={`${
-                      index % 2 === 1
-                        ? "bg-white/5"
-                        : "bg-white/10"
-                    } text-[#441a05] animate-scaleIn hover:bg-white/20 transition-colors duration-200`}
+                    className={`${index % 2 === 1 ? "bg-white/5" : "bg-white/10"} text-[#441a05] animate-scaleIn hover:bg-white/20 transition-colors duration-200`}
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
                     {selectedClassForPDF === null && (
@@ -568,7 +519,7 @@ const ExamRoutineTable = ({
                     )}
                     <td className="p-4 font-medium">
                       {subjectName}
-                      {classSubjectQueries[schedule.classId]?.isLoading && (
+                      {selectedClassForPDF === schedule.classId && isSubjectsLoading && (
                         <span className="ml-2 text-xs text-gray-500">(লোড হচ্ছে...)</span>
                       )}
                     </td>

@@ -267,7 +267,7 @@ const ClassPeriodSetup = () => {
         <div className="flex items-center space-x-4 mb-6 animate-fadeIn ml-5">
           <IoAddCircle className="text-4xl text-[#441a05]" />
           <h1 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
-            ক্লাস পিরিয়ড সেটআপ
+            ক্লাস ঘন্টা সেটআপ
           </h1>
         </div>
 
@@ -318,7 +318,7 @@ const ClassPeriodSetup = () => {
               <span className="bg-[#DB9E30]/20 text-[#441a05] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">
                 ২
               </span>
-              নতুন পিরিয়ড যোগ করুন
+              নতুন ঘন্টা যোগ করুন
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid md:grid-cols-2 gap-5">

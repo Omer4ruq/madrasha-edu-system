@@ -179,8 +179,8 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
                     </h3>
                     <p><span className="font-medium">ইমেইল:</span> {institute.institute_email_address || 'অজানা'}</p>
                     <p><span className="font-medium">ইআইআইএন নম্বর:</span> {institute.institute_eiin_no || 'অজানা'}</p>
-                    <p><span className="font-medium">লিঙ্গের ধরন:</span> {institute.institute_gender_type === 'Combined' ? 'মিশ্র' : institute.institute_gender_type === 'Male' ? 'পুরুষ' : 'নারী'}</p>
-                    <p><span className="font-medium">ধরন:</span> {institute.institute_type?.name || 'অজানা'}</p>
+                    <p><span className="font-medium">শিক্ষার্থীর ধরন:</span> {institute.institute_gender_type === 'Combined' ? 'মিশ্র' : institute.institute_gender_type === 'Boys' ? 'ছেলে' : 'মেয়ে'}</p>
+                    <p><span className="font-medium">প্রতিষ্ঠানের ধরন:</span> {institute.institute_type?.name || 'অজানা'}</p>
                   </div>
                 </div>
               )}

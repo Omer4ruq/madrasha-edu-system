@@ -75,10 +75,18 @@ import PersonalMarkSheet from "./components/results/PersonalMarkSheet";
 import MeritList from "./components/results/MeritList";
 import ResultConfig from "./components/results/ResultConfig";
 import MutalayaReport from "./components/layout/MutalayaReport";
+import PrivateRoute from "./PrivateRoute";
 
 function Root() {
   const router = createBrowserRouter([
-    {
+        {
+      path: "login",
+      element: <Login />,
+    },
+   {
+    element: <PrivateRoute />, // 🔐 Protected Route
+    children: [
+       {
       path: "/",
       element: <App />,
       errorElement: <Dummy />,
@@ -472,10 +480,9 @@ function Root() {
         },
       ],
     },
-    {
-      path: "login",
-      element: <Login />,
-    },
+    ]
+   }
+
   ]);
 
   return <RouterProvider router={router} />;

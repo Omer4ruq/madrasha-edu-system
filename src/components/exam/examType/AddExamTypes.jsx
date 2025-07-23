@@ -16,8 +16,10 @@ import { useGetAcademicYearApiQuery } from "../../../redux/features/api/academic
 const AddExamType = () => {
   const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
   const [examName, setExamName] = useState("");
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState(""); // New state for academic year
   const [editExamId, setEditExamId] = useState(null);
   const [editExamName, setEditExamName] = useState("");
+  const [editAcademicYear, setEditAcademicYear] = useState(""); // New state for edit academic year
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
@@ -31,15 +33,18 @@ const AddExamType = () => {
   const [createExam, { isLoading: isCreating, error: createError }] = useCreateExamApiMutation();
   const [updateExam, { isLoading: isUpdating, error: updateError }] = useUpdateExamApiMutation();
   const [deleteExam, { isLoading: isDeleting, error: deleteError }] = useDeleteExamApiMutation();
-const { data: academicYears, isLoading: academicYearsLoading } = useGetAcademicYearApiQuery();
+  const { data: academicYears, isLoading: academicYearsLoading } = useGetAcademicYearApiQuery();
+  
   // Permissions hook
   const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
     skip: !group_id,
   });
+  
   const academicYearOptions = academicYears?.map((year) => ({
     value: year.id,
     label: year.name,
   })) || [];
+  
   // Permission checks
   const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_examname') || false;
   const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_examname') || false;
@@ -57,14 +62,19 @@ const { data: academicYears, isLoading: academicYearsLoading } = useGetAcademicY
       toast.error("অনুগ্রহ করে একটি পরীক্ষার ধরনের নাম লিখুন");
       return;
     }
-    if (examTypes?.some((et) => et.name.toLowerCase() === examName.toLowerCase())) {
-      toast.error("এই পরীক্ষার ধরন ইতিমধ্যে বিদ্যমান!");
+    if (!selectedAcademicYear) {
+      toast.error("অনুগ্রহ করে একটি শিক্ষাবর্ষ নির্বাচন করুন");
+      return;
+    }
+    if (examTypes?.some((et) => et.name.toLowerCase() === examName.toLowerCase() && et.academic_year === parseInt(selectedAcademicYear))) {
+      toast.error("এই শিক্ষাবর্ষে এই পরীক্ষার ধরন ইতিমধ্যে বিদ্যমান!");
       return;
     }
 
     setModalAction("create");
     setModalData({
       name: examName.trim(),
+      academic_year: parseInt(selectedAcademicYear),
       is_active: true,
     });
     setIsModalOpen(true);
@@ -78,6 +88,7 @@ const { data: academicYears, isLoading: academicYearsLoading } = useGetAcademicY
     }
     setEditExamId(exam.id);
     setEditExamName(exam.name);
+    setEditAcademicYear(exam.academic_year?.toString() || "");
   };
 
   // Handle update exam type
@@ -91,11 +102,16 @@ const { data: academicYears, isLoading: academicYearsLoading } = useGetAcademicY
       toast.error("অনুগ্রহ করে একটি পরীক্ষার ধরনের নাম লিখুন");
       return;
     }
+    if (!editAcademicYear) {
+      toast.error("অনুগ্রহ করে একটি শিক্ষাবর্ষ নির্বাচন করুন");
+      return;
+    }
 
     setModalAction("update");
     setModalData({
       id: editExamId,
       name: editExamName.trim(),
+      academic_year: parseInt(editAcademicYear),
       is_active: examTypes.find((et) => et.id === editExamId)?.is_active || true,
     });
     setIsModalOpen(true);
@@ -111,6 +127,7 @@ const { data: academicYears, isLoading: academicYearsLoading } = useGetAcademicY
     setModalData({
       id: exam.id,
       name: exam.name,
+      academic_year: exam.academic_year,
       is_active: !exam.is_active,
     });
     setIsModalOpen(true);
@@ -138,6 +155,7 @@ const { data: academicYears, isLoading: academicYearsLoading } = useGetAcademicY
         await createExam(modalData).unwrap();
         toast.success("পরীক্ষার ধরন সফলভাবে তৈরি করা হয়েছে!");
         setExamName("");
+        setSelectedAcademicYear("");
       } else if (modalAction === "update") {
         if (!hasChangePermission) {
           toast.error('পরীক্ষার ধরন আপডেট করার অনুমতি নেই।');
@@ -147,6 +165,7 @@ const { data: academicYears, isLoading: academicYearsLoading } = useGetAcademicY
         toast.success("পরীক্ষার ধরন সফলভাবে আপডেট করা হয়েছে!");
         setEditExamId(null);
         setEditExamName("");
+        setEditAcademicYear("");
       } else if (modalAction === "delete") {
         if (!hasDeletePermission) {
           toast.error('পরীক্ষার ধরন মুছে ফেলার অনুমতি নেই।');
@@ -172,7 +191,13 @@ const { data: academicYears, isLoading: academicYearsLoading } = useGetAcademicY
     }
   };
 
-  if (isExamLoading || permissionsLoading) {
+  // Get academic year name by ID
+  const getAcademicYearName = (academicYearId) => {
+    const academicYear = academicYears?.find(year => year.id === academicYearId);
+    return academicYear ? academicYear.name : 'N/A';
+  };
+
+  if (isExamLoading || permissionsLoading || academicYearsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="flex items-center gap-4 p-6 bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 animate-fadeIn">
@@ -255,7 +280,7 @@ const { data: academicYears, isLoading: academicYearsLoading } = useGetAcademicY
               <IoAddCircle className="text-4xl text-[#441a05]" />
               <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">নতুন পরীক্ষার ধরন যোগ করুন</h3>
             </div>
-            <form onSubmit={handleSubmitExam} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
+            <form onSubmit={handleSubmitExam} className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl">
               <input
                 type="text"
                 id="examName"
@@ -266,6 +291,22 @@ const { data: academicYears, isLoading: academicYearsLoading } = useGetAcademicY
                 disabled={isCreating}
                 aria-describedby={createError ? "exam-error" : undefined}
               />
+              <select
+                id="academicYear"
+                value={selectedAcademicYear}
+                onChange={(e) => setSelectedAcademicYear(e.target.value)}
+                className="w-full p-2 bg-transparent text-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300"
+                disabled={isCreating || academicYearsLoading}
+              >
+                <option value="" disabled className="bg-white text-black">
+                  শিক্ষাবর্ষ নির্বাচন করুন
+                </option>
+                {academicYearOptions.map((option) => (
+                  <option key={option.value} value={option.value} className="bg-white text-black">
+                    {option.label}
+                  </option>
+                ))}
+              </select>
               <button
                 type="submit"
                 disabled={isCreating}
@@ -306,7 +347,7 @@ const { data: academicYears, isLoading: academicYearsLoading } = useGetAcademicY
               <FaEdit className="text-3xl text-[#441a05]" />
               <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">পরীক্ষার ধরন সম্পাদনা করুন</h3>
             </div>
-            <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl">
+            <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-4xl">
               <input
                 type="text"
                 id="editExamName"
@@ -318,6 +359,22 @@ const { data: academicYears, isLoading: academicYearsLoading } = useGetAcademicY
                 aria-label="পরীক্ষার ধরন সম্পাদনা"
                 aria-describedby="edit-exam-error"
               />
+              <select
+                id="editAcademicYear"
+                value={editAcademicYear}
+                onChange={(e) => setEditAcademicYear(e.target.value)}
+                className="w-full bg-transparent text-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
+                disabled={isUpdating || academicYearsLoading}
+              >
+                <option value="" disabled className="bg-white text-black">
+                  শিক্ষাবর্ষ নির্বাচন করুন
+                </option>
+                {academicYearOptions.map((option) => (
+                  <option key={option.value} value={option.value} className="bg-white text-black">
+                    {option.label}
+                  </option>
+                ))}
+              </select>
               <button
                 type="submit"
                 disabled={isUpdating}
@@ -340,6 +397,7 @@ const { data: academicYears, isLoading: academicYearsLoading } = useGetAcademicY
                 onClick={() => {
                   setEditExamId(null);
                   setEditExamName("");
+                  setEditAcademicYear("");
                 }}
                 title="সম্পাদনা বাতিল করুন"
                 className="relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-gray-500 text-[#441a05] hover:text-white transition-all duration-300 animate-scaleIn"
@@ -379,6 +437,9 @@ const { data: academicYears, isLoading: academicYearsLoading } = useGetAcademicY
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       পরীক্ষার ধরন
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      শিক্ষাবর্ষ
+                    </th>
                     {hasChangePermission && (
                       <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                         সক্রিয়
@@ -406,6 +467,9 @@ const { data: academicYears, isLoading: academicYearsLoading } = useGetAcademicY
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
                         {exam.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]/70">
+                        {getAcademicYearName(exam.academic_year)}
                       </td>
                       {hasChangePermission && (
                         <td className="px-6 py-4 whitespace-nowrap text-[#441a05]">

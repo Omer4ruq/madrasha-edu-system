@@ -115,7 +115,7 @@ const mainMenu = [
           },
           {
             id: "05/01/07",
-            title: "রেজাল্ট কনফিগারেশন",
+            title: "গ্রেড কনফিগারেশন",
             link: "/talimat/settings/result-config",
           },
         ],
@@ -168,12 +168,12 @@ const mainMenu = [
       },
       {
         id: "05/07",
-        title: "পিরিয়ড / ঘন্টা",
+        title: "জামাত ঘন্টা",
         link: "/talimat/periods",
         children: [
           {
             id: "05/07/01",
-            title: "পিরিয়ড / ঘন্টা",
+            title: "জামাত ঘন্টা",
             link: "/talimat/periods",
           },
         ],

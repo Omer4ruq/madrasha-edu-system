@@ -24,7 +24,7 @@ export default function Profile() {
   return (
     <div className="flex items-center gap-1 pl-2 sm:pl-3 relative cursor-pointer" ref={modalRef}>
       <img
-        src={profileImage}
+        src={'https://images.rawpixel.com/image_png_800/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvam9iNjAyLTU2LXAucG5n.png'}
         className="w-8 sm:w-9 h-8 sm:h-9 rounded-full"
         onClick={()=> setIsOpen(!isOpen)}
       />

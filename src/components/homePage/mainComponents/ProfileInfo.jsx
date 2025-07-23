@@ -1,30 +1,35 @@
 import React from 'react';
-import { FaUserEdit } from 'react-icons/fa';
-import profileImg from "/images/profile.jpg";
 import { useSelector } from 'react-redux';
-
+import { FaUserEdit } from 'react-icons/fa';
 
 export default function ProfileInfo() {
-  const { user, role, profile : details, token, refresh_token, group_id, group_name, role_id, username } = useSelector((state) => state.auth);
+  const {
+    user,
+    role,
+    profile: details,
+    username,
+  } = useSelector((state) => state.auth);
 
-console.log(user, role, details, token, refresh_token, group_id, group_name, role_id, username);
-
-  const profile = [
+  const profileInfo = [
     {
-      title: 'নিবন্ধন নম্বর',
-      data: 'মাদ্রাসা-২০২৩-০০১',
+      title: 'ব্যবহারকারীর নাম',
+      data: username || 'N/A',
     },
     {
-      title: 'ব্যবহারকারীর প্রকার',
-      data: 'মুহতামিম',
+      title: 'ব্যবহারকারীর ধরণ',
+      data: role || 'N/A',
     },
     {
       title: 'পদবী',
-      data: 'প্রধান শিক্ষক',
+      data: details?.designation || 'নির্ধারিত নয়',
+    },
+    {
+      title: 'কর্মের ধরণ',
+      data: details?.job_nature || 'নির্ধারিত নয়',
     },
     {
       title: 'মোবাইল নম্বর',
-      data: '০১৭০৭-২৯২৮০৪',
+      data: details?.phone_number || 'নির্ধারিত নয়',
     },
   ];
 
@@ -52,25 +57,24 @@ console.log(user, role, details, token, refresh_token, group_id, group_name, rol
         `}
       </style>
 
-      {/* User image */}
+      {/* User Image */}
       <div className="flex justify-center">
         <img
-          src={profileImg}
+          src="https://images.rawpixel.com/image_png_800/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvam9iNjAyLTU2LXAucG5n.png"
           alt="প্রোফাইল ছবি"
           className="w-20 h-20 rounded-full border-2 border-[#DB9E30] animate-scaleIn"
-          title="প্রোফাইল ছবি / Profile Image"
         />
       </div>
 
-      {/* User name */}
+      {/* Name */}
       <h4 className="text-[#441a05] bg-[#DB9E30] text-center rounded-lg p-2 font-bold text-lg animate-scaleIn">
-        {user?.name}
+        {user?.name || 'নাম পাওয়া যায়নি'}
       </h4>
 
-      {/* User data table */}
+      {/* Profile Info */}
       <table className="min-w-full divide-y divide-white/20 bg-white/5 rounded-lg">
         <tbody>
-          {profile.map((row, index) => (
+          {profileInfo.map((row, index) => (
             <tr key={index} className="animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
               <td className="text-end px-4 py-2 border border-white/30 text-[#DB9E30] font-medium text-sm">
                 {row.title} :
@@ -82,14 +86,6 @@ console.log(user, role, details, token, refresh_token, group_id, group_name, rol
           ))}
         </tbody>
       </table>
-
-      {/* Edit icon */}
-      <button
-        title="প্রোফাইল সম্পাদনা করুন / Edit Profile"
-        className="absolute top-3 right-3 text-[#9d9087] hover:text-[#DB9E30] transition-colors duration-300 btn-glow"
-      >
-        <FaUserEdit className="w-6 h-6" />
-      </button>
     </div>
   );
 }

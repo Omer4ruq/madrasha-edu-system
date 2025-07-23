@@ -1,6 +1,4 @@
 import React, { useState, useRef } from "react";
-import DateTimePicker from "react-datetime-picker";
-import "react-datetime-picker/dist/DateTimePicker.css";
 import { FaEdit, FaTrash, FaSpinner } from "react-icons/fa";
 import { IoAddCircle } from "react-icons/io5";
 import { Toaster, toast } from "react-hot-toast";
@@ -11,22 +9,24 @@ import {
   useDeleteEventMutation,
 } from "../../redux/features/api/event/eventApi";
 import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
-import { useSelector } from "react-redux"; // Import useSelector
-import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi"; // Import permission hook
+import { useSelector } from "react-redux";
+import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi";
 
 const AddEvent = () => {
-  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
+  const { user, group_id } = useSelector((state) => state.auth);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [newEvent, setNewEvent] = useState({
     title: "",
-    start: "",
-    end: "",
+    startDate: "",
+    startTime: "",
+    endDate: "",
+    endTime: "",
     academic_year: "",
   });
-  const formRef = useRef(null); // Reference to the form container
+  const formRef = useRef(null);
 
   // API hooks
   const {
@@ -58,6 +58,15 @@ const AddEvent = () => {
   const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_event') || false;
   const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_event') || false;
 
+  // Combine date and time into ISO string
+  const combineDateTime = (date, time) => {
+    if (!date || !time) return "";
+    const [hours, minutes] = time.split(":");
+    const dateTime = new Date(date);
+    dateTime.setHours(parseInt(hours), parseInt(minutes));
+    return dateTime.toISOString();
+  };
+
   // Handle form submission for adding new event
   const handleSubmitEvent = async (e) => {
     e.preventDefault();
@@ -67,14 +76,18 @@ const AddEvent = () => {
     }
     if (
       !newEvent.title.trim() ||
-      !newEvent.start ||
-      !newEvent.end ||
+      !newEvent.startDate ||
+      !newEvent.startTime ||
+      !newEvent.endDate ||
+      !newEvent.endTime ||
       !newEvent.academic_year
     ) {
       toast.error("অনুগ্রহ করে সকল ক্ষেত্র পূরণ করুন");
       return;
     }
-    if (new Date(newEvent.end) < new Date(newEvent.start)) {
+    const start = combineDateTime(newEvent.startDate, newEvent.startTime);
+    const end = combineDateTime(newEvent.endDate, newEvent.endTime);
+    if (new Date(end) < new Date(start)) {
       toast.error("শেষের সময় শুরুর সময়ের আগে হতে পারে না");
       return;
     }
@@ -82,7 +95,7 @@ const AddEvent = () => {
       events?.some(
         (event) =>
           event.title.toLowerCase() === newEvent.title.toLowerCase() &&
-          event.start === new Date(newEvent.start).toISOString() &&
+          event.start === start &&
           event.academic_year === parseInt(newEvent.academic_year)
       )
     ) {
@@ -92,8 +105,8 @@ const AddEvent = () => {
 
     setModalData({
       title: newEvent.title.trim(),
-      start: new Date(newEvent.start).toISOString(),
-      end: new Date(newEvent.end).toISOString(),
+      start,
+      end,
       academic_year: parseInt(newEvent.academic_year),
     });
     setModalAction("create");
@@ -106,11 +119,15 @@ const AddEvent = () => {
       toast.error('ইভেন্ট সম্পাদনা করার অনুমতি নেই।');
       return;
     }
+    const startDate = new Date(event.start);
+    const endDate = new Date(event.end);
     setSelectedEventId(event.id);
     setNewEvent({
       title: event.title,
-      start: new Date(event.start),
-      end: new Date(event.end),
+      startDate: startDate.toISOString().split('T')[0],
+      startTime: startDate.toTimeString().slice(0, 5),
+      endDate: endDate.toISOString().split('T')[0],
+      endTime: endDate.toTimeString().slice(0, 5),
       academic_year: event.academic_year.toString(),
     });
   };
@@ -124,14 +141,18 @@ const AddEvent = () => {
     }
     if (
       !newEvent.title.trim() ||
-      !newEvent.start ||
-      !newEvent.end ||
+      !newEvent.startDate ||
+      !newEvent.startTime ||
+      !newEvent.endDate ||
+      !newEvent.endTime ||
       !newEvent.academic_year
     ) {
       toast.error("অনুগ্রহ করে সকল ক্ষেত্র পূরণ করুন");
       return;
     }
-    if (new Date(newEvent.end) < new Date(newEvent.start)) {
+    const start = combineDateTime(newEvent.startDate, newEvent.startTime);
+    const end = combineDateTime(newEvent.endDate, newEvent.endTime);
+    if (new Date(end) < new Date(start)) {
       toast.error("শেষের সময় শুরুর সময়ের আগে হতে পারে না");
       return;
     }
@@ -139,8 +160,8 @@ const AddEvent = () => {
     setModalData({
       id: selectedEventId,
       title: newEvent.title.trim(),
-      start: new Date(newEvent.start).toISOString(),
-      end: new Date(newEvent.end).toISOString(),
+      start,
+      end,
       academic_year: parseInt(newEvent.academic_year),
     });
     setModalAction("update");
@@ -158,6 +179,16 @@ const AddEvent = () => {
     setIsModalOpen(true);
   };
 
+
+
+   const handleDateClick = (e) => {
+ 
+      e.target.showPicker();
+ 
+  };
+
+
+
   // Confirm action for modal
   const confirmAction = async () => {
     try {
@@ -168,7 +199,7 @@ const AddEvent = () => {
         }
         await createEvent(modalData).unwrap();
         toast.success("ইভেন্ট সফলভাবে তৈরি করা হয়েছে!");
-        setNewEvent({ title: "", start: "", end: "", academic_year: "" });
+        setNewEvent({ title: "", startDate: "", startTime: "", endDate: "", endTime: "", academic_year: "" });
       } else if (modalAction === "update") {
         if (!hasChangePermission) {
           toast.error('ইভেন্ট আপডেট করার অনুমতি নেই।');
@@ -177,7 +208,7 @@ const AddEvent = () => {
         await updateEvent(modalData).unwrap();
         toast.success("ইভেন্ট সফলভাবে আপডেট করা হয়েছে!");
         setSelectedEventId(null);
-        setNewEvent({ title: "", start: "", end: "", academic_year: "" });
+        setNewEvent({ title: "", startDate: "", startTime: "", endDate: "", endTime: "", academic_year: "" });
       } else if (modalAction === "delete") {
         if (!hasDeletePermission) {
           toast.error('ইভেন্ট মুছে ফেলার অনুমতি নেই।');
@@ -285,67 +316,25 @@ const AddEvent = () => {
           ::-webkit-scrollbar-thumb:hover {
             background: rgba(10, 13, 21, 0.44);
           }
-          .react-datetime-picker__wrapper {
-            border: 1px solid #9d9087 !important;
-            border-radius: 0.5rem !important;
-            padding: 0.5rem !important;
-            background: transparent !important;
+          input[type="date"],
+          input[type="time"] {
+            border: 1px solid #9d9087;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            color: #441a05;
+            font-family: 'Noto Sans Bengali', sans-serif;
+            width: 100%;
+            transition: all 0.3s ease;
           }
-          .react-datetime-picker__inputGroup__input,
-          .react-datetime-picker__inputGroup__leadingZero,
-          .react-datetime-picker__inputGroup__divider,
-          .react-datetime-picker__inputGroup__amPm {
-            color: #441a05 !important;
-            font-family: 'Noto Sans Bengali', sans-serif !important;
+          input[type="date"]:focus,
+          input[type="time"]:focus {
+            box-shadow: 0 0 10px rgba(219, 158, 48, 0.4);
+            border-color: #DB9E30;
+            outline: none;
           }
-          .react-datetime-picker__button svg {
-            stroke: #441a05 !important;
-          }
-          .react-datetime-picker__calendar,
-          .react-datetime-picker__clock {
-            position: fixed !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            background: white !important;
-            border: 1px solid #9d9087 !important;
-            border-radius: 0.5rem !important;
-            color: #441a05 !important;
-            font-family: 'Noto Sans Bengali', sans-serif !important;
-            z-index: 10010 !important;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-            max-height: 80vh !important;
-            overflow-y: auto !important;
-          }
-          .react-calendar__tile:hover {
-            background: #DB9E30 !important;
-            color: #441a05 !important;
-          }
-          .react-calendar__tile--active {
-            background: #441a05 !important;
-            color: white !important;
-          }
-          .react-datetime-picker__clock {
-            background: white !important;
-            color: #441a05 !important;
-            padding: 1rem !important;
-          }
-          .react-clock__face {
-            background: white !important;
-            border: 1px solid #9d9087 !important;
-          }
-          .react-clock__hand__body {
-            background: #441a05 !important;
-          }
-          .react-clock__mark__body {
-            background: #441a05 !important;
-          }
-          .react-clock__mark__number {
-            color: #441a05 !important;
-            font-family: 'Noto Sans Bengali', sans-serif !important;
-          }
-          .react-clock__second-hand__body {
-            background: #DB9E30 !important;
+          input[type="date"]::-webkit-calendar-picker-indicator,
+          input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(20%) sepia(50%) saturate(300%) hue-rotate(10deg);
           }
         `}
       </style>
@@ -381,29 +370,53 @@ const AddEvent = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#441a05]">শুরুর সময়</label>
-                <DateTimePicker
-                  value={newEvent.start}
-                  onChange={(value) => setNewEvent({ ...newEvent, start: value })}
-                  className="w-full text-[#441a05] animate-scaleIn"
+                <label className="block text-sm font-medium text-[#441a05]">শুরুর তারিখ</label>
+                <input
+                  type="date"
+                  value={newEvent.startDate}
+                   onClick={handleDateClick}
+                  onChange={(e) => setNewEvent({ ...newEvent, startDate: e.target.value })}
+                  className="w-full p-3 animate-scaleIn bg-transparent"
                   disabled={isCreating || isUpdating}
-                  format="y-MM-dd h:mm a"
-                  locale="bn-BD"
-                  disableClock={false}
+                  aria-label="ইভেন্টের শুরুর তারিখ নির্বাচন করুন"
+                  title="ইভেন্টের শুরুর তারিখ নির্বাচন করুন / Select event start date"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-[#441a05]">শুরুর সময়</label>
+                <input
+                  type="time"
+                  value={newEvent.startTime}
+                  onChange={(e) => setNewEvent({ ...newEvent, startTime: e.target.value })}
+                   onClick={handleDateClick}
+                  className="w-full p-3 animate-scaleIn bg-transparent"
+                  disabled={isCreating || isUpdating}
                   aria-label="ইভেন্টের শুরুর সময় নির্বাচন করুন"
                   title="ইভেন্টের শুরুর সময় নির্বাচন করুন / Select event start time"
                 />
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#441a05]">শেষের সময়</label>
-                <DateTimePicker
-                  value={newEvent.end}
-                  onChange={(value) => setNewEvent({ ...newEvent, end: value })}
-                  className="w-full text-[#441a05] animate-scaleIn"
+                <label className="block text-sm font-medium text-[#441a05]">শেষের তারিখ</label>
+                <input
+                  type="date"
+                  value={newEvent.endDate}
+                  onChange={(e) => setNewEvent({ ...newEvent, endDate: e.target.value })}
+                   onClick={handleDateClick}
+                  className="w-full p-3 animate-scaleIn bg-transparent"
                   disabled={isCreating || isUpdating}
-                  format="y-MM-dd h:mm a"
-                  locale="bn-BD"
-                  disableClock={false}
+                  aria-label="ইভেন্টের শেষের তারিখ নির্বাচন করুন"
+                  title="ইভেন্টের শেষের তারিখ নির্বাচন করুন / Select event end date"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-[#441a05]">শেষের সময়</label>
+                <input
+                  type="time"
+                  value={newEvent.endTime}
+                  onChange={(e) => setNewEvent({ ...newEvent, endTime: e.target.value })}
+                   onClick={handleDateClick}
+                  className="w-full p-3 animate-scaleIn bg-transparent"
+                  disabled={isCreating || isUpdating}
                   aria-label="ইভেন্টের শেষের সময় নির্বাচন করুন"
                   title="ইভেন্টের শেষের সময় নির্বাচন করুন / Select event end time"
                 />
@@ -460,8 +473,10 @@ const AddEvent = () => {
                       setSelectedEventId(null);
                       setNewEvent({
                         title: "",
-                        start: "",
-                        end: "",
+                        startDate: "",
+                        startTime: "",
+                        endDate: "",
+                        endTime: "",
                         academic_year: "",
                       });
                     }}
@@ -538,10 +553,10 @@ const AddEvent = () => {
                         {event.title}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                        {new Date(event.start).toLocaleString("bn-BD")}
+                        {new Date(event.start).toLocaleString("bn-BD", { dateStyle: "short", timeStyle: "short" })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                        {new Date(event.end).toLocaleString("bn-BD")}
+                        {new Date(event.end).toLocaleString("bn-BD", { dateStyle: "short", timeStyle: "short" })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
                         {academicYears?.find(

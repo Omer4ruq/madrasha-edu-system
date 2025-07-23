@@ -9,6 +9,7 @@ import { useCreateStaffRegistrationApiMutation } from '../../../redux/features/a
 import { useSelector } from 'react-redux'; // Import useSelector
 import { useGetGroupPermissionsQuery } from '../../../redux/features/api/permissionRole/groupsApi'; // Import permission hook
 import { useGetGroupListQuery } from '../../../redux/features/api/permissionRole/groupListApi';
+import { useGetRoleTypesQuery } from '../../../redux/features/api/roleType/roleTypesApi';
 
 
 const StaffRegistrationForm = () => {
@@ -57,6 +58,12 @@ const StaffRegistrationForm = () => {
     isLoading: isGroupsLoading,
     error: groupsError,
   } = useGetGroupListQuery();
+    const {
+      data: roleTypes,
+      isLoading: isRoleLoading,
+      error: roleError,
+      refetch,
+    } = useGetRoleTypesQuery();
   // Permissions hook
   const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
     skip: !group_id,
@@ -974,7 +981,7 @@ const StaffRegistrationForm = () => {
   disabled={!hasAddPermission} // Disable if no add permission
 >
   <option value="">ভূমিকা নির্বাচন করুন</option>
-  {groups?.map((group) => (
+  {roleTypes?.map((group) => (
     <option key={group.id} value={group.id}>
       {group.name.charAt(0).toUpperCase() + group.name.slice(1)}
     </option>

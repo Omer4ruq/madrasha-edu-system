@@ -31,19 +31,19 @@ export default function Home() {
       </div>
 
       {/* Fees Info and Payment Statistics */}
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+      {/* <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         <FeeInfo />
         <PaymentStat />
-      </div>
+      </div> */}
 
       {/* Leave Info and SMS Info */}
       <LeaveAndSmsInfo />
 
       {/* payslip and routine */}
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+      {/* <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         <SearchPayslip />
         <ClassRoutine />
-      </div>
+      </div> */}
 
       {/* Events and gender wise teacher and student info */}
       {/* <div className="grid gap-4 grid-cols-1 md:grid-cols-2">

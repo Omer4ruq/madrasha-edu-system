@@ -9,8 +9,10 @@ export default function ProfileMenu() {
   const { user } = useSelector((state) => state.auth);
 
   const handleLogout = () => {
+    const currentPath = window.location.pathname;
+    localStorage.setItem("redirect_after_login", currentPath);
     dispatch(logout());
-    navigate('/');
+    navigate("/login");
     toast.success("সফলভাবে লগআউট হয়েছে!");
   };
 

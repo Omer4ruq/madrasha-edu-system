@@ -17,11 +17,11 @@
 //   }
 
 //   try {
-//     const res = await fetch(`https://${subdomain}.easydr.xyz/api/tenant-info/`);
+//     const res = await fetch(`https://${subdomain}.madrasahhub.online/api/tenant-info/`);
 //     const data = await res.json();
 
 //     if (data?.matched) {
-//       BASE_URL = `https://${subdomain}.easydr.xyz/api`;
+//       BASE_URL = `https://${subdomain}.madrasahhub.online/api`;
 //     } else {
 //       showInvalidSubdomainScreen();
 //     }
@@ -118,7 +118,7 @@ export default BASE_URL;
 
 
 
-////////////// live code
+///// live code
 // const getSubdomain = () => {
 //   const host = window.location.hostname;
 //   const parts = host.split(".");
@@ -138,11 +138,11 @@ export default BASE_URL;
 //   }
 
 //   try {
-//     const res = await fetch(`https://${subdomain}.easydr.xyz/api/tenant-info/`);
+//     const res = await fetch(`https://${subdomain}.madrasahhub.online/api/tenant-info/`);
 //     const data = await res.json();
 
 //     if (data?.matched) {
-//       BASE_URL = `https://${subdomain}.easydr.xyz/api`;
+//       BASE_URL = `https://${subdomain}.madrasahhub.online/api`;
 //     } else {
 //       showInvalidSubdomainScreen();
 //     }

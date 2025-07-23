@@ -43,10 +43,10 @@ export default function LeaveAndSmsInfo() {
               <h4 className="text-[#441a05] text-[16px] font-medium">
                 শিক্ষার্থী ছুটি
               </h4>
-              <h4 className="text-xl font-bold text-[#DB9E30]">৫</h4>
-              <h4 className="text-xs font-medium text-[#441a05]">
+              <h4 className="text-xl font-bold text-[#DB9E30]">o</h4>
+              {/* <h4 className="text-xs font-medium text-[#441a05]">
                 মোট শিক্ষার্থী: ৫৩০
-              </h4>
+              </h4> */}
             </div>
           </div>
 
@@ -57,12 +57,12 @@ export default function LeaveAndSmsInfo() {
             </div>
             <div className="border-l-2 border-[#9d9087] pl-3">
               <h4 className="text-[#441a05] text-[16px] font-medium">
-                শিক্ষক ছুটি
+                কর্মকর্তা ছুটি
               </h4>
-              <h4 className="text-xl font-bold text-[#DB9E30]">১</h4>
-              <h4 className="text-xs font-medium text-[#441a05]">
+              <h4 className="text-xl font-bold text-[#DB9E30]">o</h4>
+              {/* <h4 className="text-xs font-medium text-[#441a05]">
                 মোট শিক্ষক: ৩০
-              </h4>
+              </h4> */}
             </div>
           </div>
         </div>
@@ -84,10 +84,10 @@ export default function LeaveAndSmsInfo() {
               <h4 className="text-[#441a05] text-[16px] font-medium">
                 সাধারণ এসএমএস
               </h4>
-              <h4 className="text-xl font-bold text-[#441a05]">৪৩৩৯</h4>
-              <h4 className="text-xs font-medium text-[#DB9E30]">
-                মেয়াদ শেষ: ১২.০৪.২০২৫
-              </h4>
+              <h4 className="text-xl font-bold text-[#441a05]">o</h4>
+              {/* <h4 className="text-xs font-medium text-[#441a05]">
+                মেয়াদ শেষ: ১২.০৮.২০২৮
+              </h4> */}
             </div>
           </div>
 
@@ -100,14 +100,15 @@ export default function LeaveAndSmsInfo() {
               <h4 className="text-[#441a05] text-[16px] font-medium">
                 মাস্কিং এসএমএস
               </h4>
-              <h4 className="text-xl font-bold text-[#441a05]">১৭৩৩৯</h4>
-              <h4 className="text-xs font-medium text-[#DB9E30]">
-                মেয়াদ শেষ: ১২.০৪.২০২৫
-              </h4>
+              <h4 className="text-xl font-bold text-[#441a05]">o</h4>
+              {/* <h4 className="text-xs font-medium text-[#441a05]">
+                মেয়াদ শেষ: ১২.০৮.২০২৮
+              </h4> */}
             </div>
           </div>
         </div>
       </div>
+      
     </div>
   );
 }
