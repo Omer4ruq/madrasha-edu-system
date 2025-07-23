@@ -10,6 +10,7 @@ import {
 } from "../../../redux/features/api/exam/examApi";
 import { useSelector } from "react-redux"; // Import useSelector
 import { useGetGroupPermissionsQuery } from "../../../redux/features/api/permissionRole/groupsApi"; // Import permission hook
+import { useGetAcademicYearApiQuery } from "../../../redux/features/api/academic-year/academicYearApi";
 
 
 const AddExamType = () => {
@@ -30,12 +31,15 @@ const AddExamType = () => {
   const [createExam, { isLoading: isCreating, error: createError }] = useCreateExamApiMutation();
   const [updateExam, { isLoading: isUpdating, error: updateError }] = useUpdateExamApiMutation();
   const [deleteExam, { isLoading: isDeleting, error: deleteError }] = useDeleteExamApiMutation();
-
+const { data: academicYears, isLoading: academicYearsLoading } = useGetAcademicYearApiQuery();
   // Permissions hook
   const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
     skip: !group_id,
   });
-
+  const academicYearOptions = academicYears?.map((year) => ({
+    value: year.id,
+    label: year.name,
+  })) || [];
   // Permission checks
   const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_examname') || false;
   const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_examname') || false;
