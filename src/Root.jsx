@@ -76,6 +76,7 @@ import MeritList from "./components/results/MeritList";
 import ResultConfig from "./components/results/ResultConfig";
 import MutalayaReport from "./components/layout/MutalayaReport";
 import PrivateRoute from "./PrivateRoute";
+import { SuperAdminRoute } from "./SuperAdminRoute";
 
 function Root() {
   const router = createBrowserRouter([
@@ -423,13 +424,21 @@ function Root() {
               ],
             },
             {
-              path: "role-permission",
-              element: <RolePermissions />,
-            },
-            {
-              path: "role-types",
-              element: <AddRoleTypes />,
-            },
+  path: "role-permission",
+  element: (
+    <SuperAdminRoute>
+      <RolePermissions />
+    </SuperAdminRoute>
+  ),
+},
+{
+  path: "role-types",
+  element: (
+    <SuperAdminRoute>
+      <AddRoleTypes />
+    </SuperAdminRoute>
+  ),
+},
           ],
         },
         {

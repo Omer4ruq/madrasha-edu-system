@@ -101,7 +101,7 @@
 
 
 // netlify code
-const BASE_URL = `https://demo.easydr.xyz/api`
+const BASE_URL = `https://demo.madrasahhub.online/api`
 
 export default BASE_URL;
 

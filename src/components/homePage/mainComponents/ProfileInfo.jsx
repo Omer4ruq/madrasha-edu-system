@@ -10,6 +10,10 @@ export default function ProfileInfo() {
     username,
   } = useSelector((state) => state.auth);
 
+
+  console.log("user", user)
+  console.log("role", role)
+
   const profileInfo = [
     {
       title: 'ব্যবহারকারীর নাম',
