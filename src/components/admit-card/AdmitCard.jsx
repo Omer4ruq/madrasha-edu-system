@@ -1,10 +1,9 @@
 import React, { useState, useRef } from 'react';
 import Select from 'react-select';
 import { useReactToPrint } from 'react-to-print';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 import { IoPrint, IoDocumentText } from 'react-icons/io5';
 import { FaSpinner } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
 import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
 import { useGetExamApiQuery } from '../../redux/features/api/exam/examApi';
@@ -83,36 +82,230 @@ const AdmitCard = () => {
   });
 
   // Handle PDF download
-  const handleDownloadPDF = async () => {
-    setIsGeneratingPDF(true);
-    try {
-      const element = printRef.current;
-      const cards = element.querySelectorAll('.admit-card');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const width = 190; // Card width
-      const cardHeight = 90; // Card height
-      const marginTop = 10; // Top margin
-      const gap = 5; // Gap between cards
-
-      for (let i = 0; i < cards.length; i += 3) {
-        if (i > 0) pdf.addPage();
-        // Process up to three cards per page
-        for (let j = 0; j < 3 && i + j < cards.length; j++) {
-          const canvas = await html2canvas(cards[i + j], {
-            scale: 3,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-          });
-          const imgData = canvas.toDataURL('image/png');
-          const imgHeight = (canvas.height * width) / canvas.width;
-          pdf.addImage(imgData, 'PNG', 10, marginTop + (imgHeight + gap) * j, width, imgHeight);
-        }
-      }
-
-      pdf.save(`Admit_Cards_${selectedExam?.label || 'Exam'}_${selectedClassConfig?.label || 'Class'}.pdf`);
-    } finally {
-      setIsGeneratingPDF(false);
+  const handleDownloadPDF = () => {
+    if (instituteLoading) {
+      toast.error('ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!');
+      return;
     }
+
+    if (!institute) {
+      toast.error('ইনস্টিটিউট তথ্য পাওয়া যায়নি!');
+      return;
+    }
+
+    if (!selectedClassConfig || !selectedAcademicYear || !selectedExam || !examStudents?.students?.length) {
+      toast.error('ক্লাস, শিক্ষাবর্ষ, পরীক্ষা নির্বাচন করুন এবং শিক্ষার্থী তথ্য লোড হয়েছে কিনা দেখুন!');
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+
+    const examInfo = exams?.find(exam => exam.id === selectedExam?.value) || {};
+    const students = examStudents.students;
+
+    // Group students into sets of 3 for each page
+    const studentGroups = [];
+    for (let i = 0; i < students.length; i += 3) {
+      studentGroups.push(students.slice(i, i + 3));
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>প্রবেশপত্র</title>
+        <meta charset="UTF-8">
+        <style>
+          @page { 
+            size: A4 portrait; 
+            margin: 5mm; 
+          }
+          body {
+            font-family: 'Noto Sans Bengali', Arial, sans-serif;
+            font-size: 10pt;
+            margin: 0;
+            padding: 5mm;
+            color: #441a05;
+          }
+          .page-container {
+            width: 200mm;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2mm;
+            box-sizing: border-box;
+          }
+          .admit-card {
+            width: 190mm;
+            height: 90mm;
+            background: white;
+            border: 1px solid #DB9E30;
+            margin:0 auto 5px;
+            border-radius: 4mm;
+            overflow: hidden;
+            position: relative;
+            page-break-inside: avoid;
+          }
+          .page-break {
+            page-break-after: always;
+          }
+          .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #DB9E30;
+            border-top-left-radius: 4mm;
+            border-top-right-radius: 4mm;
+            padding: 1mm 4mm;
+          }
+          .header img {
+            width: 8mm;
+            height: 8mm;
+            object-fit: contain;
+          }
+          .header-text {
+            text-align: center;
+            color: white;
+          }
+          .header-text h1 {
+            font-size: 12pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 0;
+          }
+          .header-text p {
+            font-size: 9pt;
+            margin: 0.5mm 0;
+          }
+          .title {
+            text-align: center;
+            font-size: 14pt;
+            font-weight: bold;
+            color: #DB9E30;
+            margin: 2mm 0;
+            text-decoration: underline;
+          }
+          .student-info {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-top: 2mm;
+            padding: 3mm;
+            font-size: 10pt;
+          }
+          .student-info p {
+            font-size: 11pt;
+            margin: 1mm 0;
+          }
+          .roll-reg {
+            border: 1px solid #DB9E30;
+            padding: 2mm 4mm;
+            border-radius: 2mm;
+            background: #DB9E30;
+            color: white;
+            transform: translateX(1mm);
+          }
+          .roll-reg p {
+            margin: 1mm 0;
+            font-size: 11pt;
+          }
+          .instructions {
+            margin-top: 1mm;
+            padding: 0 3mm;
+            width: 70%;
+            font-size: 9pt;
+          }
+          .signature {
+            position: absolute;
+            bottom: 2mm;
+            right: 4mm;
+            text-align: center;
+          }
+          .signature-line {
+            border-top: 1px solid #441a05;
+            width: 20mm;
+            margin: 0 auto;
+          }
+          .signature p {
+            font-size: 9pt;
+            margin-top: 1mm;
+            font-weight: 600;
+          }
+          .background-image {
+            position: absolute;
+            width: 80mm;
+            height: 50mm;
+            left: 28%;
+            top: 30%;
+            background: url('https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.1;
+            z-index: 0;
+          }
+        </style>
+      </head>
+      <body>
+        ${studentGroups.map((group, pageIndex) => `
+          <div class="page-container">
+            ${group.map(student => `
+              <div class="admit-card">
+                <div class="background-image"></div>
+                <div class="header">
+                  <img src="${institute.institute_logo || 'https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg'}" alt="Institute Logo" />
+                  <div class="header-text">
+                    <h1>${institute.institute_name || 'Institute Name'}</h1>
+                    <p>${institute.institute_address || 'Address'}</p>
+                    <p><strong>পরীক্ষা:</strong> ${examInfo.name || 'Exam Name'} | <strong>তারিখ:</strong> ${examInfo.start_date || 'Date'}</p>
+                  </div>
+                  <img src="${institute.institute_logo || 'https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg'}" alt="Institute Logo" />
+                </div>
+                <div class="title">প্রবেশপত্র</div>
+                <div class="student-info">
+                  <div class="space-y-1">
+                    <p><strong>নাম:</strong> ${student.student_name}</p>
+                    <p><strong>শ্রেণি:</strong> ${student.class_name}</p>
+                    <p><strong>সেকশন:</strong> ${student.section_name}</p>
+                    <p><strong>সেশন:</strong> ${selectedAcademicYear?.label || 'N/A'}</p>
+                  </div>
+                  <div class="roll-reg">
+                    <p><strong>রোল:</strong> ${student.roll_no || student.user_id}</p>
+                    <p><strong>রেজি:</strong> ${student.user_id}</p>
+                  </div>
+                </div>
+                <div class="instructions">
+                  <p><strong>নির্দেশ:</strong> পরীক্ষার হলে এই প্রবেশপত্র অবশ্যই সঙ্গে আনতে হবে।</p>
+                  <p><strong>নির্দেশ:</strong> পরীক্ষা শুরুর ১৫ মিনিট পূর্বে উপস্থিত থাকতে হবে।</p>
+                  <p><strong>নির্দেশ:</strong> প্রয়োজনীয় সামগ্রী: বোর্ড, শার্পনার, রুলার, পেন্সিল, কলম, ইরেজার।</p>
+                </div>
+                <div class="signature">
+                  <div class="signature-line"></div>
+                  <p>পরীক্ষা নিয়ন্ত্রকের স্বাক্ষর</p>
+                </div>
+              </div>
+            `).join('')}
+            ${pageIndex < studentGroups.length - 1 ? '<div class="page-break"></div>' : ''}
+          </div>
+        `).join('')}
+        <script>
+          let printAttempted = false;
+          window.onbeforeprint = () => { printAttempted = true; };
+          window.onafterprint = () => { window.close(); };
+          window.addEventListener('beforeunload', (event) => {
+            if (!printAttempted) { window.close(); }
+          });
+          window.print();
+        </script>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    toast.success('প্রবেশপত্র তৈরি হয়েছে! প্রিন্ট বা সেভ করুন।');
+    setIsGeneratingPDF(false);
   };
 
   // Format select options
@@ -354,7 +547,7 @@ const AdmitCard = () => {
         {selectedClassConfig && selectedAcademicYear && selectedExam && (
           <div className="mt-6 flex space-x-4 no-print">
             <button
-              onClick={handlePrint}
+            onClick={handleDownloadPDF}
               className="px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn hover:text-white btn-glow"
               aria-label="প্রবেশপত্র প্রিন্ট করুন"
               title="প্রবেশপত্র প্রিন্ট করুন / Print admit cards"
@@ -362,26 +555,6 @@ const AdmitCard = () => {
               <span className="flex items-center space-x-2">
                 <IoPrint className="w-5 h-5" />
                 <span>প্রবেশপত্র প্রিন্ট করুন</span>
-              </span>
-            </button>
-            <button
-              onClick={handleDownloadPDF}
-              disabled={isGeneratingPDF || !selectedClassConfig || !selectedAcademicYear || !selectedExam}
-              className={`px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                isGeneratingPDF || !selectedClassConfig || !selectedAcademicYear || !selectedExam
-                  ? 'opacity-50 cursor-not-allowed'
-                  : 'hover:text-white btn-glow'
-              }`}
-              aria-label="পিডিএফ ডাউনলোড"
-              title="পিডিএফ ডাউনলোড / Download PDF"
-            >
-              <span className="flex items-center space-x-2">
-                {isGeneratingPDF ? (
-                  <FaSpinner className="w-5 h-5 spinner" />
-                ) : (
-                  <IoDocumentText className="w-5 h-5" />
-                )}
-                <span>{isGeneratingPDF ? 'পিডিএফ তৈরি হচ্ছে...' : 'পিডিএফ ডাউনলোড'}</span>
               </span>
             </button>
           </div>
