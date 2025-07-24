@@ -15,173 +15,9 @@ import {
 } from "../../redux/features/api/waivers/waiversApi";
 import { useGetFundsQuery } from "../../redux/features/api/funds/fundsApi";
 import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi";
+import { useGetInstituteLatestQuery } from "../../redux/features/api/institute/instituteLatestApi";
 import { useSelector } from "react-redux";
-import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
-
-// Register Noto Sans Bengali font (Used for PDF generation)
-try {
-  Font.register({
-    family: 'NotoSansBengali',
-    src: 'https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf',
-  });
-} catch (error) {
-  console.error('Font registration failed:', error);
-  Font.register({
-    family: 'Helvetica',
-    src: 'https://fonts.gstatic.com/s/helvetica/v13/Helvetica.ttf',
-  });
-}
-
-// PDF styles
-const styles = StyleSheet.create({
-  page: {
-    padding: 40,
-    fontFamily: 'NotoSansBengali',
-    fontSize: 10,
-    color: '#222',
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: 15,
-  },
-  schoolName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#441a05',
-  },
-  headerText: {
-    fontSize: 10,
-    marginTop: 4,
-  },
-  title: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    marginTop: 6,
-    marginBottom: 10,
-    color: '#441a05',
-    textDecoration: 'underline',
-  },
-  metaContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontSize: 9,
-    marginBottom: 8,
-  },
-  divider: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#441a05',
-    marginVertical: 6,
-  },
-  table: {
-    display: 'table',
-    width: 'auto',
-    borderStyle: 'solid',
-    borderWidth: 1,
-    borderColor: '#441a05',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#441a05',
-  },
-  tableHeader: {
-    backgroundColor: '#441a05',
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 10,
-    paddingVertical: 6,
-    paddingHorizontal: 4,
-    textAlign: 'center',
-    borderRightWidth: 1,
-    borderRightColor: '#fff',
-  },
-  tableCell: {
-    paddingVertical: 5,
-    paddingHorizontal: 4,
-    fontSize: 9,
-    borderRightWidth: 1,
-    borderRightColor: '#ddd',
-    flex: 1,
-    textAlign: 'left',
-  },
-  tableCellCenter: {
-    textAlign: 'center',
-  },
-  tableRowAlternate: {
-    backgroundColor: '#f2f2f2',
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 40,
-    right: 40,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontSize: 8,
-    color: '#555',
-  },
-});
-
-// PDF Document Component for Waivers
-const PDFDocument = ({ waivers, students, academicYears, feeHeads, funds }) => {
-  const getStudentName = (studentId) => {
-    return students?.find((s) => s.id === studentId)?.name || `ছাত্র ${studentId}`;
-  };
-
-  const getAcademicYearName = (yearId) => {
-    return academicYears?.find((y) => y.id === yearId)?.name || `বছর ${yearId}`;
-  };
-
-  const getFundName = (fundId) => {
-    return funds?.find((f) => f.id === fundId)?.name || `ফান্ড ${fundId}`;
-  };
-
-  const getFeeTypeNames = (feeTypeIds) => {
-    return feeTypeIds.map(id => feeHeads?.find(f => f.id === id)?.name || `ফি ${id}`).join(", ");
-  };
-
-  return (
-    <Document>
-      <Page size="A4" orientation="landscape" style={styles.page}>
-        <View style={styles.header}>
-          <Text style={styles.schoolName}>আদর্শ বিদ্যালয়</Text>
-          <Text style={styles.headerText}>ঢাকা, বাংলাদেশ</Text>
-          <Text style={styles.title}>ওয়েভার প্রতিবেদন</Text>
-          <View style={styles.metaContainer}>
-            <Text style={styles.metaText}>
-              তৈরির তারিখ: {new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
-            </Text>
-          </View>
-          <View style={styles.divider} />
-        </View>
-        <View style={styles.table}>
-          <View style={styles.tableRow}>
-            <Text style={[styles.tableHeader, { flex: 1.5 }]}>ছাত্র</Text>
-            <Text style={[styles.tableHeader, { flex: 1 }]}>বৃত্তির পরিমাণ (%)</Text>
-            <Text style={[styles.tableHeader, { flex: 1.5 }]}>শিক্ষাবর্ষ</Text>
-            <Text style={[styles.tableHeader, { flex: 2 }]}>ফি প্রকার</Text>
-            <Text style={[styles.tableHeader, { flex: 1.5 }]}>ফান্ড</Text>
-            <Text style={[styles.tableHeader, { flex: 2 }]}>বর্ণনা</Text>
-          </View>
-          {waivers.map((waiver, index) => (
-            <View key={waiver.id} style={[styles.tableRow, index % 2 === 1 && styles.tableRowAlternate]}>
-              <Text style={[styles.tableCell, { flex: 1.5 }]}>{getStudentName(waiver.student_id)}</Text>
-              <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{waiver.waiver_amount}</Text>
-              <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1.5 }]}>{getAcademicYearName(waiver.academic_year)}</Text>
-              <Text style={[styles.tableCell, { flex: 2 }]}>{getFeeTypeNames(waiver.fee_types)}</Text>
-              <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1.5 }]}>{getFundName(waiver.fund_id)}</Text>
-              <Text style={[styles.tableCell, { flex: 2 }]}>{waiver.description || '-'}</Text>
-            </View>
-          ))}
-        </View>
-        <View style={styles.footer} fixed>
-          <Text>প্রতিবেদনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে।</Text>
-          <Text render={({ pageNumber, totalPages }) => `পৃষ্ঠা ${pageNumber} এর ${totalPages}`} />
-        </View>
-      </Page>
-    </Document>
-  );
-};
+import selectStyles from "../../utilitis/selectStyles";
 
 const AddWaivers = () => {
   const { group_id } = useSelector((state) => state.auth);
@@ -215,6 +51,7 @@ const AddWaivers = () => {
   const { data: academicYears, isLoading: isAcademicYearLoading } = useGetAcademicYearApiQuery();
   const { data: waivers, isLoading: isWaiverLoading } = useGetWaiversQuery();
   const { data: funds, isLoading: isFundsLoading } = useGetFundsQuery();
+  const { data: institute, isLoading: isInstituteLoading, error: instituteError } = useGetInstituteLatestQuery();
   const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
     skip: !group_id,
   });
@@ -295,6 +132,23 @@ const AddWaivers = () => {
       return true;
     });
   }, [waivers, students, waiverListFilters]);
+
+  // Helper functions for rendering data
+  const getStudentName = (studentId) => {
+    return students?.find((s) => s.id === studentId)?.name || `ছাত্র ${studentId}`;
+  };
+
+  const getAcademicYearName = (yearId) => {
+    return academicYears?.find((y) => y.id === yearId)?.name || `বছর ${yearId}`;
+  };
+
+  const getFundName = (fundId) => {
+    return funds?.find((f) => f.id === fundId)?.name || `ফান্ড ${fundId}`;
+  };
+
+  const getFeeTypeNames = (feeTypeIds) => {
+    return feeTypeIds.map(id => feeHeads?.find(f => f.id === id)?.name || `ফি ${id}`).join(", ");
+  };
 
   // Handle student selection toggle (for Add Waiver section)
   const handleStudentToggle = (studentId) => {
@@ -502,79 +356,169 @@ const AddWaivers = () => {
   };
 
   // Generate PDF report
-  const generatePDFReport = async () => {
+  const generatePDFReport = () => {
     if (!hasViewPermission) {
       toast.error('ওয়েভার প্রতিবেদন দেখার অনুমতি নেই।');
       return;
     }
 
-    if (isWaiverLoading || isStudentLoading || isAcademicYearLoading || isFeeHeadsLoading || isFundsLoading) {
+    if (isWaiverLoading || isStudentLoading || isAcademicYearLoading || isFeeHeadsLoading || isFundsLoading || isInstituteLoading) {
       toast.error('তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন।');
       return;
     }
-    
+
     if (filteredWaivers.length === 0) {
       toast.error('নির্বাচিত ফিল্টারে কোনো ওয়েভার পাওয়া যায়নি।');
       return;
     }
 
-    try {
-      const doc = <PDFDocument
-        waivers={filteredWaivers}
-        students={students}
-        academicYears={academicYears}
-        feeHeads={feeHeads}
-        funds={funds}
-      />;
-      const blob = await pdf(doc).toBlob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `ওয়েভার_প্রতিবেদন_${new Date().toLocaleDateString('bn-BD')}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-      toast.success('প্রতিবেদন সফলভাবে ডাউনলোড হয়েছে!');
-    } catch (error) {
-      console.error('PDF generation error:', error);
-      toast.error(`প্রতিবেদন তৈরিতে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
+    if (!institute) {
+      toast.error('ইনস্টিটিউট তথ্য পাওয়া যায়নি!');
+      return;
     }
-  };
 
-  const selectStyles = {
-    control: (provided) => ({
-      ...provided,
-      background: "transparent",
-      borderColor: "#9d9087",
-      color: "#fff",
-      padding: "1px",
-      borderRadius: "0.5rem",
-      "&:hover": { borderColor: "#DB9E30" },
-    }),
-    singleValue: (provided) => ({ ...provided, color: "#441a05" }),
-    multiValue: (provided) => ({
-      ...provided,
-      background: "#DB9E30",
-      color: "#fff",
-    }),
-    multiValueLabel: (provided) => ({ ...provided, color: "#441a05" }),
-    multiValueRemove: (provided) => ({
-      ...provided,
-      color: "#441a05",
-      "&:hover": { background: "#441a05", color: "#DB9E30" },
-    }),
-    menu: (provided) => ({
-      ...provided,
-      background: "#fff",
-      color: "#441a05",
-      zIndex: 9999,
-    }),
-    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-    option: (provided, state) => ({
-      ...provided,
-      background: state.isSelected ? "#DB9E30" : "#fff",
-      color: "#441a05",
-      "&:hover": { background: "#DB9E30", color: "#441a05" },
-    }),
+    const printWindow = window.open('', '_blank');
+
+    // Group waivers into pages (assuming ~20 rows per page to fit A4 landscape)
+    const rowsPerPage = 20;
+    const waiverPages = [];
+    for (let i = 0; i < filteredWaivers.length; i += rowsPerPage) {
+      waiverPages.push(filteredWaivers.slice(i, i + rowsPerPage));
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>ওয়েভার প্রতিবেদন</title>
+        <meta charset="UTF-8">
+        <style>
+          @page { 
+            size: A4 landscape; 
+            margin: 20mm;
+          }
+          body { 
+            font-family: 'Noto Sans Bengali', Arial, sans-serif;  
+            font-size: 12px; 
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            color: #000;
+          }
+          .page-container {
+            width: 100%;
+            min-height: 190mm;
+            page-break-after: always;
+          }
+          .page-container:last-child {
+            page-break-after: auto;
+          }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 10px; 
+            margin-top: 10px;
+          }
+          th, td { 
+            border: 1px solid #000; 
+            padding: 8px; 
+            text-align: center; 
+          }
+          th { 
+            background-color: #f5f5f5; 
+            font-weight: bold; 
+            color: #000;
+            text-transform: uppercase;
+          }
+          td { 
+            color: #000; 
+          }
+          .header { 
+            text-align: center; 
+            margin-bottom: 15px; 
+            padding-bottom: 10px;
+          }
+          .institute-info {
+            margin-bottom: 10px;
+          }
+          .institute-info h1 {
+            font-size: 22px;
+            margin: 0;
+            color: #000;
+          }
+          .institute-info p {
+            font-size: 14px;
+            margin: 5px 0;
+            color: #000;
+          }
+          .title {
+            font-size: 18px;
+            color: #DB9E30;
+            margin: 10px 0;
+          }
+          .date { 
+            margin-top: 20px; 
+            text-align: right; 
+            font-size: 10px; 
+            color: #000;
+          }
+        </style>
+      </head>
+      <body>
+        ${waiverPages.map((pageWaivers, pageIndex) => `
+          <div class="page-container">
+            <div class="header">
+              <div class="institute-info">
+                <h1>${institute.institute_name || 'অজানা ইনস্টিটিউট'}</h1>
+                <p>${institute.institute_address || 'ঠিকানা উপলব্ধ নয়'}</p>
+              </div>
+              <h2 class="title">ওয়েভার প্রতিবেদন</h2>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 150px;">ছাত্র</th>
+                  <th style="width: 80px;">বৃত্তির পরিমাণ (%)</th>
+                  <th style="width: 80px;">শিক্ষাবর্ষ</th>
+                  <th style="width: 150px;">ফি প্রকার</th>
+                  <th style="width: 100px;">ফান্ড</th>
+                  <th style="width: 200px;">বর্ণনা</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${pageWaivers.map(waiver => `
+                  <tr>
+                    <td>${getStudentName(waiver.student_id)}</td>
+                    <td>${waiver.waiver_amount}%</td>
+                    <td>${getAcademicYearName(waiver.academic_year)}</td>
+                    <td>${getFeeTypeNames(waiver.fee_types)}</td>
+                    <td>${getFundName(waiver.fund_id)}</td>
+                    <td>${waiver.description || '-'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <div class="date">
+              রিপোর্ট তৈরির তারিখ: ${new Date().toLocaleDateString('bn-BD')}
+            </div>
+          </div>
+        `).join('')}
+        <script>
+          let printAttempted = false;
+          window.onbeforeprint = () => { printAttempted = true; };
+          window.onafterprint = () => { window.close(); };
+          window.addEventListener('beforeunload', (event) => {
+            if (!printAttempted) { window.close(); }
+          });
+          window.print();
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    toast.success('প্রতিবেদন সফলভাবে তৈরি হয়েছে!');
   };
 
   // View-only mode for users with only view permission
@@ -714,20 +658,6 @@ const AddWaivers = () => {
 
   return (
     <div className="py-8 w-full relative">
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          style: {
-            background: "rgba(0, 0, 0, 0.1)",
-            color: "#441a05",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-            borderRadius: "0.5rem",
-            backdropFilter: "blur(4px)",
-          },
-          success: { style: { background: "rgba(219, 158, 48, 0.1)", borderColor: "#DB9E30" } },
-          error: { style: { background: "rgba(239, 68, 68, 0.1)", borderColor: "#ef4444" } },
-        }}
-      />
       <style>
         {`
           @keyframes fadeIn {
@@ -1396,14 +1326,14 @@ const AddWaivers = () => {
               type="text"
               value={waiverListFilters.studentSearch}
               onChange={(e) => setWaiverListFilters({...waiverListFilters, studentSearch: e.target.value})}
-              className="w-full sm:w-auto bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
-              placeholder="ছাত্রের নাম বা আইডি অনুসন্ধান"
+              className="w-[200px] bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
+              placeholder="ছাত্রের নাম বা আইডি"
             />
             {/* Fee Type Filter */}
             <select
               value={waiverListFilters.feeTypeId || ""}
               onChange={(e) => setWaiverListFilters({...waiverListFilters, feeTypeId: e.target.value ? parseInt(e.target.value) : null})}
-              className="bg-transparent min-w-[150px] text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg w-full sm:w-auto"
+              className="bg-transparent min-w-[180px] text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg sm:w-auto"
             >
               <option value="">ফি প্রকার নির্বাচন</option>
               {feeTypeOptions.map((fee) => (
