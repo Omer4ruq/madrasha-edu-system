@@ -3,7 +3,6 @@ import { FaEdit, FaSpinner, FaTrash } from 'react-icons/fa';
 import { IoAdd, IoAddCircle } from 'react-icons/io5';
 import Select from 'react-select';
 import { Toaster, toast } from 'react-hot-toast';
-import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
 import { useGetStudentActiveApiQuery } from '../../redux/features/api/student/studentActiveApi';
 import { useGetStudentCurrentFeesQuery } from '../../redux/features/api/studentFeesCurrentApi/studentFeesCurrentApi';
 import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
@@ -14,174 +13,6 @@ import selectStyles from '../../utilitis/selectStyles'; // Assuming this path is
 import { useSelector } from 'react-redux'; // Import useSelector
 import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi'; // Import permission hook
 import { useGetInstituteLatestQuery } from '../../redux/features/api/institute/instituteLatestApi';
-
-// Register Noto Sans Bengali font
-try {
-  Font.register({
-    family: 'NotoSansBengali',
-    src: 'https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf',
-  });
-} catch (error) {
-  console.error('Font registration failed:', error);
-  Font.register({
-    family: 'Helvetica',
-    src: 'https://fonts.gstatic.com/s/helvetica/v13/Helvetica.ttf',
-  });
-}
-
-// PDF styles
-const styles = StyleSheet.create({
-  page: {
-    padding: 40,
-    fontFamily: 'NotoSansBengali',
-    fontSize: 10,
-    color: '#222',
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: 15,
-  },
-  schoolName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#441a05',
-  },
-  headerText: {
-    fontSize: 10,
-    marginTop: 4,
-  },
-  title: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    marginTop: 6,
-    marginBottom: 10,
-    color: '#441a05',
-    textDecoration: 'underline',
-  },
-  metaContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontSize: 9,
-    marginBottom: 8,
-  },
-  divider: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#441a05',
-    marginVertical: 6,
-  },
-  table: {
-    display: 'table',
-    width: 'auto',
-    borderStyle: 'solid',
-    borderWidth: 1,
-    borderColor: '#441a05',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#441a05',
-  },
-  tableHeader: {
-    backgroundColor: '#441a05',
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 10,
-    paddingVertical: 6,
-    paddingHorizontal: 4,
-    textAlign: 'center',
-    borderRightWidth: 1,
-    borderRightColor: '#fff',
-  },
-  tableCell: {
-    paddingVertical: 5,
-    paddingHorizontal: 4,
-    fontSize: 9,
-    borderRightWidth: 1,
-    borderRightColor: '#ddd',
-    flex: 1,
-    textAlign: 'left',
-  },
-  tableCellCenter: {
-    textAlign: 'center',
-  },
-  tableRowAlternate: {
-    backgroundColor: '#f2f2f2',
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 40,
-    right: 40,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontSize: 8,
-    color: '#555',
-  },
-});
-
-// PDF Document Component
-const PDFDocument = ({ feeRecords, filterType, feeTypeFilter, startDate, endDate, selectedStudent, institute }) => (
-  <Document>
-    <Page size="A4" orientation="landscape" style={styles.page}>
-      <View style={styles.header}>
-        <Text style={styles.schoolName}>{institute?.institute_name}</Text>
-        <Text style={styles.headerText}>{institute?.institute_address}</Text>
-        <Text style={styles.headerText}>{institute?.institute_email_address} | {institute?.institute_mobile}</Text>
-          
-        <Text style={styles.title}>
-          বোর্ডিং ফি ইতিহাস প্রতিবেদন - {filterType === 'due' ? 'বকেয়া ' : filterType === 'paid' ? 'পরিশোধিত ফি' : 'সমস্ত ফি'}
-        </Text>
-        {selectedStudent && (
-          <Text style={styles.headerText}>
-            ছাত্র: {selectedStudent.name} (রোল: {selectedStudent.roll_no || 'অজানা'})
-          </Text>
-        )}
-        {feeTypeFilter && (
-          <Text style={styles.headerText}>
-            ফি প্রকার: {feeTypeFilter}
-          </Text>
-        )}
-        <View style={styles.metaContainer}>
-          <Text>
-            তারিখ পরিসীমা: {startDate ? new Date(startDate).toLocaleDateString('bn-BD') : 'শুরু'} থেকে {endDate ? new Date(endDate).toLocaleDateString('bn-BD') : 'শেষ'}
-          </Text>
-          <Text>
-            তৈরির তারিখ: {new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
-          </Text>
-        </View>
-        <View style={styles.divider} />
-      </View>
-      <View style={styles.table}>
-        <View style={styles.tableRow}>
-          <Text style={[styles.tableHeader, { flex: 1.5 }]}>ফি প্রকার</Text>
-          <Text style={[styles.tableHeader, { flex: 1 }]}>মোট প্রদান পরিমাণ</Text>
-          <Text style={[styles.tableHeader, { flex: 1 }]}>ওয়েভার পরিমাণ</Text>
-          <Text style={[styles.tableHeader, { flex: 1 }]}>ডিসকাউন্ট পরিমাণ</Text>
-          <Text style={[styles.tableHeader, { flex: 1 }]}>স্থিতি</Text>
-          <Text style={[styles.tableHeader, { flex: 1 }]}>তৈরির তারিখ</Text>
-        </View>
-        {feeRecords.map((fee, index) => (
-          <View key={fee.id} style={[styles.tableRow, index % 2 === 1 && styles.tableRowAlternate]}>
-            <Text style={[styles.tableCell, { flex: 1.5 }]}>{fee.feetype_name}</Text>
-            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{fee.amount}</Text>
-            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{fee.waiver_amount || '0.00'}</Text>
-            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{fee.discount_amount}</Text>
-            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
-              {fee.status === 'PAID' ? 'প্রদান' : fee.status === 'PARTIAL' ? 'আংশিক' : 'অপ্রদান'}
-            </Text>
-            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
-              {fee.created_at ? new Date(fee.created_at).toLocaleDateString('bn-BD') : 'অজানা'}
-            </Text>
-          </View>
-        ))}
-      </View>
-      <View style={styles.footer} fixed>
-        <Text>প্রতিবেদনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে।</Text>
-        <Text render={({ pageNumber, totalPages }) => `পৃষ্ঠা ${pageNumber} এর ${totalPages}`} />
-      </View>
-    </Page>
-  </Document>
-);
 
 const BoardingFees = () => {
   const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
@@ -356,10 +187,15 @@ const BoardingFees = () => {
     return boardingFeeTypes;
   };
 
-  // Generate PDF report for history
-  const generateHistoryPDFReport = async () => {
+  // Generate HTML-based report for printing
+  const generateHistoryPDFReport = () => {
     if (!hasViewPermission) {
       toast.error('বোর্ডিং ফি ইতিহাস প্রতিবেদন দেখার অনুমতি নেই।');
+      return;
+    }
+    
+    if (feesDataLoading || studentLoading || academicYearsLoading || fundsLoading || waiversLoading || instituteLoading) {
+      toast.error('তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন।');
       return;
     }
     
@@ -370,36 +206,184 @@ const BoardingFees = () => {
       return;
     }
 
-    try {
-      const doc = <PDFDocument
-        feeRecords={filteredRecords}
-        filterType={historyFilterType}
-        feeTypeFilter={historyFeeTypeFilter}
-        startDate={historyDateFilter.startDate}
-        endDate={historyDateFilter.endDate}
-        selectedStudent={selectedStudent}
-        institute={institute}
-      />;
-      
-      const blob = await pdf(doc).toBlob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      
-      const filterName = historyFilterType === 'due' ? 'বকেয়া' : historyFilterType === 'paid' ? 'পরিশোধিত' : 'সমস্ত';
-      const feeTypeFilterName = historyFeeTypeFilter ? `_${historyFeeTypeFilter}` : '';
-      const dateRange = historyDateFilterType && historyDateFilter.startDate && historyDateFilter.endDate 
-        ? `_${historyDateFilter.startDate}_থেকে_${historyDateFilter.endDate}` 
-        : '';
-      
-      link.download = `বোর্ডিং_ফি_ইতিহাস_${filterName}${feeTypeFilterName}_${selectedStudent?.name || 'সব_ছাত্র'}${dateRange}_${new Date().toLocaleDateString('bn-BD')}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-      toast.success('বোর্ডিং ফি প্রতিবেদন সফলভাবে ডাউনলোড হয়েছে!');
-    } catch (error) {
-      console.error('PDF generation error:', error);
-      toast.error(`প্রতিবেদন তৈরিতে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
+    if (!institute) {
+      toast.error('ইনস্টিটিউট তথ্য পাওয়া যায়নি!');
+      return;
     }
+
+    const printWindow = window.open('', '_blank');
+
+    // Group fee records into pages (assuming ~20 rows per page to fit A4 landscape)
+    const rowsPerPage = 20;
+    const feePages = [];
+    for (let i = 0; i < filteredRecords.length; i += rowsPerPage) {
+      feePages.push(filteredRecords.slice(i, i + rowsPerPage));
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>বোর্ডিং ফি ইতিহাস প্রতিবেদন</title>
+        <meta charset="UTF-8">
+        <style>
+          @page { 
+            size: A4 landscape; 
+            margin: 20mm;
+          }
+          body { 
+            font-family: 'Noto Sans Bengali', Arial, sans-serif;  
+            font-size: 12px; 
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            color: #000;
+          }
+          .page-container {
+            width: 100%;
+            min-height: 190mm;
+            page-break-after: always;
+          }
+          .page-container:last-child {
+            page-break-after: auto;
+          }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 10px; 
+            margin-top: 10px;
+          }
+          th, td { 
+            border: 1px solid #000; 
+            padding: 8px; 
+            text-align: center; 
+          }
+          th { 
+            background-color: #f5f5f5; 
+            font-weight: bold; 
+            color: #000;
+            text-transform: uppercase;
+          }
+          td { 
+            color: #000; 
+          }
+          .header { 
+            text-align: center; 
+            margin-bottom: 15px; 
+            padding-bottom: 10px;
+          }
+          .institute-info {
+            margin-bottom: 10px;
+          }
+          .institute-info h1 {
+            font-size: 22px;
+            margin: 0;
+            color: #000;
+          }
+          .institute-info p {
+            font-size: 14px;
+            margin: 5px 0;
+            color: #000;
+          }
+          .title {
+            font-size: 18px;
+            color: #DB9E30;
+            margin: 10px 0;
+          }
+          .meta-container {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            margin-bottom: 8px;
+          }
+          .date { 
+            margin-top: 20px; 
+            text-align: right; 
+            font-size: 10px; 
+            color: #000;
+          }
+          .footer {
+            position: absolute;
+            bottom: 20px;
+            left: 40px;
+            right: 40px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 8px;
+            color: #555;
+          }
+        </style>
+      </head>
+      <body>
+        ${feePages.map((pageItems, pageIndex) => `
+          <div class="page-container">
+            <div class="header">
+              <div class="institute-info">
+                <h1>${institute.institute_name || 'অজানা ইনস্টিটিউট'}</h1>
+                <p>${institute.institute_address || 'ঠিকানা উপলব্ধ নয়'}</p>
+              </div>
+              <h2 class="title">বোর্ডিং ফি ইতিহাস প্রতিবেদন - ${historyFilterType === 'due' ? 'বকেয়া' : historyFilterType === 'paid' ? 'পরিশোধিত ফি' : 'সমস্ত ফি'}</h2>
+              <div class="meta-container">
+                <span>
+                  ${selectedStudent ? `ছাত্র: ${selectedStudent.name} (রোল: ${selectedStudent.roll_no || 'অজানা'})` : 'সকল ছাত্র'}
+                  ${historyFeeTypeFilter ? ` | ফি প্রকার: ${historyFeeTypeFilter}` : ''}
+                </span>
+                <span>তৈরির তারিখ: ${new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+              </div>
+              <div class="meta-container">
+                <span>তারিখ পরিসীমা: ${historyDateFilter.startDate ? new Date(historyDateFilter.startDate).toLocaleDateString('bn-BD') : 'শুরু'} থেকে ${historyDateFilter.endDate ? new Date(historyDateFilter.endDate).toLocaleDateString('bn-BD') : 'শেষ'}</span>
+                <span></span>
+              </div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 150px;">ফি প্রকার</th>
+                  <th style="width: 100px;">মোট প্রদান পরিমাণ</th>
+                  <th style="width: 100px;">ওয়েভার পরিমাণ</th>
+                  <th style="width: 100px;">ডিসকাউন্ট পরিমাণ</th>
+                  <th style="width: 80px;">স্থিতি</th>
+                  <th style="width: 100px;">তৈরির তারিখ</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${pageItems.map((fee, index) => `
+                  <tr style="${index % 2 === 1 ? 'background-color: #f2f2f2;' : ''}">
+                    <td>${fee.feetype_name}</td>
+                    <td>${fee.amount}</td>
+                    <td>${fee.waiver_amount || '0.00'}</td>
+                    <td>${fee.discount_amount}</td>
+                    <td>${fee.status === 'PAID' ? 'প্রদান' : fee.status === 'PARTIAL' ? 'আংশিক' : 'অপ্রদান'}</td>
+                    <td>${fee.created_at ? new Date(fee.created_at).toLocaleDateString('bn-BD') : 'অজানা'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <div class="date">
+              রিপোর্ট তৈরির তারিখ: ${new Date().toLocaleDateString('bn-BD')}
+            </div>
+            <div class="footer">
+              <span>প্রতিবেদনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে।</span>
+              <span>পৃষ্ঠা ${pageIndex + 1} এর ${feePages.length}</span>
+            </div>
+          </div>
+        `).join('')}
+        <script>
+          let printAttempted = false;
+          window.onbeforeprint = () => { printAttempted = true; };
+          window.onafterprint = () => { window.close(); };
+          window.addEventListener('beforeunload', (event) => {
+            if (!printAttempted) { window.close(); }
+          });
+          window.print();
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    toast.success('বোর্ডিং ফি প্রতিবেদন সফলভাবে তৈরি হয়েছে!');
   };
 
   // Handle history date filter change
@@ -1189,7 +1173,7 @@ const BoardingFees = () => {
                         onClick={generateHistoryPDFReport}
                         className="report-button"
                         disabled={!historyDateFilter.startDate || !historyDateFilter.endDate}
-                        title="বোর্ডিং ফি প্রতিবেদন ডাউনলোড করুন"
+                        title="বোর্ডিং ফি প্রতিবেদন প্রিন্ট করুন"
                       >
                         রিপোর্ট
                       </button>
@@ -1204,7 +1188,7 @@ const BoardingFees = () => {
                   <button
                     onClick={generateHistoryPDFReport}
                     className="report-button"
-                    title="বোর্ডিং ফি প্রতিবেদন ডাউনলোড করুন"
+                    title="বোর্ডিং ফি প্রতিবেদন প্রিন্ট করুন"
                   >
                     রিপোর্ট
                   </button>

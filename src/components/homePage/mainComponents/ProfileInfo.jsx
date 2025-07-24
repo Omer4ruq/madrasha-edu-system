@@ -4,11 +4,10 @@ import { FaUserEdit } from 'react-icons/fa';
 
 export default function ProfileInfo() {
   const {
-    user,
-    role,
-    profile: details,
-    username,
+    user, role, profile, token, refresh_token, group_id, group_name, role_id, username
   } = useSelector((state) => state.auth);
+
+  console.log(user, role, profile, token, refresh_token, group_id, group_name, role_id, username)
 
   const profileInfo = [
     {
@@ -21,15 +20,15 @@ export default function ProfileInfo() {
     },
     {
       title: 'পদবী',
-      data: details?.designation || 'নির্ধারিত নয়',
+      data: profile?.designation || 'নির্ধারিত নয়',
     },
     {
       title: 'কর্মের ধরণ',
-      data: details?.job_nature || 'নির্ধারিত নয়',
+      data: profile?.job_nature || 'নির্ধারিত নয়',
     },
     {
       title: 'মোবাইল নম্বর',
-      data: details?.phone_number || 'নির্ধারিত নয়',
+      data: profile?.phone_number || 'নির্ধারিত নয়',
     },
   ];
 
