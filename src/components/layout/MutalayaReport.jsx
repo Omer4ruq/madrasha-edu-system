@@ -46,6 +46,7 @@ const MutalayaReport = () => {
   const [endDate, setEndDate] = useState("");
   const [reportData, setReportData] = useState([]);
   const [dynamicReportData, setDynamicReportData] = useState([]);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Fetch APIs
   const { data: classConfigs, isLoading: classConfigsLoading } =
@@ -481,6 +482,12 @@ const MutalayaReport = () => {
             background-color: #9D9087;
             cursor: not-allowed;
           }
+          .btn-glow {
+            box-shadow: 0 0 15px rgba(219, 158, 48, 0.3);
+          }
+          .btn-glow:hover {
+            box-shadow: 0 0 20px rgba(219, 158, 48, 0.5);
+          }
           ::-webkit-scrollbar {
             width: 8px;
           }
@@ -538,6 +545,8 @@ const MutalayaReport = () => {
             placeholder="শেষের তারিখ"
           />
         </div>
+        
+        {/* Enhanced PDF Download Button */}
         <button
           onClick={downloadPDF}
           className="download-btn"
@@ -602,7 +611,7 @@ const MutalayaReport = () => {
                     rowSpan="3"
                     className="border border-black px-2 py-1 text-[8px]"
                   >
-                    বিষয়
+                    বিষয়
                   </th>
                   {generateDynamicDates(startDate, endDate).map((d, i) => (
                     <th
@@ -660,6 +669,14 @@ const MutalayaReport = () => {
                         <td
                           rowSpan={student.subjects.length}
                           className="border border-black align-top px-1 text-center text-[8px]"
+                          style={{ 
+                            transform: 'rotate(180deg)',
+                            writingMode: 'vertical-rl', 
+                            textOrientation: 'mixed',
+                            width: '25px',
+                            minHeight: '80px',
+                            lineHeight: '1.2'
+                          }}
                         >
                           {student.name}
                         </td>

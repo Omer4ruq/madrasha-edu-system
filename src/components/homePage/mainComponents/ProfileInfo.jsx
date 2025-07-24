@@ -7,7 +7,9 @@ export default function ProfileInfo() {
     user, role, profile, token, refresh_token, group_id, group_name, role_id, username
   } = useSelector((state) => state.auth);
 
-  console.log(user, role, profile, token, refresh_token, group_id, group_name, role_id, username)
+
+  console.log("user", user)
+  console.log("role", role)
 
   const profileInfo = [
     {
