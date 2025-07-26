@@ -6,7 +6,9 @@ import { logout } from "../../redux/features/slice/authSlice";
 export default function ProfileMenu() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user } = useSelector((state) => state.auth);
+  const { user, profile } = useSelector((state) => state.auth);
+
+  console.log(profile);
 
   const handleLogout = () => {
     const currentPath = window.location.pathname;
@@ -20,26 +22,29 @@ export default function ProfileMenu() {
   if (!user) return null;
 
   const linkedMenu = [
-    {
-      name: "প্রোফাইল",
-      link: "/profile"
-    },
-    {
-      name: "সেটিংস",
-      link: "/settings"
-    },
+    // {
+    //   name: "প্রোফাইল",
+    // },
+    // {
+    //   name: "সেটিংস",
+    //   link: "/settings"
+    // },
     {
       name: "লগআউট",
-      action: handleLogout
-    }
+      action: handleLogout,
+    },
   ];
 
   return (
     <div className="absolute z-50 bg-[#DB9E30] shadow rounded top-9 md:top-10 right-0 w-32 md:w-40 text-[#441a05] font-medium text-start tracking-wide cursor-pointer">
       {linkedMenu.map((item, index) =>
         item.link ? (
-          <Link key={index} to={item.link}>
-            <p className={`px-3 md:px-4 py-[6px] hover:bg-bgGray ${index !== 0 ? "border-t-2" : ""}`}>
+          <Link key={index} to={item?.link}>
+            <p
+              className={`px-3 md:px-4 py-[6px] hover:bg-bgGray ${
+                index !== 0 ? "border-t-2" : ""
+              }`}
+            >
               {item.name}
             </p>
           </Link>
@@ -47,7 +52,9 @@ export default function ProfileMenu() {
           <p
             key={index}
             onClick={item.action}
-            className={`px-3 md:px-4 py-[6px] hover:bg-bgGray ${index !== 0 ? "border-t-2" : ""}`}
+            className={`px-3 md:px-4 py-[6px] hover:bg-bgGray ${
+              index !== 0 ? "border-t-2" : ""
+            }`}
           >
             {item.name}
           </p>

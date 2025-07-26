@@ -9,168 +9,8 @@ import { useGetFeesNamesQuery } from '../../redux/features/api/fees-name/feesNam
 import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
 import { useCreateDeleteFeeMutation, useGetDeleteFeesQuery, useUpdateDeleteFeeMutation, useDeleteFeeMutation } from '../../redux/features/api/deleteFees/deleteFeesApi';
 import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi';
-import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
-
-// Register Noto Sans Bengali font (Used for PDF generation)
-try {
-  Font.register({
-    family: 'NotoSansBengali',
-    src: 'https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf',
-  });
-} catch (error) {
-  console.error('Font registration failed:', error);
-  // Fallback font registration if Bengali font fails
-  Font.register({
-    family: 'Helvetica',
-    src: 'https://fonts.gstatic.com/s/helvetica/v13/Helvetica.ttf',
-  });
-}
-
-// PDF styles
-const styles = StyleSheet.create({
-  page: {
-    padding: 40,
-    fontFamily: 'NotoSansBengali',
-    fontSize: 10,
-    color: '#222',
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: 15,
-  },
-  schoolName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#441a05',
-  },
-  headerText: {
-    fontSize: 10,
-    marginTop: 4,
-  },
-  title: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    marginTop: 6,
-    marginBottom: 10,
-    color: '#441a05',
-    textDecoration: 'underline',
-  },
-  metaContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontSize: 9,
-    marginBottom: 8,
-  },
-  divider: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#441a05',
-    marginVertical: 6,
-  },
-  table: {
-    display: 'table',
-    width: 'auto',
-    borderStyle: 'solid',
-    borderWidth: 1,
-    borderColor: '#441a05',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#441a05',
-  },
-  tableHeader: {
-    backgroundColor: '#441a05',
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 10,
-    paddingVertical: 6,
-    paddingHorizontal: 4,
-    textAlign: 'center',
-    borderRightWidth: 1,
-    borderRightColor: '#fff',
-  },
-  tableCell: {
-    paddingVertical: 5,
-    paddingHorizontal: 4,
-    fontSize: 9,
-    borderRightWidth: 1,
-    borderRightColor: '#ddd',
-    flex: 1,
-    textAlign: 'left',
-  },
-  tableCellCenter: {
-    textAlign: 'center',
-  },
-  tableRowAlternate: {
-    backgroundColor: '#f2f2f2',
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 40,
-    right: 40,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontSize: 8,
-    color: '#555',
-  },
-});
-
-// PDF Document Component for Deleted Fees
-const PDFDocument = ({ deletedFees, studentsData, feesData, academicYearsData }) => {
-  const getStudentDetails = (studentId) => {
-    return studentsData?.find(s => s.id === studentId);
-  };
-
-  const getFeeNames = (feeIds) => {
-    return feeIds.map(id => feesData?.find(f => f.id === id)?.fees_title || 'অজানা').join(', ');
-  };
-
-  const getAcademicYearName = (yearId) => {
-    return academicYearsData?.find(y => y.id === yearId)?.name || 'অজানা';
-  };
-
-  return (
-    <Document>
-      <Page size="A4" orientation="portrait" style={styles.page}>
-        <View style={styles.header}>
-          <Text style={styles.schoolName}>আদর্শ বিদ্যালয়</Text>
-          <Text style={styles.headerText}>ঢাকা, বাংলাদেশ</Text>
-          <Text style={styles.title}>মুছে ফেলা ফি প্রতিবেদন</Text>
-          <View style={styles.metaContainer}>
-            <Text style={styles.metaText}>
-              তৈরির তারিখ: {new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
-            </Text>
-          </View>
-          <View style={styles.divider} />
-        </View>
-        <View style={styles.table}>
-          <View style={styles.tableRow}>
-            <Text style={[styles.tableHeader, { flex: 1.5 }]}>ছাত্রের নাম (ইউজার আইডি)</Text>
-            <Text style={[styles.tableHeader, { flex: 2 }]}>ফি প্রকার</Text>
-            <Text style={[styles.tableHeader, { flex: 1 }]}>একাডেমিক বছর</Text>
-          </View>
-          {deletedFees.map((fee, index) => {
-            const student = getStudentDetails(fee.student_id);
-            return (
-              <View key={fee.id} style={[styles.tableRow, index % 2 === 1 && styles.tableRowAlternate]}>
-                <Text style={[styles.tableCell, { flex: 1.5 }]}>
-                  {(student ? `${student.name} (${student.user_id})` : `ID: ${fee.student_id}`)}
-                </Text>
-                <Text style={[styles.tableCell, { flex: 2 }]}>{getFeeNames(fee.feetype_id)}</Text>
-                <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{getAcademicYearName(fee.academic_year)}</Text>
-              </View>
-            );
-          })}
-        </View>
-        <View style={styles.footer} fixed>
-          <Text>প্রতিবেদনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে।</Text>
-          <Text render={({ pageNumber, totalPages }) => `পৃষ্ঠা ${pageNumber} এর ${totalPages}`} />
-        </View>
-      </Page>
-    </Document>
-  );
-};
+import { useGetInstituteLatestQuery } from '../../redux/features/api/institute/instituteLatestApi';
+import selectStyles from '../../utilitis/selectStyles';
 
 const DeleteStudentFees = () => {
   const { group_id } = useSelector((state) => state.auth);
@@ -199,6 +39,7 @@ const DeleteStudentFees = () => {
   const { data: feesData, isLoading: feesLoading } = useGetFeesNamesQuery();
   const { data: academicYearsData, isLoading: academicYearsLoading } = useGetAcademicYearApiQuery();
   const { data: deletedFeesData, isLoading: deletedFeesLoading, refetch: refetchDeletedFees } = useGetDeleteFeesQuery();
+  const { data: institute, isLoading: instituteLoading } = useGetInstituteLatestQuery();
   const [createDeleteFee, { isLoading: createLoading }] = useCreateDeleteFeeMutation();
   const [updateDeleteFee, { isLoading: updateLoading }] = useUpdateDeleteFeeMutation();
   const [deleteFee, { isLoading: deleteLoading }] = useDeleteFeeMutation();
@@ -220,18 +61,6 @@ const DeleteStudentFees = () => {
     label: year.name || `Year ${year.id}`
   })) || [];
 
-  const selectStyles = {
-    control: (base) => ({...base, background: 'transparent', borderColor: '#9d9087', borderRadius: '8px', paddingLeft: '0.75rem', padding: '3px', color: '#441a05', fontFamily: "'Noto Sans Bengali', sans-serif", fontSize: '16px', transition: 'all 0.3s ease', '&:hover': { borderColor: '#441a05' }, '&:focus': { outline: 'none', boxShadow: 'none' }, }),
-    placeholder: (base) => ({...base, color: '#441a05', opacity: 0.7, fontFamily: "'Noto Sans Bengali', sans-serif", fontSize: '16px',}),
-    singleValue: (base) => ({...base, color: '#441a05', fontFamily: "'Noto Sans Bengali', sans-serif", fontSize: '16px',}),
-    input: (base) => ({...base, color: '#441a05', fontFamily: "'Noto Sans Bengali', sans-serif", fontSize: '16px',}),
-    menu: (base) => ({...base, backgroundColor: 'rgba(0, 0, 0, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '8px', zIndex: 9999, marginTop: '4px',}),
-    menuPortal: (base) => ({...base, zIndex: 9999,}),
-    option: (base, { isFocused, isSelected }) => ({...base, color: '#441a05', fontFamily: "'Noto Sans Bengali', sans-serif", fontSize: '16px', backgroundColor: isSelected ? '#DB9E30' : isFocused ? 'rgba(255, 255, 255, 0.1)' : 'transparent', cursor: 'pointer', '&:active': { backgroundColor: '#DB9E30' },}),
-    multiValue: (base) => ({...base, backgroundColor: '#DB9E30', borderRadius: '4px',}),
-    multiValueLabel: (base) => ({...base, color: '#441a05', fontFamily: "'Noto Sans Bengali', sans-serif", fontSize: '14px',}),
-    multiValueRemove: (base) => ({...base, color: '#441a05', '&:hover': {backgroundColor: '#441a05', color: 'white',},}),
-  };
 
   const validateForm = () => {
     if (!selectedStudent) { toast.error('অনুগ্রহ করে একজন ছাত্র নির্বাচন করুন'); return false; }
@@ -306,13 +135,14 @@ const DeleteStudentFees = () => {
   const filteredDeletedFees = selectedStudent ? deletedFeesData?.filter(fee => fee.student_id === selectedStudent.value) : deletedFeesData || [];
   const studentDetails = selectedStudent ? studentsData?.find(student => student.id === selectedStudent.value) : null;
 
-  const generatePDFReport = async () => {
+  // Generate HTML-based report for printing
+  const generatePDFReport = () => {
     if (!hasViewPermission) {
       toast.error('মুছে ফেলা ফি প্রতিবেদন দেখার অনুমতি নেই।');
       return;
     }
 
-    if (deletedFeesLoading || studentsLoading || academicYearsLoading || feesLoading) {
+    if (deletedFeesLoading || studentsLoading || academicYearsLoading || feesLoading || instituteLoading) {
       toast.error('তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন।');
       return;
     }
@@ -322,25 +152,184 @@ const DeleteStudentFees = () => {
       return;
     }
 
-    try {
-      const doc = <PDFDocument 
-        deletedFees={filteredDeletedFees} 
-        studentsData={studentsData} 
-        feesData={feesData} 
-        academicYearsData={academicYearsData} 
-      />;
-      const blob = await pdf(doc).toBlob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `মুছে_ফেলা_ফি_প্রতিবেদন_${new Date().toLocaleDateString('bn-BD')}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-      toast.success('প্রতিবেদন সফলভাবে ডাউনলোড হয়েছে!');
-    } catch (error) {
-      console.error('PDF generation error:', error);
-      toast.error(`প্রতিবেদন তৈরিতে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
+    if (!institute) {
+      toast.error('ইনস্টিটিউট তথ্য পাওয়া যায়নি!');
+      return;
     }
+
+    const printWindow = window.open('', '_blank');
+
+    // Group deleted fees into pages (assuming ~20 rows per page to fit A4 portrait)
+    const rowsPerPage = 20;
+    const feePages = [];
+    for (let i = 0; i < filteredDeletedFees.length; i += rowsPerPage) {
+      feePages.push(filteredDeletedFees.slice(i, i + rowsPerPage));
+    }
+
+    const getStudentDetails = (studentId) => {
+      const student = studentsData?.find(s => s.id === studentId);
+      return student ? `${student.name} (${student.user_id})` : `ID: ${studentId}`;
+    };
+
+    const getFeeNames = (feeIds) => {
+      return feeIds.map(id => feesData?.find(f => f.id === id)?.fees_title || 'অজানা').join(', ');
+    };
+
+    const getAcademicYearName = (yearId) => {
+      return academicYearsData?.find(y => y.id === yearId)?.name || 'অজানা';
+    };
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>মুছে ফেলা ফি প্রতিবেদন</title>
+        <meta charset="UTF-8">
+        <style>
+          @page { 
+            size: A4 portrait; 
+            margin: 20mm;
+          }
+          body { 
+            font-family: 'Noto Sans Bengali', Arial, sans-serif;  
+            font-size: 12px; 
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            color: #000;
+          }
+          .page-container {
+            width: 100%;
+            min-height: 257mm;
+            page-break-after: always;
+          }
+          .page-container:last-child {
+            page-break-after: auto;
+          }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 10px; 
+            margin-top: 10px;
+          }
+          th, td { 
+            border: 1px solid #000; 
+            padding: 8px; 
+            text-align: center; 
+          }
+          th { 
+            background-color: #f5f5f5; 
+            font-weight: bold; 
+            color: #000;
+            text-transform: uppercase;
+          }
+          td { 
+            color: #000; 
+          }
+          .header { 
+            text-align: center; 
+            margin-bottom: 15px; 
+            padding-bottom: 10px;
+          }
+          .institute-info {
+            margin-bottom: 10px;
+          }
+          .institute-info h1 {
+            font-size: 22px;
+            margin: 0;
+            color: #000;
+          }
+          .institute-info p {
+            font-size: 14px;
+            margin: 5px 0;
+            color: #000;
+          }
+          .title {
+            font-size: 18px;
+            color: #DB9E30;
+            margin: 10px 0;
+          }
+          .meta-container {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            margin-bottom: 8px;
+          }
+          .date { 
+            margin-top: 20px; 
+            text-align: right; 
+            font-size: 10px; 
+            color: #000;
+          }
+          .footer {
+            position: absolute;
+            bottom: 20px;
+            left: 40px;
+            right: 40px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 8px;
+            color: #555;
+          }
+        </style>
+      </head>
+      <body>
+        ${feePages.map((pageItems, pageIndex) => `
+          <div class="page-container">
+            <div class="header">
+              <div class="institute-info">
+                <h1>${institute.institute_name || 'অজানা ইনস্টিটিউট'}</h1>
+                <p>${institute.institute_address || 'ঠিকানা উপলব্ধ নয়'}</p>
+              </div>
+              <h2 class="title">মুছে ফেলা ফি প্রতিবেদন</h2>
+              <div class="meta-container">
+                <span>নির্বাচিত ছাত্র: ${selectedStudent ? getStudentDetails(selectedStudent.value) : 'সকল ছাত্র'}</span>
+                <span>তৈরির তারিখ: ${new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+              </div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 200px;">ছাত্রের নাম (ইউজার আইডি)</th>
+                  <th style="width: 250px;">ফি প্রকার</th>
+                  <th style="width: 100px;">একাডেমিক বছর</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${pageItems.map((fee, index) => `
+                  <tr style="${index % 2 === 1 ? 'background-color: #f2f2f2;' : ''}">
+                    <td>${getStudentDetails(fee.student_id)}</td>
+                    <td>${getFeeNames(fee.feetype_id)}</td>
+                    <td>${getAcademicYearName(fee.academic_year)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <div class="date">
+              রিপোর্ট তৈরির তারিখ: ${new Date().toLocaleDateString('bn-BD')}
+            </div>
+            <div class="footer">
+              <span>প্রতিবেদনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে।</span>
+              <span>পৃষ্ঠা ${pageIndex + 1} এর ${feePages.length}</span>
+            </div>
+          </div>
+        `).join('')}
+        <script>
+          let printAttempted = false;
+          window.onbeforeprint = () => { printAttempted = true; };
+          window.onafterprint = () => { window.close(); };
+          window.addEventListener('beforeunload', (event) => {
+            if (!printAttempted) { window.close(); }
+          });
+          window.print();
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    toast.success('প্রতিবেদন সফলভাবে তৈরি হয়েছে!');
   };
 
   // --- Start of Permission-based Rendering ---
@@ -355,7 +344,6 @@ const DeleteStudentFees = () => {
 
   return (
     <div className="py-8">
-      <Toaster position="top-right" reverseOrder={false} />
       <style>{`/* Original styles */`}</style>
       <div className="">
         {hasAddPermission && ( // Permission Check
@@ -394,7 +382,7 @@ const DeleteStudentFees = () => {
             <button
               onClick={generatePDFReport}
               className="report-button px-4 py-2 bg-[#441a05] text-white rounded-lg hover:bg-[#5a2e0a] transition-colors"
-              title="Download Deleted Fees Report"
+              title="প্রতিবেদন প্রিন্ট করুন"
             >
               <FaFilePdf className="inline-block mr-2"/> রিপোর্ট
             </button>

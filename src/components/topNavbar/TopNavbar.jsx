@@ -84,12 +84,12 @@ export default function TopNavbar({ setShowSidebar }) {
           <div className="animate-scaleIn" style={{ animationDelay: "0.1s" }}>
             {/* <LangSwitcher /> */}
           </div>
-          <div className="animate-scaleIn" style={{ animationDelay: "0.2s" }}>
+          {/* <div className="animate-scaleIn" style={{ animationDelay: "0.2s" }}>
             <Mail />
           </div>
           <div className="animate-scaleIn" style={{ animationDelay: "0.3s" }}>
             <Notifications />
-          </div>
+          </div> */}
           <div className="animate-scaleIn" style={{ animationDelay: "0.4s" }}>
             <Profile />
           </div>

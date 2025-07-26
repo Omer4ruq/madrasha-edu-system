@@ -3,6 +3,7 @@ const mainMenu = [
     id: "01",
     title: "প্রোফাইল",
     icon: false,
+    link: "/profile",
   },
   {
     id: "02",
@@ -202,46 +203,51 @@ const mainMenu = [
       },
       {
         id: "05/11",
+        title: "নোটিশ",
+        link: "/talimat/notice",
+      },
+      {
+        id: "05/12",
         title: "রুটিন",
         link: "/talimat/routine",
       },
       {
-        id: "05/12",
+        id: "05/13",
         title: "পরীক্ষার রুটিন",
         link: "/talimat/exam-routine",
       },
       {
-        id: "05/13",
+        id: "05/14",
         title: "ছাত্রের উপস্থিতি",
         link: "/talimat/student-attendance",
       },
       {
-        id: "05/14",
+        id: "05/15",
         title: "প্রত্যয়ন পত্র",
         link: "/talimat/testimonial",
       },
       {
-        id: "05/15",
+        id: "05/16",
         title: "রেজাল্ট",
         link: "/talimat/result",
         children: [
           {
-            id: "05/15/01",
+            id: "05/16/01",
             title: "ফলাফল পত্র",
             link: "/talimat/result",
           },
           {
-            id: "05/15/02",
+            id: "05/16/02",
             title: "নম্বরপত্র",
             link: "/talimat/result/mark-sheet",
           },
           {
-            id: "05/15/03",
+            id: "05/16/03",
             title: "ব্যক্তিগত নম্বরপত্র",
             link: "/talimat/result/personal-mark-sheet",
           },
           {
-            id: "05/15/04",
+            id: "05/16/04",
             title: "মেধা স্থান",
             link: "/talimat/result/merit-list",
           },

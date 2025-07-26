@@ -69,6 +69,7 @@ import { cleanReportTypeApi } from "./features/api/clean/cleanReportTypeApi";
 import { roleTypesApi } from "./features/api/roleType/roleTypesApi";
 import authReducer from './features/slice/authSlice';
 import { gradeRuleApi } from "./features/api/result/gradeRuleApi";
+import { noticeApi } from "./features/api/notice/noticeApi";
 
 export const store = configureStore({
   reducer: {
@@ -146,6 +147,7 @@ export const store = configureStore({
     [roleTypesApi.reducerPath]: roleTypesApi.reducer,
     [roleTypesApi.reducerPath]: roleTypesApi.reducer,
     [gradeRuleApi.reducerPath]: gradeRuleApi.reducer,
+    [noticeApi.reducerPath]: noticeApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -217,6 +219,7 @@ export const store = configureStore({
       .concat(cleanReportTypeApi.middleware)
       .concat(roleTypesApi.middleware)
       .concat(gradeRuleApi.middleware)
+      .concat(noticeApi.middleware)
 });
 
 // Enable refetchOnFocus/refetchOnReconnect behaviors

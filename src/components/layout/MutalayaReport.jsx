@@ -1,13 +1,44 @@
 import React, { useState, useEffect } from "react";
-import ReactDOM from "react-dom/client";
+import Select from "react-select";
 import { Toaster, toast } from "react-hot-toast";
-import { FaSpinner, FaDownload, FaFilePdf } from "react-icons/fa";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
-import { saveAs } from "file-saver";
+import { FaSpinner, FaDownload } from "react-icons/fa";
 import { useGetclassConfigApiQuery } from "../../redux/features/api/class/classConfigApi";
 import { useGetStudentActiveByClassQuery } from "../../redux/features/api/student/studentActiveApi";
 import { useGetClassSubjectsByClassIdQuery } from "../../redux/features/api/class-subjects/classSubjectsApi";
+import { useGetInstituteLatestQuery } from "../../redux/features/api/institute/instituteLatestApi";
+import selectStyles from "../../utilitis/selectStyles";
+
+// Simulate marks data (replace with actual marks API when available)
+const simulateMarks = (studentId) => {
+  return []; // Marks data not used in the report
+};
+
+// Generate dynamic dates based on date range
+const generateDynamicDates = (startDate, endDate) => {
+  if (!startDate || !endDate) return [];
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const dates = [];
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const bnDate = d.toLocaleDateString("bn-BD", { day: "numeric" });
+    const bnDay = d.toLocaleDateString("bn-BD", { weekday: "long" });
+    dates.push({ day: bnDay, date: bnDate });
+  }
+  return dates;
+};
+
+// Simulate attendance data
+const simulateAttendance = (studentId, subjectName, dynamicDates) => {
+  const attendance = {};
+  dynamicDates.forEach((d) => {
+    attendance[d.date] = {
+      sobok:
+        Math.random() > 0.3 ? "✓" : Math.floor(Math.random() * 10).toString(),
+      mutalaya: Math.random() > 0.5 ? "✓" : Math.random() > 0.7 ? "১/২" : "",
+    };
+  });
+  return attendance;
+};
 
 const MutalayaReport = () => {
   const [selectedClassConfig, setSelectedClassConfig] = useState("");
@@ -28,19 +59,13 @@ const MutalayaReport = () => {
     useGetClassSubjectsByClassIdQuery(selectedClassConfig, {
       skip: !selectedClassConfig,
     });
+  const {
+    data: institute,
+    isLoading: instituteLoading,
+    error: instituteError,
+  } = useGetInstituteLatestQuery();
 
-  // Simulate marks data (replace with actual marks API when available)
-  const simulateMarks = (studentId) => {
-    const mockMarks = subjects?.map((subject) => ({
-      subject: subject.name,
-      obtained: Math.floor(Math.random() * 100),
-      maxMark: 100,
-      examDate: new Date(startDate || "2025-07-01").toLocaleDateString("bn-BD"),
-    }));
-    return mockMarks;
-  };
-
-  // Generate report data
+  // Generate report data (for compatibility, though not used in primary layout)
   useEffect(() => {
     if (students && subjects && selectedClassConfig && startDate && endDate) {
       const data = students.map((student) => {
@@ -62,374 +87,328 @@ const MutalayaReport = () => {
     }
   }, [students, subjects, selectedClassConfig, startDate, endDate]);
 
-  // Generate dynamic dates based on date range (skip Fridays)
-  const generateDynamicDates = () => {
-    if (!startDate || !endDate) return [];
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const dates = [];
-    
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      // Skip Friday (day 5 in JavaScript Date.getDay() where Sunday = 0)
-      if (d.getDay() !== 5) {
-        const bnDate = d.toLocaleDateString("bn-BD", { day: "numeric" });
-        const bnDay = d.toLocaleDateString("bn-BD", { weekday: "long" });
-        dates.push({ day: bnDay, date: bnDate });
-      }
-    }
-    return dates;
-  };
-
-  // Simulate attendance data (keeping empty for PDF)
-  const simulateAttendance = (studentId, subjectName) => {
-    const dynamicDates = generateDynamicDates();
-    const attendance = {};
-    dynamicDates.forEach((d) => {
-      attendance[d.date] = {
-        sobok: "", // Keep empty
-        mutalaya: "", // Keep empty
-      };
-    });
-    return attendance;
-  };
-
   // Generate dynamic report data for primary layout
   useEffect(() => {
     if (students && subjects && selectedClassConfig && startDate && endDate) {
+      const dynamicDates = generateDynamicDates(startDate, endDate);
       const dynamicData = students.map((student) => ({
         name: student.name,
         roll_no: student.roll_no || student.username,
         subjects: subjects.map((subject) => ({
           name: subject.name,
-          attendance: simulateAttendance(student.id, subject.name),
+          attendance: simulateAttendance(
+            student.id,
+            subject.name,
+            dynamicDates
+          ),
         })),
       }));
       setDynamicReportData(dynamicData);
     }
   }, [students, subjects, selectedClassConfig, startDate, endDate]);
 
-  // Enhanced PDF generation using print window approach (like ExamRoutineTable)
-  const generateMutalayaPDF = () => {
-    if (!selectedClassConfig || !startDate || !endDate) {
-      toast.error("ক্লাস, শুরুর তারিখ এবং শেষের তারিখ নির্বাচন করুন");
+  // Generate HTML-based report for printing
+  const downloadPDF = () => {
+    if (
+      !selectedClassConfig ||
+      !startDate ||
+      !endDate ||
+      dynamicReportData.length === 0
+    ) {
+      toast.error("দয়া করে ক্লাস এবং তারিখের রেঞ্জ নির্বাচন করুন।");
       return;
     }
 
-    if (dynamicReportData.length === 0) {
-      toast.error("রিপোর্ট ডেটা খুঁজে পাওয়া যায়নি!");
+    if (
+      classConfigsLoading ||
+      studentsLoading ||
+      subjectsLoading ||
+      instituteLoading
+    ) {
+      toast.error("তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন।");
       return;
     }
 
-    setIsDownloading(true);
-    
-    try {
-      const printWindow = window.open('', '_blank');
-      
-      const selectedClass = classConfigs?.find((c) => c.id === Number(selectedClassConfig));
-      const className = selectedClass?.class_name;
-      const monthName = new Date(startDate).toLocaleDateString("bn-BD", { month: "long" });
-      const dynamicDates = generateDynamicDates();
+    if (!institute) {
+      toast.error("ইনস্টিটিউট তথ্য পাওয়া যায়নি!");
+      return;
+    }
 
-      let htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>মুতালায়া রিপোর্ট - ${className}</title>
-          <meta charset="UTF-8">
-          <style>
-            body { 
-              font-family: 'Noto Sans Bengali', 'SutonnyMJ', 'Kalpurush', Arial, sans-serif; 
-              margin: 0; 
-              padding: 20px; 
-              background: white;
-              font-size: 12px;
-              line-height: 1.4;
+    const dynamicDates = generateDynamicDates(startDate, endDate);
+    const className =
+      classConfigs?.find((c) => c.id === Number(selectedClassConfig))
+        ?.class_name || "অজানা";
+
+    // Group rows by student to prevent breaking across pages
+    const studentGroups = dynamicReportData.map((student, sIdx) => ({
+      student,
+      sIdx,
+      rows: student.subjects.map((subject, subjIdx) => ({
+        student,
+        sIdx,
+        subjIdx,
+      })),
+    }));
+
+    // Estimate rows per page (accounting for header and footer space)
+    const rowsPerPage = 50;
+    const pages = [];
+    let currentPage = [];
+    let currentRowCount = 0;
+
+    studentGroups.forEach((group) => {
+      if (currentRowCount + group.rows.length <= rowsPerPage) {
+        currentPage.push(group);
+        currentRowCount += group.rows.length;
+      } else {
+        pages.push(currentPage);
+        currentPage = [group];
+        currentRowCount = group.rows.length;
+      }
+    });
+    if (currentPage.length > 0) {
+      pages.push(currentPage);
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>মুতালায়া ও সবক শুনানোর রিপোর্ট</title>
+        <meta charset="UTF-8">
+        <style>
+          @page { 
+            size: A4 portrait; 
+            margin: 20mm;
+          }
+          body { 
+            font-family: 'Noto Sans Bengali', Arial, sans-serif; 
+            font-size: 8px; 
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            color: #000;
+          }
+          .page-container {
+            width: 100%;
+            min-height: 257mm;
+            page-break-after: always;
+            text-wrap: nowrap;
+          }
+          .page-container:last-child {
+            page-break-after: auto;
+          }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 10px;
+          }
+          thead {
+            display: table-header-group; /* Ensures header repeats on each page */
+          }
+          th, td { 
+            border: 1px solid #000; 
+            padding: 4px 8px; 
+            text-align: center; 
+            vertical-align: middle;
+          }
+          th { 
+            background-color: #ffffff; 
+            font-weight: bold; 
+            color: #000;
+            text-transform: uppercase;
+          }
+          td { 
+            color: #000; 
+          }
+          .student-group {
+            page-break-inside: avoid; /* Prevents student rows from breaking across pages */
+          }
+          .header { 
+            text-align: center; 
+            margin-bottom: 15px; 
+            padding-bottom: 10px;
+          }
+          .institute-info {
+            margin-bottom: 10px;
+          }
+          .institute-info h1 {
+            font-size: 16px;
+            margin: 0;
+            color: #000;
+          }
+          .institute-info p {
+            font-size: 12px;
+            margin: 5px 0;
+            color: #000;
+          }
+          .title {
+            font-size: 14px;
+            color: #DB9E30;
+            margin: 10px 0;
+            font-weight: bold;
+          }
+          .sub-header {
+            font-size: 10px;
+            color: #000;
+            margin-top: 4px;
+          }
+          .footer {
+            position: absolute;
+            bottom: 2px;
+            left: 20mm;
+            right: 20mm;
+            display: flex;
+            justify-content: space-between;
+            font-size: 8px;
+            color: #555;
+          }
+            .sobok{
+            padding: 0 2px;
             }
-            .header { 
-              text-align: center; 
-              margin-bottom: 25px; 
-              border-bottom: 2px solid #333;
-              padding-bottom: 15px;
-            }
-            .institution { 
-              font-size: 20px; 
-              font-weight: bold; 
-              margin-bottom: 8px; 
-              color: #1a1a1a;
-            }
-            .report-title { 
-              font-size: 18px; 
-              font-weight: bold;
-              margin: 8px 0; 
-              color: #2c3e50;
-            }
-            .class-info { 
-              font-size: 14px; 
-              color: #555; 
-              margin: 5px 0;
-            }
-            .report-table { 
-              width: 100%; 
-              border-collapse: collapse; 
-              margin: 15px 0; 
-              border: 2px solid #333;
-              font-size: 10px;
-            }
-            .report-table th, .report-table td { 
-              border: 1px solid #333; 
-              padding: 6px 4px; 
-              text-align: center;
-              vertical-align: middle;
-            }
-            .report-table th { 
-              background-color: #f8f9fa; 
-              font-weight: bold; 
-              font-size: 9px;
-              color: #2c3e50;
-            }
-            .report-table td {
-              font-size: 9px;
-              min-height: 25px;
-            }
-            .student-name {
-              text-align: left;
-              padding-left: 8px;
-              font-weight: 500;
-              writing-mode: vertical-lr;
-              text-orientation: mixed;
-              width: 25px;
-              min-height: 80px;
-              line-height: 1.2;
-            }
-            .subject-name {
-              text-align: left;
-              padding-left: 8px;
-              font-weight: 500;
-            }
-            .roll-number {
-              font-weight: bold;
-              background-color: #f0f8ff;
-            }
-            .day-header {
-              background-color: #e3f2fd;
-              font-weight: bold;
-              color: #1565c0;
-            }
-            .date-header {
-              background-color: #f5f5f5;
-              font-weight: bold;
-              color: #424242;
-            }
-            .attendance-cell {
-              background-color: #fafafa;
-              min-width: 30px;
-              height: 25px;
-            }
-            .comments-cell {
-              background-color: #fff9c4;
-              min-width: 80px;
-            }
-            .footer {
-              margin-top: 30px;
-              display: flex;
-              justify-content: space-between;
-              font-size: 10px;
-              color: #666;
-              border-top: 1px solid #ddd;
-              padding-top: 15px;
-            }
-            .signature-section {
-              margin-top: 50px;
-              display: flex;
-              justify-content: space-between;
-              padding: 0 20px;
-            }
-            .signature-box {
-              text-align: center;
-              border-top: 1px solid #333;
-              padding-top: 8px;
-              width: 180px;
-              font-size: 11px;
-              color: #444;
-            }
-            .notes-section {
-              margin-top: 20px;
-              padding: 15px;
-              background-color: #f8f9fa;
-              border: 1px solid #dee2e6;
-              border-radius: 5px;
-              font-size: 10px;
-              color: #495057;
-            }
-            .notes-title {
-              font-weight: bold;
-              margin-bottom: 8px;
-              color: #2c3e50;
-            }
-            @media print {
-              body { 
-                margin: 0; 
-                padding: 15px;
-              }
-              .no-print { display: none; }
-              .report-table {
-                font-size: 8px;
-              }
-              .report-table th, .report-table td {
-                padding: 4px 2px;
-                font-size: 8px;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="institution">[প্রতিষ্ঠানের নাম]</div>
-            <div class="report-title">মুতালায়া ও সবক শুনানোর রিপোর্ট</div>
-            <div class="class-info">
-              জামাত: ${className} | 
-              সেকশন: ${selectedClass?.section_name || ''} | 
-              শিফট: ${selectedClass?.shift_name || ''} | 
-              মাস: ${monthName} - ২০২৫
+        </style>
+      </head>
+      <body>
+        ${pages
+          .map(
+            (pageGroups, pageIdx) => `
+          <div class="page-container">
+            <div class="header">
+              <div class="institute-info">
+                <h1>${institute.institute_name || "অজানা ইনস্টিটিউট"}</h1>
+                <p>${institute.institute_address || "ঠিকানা উপলব্ধ নয়"}</p>
+              </div>
+              <h2 class="title">মুতালায়া ও সবক শুনানোর রিপোর্ট</h2>
+              <p class="sub-header">
+                জামাত: ${className} | মাস: ${new Date(
+              startDate
+            ).toLocaleDateString("bn-BD", { month: "long" })} - ২০২৫
+              </p>
             </div>
+            <table>
+              <thead>
+                <tr>
+                  <th rowspan="3" style="width: 40px;">ক্রমিক</th>
+                  <th rowspan="3" style="width: 120px;">নাম</th>
+                  <th rowspan="3" style="width: 80px;">বিষয়</th>
+                  ${dynamicDates
+                    .map(
+                      (d, i) => `
+                    <th colspan="2" style="width: ${Math.max(
+                      80 / dynamicDates.length,
+                      40
+                    )}px;">
+                      ${d.day}
+                    </th>
+                  `
+                    )
+                    .join("")}
+                  <th rowspan="3" style="width: 60px;">মন্তব্য</th>
+                </tr>
+                <tr>
+                  ${dynamicDates
+                    .map(
+                      (d, i) => `
+                    <th colspan="2" style="width: ${Math.max(
+                      80 / dynamicDates.length,
+                      40
+                    )}px;">
+                      ${d.date}
+                    </th>
+                  `
+                    )
+                    .join("")}
+                </tr>
+                <tr>
+                  ${dynamicDates
+                    .map(
+                      (_, i) => `
+                    <th style="width: ${Math.max(
+                      40 / dynamicDates.length,
+                      20
+                    )}px;">সবক</th>
+                    <th class='sobok' style="width: ${Math.max(
+                      40 / dynamicDates.length,
+                      20
+                    )}px;">মুতালায়া</th>
+                  `
+                    )
+                    .join("")}
+                </tr>
+              </thead>
+              <tbody>
+                ${pageGroups
+                  .map(
+                    ({ student, sIdx, rows }) => `
+                  <tr class="student-group">
+                    ${rows
+                      .map(
+                        ({ subjIdx }, rowIdx) => `
+                      <tr>
+                        ${
+                          subjIdx === 0
+                            ? `
+                          <td rowspan="${
+                            student.subjects.length
+                          }" style="vertical-align: top;">
+                            ${sIdx + 1}
+                          </td>
+                          <td rowspan="${
+                            student.subjects.length
+                          }" style="vertical-align: top;">
+                            ${student.name}
+                          </td>
+                        `
+                            : ""
+                        }
+                        <td>${student.subjects[subjIdx].name}</td>
+                        ${dynamicDates
+                          .map(
+                            (d) => `
+                          <td>${""}</td>
+                          <td>${""}</td>
+                        `
+                          )
+                          .join("")}
+                        <td></td>
+                      </tr>
+                    `
+                      )
+                      .join("")}
+                  </tr>
+                `
+                  )
+                  .join("")}
+              </tbody>
+            </table>
           </div>
-
-          <table class="report-table">
-            <thead>
-              <tr>
-                <th rowspan="3" style="width: 8%;">ক্রমিক</th>
-                <th rowspan="3" style="width: 15%;">নাম</th>
-                <th rowspan="3" style="width: 12%;">বিষয়</th>
-      `;
-
-      // Generate dynamic date headers
-      dynamicDates.forEach((d) => {
-        htmlContent += `<th colspan="2" class="day-header" style="width: ${Math.floor(65 / dynamicDates.length)}%;">${d.day}</th>`;
-      });
-
-      htmlContent += `
-                <th rowspan="3" style="width: 10%;">মন্তব্য</th>
-              </tr>
-              <tr>
-      `;
-
-      // Generate date row
-      dynamicDates.forEach((d) => {
-        htmlContent += `<th colspan="2" class="date-header">${d.date}</th>`;
-      });
-
-      htmlContent += `
-              </tr>
-              <tr>
-      `;
-
-      // Generate sobok/mutalaya headers
-      dynamicDates.forEach(() => {
-        htmlContent += `
-          <th style="width: 4%;">সবক</th>
-          <th style="width: 4%;">মুতালায়া</th>
-        `;
-      });
-
-      htmlContent += `
-              </tr>
-            </thead>
-            <tbody>
-      `;
-
-      // Generate table body
-      dynamicReportData.forEach((student, sIdx) => {
-        student.subjects.forEach((subject, subjIdx) => {
-          htmlContent += `<tr>`;
-          
-          // Roll number (only for first subject)
-          if (subjIdx === 0) {
-            htmlContent += `
-              <td rowspan="${student.subjects.length}" class="roll-number">
-                ${student.roll_no}
-              </td>
-            `;
-          }
-          
-          // Student name (only for first subject)
-          if (subjIdx === 0) {
-            htmlContent += `
-              <td rowspan="${student.subjects.length}" class="student-name">
-                ${student.name}
-              </td>
-            `;
-          }
-          
-          // Subject name
-          htmlContent += `<td class="subject-name">${subject.name}</td>`;
-          
-          // Attendance cells for each date
-          dynamicDates.forEach(() => {
-            htmlContent += `
-              <td class="attendance-cell"></td>
-              <td class="attendance-cell"></td>
-            `;
+        `
+          )
+          .join("")}
+        <script>
+          let printAttempted = false;
+          window.onbeforeprint = () => { printAttempted = true; };
+          window.onafterprint = () => { window.close(); };
+          window.addEventListener('beforeunload', (event) => {
+            if (!printAttempted) { window.close(); }
           });
-          
-          // Comments cell
-          htmlContent += `<td class="comments-cell"></td>`;
-          htmlContent += `</tr>`;
-        });
-      });
+          window.print();
+        </script>
+      </body>
+      </html>
+    `;
 
-      htmlContent += `
-            </tbody>
-          </table>
-
-          <div class="notes-section">
-            <div class="notes-title">নির্দেশনা:</div>
-            <ul style="margin: 0; padding-left: 20px;">
-              <li>সবক কলামে দৈনিক পঠিত পৃষ্ঠা সংখ্যা লিখুন</li>
-              <li>মুতালায়া কলামে পুনরায় অধ্যয়নের বিষয় উল্লেখ করুন</li>
-              <li>অনুপস্থিতির ক্ষেত্রে 'অ' এবং ছুটির ক্ষেত্রে 'ছ' লিখুন</li>
-              <li>বিশেষ মন্তব্য থাকলে মন্তব্য কলামে লিখুন</li>
-            </ul>
-          </div>
-
-          <div class="footer">
-            <div>রিপোর্ট তৈরির তারিখ: ${new Date().toLocaleDateString('bn-BD')}</div>
-            <div>মুদ্রণের তারিখ: ${new Date().toLocaleDateString('bn-BD')}</div>
-          </div>
-          
-          <div class="signature-section">
-            <div class="signature-box">
-              শ্রেণি শিক্ষকের স্বাক্ষর
-            </div>
-            <div class="signature-box">
-              বিভাগীয় প্রধানের স্বাক্ষর
-            </div>
-            <div class="signature-box">
-              প্রধান শিক্ষকের স্বাক্ষর
-            </div>
-          </div>
-        </body>
-        </html>
-      `;
-
-      printWindow.document.write(htmlContent);
-      printWindow.document.close();
-      printWindow.print();
-
-      const filename = `মুতালায়া_রিপোর্ট_${className}_${monthName}_২০২৫`;
-      toast.success(`${filename} PDF সফলভাবে তৈরি হয়েছে!`);
-      
-    } catch (error) {
-      console.error("PDF generation error:", error);
-      toast.error("PDF তৈরি করতে সমস্যা হয়েছে!");
-    } finally {
-      setIsDownloading(false);
-    }
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    toast.success("মুতালায়া ও সবক শুনানোর রিপোর্ট সফলভাবে তৈরি হয়েছে!");
   };
 
-  // Legacy PDF download function (keeping for backward compatibility)
-  const downloadPDF = async () => {
-    generateMutalayaPDF();
-  };
+  const classConfigOptions =
+    classConfigs?.map((config) => ({
+      value: config.id,
+      label: `${config.class_name} - ${config.section_name} (${config.shift_name})`,
+    })) || [];
 
   return (
     <div className="py-8 w-full relative">
@@ -531,19 +510,24 @@ const MutalayaReport = () => {
           মুতালায়া রিপোর্ট
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <select
-            value={selectedClassConfig}
-            onChange={(e) => setSelectedClassConfig(e.target.value)}
-            className="select-field"
-            disabled={classConfigsLoading}
-          >
-            <option value="">ক্লাস নির্বাচন করুন</option>
-            {classConfigs?.map((config) => (
-              <option key={config.id} value={config.id}>
-                {config.class_name} - {config.section_name} ({config.shift_name})
-              </option>
-            ))}
-          </select>
+          <Select
+            value={
+              classConfigOptions.find(
+                (option) => option.value === selectedClassConfig
+              ) || null
+            }
+            onChange={(option) =>
+              setSelectedClassConfig(option ? option.value : "")
+            }
+            options={classConfigOptions}
+            placeholder="ক্লাস নির্বাচন করুন"
+            isDisabled={classConfigsLoading}
+            styles={selectStyles}
+            menuPortalTarget={document.body}
+            menuPosition="fixed"
+            aria-label="ক্লাস নির্বাচন"
+          />
+
           <input
             type="date"
             value={startDate}
@@ -564,48 +548,46 @@ const MutalayaReport = () => {
         
         {/* Enhanced PDF Download Button */}
         <button
-            onClick={generateMutalayaPDF}
-            className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-300 mt-4 ${
-              !selectedClassConfig || !startDate || !endDate || classConfigsLoading || studentsLoading || subjectsLoading || isDownloading
-                ? "bg-gray-400 text-gray-600 cursor-not-allowed"
-                : "bg-red-600 text-white hover:bg-red-700 btn-glow"
-            }`}
-            disabled={
-              !selectedClassConfig || !startDate || !endDate || classConfigsLoading || studentsLoading || subjectsLoading || isDownloading
-            }
-            title="মুতালায়া রিপোর্ট PDF ডাউনলোড করুন"
-          >
-            {isDownloading ? (
-              <>
-                <FaSpinner className="animate-spin text-lg" />
-                <span>PDF তৈরি হচ্ছে...</span>
-              </>
-            ) : (
-              <>
-                <FaFilePdf className="text-lg" />
-                <span>PDF ডাউনলোড</span>
-              </>
-            )}
-          </button>
+          onClick={downloadPDF}
+          className="download-btn"
+          disabled={
+            dynamicReportData.length === 0 ||
+            classConfigsLoading ||
+            studentsLoading ||
+            subjectsLoading ||
+            instituteLoading
+          }
+        >
+          <FaDownload /> রিপোর্ট
+        </button>
       </div>
 
       {/* Report Preview */}
-      {classConfigsLoading || studentsLoading || subjectsLoading ? (
+      {classConfigsLoading ||
+      studentsLoading ||
+      subjectsLoading ||
+      instituteLoading ? (
         <div className="flex justify-center items-center h-64">
           <FaSpinner className="animate-spin text-4xl text-[#441A05]" />
         </div>
-      ) : reportData.length > 0 ? (
+      ) : dynamicReportData.length > 0 ? (
         <div className="p-4 text-xs font-[kalpurush] text-black a4-portrait animate-fadeIn">
           {/* Header */}
           <div className="text-center mb-4">
-            <h2 className="text-lg font-bold">মুতালায়া ও সবক শুনানোর রিপোর্ট</h2>
+            <h2 className="text-lg font-bold">
+              মুতালায়া ও সবক শুনানোর রিপোর্ট
+            </h2>
             <p className="text-sm">
               জামাত:{" "}
               {
                 classConfigs?.find((c) => c.id === Number(selectedClassConfig))
                   ?.class_name
               }{" "}
-              | মাস: {new Date(startDate).toLocaleDateString("bn-BD", { month: "long" })} - ২০২৫
+              | মাস:{" "}
+              {new Date(startDate).toLocaleDateString("bn-BD", {
+                month: "long",
+              })}{" "}
+              - ২০২৫
             </p>
           </div>
 
@@ -613,7 +595,10 @@ const MutalayaReport = () => {
             <table className="table-auto w-full border-collapse">
               <thead>
                 <tr>
-                  <th rowSpan="3" className="border border-black py-1 text-[8px]">
+                  <th
+                    rowSpan="3"
+                    className="border border-black py-1 text-[8px]"
+                  >
                     ক্রমিক
                   </th>
                   <th
@@ -628,7 +613,7 @@ const MutalayaReport = () => {
                   >
                     বিষয়
                   </th>
-                  {generateDynamicDates().map((d, i) => (
+                  {generateDynamicDates(startDate, endDate).map((d, i) => (
                     <th
                       key={i}
                       colSpan={2}
@@ -645,7 +630,7 @@ const MutalayaReport = () => {
                   </th>
                 </tr>
                 <tr>
-                  {generateDynamicDates().map((d, i) => (
+                  {generateDynamicDates(startDate, endDate).map((d, i) => (
                     <th
                       key={i}
                       colSpan={2}
@@ -656,7 +641,7 @@ const MutalayaReport = () => {
                   ))}
                 </tr>
                 <tr>
-                  {generateDynamicDates().map((_, i) => (
+                  {generateDynamicDates(startDate, endDate).map((_, i) => (
                     <React.Fragment key={i}>
                       <th className="border border-black text-center text-[8px] px-2">
                         সবক
@@ -677,7 +662,7 @@ const MutalayaReport = () => {
                           rowSpan={student.subjects.length}
                           className="border border-black text-center align-top text-[8px]"
                         >
-                          {sIdx +1}
+                          {sIdx + 1}
                         </td>
                       )}
                       {subjIdx === 0 && (
@@ -699,14 +684,10 @@ const MutalayaReport = () => {
                       <td className="border border-black px-1 text-center text-[8px]">
                         {subject.name}
                       </td>
-                      {generateDynamicDates().map((d) => (
+                      {generateDynamicDates(startDate, endDate).map((d) => (
                         <React.Fragment key={d.date}>
-                          <td className="border border-black text-center text-[8px]">
-                            {/* Empty cell for manual entry */}
-                          </td>
-                          <td className="border border-black text-center text-[8px]">
-                            {/* Empty cell for manual entry */}
-                          </td>
+                          <td className="border border-black text-center text-[8px]"></td>
+                          <td className="border border-black text-center text-[8px]"></td>
                         </React.Fragment>
                       ))}
                       <td className="border border-black"></td>

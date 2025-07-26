@@ -1,4 +1,5 @@
 
+
 // /////////////////local code
 const getSubdomain = () => {
   const host = window.location.hostname;
@@ -7,21 +8,31 @@ const getSubdomain = () => {
 };
 
 const subdomain = getSubdomain();
-
 let BASE_URL = "";
 
+const storedSubdomain = localStorage.getItem("subdomain");
+
+if (storedSubdomain && storedSubdomain !== subdomain) {
+  localStorage.removeItem("subdomain");
+  localStorage.removeItem("token");
+  localStorage.removeItem("authState");
+  window.location.reload();
+} else if (!storedSubdomain && subdomain !== "localhost") {
+  localStorage.setItem("subdomain", subdomain);
+}
+
 const validateTenant = async () => {
-  if (subdomain == 'localhost') {
+  if (subdomain === "localhost") {
     showNoSubdomainScreen();
     return;
   }
 
   try {
-    const res = await fetch(`https://${subdomain}.easydr.online/api/tenant-info/`);
+    const res = await fetch(`https://${subdomain}.madrasahhub.online/api/tenant-info/`);
     const data = await res.json();
 
     if (data?.matched) {
-      BASE_URL = `https://${subdomain}.easydr.online/api`;
+      BASE_URL = `https://${subdomain}.madrasahhub.online/api`;
     } else {
       showInvalidSubdomainScreen();
     }
@@ -59,7 +70,6 @@ const showNoSubdomainScreen = () => {
         </p>
       </div>
     </div>
-
     <style>
       @keyframes fadeIn {
         from { opacity: 0; transform: translateY(30px); }
@@ -68,7 +78,6 @@ const showNoSubdomainScreen = () => {
     </style>
   `;
 };
-
 
 const showInvalidSubdomainScreen = () => {
   document.body.innerHTML = `
@@ -94,21 +103,9 @@ export default BASE_URL;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// ///////// local
+// const BASE_URL = 'https://demo.easydr.xyz/api'
+// export default BASE_URL
 
 
 
@@ -120,10 +117,19 @@ export default BASE_URL;
 // };
 
 // const subdomain = getSubdomain();
-
-// console.log(subdomain)
-
 // let BASE_URL = "";
+
+
+// const storedSubdomain = localStorage.getItem("subdomain");
+
+// if (storedSubdomain && storedSubdomain !== subdomain) {
+//   localStorage.removeItem("subdomain");
+//   localStorage.removeItem("token");
+//   localStorage.removeItem("authState");
+//   window.location.reload();
+// } else if (!storedSubdomain && subdomain !== null) {
+//   localStorage.setItem("subdomain", subdomain);
+// }
 
 // const validateTenant = async () => {
 //   if (!subdomain) {
@@ -174,7 +180,6 @@ export default BASE_URL;
 //         </p>
 //       </div>
 //     </div>
-
 //     <style>
 //       @keyframes fadeIn {
 //         from { opacity: 0; transform: translateY(30px); }
@@ -183,7 +188,6 @@ export default BASE_URL;
 //     </style>
 //   `;
 // };
-
 
 // const showInvalidSubdomainScreen = () => {
 //   document.body.innerHTML = `

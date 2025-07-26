@@ -8,6 +8,7 @@ import { useSearchJointUsersQuery } from '../../redux/features/api/jointUsers/jo
 import selectStyles from '../../utilitis/selectStyles';
 import { useSelector } from 'react-redux';
 import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi';
+import { useGetInstituteLatestQuery } from '../../redux/features/api/institute/instituteLatestApi';
 
 // Component to fetch and display individual user data
 const UserInfoCell = ({ userId }) => {
@@ -146,6 +147,9 @@ const MealStatus = () => {
   const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
     skip: !group_id,
   });
+
+  // Institute data hook
+  const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
 
   // Permission checks
   const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_meal_status') || false;
@@ -346,72 +350,205 @@ const MealStatus = () => {
     }
   };
 
-  // Generate PDF Report
+  // Generate HTML-based report for printing
   const generatePDFReport = () => {
+    if (!hasViewPermission) {
+      toast.error('খাবারের স্থিতি প্রতিবেদন দেখার অনুমতি নেই।');
+      return;
+    }
+
+    if (statusesLoading || usersLoading || instituteLoading) {
+      toast.error('তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন।');
+      return;
+    }
+
+    if (!mealStatuses || mealStatuses.length === 0) {
+      toast.error('কোনো খাবারের স্থিতি রেকর্ড পাওয়া যায়নি।');
+      return;
+    }
+
+    if (!institute) {
+      toast.error('ইনস্টিটিউট তথ্য পাওয়া যায়নি!');
+      return;
+    }
+
     const printWindow = window.open('', '_blank');
-    
-    let htmlContent = `
+
+    // Group meal status records into pages (assuming ~20 rows per page to fit A4 landscape)
+    const rowsPerPage = 20;
+    const statusPages = [];
+    for (let i = 0; i < mealStatuses.length; i += rowsPerPage) {
+      statusPages.push(mealStatuses.slice(i, i + rowsPerPage));
+    }
+
+    const htmlContent = `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>খাবারের স্থিতি রিপোর্ট</title>
+        <title>খাবারের স্থিতি প্রতিবেদন</title>
         <meta charset="UTF-8">
         <style>
-          body { font-family: Arial, sans-serif; margin: 20px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-          th { background-color: #f2f2f2; font-weight: bold; }
-          .header { text-align: center; margin-bottom: 20px; }
-          .date { margin-top: 20px; text-align: right; }
+          @page { 
+            size: A4 landscape; 
+            margin: 20mm;
+          }
+          body { 
+            font-family: 'Noto Sans Bengali', Arial, sans-serif;  
+            font-size: 12px; 
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            color: #000;
+          }
+          .page-container {
+            width: 100%;
+            min-height: 190mm;
+            page-break-after: always;
+          }
+          .page-container:last-child {
+            page-break-after: auto;
+          }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 10px; 
+            margin-top: 10px;
+          }
+          th, td { 
+            border: 1px solid #000; 
+            padding: 8px; 
+            text-align: center; 
+          }
+          th { 
+            background-color: #f5f5f5; 
+            font-weight: bold; 
+            color: #000;
+            text-transform: uppercase;
+          }
+          td { 
+            color: #000; 
+          }
+          .header { 
+            text-align: center; 
+            margin-bottom: 15px; 
+            padding-bottom: 10px;
+          }
+          .institute-info {
+            margin-bottom: 10px;
+          }
+          .institute-info h1 {
+            font-size: 22px;
+            margin: 0;
+            color: #000;
+          }
+          .institute-info p {
+            font-size: 14px;
+            margin: 5px 0;
+            color: #000;
+          }
+          .title {
+            font-size: 18px;
+            color: #DB9E30;
+            margin: 10px 0;
+          }
+          .meta-container {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            margin-bottom: 8px;
+          }
+          .date { 
+            margin-top: 20px; 
+            text-align: right; 
+            font-size: 10px; 
+            color: #000;
+          }
+          .footer {
+            position: absolute;
+            bottom: 20px;
+            left: 40px;
+            right: 40px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 8px;
+            color: #555;
+          }
         </style>
       </head>
       <body>
-        <div class="header">
-          <h2>খাবারের স্থিতি রিপোর্ট</h2>
-          <h3>Meal Status Report</h3>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>আইডি (ID)</th>
-              <th>ব্যবহারকারী ID (User ID)</th>
-              <th>শুরুর তারিখ (Start Date)</th>
-              <th>শেষের তারিখ (End Date)</th>
-              <th>স্থিতি (Status)</th>
-              <th>মন্তব্য (Remarks)</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
-
-    mealStatuses.forEach(status => {
-      htmlContent += `
-        <tr>
-          <td>${status.id}</td>
-          <td>${status.meal_user}</td>
-          <td>${status.start_time}</td>
-          <td>${status.end_time}</td>
-          <td>${status.status === 'ACTIVE' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</td>
-          <td>${status.remarks || 'N/A'}</td>
-        </tr>
-      `;
-    });
-
-    htmlContent += `
-          </tbody>
-        </table>
-        <div class="date">
-          রিপোর্ট তৈরির তারিখ: ${new Date().toLocaleDateString('bn-BD')}
-        </div>
+        ${statusPages.map((pageItems, pageIndex) => `
+          <div class="page-container">
+            <div class="header">
+              <div class="institute-info">
+                <h1>${institute.institute_name || 'অজানা ইনস্টিটিউট'}</h1>
+                <p>${institute.institute_address || 'ঠিকানা উপলব্ধ নয়'}</p>
+              </div>
+              <h2 class="title">খাবারের স্থিতি প্রতিবেদন</h2>
+              <div class="meta-container">
+                <span>তৈরির তারিখ: ${new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+              </div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 80px;">আইডি</th>
+                  <th style="width: 150px;">ব্যবহারকারী</th>
+                  <th style="width: 80px;">ধরন</th>
+                  <th style="width: 100px;">শুরুর তারিখ</th>
+                  <th style="width: 100px;">শেষের তারিখ</th>
+                  <th style="width: 80px;">স্থিতি</th>
+                  <th style="width: 150px;">মন্তব্য</th>
+                  <th style="width: 120px;">তৈরির সময়</th>
+                  <th style="width: 120px;">আপডেটের সময়</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${pageItems.map((status, index) => {
+                  const user = jointUsers.find(u => u.id === status.meal_user || u.user_id === status.meal_user);
+                  const userDisplay = user ? (user.student_profile ? `${user.name} (${user.student_profile.class_name || 'অজানা'} - রোল: ${user.student_profile.roll_no || 'অজানা'})` : 
+                    user.staff_profile ? `${user.name} (${user.staff_profile.designation || 'অজানা'})` : user.name || status.meal_user) : status.meal_user;
+                  const userType = user ? (user.student_profile ? 'শিক্ষার্থী' : user.staff_profile ? 'কর্মী' : 'অজানা') : 'অজানা';
+                  return `
+                    <tr style="${index % 2 === 1 ? 'background-color: #f2f2f2;' : ''}">
+                      <td>${status.id}</td>
+                      <td>${userDisplay}</td>
+                      <td>${userType}</td>
+                      <td>${status.start_time}</td>
+                      <td>${status.end_time}</td>
+                      <td>${status.status === 'ACTIVE' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</td>
+                      <td>${status.remarks || 'N/A'}</td>
+                      <td>${new Date(status.created_at).toLocaleDateString('bn-BD')}</td>
+                      <td>${new Date(status.updated_at).toLocaleDateString('bn-BD')}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+            <div class="date">
+              রিপোর্ট তৈরির তারিখ: ${new Date().toLocaleDateString('bn-BD')}
+            </div>
+            <div class="footer">
+              <span>প্রতিবেদনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে।</span>
+              <span>পৃষ্ঠা ${pageIndex + 1} এর ${statusPages.length}</span>
+            </div>
+          </div>
+        `).join('')}
+        <script>
+          let printAttempted = false;
+          window.onbeforeprint = () => { printAttempted = true; };
+          window.onafterprint = () => { window.close(); };
+          window.addEventListener('beforeunload', (event) => {
+            if (!printAttempted) { window.close(); }
+          });
+          window.print();
+        </script>
       </body>
       </html>
     `;
 
     printWindow.document.write(htmlContent);
     printWindow.document.close();
-    printWindow.print();
-    
-    toast.success("PDF রিপোর্ট তৈরি হয়েছে!");
+    toast.success('খাবারের স্থিতি প্রতিবেদন সফলভাবে তৈরি হয়েছে!');
   };
 
   // Status options
@@ -420,7 +557,7 @@ const MealStatus = () => {
     { value: 'DEACTIVATE', label: 'নিষ্ক্রিয়' },
   ];
 
-  if (statusesLoading || usersLoading || permissionsLoading) {
+  if (statusesLoading || usersLoading || permissionsLoading || instituteLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="flex items-center gap-4 p-6 bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 animate-fadeIn">
@@ -681,11 +818,11 @@ const MealStatus = () => {
                   ? "bg-gray-400 text-gray-600 cursor-not-allowed"
                   : "bg-[#DB9E30] text-[#441a05] hover:text-white btn-glow"
               }`}
-              aria-label="PDF রিপোর্ট ডাউনলোড"
-              title="PDF রিপোর্ট ডাউনলোড করুন"
+              aria-label="খাবারের স্থিতি প্রতিবেদন প্রিন্ট"
+              title="খাবারের স্থিতি প্রতিবেদন প্রিন্ট করুন"
             >
               <FaFilePdf className="text-lg" />
-              <span>PDF রিপোর্ট</span>
+              <span>রিপোর্ট</span>
             </button>
           </div>
 
