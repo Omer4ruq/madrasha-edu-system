@@ -171,9 +171,7 @@ const AddNotice = () => {
     }
     if (newNotice.file_attached) {
       formData.append("file_attached", newNotice.file_attached);
-    } else if (newNotice.existing_file) {
-      formData.append("file_attached", newNotice.existing_file);
-    }
+    } 
 
     setModalData({ id: selectedNoticeId, formData });
     setModalAction("update");
@@ -507,7 +505,7 @@ const AddNotice = () => {
                   title="ফাইল সংযুক্তি নির্বাচন করুন / Select file attachment"
                 />
                 {newNotice.existing_file && !newNotice.file_attached && (
-                  <p className="text-sm text-[#441a05]/70">
+                  <p className="text-sm text-[#441a05]/70 max-w-[300px] overflow-auto text-nowrap">
                     Existing file: {newNotice.existing_file}
                   </p>
                 )}
@@ -516,7 +514,7 @@ const AddNotice = () => {
                 <button
                   type="submit"
                   disabled={isCreating || isUpdating}
-                  className={`px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn btn-glow ${
+                  className={`px-8 py-3 text-nowrap rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn btn-glow ${
                     isCreating || isUpdating
                       ? "cursor-not-allowed opacity-50"
                       : "hover:text-white hover:shadow-md"
