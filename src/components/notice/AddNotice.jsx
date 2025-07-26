@@ -5,7 +5,7 @@ import { Toaster, toast } from "react-hot-toast";
 import {
   useGetNoticesQuery,
   useCreateNoticeMutation,
-  useUpdateNoticeMutation,
+  usePatchNoticeMutation,
   useDeleteNoticeMutation,
 } from "../../redux/features/api/notice/noticeApi";
 import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
@@ -25,7 +25,7 @@ const AddNotice = () => {
     expire_date: "",
     file_attached: null,
     academic_year: "",
-    existing_file: null, // Store existing file URL for updates
+    existing_file: null,
   });
   const formRef = useRef(null);
 
@@ -43,8 +43,8 @@ const AddNotice = () => {
   } = useGetAcademicYearApiQuery();
   const [createNotice, { isLoading: isCreating, error: createError }] =
     useCreateNoticeMutation();
-  const [updateNotice, { isLoading: isUpdating, error: updateError }] =
-    useUpdateNoticeMutation();
+  const [patchNotice, { isLoading: isUpdating, error: updateError }] =
+    usePatchNoticeMutation();
   const [deleteNotice, { isLoading: isDeleting, error: deleteError }] =
     useDeleteNoticeMutation();
 
@@ -107,11 +107,6 @@ const AddNotice = () => {
     formData.append("file_attached", newNotice.file_attached);
     formData.append("academic_year", newNotice.academic_year);
 
-    // Log FormData for debugging
-    for (let [key, value] of formData.entries()) {
-      console.log(`Create Notice - ${key}: ${value}`);
-    }
-
     setModalData(formData);
     setModalAction("create");
     setIsModalOpen(true);
@@ -129,9 +124,9 @@ const AddNotice = () => {
       date: notice.date,
       notice_description: notice.notice_description,
       expire_date: notice.expire_date,
-      file_attached: null, // File input cannot pre-populate
+      file_attached: null,
       academic_year: notice.academic_year.toString(),
-      existing_file: notice.file_attached, // Store existing file URL
+      existing_file: notice.file_attached,
     });
   };
 
@@ -157,20 +152,30 @@ const AddNotice = () => {
       return;
     }
 
-    const noticeData = {
-      notice_title: newNotice.notice_title.trim(),
-      date: newNotice.date,
-      notice_description: newNotice.notice_description.trim(),
-      expire_date: newNotice.expire_date,
-      academic_year: newNotice.academic_year,
-      file_attached: newNotice.file_attached, // New file if uploaded
-      existing_file: newNotice.existing_file, // Retain existing file if no new file
-    };
+    // Prepare FormData with only changed fields
+    const formData = new FormData();
+    if (newNotice.notice_title.trim()) {
+      formData.append("notice_title", newNotice.notice_title.trim());
+    }
+    if (newNotice.date) {
+      formData.append("date", newNotice.date);
+    }
+    if (newNotice.notice_description.trim()) {
+      formData.append("notice_description", newNotice.notice_description.trim());
+    }
+    if (newNotice.expire_date) {
+      formData.append("expire_date", newNotice.expire_date);
+    }
+    if (newNotice.academic_year) {
+      formData.append("academic_year", newNotice.academic_year);
+    }
+    if (newNotice.file_attached) {
+      formData.append("file_attached", newNotice.file_attached);
+    } else if (newNotice.existing_file) {
+      formData.append("file_attached", newNotice.existing_file);
+    }
 
-    // Log payload for debugging
-    // console.log("Update Notice Payload:", noticeData);
-
-    setModalData({ id: selectedNoticeId, noticeData });
+    setModalData({ id: selectedNoticeId, formData });
     setModalAction("update");
     setIsModalOpen(true);
   };
@@ -202,7 +207,7 @@ const AddNotice = () => {
     try {
       if (modalAction === "create") {
         if (!hasAddPermission) {
-          toast.error("নোটিশ তৈরি করার অনুমতি নেই।");
+          toast.error("নোটিশ তৈরি করা হিনে।");
           return;
         }
         await createNotice(modalData).unwrap();
@@ -221,9 +226,9 @@ const AddNotice = () => {
           toast.error("নোটিশ আপডেট করার অনুমতি নেই।");
           return;
         }
-        await updateNotice({
+        await patchNotice({
           id: modalData.id,
-          noticeData: modalData.noticeData,
+          formData: modalData.formData,
         }).unwrap();
         toast.success("নোটিশ সফলভাবে আপডেট করা হয়েছে!");
         setSelectedNoticeId(null);

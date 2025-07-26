@@ -14,7 +14,7 @@ export const noticeApi = createApi({
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
-      //   headers.set('Content-Type', 'application/json');
+    //   headers.set('Content-Type', 'application/json');
       return headers;
     },
   }),
@@ -44,34 +44,20 @@ export const noticeApi = createApi({
 
     // PUT: Update an existing notice
     updateNotice: builder.mutation({
-      query: ({ id, noticeData }) => {
-        const formData = new FormData();
-        formData.append('notice_title', noticeData.notice_title.trim());
-        formData.append('date', noticeData.date);
-        formData.append('notice_description', noticeData.notice_description.trim());
-        formData.append('expire_date', noticeData.expire_date);
-        formData.append('academic_year', noticeData.academic_year);
-        if (noticeData.file_attached) {
-          formData.append('file_attached', noticeData.file_attached);
-        } else if (noticeData.existing_file) {
-          formData.append('file_attached', noticeData.existing_file); // Retain existing file URL if no new file
-        }
-
-        return {
-          url: `/notices/${id}/`,
-          method: 'PUT',
-          body: formData,
-        };
-      },
+      query: ({ id, formData }) => ({
+        url: `/notices/${id}/`,
+        method: 'PUT',
+        body: formData,
+      }),
       invalidatesTags: ['noticeApi'],
     }),
 
     // PATCH: Partially update an existing notice
     patchNotice: builder.mutation({
-      query: ({ id, ...noticeData }) => ({
+      query: ({ id, formData }) => ({
         url: `/notices/${id}/`,
         method: 'PATCH',
-        body: noticeData,
+        body: formData,
       }),
       invalidatesTags: ['noticeApi'],
     }),

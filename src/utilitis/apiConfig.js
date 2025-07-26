@@ -103,11 +103,8 @@ export default BASE_URL;
 
 
 
-
+// ///////// local
 // const BASE_URL = 'https://demo.easydr.xyz/api'
-
-
-
 // export default BASE_URL
 
 
