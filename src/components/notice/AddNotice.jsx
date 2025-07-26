@@ -23,8 +23,9 @@ const AddNotice = () => {
     date: "",
     notice_description: "",
     expire_date: "",
-    file_attached: "",
+    file_attached: null,
     academic_year: "",
+    existing_file: null, // Store existing file URL for updates
   });
   const formRef = useRef(null);
 
@@ -57,11 +58,9 @@ const AddNotice = () => {
   const hasAddPermission =
     groupPermissions?.some((perm) => perm.codename === "add_notice") || false;
   const hasChangePermission =
-    groupPermissions?.some((perm) => perm.codename === "change_notice") ||
-    false;
+    groupPermissions?.some((perm) => perm.codename === "change_notice") || false;
   const hasDeletePermission =
-    groupPermissions?.some((perm) => perm.codename === "delete_notice") ||
-    false;
+    groupPermissions?.some((perm) => perm.codename === "delete_notice") || false;
   const hasViewPermission =
     groupPermissions?.some((perm) => perm.codename === "view_notice") || false;
 
@@ -108,6 +107,11 @@ const AddNotice = () => {
     formData.append("file_attached", newNotice.file_attached);
     formData.append("academic_year", newNotice.academic_year);
 
+    // Log FormData for debugging
+    for (let [key, value] of formData.entries()) {
+      console.log(`Create Notice - ${key}: ${value}`);
+    }
+
     setModalData(formData);
     setModalAction("create");
     setIsModalOpen(true);
@@ -125,8 +129,9 @@ const AddNotice = () => {
       date: notice.date,
       notice_description: notice.notice_description,
       expire_date: notice.expire_date,
-      file_attached: notice.file_attached, // File input cannot pre-populate, user must re-upload
+      file_attached: null, // File input cannot pre-populate
       academic_year: notice.academic_year.toString(),
+      existing_file: notice.file_attached, // Store existing file URL
     });
   };
 
@@ -142,8 +147,7 @@ const AddNotice = () => {
       !newNotice.date ||
       !newNotice.notice_description.trim() ||
       !newNotice.expire_date ||
-      !newNotice.academic_year ||
-      !newNotice.file_attached
+      !newNotice.academic_year
     ) {
       toast.error("অনুগ্রহ করে সকল ক্ষেত্র পূরণ করুন");
       return;
@@ -153,15 +157,20 @@ const AddNotice = () => {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("notice_title", newNotice.notice_title.trim());
-    formData.append("date", newNotice.date);
-    formData.append("notice_description", newNotice.notice_description.trim());
-    formData.append("expire_date", newNotice.expire_date);
-    formData.append("file_attached", newNotice.file_attached);
-    formData.append("academic_year", newNotice.academic_year);
+    const noticeData = {
+      notice_title: newNotice.notice_title.trim(),
+      date: newNotice.date,
+      notice_description: newNotice.notice_description.trim(),
+      expire_date: newNotice.expire_date,
+      academic_year: newNotice.academic_year,
+      file_attached: newNotice.file_attached, // New file if uploaded
+      existing_file: newNotice.existing_file, // Retain existing file if no new file
+    };
 
-    setModalData({ id: selectedNoticeId, formData });
+    // Log payload for debugging
+    // console.log("Update Notice Payload:", noticeData);
+
+    setModalData({ id: selectedNoticeId, noticeData });
     setModalAction("update");
     setIsModalOpen(true);
   };
@@ -205,6 +214,7 @@ const AddNotice = () => {
           expire_date: "",
           file_attached: null,
           academic_year: "",
+          existing_file: null,
         });
       } else if (modalAction === "update") {
         if (!hasChangePermission) {
@@ -213,7 +223,7 @@ const AddNotice = () => {
         }
         await updateNotice({
           id: modalData.id,
-          ...modalData.formData,
+          noticeData: modalData.noticeData,
         }).unwrap();
         toast.success("নোটিশ সফলভাবে আপডেট করা হয়েছে!");
         setSelectedNoticeId(null);
@@ -224,6 +234,7 @@ const AddNotice = () => {
           expire_date: "",
           file_attached: null,
           academic_year: "",
+          existing_file: null,
         });
       } else if (modalAction === "delete") {
         if (!hasDeletePermission) {
@@ -293,7 +304,6 @@ const AddNotice = () => {
 
   return (
     <div className="py-8">
-      <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
           @keyframes fadeIn {
@@ -344,7 +354,6 @@ const AddNotice = () => {
           textarea {
             border: 1px solid #9d9087;
             border-radius: 0.5rem;
-            // padding: 0.5rem;
             color: #441a05;
             font-family: 'Noto Sans Bengali', sans-serif;
             width: 100%;
@@ -492,6 +501,11 @@ const AddNotice = () => {
                   aria-label="ফাইল সংযুক্তি নির্বাচন করুন"
                   title="ফাইল সংযুক্তি নির্বাচন করুন / Select file attachment"
                 />
+                {newNotice.existing_file && !newNotice.file_attached && (
+                  <p className="text-sm text-[#441a05]/70">
+                    Existing file: {newNotice.existing_file}
+                  </p>
+                )}
               </div>
               <div className="flex items-end space-x-4">
                 <button
@@ -536,6 +550,7 @@ const AddNotice = () => {
                         expire_date: "",
                         file_attached: null,
                         academic_year: "",
+                        existing_file: null,
                       });
                     }}
                     className="px-6 py-3 rounded-lg font-medium bg-gray-500/20 text-[#441a05] hover:bg-gray-500/30 transition-all duration-300 animate-scaleIn btn-glow"
