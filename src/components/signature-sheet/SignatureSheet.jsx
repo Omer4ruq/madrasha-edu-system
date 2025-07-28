@@ -1,70 +1,53 @@
-
-import React, { useState, useRef } from 'react';
-import { FaPrint, FaFilePdf, FaSpinner } from 'react-icons/fa';
+import { useState, useRef } from 'react';
+import { FaPrint, FaSpinner } from 'react-icons/fa';
 import { Toaster, toast } from 'react-hot-toast';
-import { useReactToPrint } from 'react-to-print';
-import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
+import Select from 'react-select';
 import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
 import { useGetExamApiQuery } from '../../redux/features/api/exam/examApi';
 import { useGetStudentActiveByClassQuery } from '../../redux/features/api/student/studentActiveApi';
 import { useGetClassSubjectsByClassIdQuery } from '../../redux/features/api/class-subjects/classSubjectsApi';
 import { useGetInstituteLatestQuery } from '../../redux/features/api/institute/instituteLatestApi';
-
-
+import selectStyles from '../../utilitis/selectStyles';
 
 const SignatureSheet = () => {
-  const [selectedClassId, setSelectedClassId] = useState(null);
-  const [selectedExamId, setSelectedExamId] = useState(null);
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedExam, setSelectedExam] = useState(null);
   const tableRef = useRef();
 
-  // Fetch institute data
-  const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
+  console.log(selectedClass);
 
-  // Fetch class configurations
+  const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
   const { data: classes = [], isLoading: isClassesLoading, error: classesError } = useGetclassConfigApiQuery();
-  
-  // Fetch exams
   const { data: exams = [], isLoading: isExamsLoading, error: examsError } = useGetExamApiQuery();
-  
-  // Fetch active students for selected class
   const {
     data: students = [],
     isLoading: isStudentsLoading,
     error: studentsError,
-  } = useGetStudentActiveByClassQuery(selectedClassId, { skip: !selectedClassId });
-  console.log("students", students)
-console.log(classes)
-  // Get class_id for subject query
-  const getClassId = classes?.find((classConfig) => classConfig?.g_class_id === parseInt(selectedClassId));
-  console.log("getClassId", getClassId)
-console.log("selectedClassId",selectedClassId)
-  // Fetch subjects for selected class
+  } = useGetStudentActiveByClassQuery(selectedClass?.value?.id, { skip: !selectedClass?.value?.id });
   const {
     data: subjects = [],
     isLoading: isSubjectsLoading,
     error: subjectsError,
-  } = useGetClassSubjectsByClassIdQuery(getClassId?.g_class_id, { skip: !selectedClassId });
-console.log("subjects",subjects)
-  // Filter active classes
+  } = useGetClassSubjectsByClassIdQuery(selectedClass?.value?.g_class_id, { skip: !selectedClass?.value?.g_class_id });
+
   const activeClasses = classes.filter((cls) => cls.is_active);
-
-  // Extract active subjects
   const activeSubjects = subjects.filter((subject) => subject.is_active) || [];
-
-  // Get current date in Bengali format
   const currentDate = new Date().toLocaleDateString('bn-BD', { dateStyle: 'short' });
 
-  // Handle print functionality
-  const handlePrint = useReactToPrint({
-    content: () => tableRef.current,
-    documentTitle: `Signature_Sheet_${selectedClassId}_${selectedExamId}`,
-    onBeforePrint: () => toast.success('প্রিন্টিং শুরু হচ্ছে...'),
-    onAfterPrint: () => toast.success('প্রিন্টিং সম্পন্ন!'),
-  });
 
-  // Generate HTML report (similar to TeacherPerformance.jsx)
+
+ const classOptions = activeClasses.map((cls) => ({
+    value: { id: cls.id, g_class_id: cls.g_class_id },
+    label: `${cls.class_name} ${cls.section_name} ${cls.shift_name}`,
+  }));
+
+  const examOptions = exams.map((exam) => ({
+    value: exam.id,
+    label: exam.name,
+  }));
+
   const generatePDFReport = () => {
-    if (!selectedClassId || !selectedExamId) {
+    if (!selectedClass?.value || !selectedExam?.value) {
       toast.error('শ্রেণি এবং পরীক্ষা নির্বাচন করুন।');
       return;
     }
@@ -85,8 +68,8 @@ console.log("subjects",subjects)
       return;
     }
 
-    const classDetails = activeClasses.find(cls => cls.id === parseInt(selectedClassId));
-    const examDetails = exams.find(exam => exam.id === parseInt(selectedExamId));
+    const classDetails = activeClasses.find(cls => cls.id === parseInt(selectedClass?.value?.id));
+    const examDetails = exams.find(exam => exam.id === parseInt(selectedExam.value));
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -164,7 +147,7 @@ console.log("subjects",subjects)
         </div>
         <h1 class="title">স্বাক্ষর শীট</h1>
         <div class="teacher-details">
-          <p><strong>শ্রেণি:</strong> ${classDetails?.class_name || 'N/A'} ${classDetails?.section_name || ''}</p>
+          <p><strong>শ্রেণি:</strong> ${classDetails?.class_name || 'N/A'} ${classDetails?.section_name || ''} ${classDetails?.shift_name || ''}</p>
           <p><strong>পরীক্ষা:</strong> ${examDetails?.name || 'N/A'}</p>
           <p><strong>তারিখ:</strong> ${currentDate}</p>
         </div>
@@ -214,9 +197,77 @@ console.log("subjects",subjects)
     toast.success('PDF রিপোর্ট তৈরি হয়েছে!');
   };
 
+  const customSelectStyles = {
+    ...selectStyles, // Merge with existing selectStyles
+    control: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.hasValue ? '#FFF7E6' : '#fff', // Light yellow when class is selected
+      borderColor: state.hasValue ? '#DB9E30' : state.isFocused ? '#F59E0B' : '#ccc', // Orange border for selected
+      boxShadow: state.hasValue ? '0 0 0 2px rgba(219, 158, 48, 0.3)' : state.isFocused ? '0 0 0 1px #F59E0B' : null,
+      '&:hover': {
+        borderColor: state.hasValue ? '#DB9E30' : '#F59E0B',
+      },
+      padding: '4px',
+      borderRadius: '8px',
+      transition: 'all 0.2s ease',
+    }),
+    singleValue: (provided, state) => ({
+      ...provided,
+      color: state.hasValue ? '#441a05' : '#000', // Darker text for selected
+      fontWeight: state.hasValue ? 'bold' : 'normal', // Bold when selected
+      display: 'flex',
+      alignItems: 'center',
+      '&:before': state.hasValue
+        ? {
+            content: '"সক্রিয়"',
+            backgroundColor: '#DB9E30',
+            color: '#fff',
+            fontSize: '10px',
+            padding: '2px 6px',
+            borderRadius: '4px',
+            marginRight: '8px',
+            fontWeight: 'normal',
+          }
+        : {},
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? '#DB9E30' // Orange for selected option
+        : state.isFocused
+        ? '#FFF7E6'
+        : '#fff',
+      color: state.isSelected ? '#fff' : '#000',
+      fontWeight: state.isSelected ? 'bold' : 'normal',
+      padding: '10px 12px',
+      cursor: 'pointer',
+      '&:hover': {
+        backgroundColor: state.isSelected ? '#DB9E30' : '#FFF7E6', // Keep orange if selected, else light yellow
+      },
+    }),
+    menu: (provided) => ({
+      ...provided,
+      zIndex: 9999,
+      backgroundColor: '#fff',
+      borderRadius: '8px',
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+    }),
+    menuList: (provided) => ({
+      ...provided,
+      padding: '0',
+      maxHeight: '200px',
+      '::-webkit-scrollbar': {
+        width: '6px',
+      },
+      '::-webkit-scrollbar-thumb': {
+        background: '#DB9E30',
+        borderRadius: '4px',
+      },
+    }),
+  };
+
   return (
     <div className="py-8 w-full relative">
-      <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
           @keyframes fadeIn {
@@ -312,43 +363,40 @@ console.log("subjects",subjects)
           স্বাক্ষর শীট তৈরি করুন
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 no-print">
-          <select
-            value={selectedClassId || ''}
-            onChange={(e) => setSelectedClassId(e.target.value)}
-            className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
+          <Select
+            options={classOptions}
+            value={selectedClass}
+            onChange={setSelectedClass}
+            placeholder="ক্লাস নির্বাচন করুন"
+            className="w-full animate-scaleIn"
+            classNamePrefix="select"
             aria-label="ক্লাস নির্বাচন"
             title="ক্লাস নির্বাচন করুন"
-          >
-            <option value="">ক্লাস নির্বাচন করুন</option>
-            {activeClasses.map((cls) => (
-              <option key={cls.g_class_id} value={cls.g_class_id}>
-                {`${cls.class_name} ${cls.section_name} ${cls.shift_name}`}
-              </option>
-            ))}
-          </select>
-          <select
-            value={selectedExamId || ''}
-            onChange={(e) => setSelectedExamId(e.target.value)}
-            className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 animate-scaleIn"
+            styles={selectStyles}
+            menuPortalTarget={document.body}
+            menuPosition="fixed"
+          />
+          <Select
+            options={examOptions}
+            value={selectedExam}
+            onChange={setSelectedExam}
+            placeholder="পরীক্ষা নির্বাচন করুন"
+            className="w-full animate-scaleIn"
+            classNamePrefix="select"
             aria-label="পরীক্ষা নির্বাচন"
             title="পরীক্ষা নির্বাচন করুন"
-          >
-            <option value="">পরীক্ষা নির্বাচন করুন</option>
-            {exams.map((exam) => (
-              <option key={exam.id} value={exam.id}>
-                {exam.name}
-              </option>
-            ))}
-          </select>
+            styles={selectStyles}
+            menuPortalTarget={document.body}
+            menuPosition="fixed"
+          />
           <div className="flex space-x-4">
             <button
-            onClick={generatePDFReport}
-              disabled={!selectedClassId || !selectedExamId || isStudentsLoading || isSubjectsLoading}
-              className={`flex w-full items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                !selectedClassId || !selectedExamId || isStudentsLoading || isSubjectsLoading
+              onClick={generatePDFReport}
+              disabled={!selectedClass?.value || !selectedExam?.value || isStudentsLoading || isSubjectsLoading}
+              className={`flex w-full items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${!selectedClass?.value || !selectedExam?.value || isStudentsLoading || isSubjectsLoading
                   ? 'cursor-not-allowed opacity-50'
                   : 'hover:text-white btn-glow'
-              }`}
+                }`}
               title="প্রিন্ট করুন"
             >
               <FaPrint className="mr-2" /> প্রিন্ট
@@ -369,14 +417,14 @@ console.log("subjects",subjects)
       <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
         <div ref={tableRef} className="print-container">
           <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20 no-print">
-            স্বাক্ষর শীট {selectedClassId && selectedExamId && `- ক্লাস: ${activeClasses.find(cls => cls.id === parseInt(selectedClassId))?.class_name} ${activeClasses.find(cls => cls.id === parseInt(selectedClassId))?.section_name}, পরীক্ষা: ${exams.find(exam => exam.id === parseInt(selectedExamId))?.name}`}
+            স্বাক্ষর শীট {selectedClass?.value && selectedExam?.value && `- ক্লাস: ${activeClasses.find(cls => cls.g_class_id === parseInt(selectedClass.value.g_class_id))?.class_name} ${activeClasses.find(cls => cls.g_class_id === parseInt(selectedClass.value.g_class_id))?.section_name}, পরীক্ষা: ${exams.find(exam => exam.id === parseInt(selectedExam.value))?.name}`}
           </h3>
           {(isClassesLoading || isExamsLoading || isStudentsLoading || isSubjectsLoading || instituteLoading) && (
             <p className="p-4 text-black flex items-center">
               <FaSpinner className="animate-spin mr-2" /> ডেটা লোড হচ্ছে...
             </p>
           )}
-          {!selectedClassId || !selectedExamId ? (
+          {!selectedClass?.value || !selectedExam?.value ? (
             <p className="p-4 text-black">অনুগ্রহ করে ক্লাস এবং পরীক্ষা নির্বাচন করুন।</p>
           ) : students.length === 0 ? (
             <p className="p-4 text-black">এই ক্লাসে কোনো সক্রিয় ছাত্র নেই।</p>
