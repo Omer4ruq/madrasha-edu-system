@@ -32,17 +32,19 @@ const SignatureSheet = () => {
     isLoading: isStudentsLoading,
     error: studentsError,
   } = useGetStudentActiveByClassQuery(selectedClassId, { skip: !selectedClassId });
-
+  console.log("students", students)
+console.log(classes)
   // Get class_id for subject query
-  const getClassId = classes?.find((classConfig) => classConfig?.id === parseInt(selectedClassId));
-
+  const getClassId = classes?.find((classConfig) => classConfig?.g_class_id === parseInt(selectedClassId));
+  console.log("getClassId", getClassId)
+console.log("selectedClassId",selectedClassId)
   // Fetch subjects for selected class
   const {
     data: subjects = [],
     isLoading: isSubjectsLoading,
     error: subjectsError,
-  } = useGetClassSubjectsByClassIdQuery(getClassId?.class_id, { skip: !selectedClassId });
-
+  } = useGetClassSubjectsByClassIdQuery(getClassId?.g_class_id, { skip: !selectedClassId });
+console.log("subjects",subjects)
   // Filter active classes
   const activeClasses = classes.filter((cls) => cls.is_active);
 
@@ -319,7 +321,7 @@ const SignatureSheet = () => {
           >
             <option value="">ক্লাস নির্বাচন করুন</option>
             {activeClasses.map((cls) => (
-              <option key={cls.id} value={cls.id}>
+              <option key={cls.g_class_id} value={cls.g_class_id}>
                 {`${cls.class_name} ${cls.section_name} ${cls.shift_name}`}
               </option>
             ))}

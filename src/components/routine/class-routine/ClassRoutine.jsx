@@ -47,7 +47,7 @@ export default function ClassRoutine() {
   // Fetch classes
   const { data: classes, isLoading: classesLoading } =
     useGetclassConfigApiQuery();
-
+console.log("classes", classes)
   // Fetch teachers
   const { data: allteachers, isLoading: allteachersLoading } =
     useGetTeacherStaffProfilesQuery();
@@ -97,7 +97,8 @@ export default function ClassRoutine() {
     selectedClass && isValidId(selectedClass.class_id) ? selectedClass.class_id : undefined,
     { skip: !selectedClass || !isValidId(selectedClass.class_id) }
   );
-
+console.log("selectedClass", selectedClass)
+console.log("classSubjects", classSubjects)
   // Filter active subjects
   const activeSubjects = useMemo(() => {
     if (!Array.isArray(classSubjects)) return [];
@@ -111,7 +112,7 @@ export default function ClassRoutine() {
   const handleClassSelect = (cls) => {
     setSelectedClass({
       id: cls.id,
-      class_id: cls.class_id,
+      class_id: cls.g_class_id,
       name: `${cls.class_name} ${cls.section_name}`,
     });
     setSelectedSubjects([]);
