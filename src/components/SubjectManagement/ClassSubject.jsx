@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"; // Add useEffect import
+import React, { useState, useEffect } from "react";
 import { FaSpinner, FaTrash } from "react-icons/fa";
 import { IoAddCircle } from "react-icons/io5";
 import { Toaster, toast } from "react-hot-toast";
@@ -10,13 +10,13 @@ import {
 } from "../../redux/features/api/class-subjects/classSubjectsApi";
 import { useGetGSubjectsByClassQuery } from "../../redux/features/api/class-subjects/gsubjectApi";
 import { useGetStudentClassApIQuery } from "../../redux/features/api/student/studentClassApi";
-import { useSelector } from "react-redux"; // Import useSelector
-import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi"; // Import permission hook
-
+import { useSelector } from "react-redux";
+import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi";
 
 const ClassSubject = () => {
-  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
+  const { user, group_id } = useSelector((state) => state.auth);
   const [selectedClassId, setSelectedClassId] = useState(null);
+  const [filterClassId, setFilterClassId] = useState("all"); // For filtering the active subjects table
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState(null);
   const [modalAction, setModalAction] = useState(null);
@@ -49,6 +49,8 @@ const ClassSubject = () => {
     skip: !group_id,
   });
 
+  console.log("classSubjects", classSubjects);
+
   // Permission checks
   const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_classsubject') || false;
   const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_classsubject') || false;
@@ -67,20 +69,28 @@ const ClassSubject = () => {
     setSelectedClassId(classId);
   };
 
-  // Handle subject checkbox change
+  console.log(selectedClassId);
+  console.log("classes", classes);
+
+  // Handle subject checkbox change - for activating/deactivating subjects
   const handleSubjectStatusChange = async (subjectId, isActive) => {
     if (!hasAddPermission && !hasChangePermission) {
       toast.error('বিষয় যোগ বা আপডেট করার অনুমতি নেই।');
       return;
     }
+
+    // Check if subject is already activated for this class
     const existingSubject = classSubjects.find(
-      (sub) => sub.class_subject === subjectId
+      (sub) => sub.class_subject === subjectId && sub.class_info?.id === selectedClassId
     );
+    
     const action = existingSubject ? "আপডেট" : "তৈরি";
     const payload = {
       is_active: isActive,
       class_subject: subjectId,
     };
+
+    console.log("payload", payload);
 
     try {
       if (existingSubject) {
@@ -112,17 +122,6 @@ const ClassSubject = () => {
     }
   };
 
-  // Handle toggle active status from table
-  const handleToggleActive = (subjectId, currentStatus) => {
-    if (!hasChangePermission) {
-      toast.error('বিষয় স্ট্যাটাস পরিবর্তন করার অনুমতি নেই।');
-      return;
-    }
-    setModalAction("toggle");
-    setModalData({ id: subjectId, is_active: !currentStatus });
-    setIsModalOpen(true);
-  };
-
   // Handle delete button click
   const handleDelete = (id) => {
     if (!hasDeletePermission) {
@@ -144,36 +143,15 @@ const ClassSubject = () => {
         }
         await deleteClassSubject(modalData.id).unwrap();
         toast.success("বিষয় সফলভাবে মুছে ফেলা হয়েছে!");
-      } else if (modalAction === "toggle") {
-        if (!hasChangePermission) {
-          toast.error('বিষয় স্ট্যাটাস পরিবর্তন করার অনুমতি নেই।');
-          return;
-        }
-        await updateClassSubject({
-          id: modalData.id,
-          is_active: modalData.is_active,
-        }).unwrap();
-        toast.success(
-          `বিষয় ${modalData.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"} করা হয়েছে!`
-        );
       }
     } catch (err) {
-      console.error(
-        `${
-          modalAction === "delete" ? "বিষয় মুছে ফেলা" : "স্ট্যাটাস টগল"
-        } ব্যর্থ:`,
-        err
-      );
+      console.error("বিষয় মুছে ফেলা ব্যর্থ:", err);
       const errorDetail =
         err?.data?.detail ||
         err?.data?.non_field_errors?.join(", ") ||
         err?.message ||
         "অজানা ত্রুটি";
-      toast.error(
-        `${
-          modalAction === "delete" ? "বিষয় মুছে ফেলা" : "স্ট্যাটাস টগল"
-        } ব্যর্থ: ${errorDetail}`
-      );
+      toast.error(`বিষয় মুছে ফেলা ব্যর্থ: ${errorDetail}`);
     } finally {
       setIsModalOpen(false);
       setModalAction(null);
@@ -269,7 +247,7 @@ const ClassSubject = () => {
                 classes?.map((cls, index) => (
                   <button
                     key={cls.id}
-                    onClick={() => handleClassSelect(cls.student_class.id)}
+                    onClick={() => handleClassSelect(cls?.student_class.id)}
                     className={`whitespace-nowrap py-2 px-4 font-medium text-sm rounded-md transition-all duration-300 animate-scaleIn ${
                       selectedClassId === cls.student_class.id
                         ? "bg-[#DB9E30] text-[#441a05] shadow-md"
@@ -291,11 +269,11 @@ const ClassSubject = () => {
           </div>
         </div>
 
-        {/* Subject List with Checkboxes */}
+        {/* Subject List with Checkboxes for Activation/Deactivation */}
         {selectedClassId && (hasAddPermission || hasChangePermission) && (
           <div className="bg-black/10 backdrop-blur-sm p-6 rounded-2xl shadow-xl mb-10 mx-auto animate-fadeIn">
             <h2 className="text-lg font-semibold text-[#441a05] mb-4">
-              নির্বাচিত ক্লাসের জন্য বিষয়
+              নির্বাচিত ক্লাসের জন্য বিষয় (সক্রিয়/নিষ্ক্রিয় করুন)
             </h2>
             {gSubjectsLoading ? (
               <div className="text-center animate-fadeIn">
@@ -307,11 +285,13 @@ const ClassSubject = () => {
                 ত্রুটি: {gSubjectsError.message}
               </p>
             ) : gSubjects.length > 0 ? (
-              <ul className=" grid grid-cols-1 md:grid-cols-3 gap-6">
+              <ul className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {gSubjects.map((subject, index) => {
+                  // Check if this subject is already activated for the selected class
                   const existingSubject = classSubjects.find(
-                    (sub) => sub.class_subject === subject.id
+                    (sub) => sub.class_subject === subject.id && sub.class_info?.id === selectedClassId
                   );
+                  
                   return (
                     <li
                       key={subject.id}
@@ -321,9 +301,7 @@ const ClassSubject = () => {
                       <label className="flex items-center cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={
-                            existingSubject ? existingSubject.is_active : false
-                          }
+                          checked={existingSubject ? existingSubject.is_active : false}
                           onChange={(e) =>
                             handleSubjectStatusChange(
                               subject.id,
@@ -375,7 +353,7 @@ const ClassSubject = () => {
           </div>
         )}
 
-        {/* Display Class Subjects */}
+        {/* Display Only Active Class Subjects */}
         {subjectsLoading || classesLoading ? (
           <div className="text-center animate-fadeIn">
             <FaSpinner className="inline-block animate-spin text-2xl text-[#441a05] mb-2" />
@@ -387,9 +365,28 @@ const ClassSubject = () => {
           </p>
         ) : (
           <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
-            <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">
-              ক্লাস বিষয় তালিকা
-            </h3>
+            <div className="flex justify-between items-center p-4 border-b border-white/20">
+              <h3 className="text-lg font-semibold text-[#441a05]">
+                সক্রিয় ক্লাস বিষয় তালিকা
+              </h3>
+              
+              {/* Class Filter Dropdown */}
+              <div className="flex items-center space-x-2">
+                <label className="text-sm text-[#441a05]/70">ক্লাস ফিল্টার:</label>
+                <select
+                  value={filterClassId}
+                  onChange={(e) => setFilterClassId(e.target.value)}
+                  className="px-3 py-1 bg-white/10 border border-white/20 rounded-md text-[#441a05] text-sm focus:outline-none focus:ring-2 focus:ring-[#DB9E30] focus:border-transparent"
+                >
+                  <option value="all">সকল ক্লাস</option>
+                  {classes.map((cls) => (
+                    <option key={cls.id} value={cls.student_class.id}>
+                      {cls.student_class.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-white/20">
                 <thead className="bg-white/5">
@@ -406,11 +403,9 @@ const ClassSubject = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       SL
                     </th>
-                    {hasChangePermission && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                        সক্রিয়
-                      </th>
-                    )}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      স্ট্যাটাস
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
                       তৈরির সময়
                     </th>
@@ -427,21 +422,17 @@ const ClassSubject = () => {
                 <tbody className="divide-y divide-white/20">
                   {classSubjects
                     ?.filter((subject) => {
-                      const gSubject = gSubjects.find(
-                        (gSub) => gSub.id === subject.class_subject
-                      );
-                      return gSubject?.class_id === selectedClassId;
+                      // Filter by active status
+                      if (!subject.is_active) return false;
+                      
+                      // Filter by selected class if not "all"
+                      if (filterClassId !== "all") {
+                        return subject.class_info?.id === parseInt(filterClassId);
+                      }
+                      
+                      return true;
                     })
                     .map((subject, index) => {
-                      const gSubject =
-                        gSubjects.find(
-                          (gSub) => gSub.id === subject.class_subject
-                        ) || {};
-                      const className = gSubject.class_id
-                        ? classes.find((cls) => cls.id === gSubject.class_id)
-                            ?.student_class?.name || "অজানা"
-                        : "অজানা";
-
                       return (
                         <tr
                           key={subject.id}
@@ -452,66 +443,24 @@ const ClassSubject = () => {
                             {index + 1}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                            {className}
+                            {subject.class_info?.name || "অজানা"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                            {gSubject.name || "অজানা"}
+                            {subject.name || "অজানা"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                            {gSubject.sl || "-"}
+                            {subject.sl || "-"}
                           </td>
-                          {hasChangePermission && (
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                              <label className="flex items-center cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={subject.is_active}
-                                  onChange={() => handleToggleActive(subject.id, subject.is_active)}
-                                  disabled={updateLoading || deleteLoading}
-                                  className="hidden cursor-none"
-                                  aria-label={`বিষয় ${
-                                    gSubject.name || "অজানা"
-                                  } সক্রিয়/নিষ্ক্রিয় করুন`}
-                                  title={`বিষয় সক্রিয়/নিষ্ক্রিয় করুন / Toggle subject ${
-                                    gSubject.name || "Unknown"
-                                  }`}
-                                />
-                                <span
-                                  className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${
-                                    subject.is_active
-                                      ? "bg-[#DB9E30] border-[#DB9E30]"
-                                      : "bg-white/10 border-[#9d9087] hover:border-[#441a05]"
-                                  }`}
-                                >
-                                  {subject.is_active && (
-                                    <svg
-                                      className="w-4 h-4 text-[#441a05] animate-scaleIn"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                      xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M5 13l4 4L19 7"
-                                      />
-                                    </svg>
-                                  )}
-                                </span>
-                              </label>
-                            </td>
-                          )}
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                            {new Date(subject.created_at).toLocaleString(
-                              "bn-BD"
-                            )}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              সক্রিয়
+                            </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                            {new Date(subject.updated_at).toLocaleString(
-                              "bn-BD"
-                            )}
+                            {new Date(subject.created_at).toLocaleString("bn-BD")}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                            {new Date(subject.updated_at).toLocaleString("bn-BD")}
                           </td>
                           {hasDeletePermission && (
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -536,30 +485,35 @@ const ClassSubject = () => {
                 </tbody>
               </table>
             </div>
-            {classSubjects?.length === 0 && (
+            {classSubjects?.filter((subject) => {
+              // Filter by active status
+              if (!subject.is_active) return false;
+              
+              // Filter by selected class if not "all"
+              if (filterClassId !== "all") {
+                return subject.class_info?.id === parseInt(filterClassId);
+              }
+              
+              return true;
+            }).length === 0 && (
               <p className="text-[#441a05]/70 p-4 text-center animate-fadeIn">
-                কোনো ক্লাস বিষয় পাওয়া যায়নি
+                {filterClassId === "all" 
+                  ? "কোনো সক্রিয় ক্লাস বিষয় পাওয়া যায়নি" 
+                  : "নির্বাচিত ক্লাসের জন্য কোনো সক্রিয় বিষয় পাওয়া যায়নি"}
               </p>
             )}
           </div>
         )}
 
         {/* Confirmation Modal */}
-        {isModalOpen && (hasChangePermission || hasDeletePermission) && (
+        {isModalOpen && hasDeletePermission && (
           <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[10000]">
             <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
               <h3 className="text-lg font-semibold text-[#441a05] mb-4">
-                {modalAction === "delete" && "বিষয় মুছে ফেলা নিশ্চিত করুন"}
-                {modalAction === "toggle" &&
-                  "বিষয় স্ট্যাটাস পরিবর্তন নিশ্চিত করুন"}
+                বিষয় মুছে ফেলা নিশ্চিত করুন
               </h3>
               <p className="text-[#441a05] mb-6">
-                {modalAction === "delete" &&
-                  "আপনি কি নিশ্চিত যে এই বিষয় মুছে ফেলতে চান?"}
-                {modalAction === "toggle" &&
-                  `আপনি কি নিশ্চিত যে এই বিষয় ${
-                    modalData.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"
-                  } করতে চান? `}
+                আপনি কি নিশ্চিত যে এই বিষয় মুছে ফেলতে চান?
               </p>
               <div className="flex justify-end space-x-4">
                 <button
@@ -574,7 +528,7 @@ const ClassSubject = () => {
                   className="px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white transition-colors duration-300 btn-glow"
                   title="নিশ্চিত করুন / Confirm"
                 >
-                  নিশ্চit করুন
+                  নিশ্চিত করুন
                 </button>
               </div>
             </div>

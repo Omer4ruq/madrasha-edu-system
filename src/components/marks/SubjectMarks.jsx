@@ -28,11 +28,13 @@ const SubjectMarks = () => {
   const { data: exams, isLoading: examsLoading } = useGetExamApiQuery();
   const { data: academicYears, isLoading: yearsLoading } = useGetAcademicYearApiQuery();
   const { data: classes, isLoading: classesLoading } = useGetclassConfigApiQuery();
+  console.log("classes",classes)
   const {
     data: subjectMarkConfigs,
     isLoading: configsLoading,
     isFetching: configsFetching
   } = useGetSubjectMarkConfigsByClassQuery(classId, { skip: !classId });
+  console.log("classId", classId)
   console.log("subjectMarkConfigs", subjectMarkConfigs);
   const {
     data: subjectMarkConfigsBySubject,

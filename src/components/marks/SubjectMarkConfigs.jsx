@@ -18,7 +18,9 @@ import { useGetGroupPermissionsQuery } from "../../redux/features/api/permission
 const SubjectMarkConfigs = () => {
   const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
   const { data: classes = [], isLoading: classesLoading } = useGetStudentClassApIQuery();
+  console.log("classes", classes)
   const [selectedClassId, setSelectedClassId] = useState('');
+  const [selectedMainClassId, setSelectedMainClassId] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState(null);
   const [modalAction, setModalAction] = useState(null);
@@ -27,6 +29,7 @@ const SubjectMarkConfigs = () => {
     isLoading: subjectsLoading,
     error: subjectsError
   } = useGetClassSubjectsByClassIdQuery(selectedClassId, { skip: !selectedClassId });
+  console.log(selectedClassId)
   const {
     data: markConfigs = [],
     isLoading: configsLoading
@@ -60,9 +63,9 @@ const SubjectMarkConfigs = () => {
 
   // Load existing configurations
   useEffect(() => {
-    if (markConfigs && selectedClassId && markTypes.length > 0) {
+    if (markConfigs && selectedMainClassId && markTypes.length > 0) {
       const configs = markConfigs.reduce((acc, config) => {
-        if (config.class_id === Number(selectedClassId)) {
+        if (config.class_id === Number(selectedMainClassId)) {
           acc[config.subject_id] = {
             id: config.id,
             subject_id: config.subject_id,
@@ -83,10 +86,12 @@ const SubjectMarkConfigs = () => {
   }, [markConfigs, selectedClassId, markTypes]);
 
   const handleClassChange = (classId) => {
-    setSelectedClassId(classId);
+
+    setSelectedClassId(classId?.student_class?.id);
+    setSelectedMainClassId(classId?.id);
     setSubjectConfigs({});
   };
-
+console.log("selectedMainClassId", selectedMainClassId)
   const handleInputChange = (subjectId, field, value, markType = null) => {
     if (!hasChangePermission) {
       toast.error('মার্ক কনফিগারেশন সম্পাদনা করার অনুমতি নেই।');
@@ -166,7 +171,7 @@ const SubjectMarkConfigs = () => {
 
       const payload = {
         id: config.id,
-        class_id: Number(selectedClassId),
+        class_id: Number(selectedMainClassId),
         subject_id: Number(config.subject_id),
         subject_serial: Number(config.subject_serial) || 1,
         subject_type: config.subject_type || 'COMPULSARY',
@@ -274,7 +279,7 @@ const SubjectMarkConfigs = () => {
         .filter(subject => subject.mark_configs.length > 0);
 
       const payload = {
-        class_id: Number(selectedClassId),
+        class_id: Number(selectedMainClassId),
         subjects: subjects
       };
 
@@ -402,9 +407,9 @@ const SubjectMarkConfigs = () => {
             {classes.map((cls, index) => (
               <button
                 key={cls.id}
-                onClick={() => handleClassChange(cls.id)}
+                onClick={() => handleClassChange(cls)}
                 className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 animate-scaleIn ${
-                  selectedClassId === cls.id
+                  selectedClassId === cls?.student_class?.id
                     ? 'bg-[#DB9E30] text-[#441a05] shadow-lg ring-2 ring-[#9d9087]'
                     : 'bg-white/10 text-[#441a05] hover:bg-white/20 hover:shadow-md'
                 }`}
