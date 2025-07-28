@@ -247,7 +247,7 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [currentClassId, setCurrentClassId] = useState(selectedClassId);
-
+console.log("selectedClassId",selectedClassId)
   // Map English day names to Bangla for display
   const dayMap = {
     Saturday: "শনিবার",
