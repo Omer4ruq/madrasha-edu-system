@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { FaPrint, FaSpinner } from 'react-icons/fa';
-import { Toaster, toast } from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 import Select from 'react-select';
 import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
 import { useGetExamApiQuery } from '../../redux/features/api/exam/examApi';
@@ -197,74 +197,6 @@ const SignatureSheet = () => {
     toast.success('PDF রিপোর্ট তৈরি হয়েছে!');
   };
 
-  const customSelectStyles = {
-    ...selectStyles, // Merge with existing selectStyles
-    control: (provided, state) => ({
-      ...provided,
-      backgroundColor: state.hasValue ? '#FFF7E6' : '#fff', // Light yellow when class is selected
-      borderColor: state.hasValue ? '#DB9E30' : state.isFocused ? '#F59E0B' : '#ccc', // Orange border for selected
-      boxShadow: state.hasValue ? '0 0 0 2px rgba(219, 158, 48, 0.3)' : state.isFocused ? '0 0 0 1px #F59E0B' : null,
-      '&:hover': {
-        borderColor: state.hasValue ? '#DB9E30' : '#F59E0B',
-      },
-      padding: '4px',
-      borderRadius: '8px',
-      transition: 'all 0.2s ease',
-    }),
-    singleValue: (provided, state) => ({
-      ...provided,
-      color: state.hasValue ? '#441a05' : '#000', // Darker text for selected
-      fontWeight: state.hasValue ? 'bold' : 'normal', // Bold when selected
-      display: 'flex',
-      alignItems: 'center',
-      '&:before': state.hasValue
-        ? {
-            content: '"সক্রিয়"',
-            backgroundColor: '#DB9E30',
-            color: '#fff',
-            fontSize: '10px',
-            padding: '2px 6px',
-            borderRadius: '4px',
-            marginRight: '8px',
-            fontWeight: 'normal',
-          }
-        : {},
-    }),
-    option: (provided, state) => ({
-      ...provided,
-      backgroundColor: state.isSelected
-        ? '#DB9E30' // Orange for selected option
-        : state.isFocused
-        ? '#FFF7E6'
-        : '#fff',
-      color: state.isSelected ? '#fff' : '#000',
-      fontWeight: state.isSelected ? 'bold' : 'normal',
-      padding: '10px 12px',
-      cursor: 'pointer',
-      '&:hover': {
-        backgroundColor: state.isSelected ? '#DB9E30' : '#FFF7E6', // Keep orange if selected, else light yellow
-      },
-    }),
-    menu: (provided) => ({
-      ...provided,
-      zIndex: 9999,
-      backgroundColor: '#fff',
-      borderRadius: '8px',
-      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-    }),
-    menuList: (provided) => ({
-      ...provided,
-      padding: '0',
-      maxHeight: '200px',
-      '::-webkit-scrollbar': {
-        width: '6px',
-      },
-      '::-webkit-scrollbar-thumb': {
-        background: '#DB9E30',
-        borderRadius: '4px',
-      },
-    }),
-  };
 
   return (
     <div className="py-8 w-full relative">
