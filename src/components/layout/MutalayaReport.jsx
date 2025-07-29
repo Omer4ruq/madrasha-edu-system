@@ -88,9 +88,10 @@ const MutalayaReport = () => {
         })),
       }));
       setDynamicReportData(dynamicData);
-    } else {
-      setDynamicReportData([]);
-    }
+    } 
+    // else {
+    //   setDynamicReportData([]);
+    // }
   }, [students, activeSubjects, selectedClassConfig, startDate, endDate, dynamicDates]);
 
   // Generate dynamic report data for primary layout

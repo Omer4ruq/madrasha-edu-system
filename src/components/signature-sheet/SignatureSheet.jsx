@@ -14,7 +14,7 @@ const SignatureSheet = () => {
   const [selectedExam, setSelectedExam] = useState(null);
   const tableRef = useRef();
 
-  console.log(selectedClass);
+
 
   const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
   const { data: classes = [], isLoading: isClassesLoading, error: classesError } = useGetclassConfigApiQuery();
