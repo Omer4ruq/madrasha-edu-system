@@ -57,7 +57,7 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
   }
 
   return (
-    <li
+    <ul
       className={`text-white group/dd duration-300 relative ${
         isActive ? "bg-[#00000020]" : ""
       }`}
@@ -114,6 +114,6 @@ export default function DropDown({ data, ddId, setDDId, setItemId }) {
       })}
       </Link>
      
-    </li>
+    </ul>
   );
 }

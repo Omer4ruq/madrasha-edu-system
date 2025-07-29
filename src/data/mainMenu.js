@@ -3,6 +3,7 @@ const mainMenu = [
     id: "01",
     title: "প্রোফাইল",
     icon: false,
+    link: "/profile",
   },
   {
     id: "02",
