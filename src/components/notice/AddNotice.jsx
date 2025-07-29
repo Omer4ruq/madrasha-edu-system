@@ -5,7 +5,7 @@ import { Toaster, toast } from "react-hot-toast";
 import {
   useGetNoticesQuery,
   useCreateNoticeMutation,
-  useUpdateNoticeMutation,
+  usePatchNoticeMutation,
   useDeleteNoticeMutation,
 } from "../../redux/features/api/notice/noticeApi";
 import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
@@ -23,8 +23,9 @@ const AddNotice = () => {
     date: "",
     notice_description: "",
     expire_date: "",
-    file_attached: "",
+    file_attached: null,
     academic_year: "",
+    existing_file: null,
   });
   const formRef = useRef(null);
 
@@ -42,8 +43,8 @@ const AddNotice = () => {
   } = useGetAcademicYearApiQuery();
   const [createNotice, { isLoading: isCreating, error: createError }] =
     useCreateNoticeMutation();
-  const [updateNotice, { isLoading: isUpdating, error: updateError }] =
-    useUpdateNoticeMutation();
+  const [patchNotice, { isLoading: isUpdating, error: updateError }] =
+    usePatchNoticeMutation();
   const [deleteNotice, { isLoading: isDeleting, error: deleteError }] =
     useDeleteNoticeMutation();
 
@@ -57,11 +58,9 @@ const AddNotice = () => {
   const hasAddPermission =
     groupPermissions?.some((perm) => perm.codename === "add_notice") || false;
   const hasChangePermission =
-    groupPermissions?.some((perm) => perm.codename === "change_notice") ||
-    false;
+    groupPermissions?.some((perm) => perm.codename === "change_notice") || false;
   const hasDeletePermission =
-    groupPermissions?.some((perm) => perm.codename === "delete_notice") ||
-    false;
+    groupPermissions?.some((perm) => perm.codename === "delete_notice") || false;
   const hasViewPermission =
     groupPermissions?.some((perm) => perm.codename === "view_notice") || false;
 
@@ -125,8 +124,9 @@ const AddNotice = () => {
       date: notice.date,
       notice_description: notice.notice_description,
       expire_date: notice.expire_date,
-      file_attached: notice.file_attached, // File input cannot pre-populate, user must re-upload
+      file_attached: null,
       academic_year: notice.academic_year.toString(),
+      existing_file: notice.file_attached,
     });
   };
 
@@ -142,8 +142,7 @@ const AddNotice = () => {
       !newNotice.date ||
       !newNotice.notice_description.trim() ||
       !newNotice.expire_date ||
-      !newNotice.academic_year ||
-      !newNotice.file_attached
+      !newNotice.academic_year
     ) {
       toast.error("অনুগ্রহ করে সকল ক্ষেত্র পূরণ করুন");
       return;
@@ -153,13 +152,26 @@ const AddNotice = () => {
       return;
     }
 
+    // Prepare FormData with only changed fields
     const formData = new FormData();
-    formData.append("notice_title", newNotice.notice_title.trim());
-    formData.append("date", newNotice.date);
-    formData.append("notice_description", newNotice.notice_description.trim());
-    formData.append("expire_date", newNotice.expire_date);
-    formData.append("file_attached", newNotice.file_attached);
-    formData.append("academic_year", newNotice.academic_year);
+    if (newNotice.notice_title.trim()) {
+      formData.append("notice_title", newNotice.notice_title.trim());
+    }
+    if (newNotice.date) {
+      formData.append("date", newNotice.date);
+    }
+    if (newNotice.notice_description.trim()) {
+      formData.append("notice_description", newNotice.notice_description.trim());
+    }
+    if (newNotice.expire_date) {
+      formData.append("expire_date", newNotice.expire_date);
+    }
+    if (newNotice.academic_year) {
+      formData.append("academic_year", newNotice.academic_year);
+    }
+    if (newNotice.file_attached) {
+      formData.append("file_attached", newNotice.file_attached);
+    } 
 
     setModalData({ id: selectedNoticeId, formData });
     setModalAction("update");
@@ -193,7 +205,7 @@ const AddNotice = () => {
     try {
       if (modalAction === "create") {
         if (!hasAddPermission) {
-          toast.error("নোটিশ তৈরি করার অনুমতি নেই।");
+          toast.error("নোটিশ তৈরি করা হিনে।");
           return;
         }
         await createNotice(modalData).unwrap();
@@ -205,15 +217,16 @@ const AddNotice = () => {
           expire_date: "",
           file_attached: "",
           academic_year: "",
+          existing_file: null,
         });
       } else if (modalAction === "update") {
         if (!hasChangePermission) {
           toast.error("নোটিশ আপডেট করার অনুমতি নেই।");
           return;
         }
-        await updateNotice({
+        await patchNotice({
           id: modalData.id,
-          ...modalData.formData,
+          formData: modalData.formData,
         }).unwrap();
         toast.success("নোটিশ সফলভাবে আপডেট করা হয়েছে!");
         setSelectedNoticeId(null);
@@ -224,6 +237,7 @@ const AddNotice = () => {
           expire_date: "",
           file_attached: "",
           academic_year: "",
+          existing_file: null,
         });
       } else if (modalAction === "delete") {
         if (!hasDeletePermission) {
@@ -293,7 +307,6 @@ const AddNotice = () => {
 
   return (
     <div className="py-8">
-      <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
           @keyframes fadeIn {
@@ -344,7 +357,6 @@ const AddNotice = () => {
           textarea {
             border: 1px solid #9d9087;
             border-radius: 0.5rem;
-            // padding: 0.5rem;
             color: #441a05;
             font-family: 'Noto Sans Bengali', sans-serif;
             width: 100%;
@@ -492,12 +504,17 @@ const AddNotice = () => {
                   aria-label="ফাইল সংযুক্তি নির্বাচন করুন"
                   title="ফাইল সংযুক্তি নির্বাচন করুন / Select file attachment"
                 />
+                {newNotice.existing_file && !newNotice.file_attached && (
+                  <p className="text-sm text-[#441a05]/70 max-w-[300px] overflow-auto text-nowrap">
+                    Existing file: {newNotice.existing_file}
+                  </p>
+                )}
               </div>
               <div className="flex items-end space-x-4">
                 <button
                   type="submit"
                   disabled={isCreating || isUpdating}
-                  className={`px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn btn-glow ${
+                  className={`px-8 py-3 text-nowrap rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn btn-glow ${
                     isCreating || isUpdating
                       ? "cursor-not-allowed opacity-50"
                       : "hover:text-white hover:shadow-md"
@@ -536,6 +553,7 @@ const AddNotice = () => {
                         expire_date: "",
                         file_attached: null,
                         academic_year: "",
+                        existing_file: null,
                       });
                     }}
                     className="px-6 py-3 rounded-lg font-medium bg-gray-500/20 text-[#441a05] hover:bg-gray-500/30 transition-all duration-300 animate-scaleIn btn-glow"

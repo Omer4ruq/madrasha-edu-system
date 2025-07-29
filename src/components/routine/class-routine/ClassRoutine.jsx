@@ -47,7 +47,7 @@ export default function ClassRoutine() {
   // Fetch classes
   const { data: classes, isLoading: classesLoading } =
     useGetclassConfigApiQuery();
-
+console.log("classes", classes)
   // Fetch teachers
   const { data: allteachers, isLoading: allteachersLoading } =
     useGetTeacherStaffProfilesQuery();
@@ -94,10 +94,11 @@ export default function ClassRoutine() {
     isLoading: subjectsLoading,
     error: subjectsError 
   } = useGetClassSubjectsByClassIdQuery(
-    selectedClass && isValidId(selectedClass.class_id) ? selectedClass.class_id : undefined,
-    { skip: !selectedClass || !isValidId(selectedClass.class_id) }
+    selectedClass && isValidId(selectedClass.g_class_id) ? selectedClass.g_class_id : undefined,
+    { skip: !selectedClass || !isValidId(selectedClass.g_class_id) }
   );
-
+console.log("selectedClass", selectedClass)
+console.log("classSubjects", classSubjects)
   // Filter active subjects
   const activeSubjects = useMemo(() => {
     if (!Array.isArray(classSubjects)) return [];
@@ -111,7 +112,10 @@ export default function ClassRoutine() {
   const handleClassSelect = (cls) => {
     setSelectedClass({
       id: cls.id,
-      class_id: cls.class_id,
+      class_id: cls.id,
+      g_class_id: cls.g_class_id,
+      r_class_id: cls.class_id,
+     
       name: `${cls.class_name} ${cls.section_name}`,
     });
     setSelectedSubjects([]);
@@ -150,7 +154,7 @@ console.log("selectedClass", selectedClass)
     setModalData({
       day_name: selectedDay,
       note: "",
-      class_id: selectedClass.class_id,
+      class_id: selectedClass.id,
       period_id: selectedPeriod.id,
       subject_id: selectedSubjects[0].id,
       teacher_name: selectedTeacher.id,

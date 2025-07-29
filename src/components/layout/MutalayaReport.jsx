@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Select from "react-select";
 import { Toaster, toast } from "react-hot-toast";
 import { FaSpinner, FaDownload } from "react-icons/fa";
@@ -9,8 +9,8 @@ import { useGetInstituteLatestQuery } from "../../redux/features/api/institute/i
 import selectStyles from "../../utilitis/selectStyles";
 
 // Simulate marks data (replace with actual marks API when available)
-const simulateMarks = (studentId) => {
-  return []; // Marks data not used in the report
+const simulateMarks = () => {
+  return [];
 };
 
 // Generate dynamic dates based on date range
@@ -18,6 +18,8 @@ const generateDynamicDates = (startDate, endDate) => {
   if (!startDate || !endDate) return [];
   const start = new Date(startDate);
   const end = new Date(endDate);
+  if (isNaN(start) || isNaN(end)) return [];
+
   const dates = [];
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     const bnDate = d.toLocaleDateString("bn-BD", { day: "numeric" });
@@ -27,104 +29,94 @@ const generateDynamicDates = (startDate, endDate) => {
   return dates;
 };
 
-// Simulate attendance data
-const simulateAttendance = (studentId, subjectName, dynamicDates) => {
-  const attendance = {};
-  dynamicDates.forEach((d) => {
-    attendance[d.date] = {
-      sobok:
-        Math.random() > 0.3 ? "✓" : Math.floor(Math.random() * 10).toString(),
-      mutalaya: Math.random() > 0.5 ? "✓" : Math.random() > 0.7 ? "১/২" : "",
-    };
-  });
-  return attendance;
-};
-
 const MutalayaReport = () => {
-  const [selectedClassConfig, setSelectedClassConfig] = useState("");
+  const [selectedClassConfig, setSelectedClassConfig] = useState(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [reportData, setReportData] = useState([]);
   const [dynamicReportData, setDynamicReportData] = useState([]);
-  const [isDownloading, setIsDownloading] = useState(false);
+
+  // Simulate attendance data
+  const simulateAttendance = (studentId, subjectName, dynamicDates) => {
+    const attendance = {};
+    dynamicDates.forEach((d) => {
+      attendance[d.date] = {
+        sobok: Math.random() > 0.3 ? "✓" : Math.floor(Math.random() * 10).toString(),
+        mutalaya: Math.random() > 0.5 ? "✓" : Math.random() > 0.7 ? "১/২" : "",
+      };
+    });
+    return attendance;
+  };
 
   // Fetch APIs
-  const { data: classConfigs, isLoading: classConfigsLoading } =
-    useGetclassConfigApiQuery();
-  const { data: students, isLoading: studentsLoading } =
-    useGetStudentActiveByClassQuery(selectedClassConfig, {
-      skip: !selectedClassConfig,
-    });
-  const { data: subjects, isLoading: subjectsLoading } =
-    useGetClassSubjectsByClassIdQuery(selectedClassConfig, {
-      skip: !selectedClassConfig,
-    });
-  const {
-    data: institute,
-    isLoading: instituteLoading,
-    error: instituteError,
-  } = useGetInstituteLatestQuery();
+  const { data: classConfigs = [], isLoading: classConfigsLoading } = useGetclassConfigApiQuery();
+  const { data: students = [], isLoading: studentsLoading } = useGetStudentActiveByClassQuery(
+    selectedClassConfig?.value?.id,
+    { skip: !selectedClassConfig?.value?.id }
+  );
+  const { data: subjects = [], isLoading: subjectsLoading } = useGetClassSubjectsByClassIdQuery(
+    selectedClassConfig?.value?.g_class_id,
+    { skip: !selectedClassConfig?.value?.g_class_id }
+  );
+  const { data: institute, isLoading: instituteLoading } = useGetInstituteLatestQuery();
 
-  // Generate report data (for compatibility, though not used in primary layout)
+  // Memoize active classes and subjects
+  const activeClasses = useMemo(() => classConfigs.filter((cls) => cls.is_active), [classConfigs]);
+  const activeSubjects = useMemo(() => subjects.filter((subject) => subject.is_active) || [], [subjects]);
+
+  // Generate class options
+  const classConfigOptions = useMemo(
+    () =>
+      activeClasses.map((cls) => ({
+        value: { id: cls.id, g_class_id: cls.g_class_id },
+        label: `${cls.class_name} ${cls.section_name} ${cls.shift_name}`,
+      })),
+    [activeClasses]
+  );
+
+  // Memoize dynamic dates
+  const dynamicDates = useMemo(() => generateDynamicDates(startDate, endDate), [startDate, endDate]);
+
+  // Generate dynamic report data
   useEffect(() => {
-    if (students && subjects && selectedClassConfig && startDate && endDate) {
-      const data = students.map((student) => {
-        const marks = simulateMarks(student.id);
-        const totalObtained = marks.reduce((sum, m) => sum + m.obtained, 0);
-        const totalMaxMarks = marks.length * 100;
-        const averageMarks =
-          totalMaxMarks > 0 ? (totalObtained / totalMaxMarks) * 100 : 0;
-        return {
-          studentId: student.id,
-          rollNo: student.roll_no || student.username,
-          studentName: student.name,
-          subjects: marks,
-          totalObtained,
-          averageMarks: averageMarks.toFixed(2),
-        };
-      });
-      setReportData(data);
+    if (students.length && activeSubjects.length && selectedClassConfig?.value && startDate && endDate) {
+      const dynamicData = students.map((student) => ({
+        name: student.name,
+        roll_no: student.roll_no || student.username,
+        subjects: activeSubjects.map((subject) => ({
+          name: subject.name,
+          attendance: simulateAttendance(student.id, subject.name, dynamicDates),
+        })),
+      }));
+      setDynamicReportData(dynamicData);
+    } else {
+      setDynamicReportData([]);
     }
-  }, [students, subjects, selectedClassConfig, startDate, endDate]);
+  }, [students, activeSubjects, selectedClassConfig, startDate, endDate, dynamicDates]);
 
   // Generate dynamic report data for primary layout
   useEffect(() => {
-    if (students && subjects && selectedClassConfig && startDate && endDate) {
+    if (students && activeSubjects && selectedClassConfig?.value && startDate && endDate) {
       const dynamicDates = generateDynamicDates(startDate, endDate);
       const dynamicData = students.map((student) => ({
         name: student.name,
         roll_no: student.roll_no || student.username,
-        subjects: subjects.map((subject) => ({
+        subjects: activeSubjects.map((subject) => ({
           name: subject.name,
-          attendance: simulateAttendance(
-            student.id,
-            subject.name,
-            dynamicDates
-          ),
+          attendance: simulateAttendance(student.id, subject.name, dynamicDates),
         })),
       }));
       setDynamicReportData(dynamicData);
     }
-  }, [students, subjects, selectedClassConfig, startDate, endDate]);
+  }, [students, activeSubjects, selectedClassConfig, startDate, endDate]);
 
   // Generate HTML-based report for printing
   const downloadPDF = () => {
-    if (
-      !selectedClassConfig ||
-      !startDate ||
-      !endDate ||
-      dynamicReportData.length === 0
-    ) {
+    if (!selectedClassConfig?.value || !startDate || !endDate || dynamicReportData.length === 0) {
       toast.error("দয়া করে ক্লাস এবং তারিখের রেঞ্জ নির্বাচন করুন।");
       return;
     }
 
-    if (
-      classConfigsLoading ||
-      studentsLoading ||
-      subjectsLoading ||
-      instituteLoading
-    ) {
+    if (classConfigsLoading || studentsLoading || subjectsLoading || instituteLoading) {
       toast.error("তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন।");
       return;
     }
@@ -135,9 +127,8 @@ const MutalayaReport = () => {
     }
 
     const dynamicDates = generateDynamicDates(startDate, endDate);
-    const className =
-      classConfigs?.find((c) => c.id === Number(selectedClassConfig))
-        ?.class_name || "অজানা";
+    const classDetails = activeClasses.find((cls) => cls.id === parseInt(selectedClassConfig?.value?.id));
+    const className = classDetails?.class_name || "অজানা";
 
     // Group rows by student to prevent breaking across pages
     const studentGroups = dynamicReportData.map((student, sIdx) => ({
@@ -204,7 +195,7 @@ const MutalayaReport = () => {
             margin-top: 10px;
           }
           thead {
-            display: table-header-group; /* Ensures header repeats on each page */
+            display: table-header-group;
           }
           th, td { 
             border: 1px solid #000; 
@@ -222,7 +213,7 @@ const MutalayaReport = () => {
             color: #000; 
           }
           .student-group {
-            page-break-inside: avoid; /* Prevents student rows from breaking across pages */
+            page-break-inside: avoid;
           }
           .header { 
             text-align: center; 
@@ -263,9 +254,20 @@ const MutalayaReport = () => {
             font-size: 8px;
             color: #555;
           }
-            .sobok{
+          .sobok {
             padding: 0 2px;
-            }
+          }
+          .name-cell {
+            transform: rotate(180deg);
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            width: 20px;
+            min-height: 80px;
+            line-height: 1.2;
+          }
+          .attendance-cell {
+          
+          }
         </style>
       </head>
       <body>
@@ -280,16 +282,17 @@ const MutalayaReport = () => {
               </div>
               <h2 class="title">মুতালায়া ও সবক শুনানোর রিপোর্ট</h2>
               <p class="sub-header">
-                জামাত: ${className} | মাস: ${new Date(
-              startDate
-            ).toLocaleDateString("bn-BD", { month: "long" })} - ২০২৫
+                জামাত: ${className} | মাস: ${new Date(startDate).toLocaleDateString(
+                  "bn-BD",
+                  { month: "long" }
+                )} - ২০২৫
               </p>
             </div>
             <table>
               <thead>
                 <tr>
-                  <th rowspan="3" style="width: 40px;">ক্রমিক</th>
-                  <th rowspan="3" style="width: 120px;">নাম</th>
+                  <th rowspan="3" style="width: 20px;">ক্রমিক</th>
+                  <th rowspan="3" style="width: 20px;">নাম</th>
                   <th rowspan="3" style="width: 80px;">বিষয়</th>
                   ${dynamicDates
                     .map(
@@ -327,7 +330,7 @@ const MutalayaReport = () => {
                       40 / dynamicDates.length,
                       20
                     )}px;">সবক</th>
-                    <th class='sobok' style="width: ${Math.max(
+                    <th class="sobok" style="width: ${Math.max(
                       40 / dynamicDates.length,
                       20
                     )}px;">মুতালায়া</th>
@@ -350,12 +353,12 @@ const MutalayaReport = () => {
                             ? `
                           <td rowspan="${
                             student.subjects.length
-                          }" style="vertical-align: top;">
+                          }" style="vertical-align: middle; text-align: center;">
                             ${sIdx + 1}
                           </td>
                           <td rowspan="${
                             student.subjects.length
-                          }" style="vertical-align: top;">
+                          }" class="name-cell">
                             ${student.name}
                           </td>
                         `
@@ -365,8 +368,8 @@ const MutalayaReport = () => {
                         ${dynamicDates
                           .map(
                             (d) => `
-                          <td>${""}</td>
-                          <td>${""}</td>
+                          <td class="attendance-cell"></td>
+                          <td class="attendance-cell"></td>
                         `
                           )
                           .join("")}
@@ -404,15 +407,8 @@ const MutalayaReport = () => {
     toast.success("মুতালায়া ও সবক শুনানোর রিপোর্ট সফলভাবে তৈরি হয়েছে!");
   };
 
-  const classConfigOptions =
-    classConfigs?.map((config) => ({
-      value: config.id,
-      label: `${config.class_name} - ${config.section_name} (${config.shift_name})`,
-    })) || [];
-
   return (
     <div className="py-8 w-full relative">
-      <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
           @keyframes fadeIn {
@@ -423,8 +419,8 @@ const MutalayaReport = () => {
             animation: fadeIn 0.6s ease-out forwards;
           }
           .a4-portrait {
-            width: 793px; /* 210mm at 96dpi */
-            height: 1122px; /* 297mm at 96dpi */
+            width: 793px;
+            height: 1122px;
             margin: 0 auto;
             background: white;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -501,6 +497,15 @@ const MutalayaReport = () => {
           ::-webkit-scrollbar-thumb:hover {
             background: rgba(10, 13, 21, 0.44);
           }
+          // .name-cell {
+          //   transform: rotate(180deg);
+          //   writing-mode: vertical-rl;
+          //   text-orientation: mixed;
+          //   width: 25px;
+          //   min-height: 80px;
+          //   line-height: 1.2;
+          // }
+        
         `}
       </style>
 
@@ -511,15 +516,9 @@ const MutalayaReport = () => {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Select
-            value={
-              classConfigOptions.find(
-                (option) => option.value === selectedClassConfig
-              ) || null
-            }
-            onChange={(option) =>
-              setSelectedClassConfig(option ? option.value : "")
-            }
             options={classConfigOptions}
+            value={selectedClassConfig}
+            onChange={setSelectedClassConfig}
             placeholder="ক্লাস নির্বাচন করুন"
             isDisabled={classConfigsLoading}
             styles={selectStyles}
@@ -527,7 +526,6 @@ const MutalayaReport = () => {
             menuPosition="fixed"
             aria-label="ক্লাস নির্বাচন"
           />
-
           <input
             type="date"
             value={startDate}
@@ -545,12 +543,13 @@ const MutalayaReport = () => {
             placeholder="শেষের তারিখ"
           />
         </div>
-        
+
         {/* Enhanced PDF Download Button */}
         <button
           onClick={downloadPDF}
           className="download-btn"
           disabled={
+            !selectedClassConfig?.value ||
             dynamicReportData.length === 0 ||
             classConfigsLoading ||
             studentsLoading ||
@@ -563,14 +562,23 @@ const MutalayaReport = () => {
       </div>
 
       {/* Report Preview */}
-      {classConfigsLoading ||
-      studentsLoading ||
-      subjectsLoading ||
-      instituteLoading ? (
+      {classConfigsLoading || studentsLoading || subjectsLoading || instituteLoading ? (
         <div className="flex justify-center items-center h-64">
           <FaSpinner className="animate-spin text-4xl text-[#441A05]" />
         </div>
-      ) : dynamicReportData.length > 0 ? (
+      ) : !selectedClassConfig?.value ? (
+        <p className="text-center text-[#441A05]/70">
+          রিপোর্ট তৈরি করতে ক্লাস নির্বাচন করুন।
+        </p>
+      ) : students.length === 0 ? (
+        <p className="text-center text-[#441A05]/70">
+          এই ক্লাসে কোনো সক্রিয় ছাত্র নেই।
+        </p>
+      ) : activeSubjects.length === 0 ? (
+        <p className="text-center text-[#441A05]/70">
+          এই ক্লাসে কোনো সক্রিয় বিষয় নেই।
+        </p>
+      ) : (
         <div className="p-4 text-xs font-[kalpurush] text-black a4-portrait animate-fadeIn">
           {/* Header */}
           <div className="text-center mb-4">
@@ -579,10 +587,7 @@ const MutalayaReport = () => {
             </h2>
             <p className="text-sm">
               জামাত:{" "}
-              {
-                classConfigs?.find((c) => c.id === Number(selectedClassConfig))
-                  ?.class_name
-              }{" "}
+              {activeClasses.find((c) => c.id === parseInt(selectedClassConfig?.value?.id))?.class_name || "N/A"}{" "}
               | মাস:{" "}
               {new Date(startDate).toLocaleDateString("bn-BD", {
                 month: "long",
@@ -595,47 +600,27 @@ const MutalayaReport = () => {
             <table className="table-auto w-full border-collapse">
               <thead>
                 <tr>
-                  <th
-                    rowSpan="3"
-                    className="border border-black py-1 text-[8px]"
-                  >
+                  <th rowSpan="3" className="border border-black py-1 text-[8px]">
                     ক্রমিক
                   </th>
-                  <th
-                    rowSpan="3"
-                    className="border border-black px-2 py-1 text-[8px]"
-                  >
+                  <th rowSpan="3" className="border border-black px-2 py-1 text-[8px]">
                     নাম
                   </th>
-                  <th
-                    rowSpan="3"
-                    className="border border-black px-2 py-1 text-[8px]"
-                  >
+                  <th rowSpan="3" className="border border-black px-2 py-1 text-[8px]">
                     বিষয়
                   </th>
                   {generateDynamicDates(startDate, endDate).map((d, i) => (
-                    <th
-                      key={i}
-                      colSpan={2}
-                      className="border border-black text-center text-[8px]"
-                    >
+                    <th key={i} colSpan={2} className="border border-black text-center text-[8px]">
                       {d.day}
                     </th>
                   ))}
-                  <th
-                    rowSpan="3"
-                    className="border border-black px-2 py-1 text-[8px]"
-                  >
+                  <th rowSpan="3" className="border border-black px-2 py-1 text-[8px]">
                     মন্তব্য
                   </th>
                 </tr>
                 <tr>
                   {generateDynamicDates(startDate, endDate).map((d, i) => (
-                    <th
-                      key={i}
-                      colSpan={2}
-                      className="border border-black text-center text-[8px]"
-                    >
+                    <th key={i} colSpan={2} className="border border-black text-center text-[8px]">
                       {d.date}
                     </th>
                   ))}
@@ -643,12 +628,8 @@ const MutalayaReport = () => {
                 <tr>
                   {generateDynamicDates(startDate, endDate).map((_, i) => (
                     <React.Fragment key={i}>
-                      <th className="border border-black text-center text-[8px] px-2">
-                        সবক
-                      </th>
-                      <th className="border border-black text-center text-[8px]">
-                        মুতালায়া
-                      </th>
+                      <th className="border border-black text-center text-[8px] px-2">সবক</th>
+                      <th className="border border-black text-center text-[8px]">মুতালায়া</th>
                     </React.Fragment>
                   ))}
                 </tr>
@@ -660,7 +641,7 @@ const MutalayaReport = () => {
                       {subjIdx === 0 && (
                         <td
                           rowSpan={student.subjects.length}
-                          className="border border-black text-center align-top text-[8px]"
+                          className="border border-black text-center align-middle text-[8px]"
                         >
                           {sIdx + 1}
                         </td>
@@ -668,14 +649,14 @@ const MutalayaReport = () => {
                       {subjIdx === 0 && (
                         <td
                           rowSpan={student.subjects.length}
-                          className="border border-black align-top px-1 text-center text-[8px]"
-                          style={{ 
-                            transform: 'rotate(180deg)',
-                            writingMode: 'vertical-rl', 
-                            textOrientation: 'mixed',
-                            width: '25px',
-                            minHeight: '80px',
-                            lineHeight: '1.2'
+                          className="border border-black text-center text-[8px]"
+                          style={{
+                            transform: "rotate(180deg)",
+                            writingMode: "vertical-rl",
+                            textOrientation: "mixed",
+                            width: "25px",
+                            minHeight: "80px",
+                            lineHeight: "1.2",
                           }}
                         >
                           {student.name}
@@ -686,8 +667,12 @@ const MutalayaReport = () => {
                       </td>
                       {generateDynamicDates(startDate, endDate).map((d) => (
                         <React.Fragment key={d.date}>
-                          <td className="border border-black text-center text-[8px]"></td>
-                          <td className="border border-black text-center text-[8px]"></td>
+                          <td className="border border-black text-center text-[8px]">
+                        
+                          </td>
+                          <td className="border border-black text-center text-[8px]">
+                  
+                          </td>
                         </React.Fragment>
                       ))}
                       <td className="border border-black"></td>
@@ -698,10 +683,6 @@ const MutalayaReport = () => {
             </table>
           </div>
         </div>
-      ) : (
-        <p className="text-center text-[#441A05]/70">
-          রিপোর্ট তৈরি করতে ফিল্টার নির্বাচন করুন।
-        </p>
       )}
     </div>
   );

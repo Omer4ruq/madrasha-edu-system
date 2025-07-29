@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-const BASE_URL = 'https://demo.easydr.xyz/api';
+import BASE_URL from '../../../../utilitis/apiConfig';
 
 const getToken = () => {
   return localStorage.getItem('token');

@@ -195,68 +195,73 @@ const AddWaivers = () => {
   };
 
   // Create waivers
-  const handleSubmitWaivers = async (e) => {
-    e.preventDefault();
-    if (!hasAddPermission) {
-      toast.error('ওয়েভার যোগ করার অনুমতি নেই।');
-      return;
-    }
-    if (selectedStudents.length === 0) {
-      toast.error("অন্তত একজন ছাত্র নির্বাচন করুন।");
-      return;
-    }
+const handleSubmitWaivers = async (e) => {
+  e.preventDefault();
+  if (!hasAddPermission) {
+    toast.error('ওয়েভার যোগ করার অনুমতি নেই।');
+    return;
+  }
+  if (selectedStudents.length === 0) {
+    toast.error("অন্তত একজন ছাত্র নির্বাচন করুন।");
+    return;
+  }
 
-    const errors = [];
-    const payloads = selectedStudents.map((studentId) => {
-      const waiver = studentWaivers[studentId];
-      if (
-        !waiver.waiver_amount ||
-        !waiver.academic_year ||
-        !waiver.fee_types.length ||
-        !waiver.fund_id
-      ) {
-        errors.push(
-          `ছাত্র আইডি ${studentId} এর জন্য প্রয়োজনীয় ক্ষেত্রগুলি পূরণ করুন (ফি প্রকার, ওয়েভার পরিমাণ, শিক্ষাবর্ষ, ফান্ড)।`
-        );
-        return null;
-      }
-      if (parseFloat(waiver.waiver_amount) > 100) {
-        errors.push(
-          `ছাত্র আইডি ${studentId} এর জন্য ওয়েভার পরিমাণ ১০০% এর বেশি হতে পারবে না।`
-        );
-        return null;
-      }
-      return {
-        student_id: waiver.student_id,
-        waiver_amount: parseFloat(waiver.waiver_amount),
-        academic_year: waiver.academic_year,
-        description: waiver.description.trim() || null,
-        fee_types: waiver.fee_types,
-        fund_id: waiver.fund_id,
-        created_by: parseInt(localStorage.getItem("userId")) || 1,
-        updated_by: parseInt(localStorage.getItem("userId")) || 1,
-      };
-    });
-
-    if (errors.length > 0) {
-      toast.error(errors.join("\n"));
-      return;
-    }
-
-    try {
-      const validPayloads = payloads.filter((p) => p !== null);
-      await Promise.all(
-        validPayloads.map((payload) => createWaiver(payload).unwrap())
+  const errors = [];
+  const payloads = selectedStudents.map((studentId) => {
+    const waiver = studentWaivers[studentId];
+    
+    // Updated validation - now includes description as required
+    if (
+      !waiver.waiver_amount ||
+      !waiver.academic_year ||
+      !waiver.fee_types.length ||
+      !waiver.fund_id ||
+      !waiver.description?.trim() // Added description validation
+    ) {
+      errors.push(
+        `ছাত্র আইডি ${studentId} এর জন্য প্রয়োজনীয় ক্ষেত্রগুলি পূরণ করুন (ফি প্রকার, ওয়েভার পরিমাণ, শিক্ষাবর্ষ, ফান্ড, বর্ণনা)।`
       );
-      toast.success("ওয়েভারগুলি সফলভাবে তৈরি হয়েছে!");
-      setSelectedStudents([]);
-      setStudentWaivers({});
-      setSelectedClassId(null);
-      setSearchQuery("");
-    } catch (err) {
-      toast.error(`ওয়েভার তৈরি ব্যর্থ: ${err.status || "অজানা ত্রুটি"}`);
+      return null;
     }
-  };
+    
+    if (parseFloat(waiver.waiver_amount) > 100) {
+      errors.push(
+        `ছাত্র আইডি ${studentId} এর জন্য ওয়েভার পরিমাণ ১০০% এর বেশি হতে পারবে না।`
+      );
+      return null;
+    }
+    
+    return {
+      student_id: waiver.student_id,
+      waiver_amount: parseFloat(waiver.waiver_amount),
+      academic_year: waiver.academic_year,
+      description: waiver.description.trim(), // Remove || null since it's now required
+      fee_types: waiver.fee_types,
+      fund_id: waiver.fund_id,
+      created_by: parseInt(localStorage.getItem("userId")) || 1,
+      updated_by: parseInt(localStorage.getItem("userId")) || 1,
+    };
+  });
+
+  if (errors.length > 0) {
+    toast.error(errors.join("\n"));
+    return;
+  }
+
+  try {
+    const validPayloads = payloads.filter((p) => p !== null);
+    await Promise.all(
+      validPayloads.map((payload) => createWaiver(payload).unwrap())
+    );
+    toast.success("ওয়েভারগুলি সফলভাবে তৈরি হয়েছে!");
+    setSelectedStudents([]);
+    setStudentWaivers({});
+    setSelectedClassId(null);
+    setSearchQuery("");
+  } catch (err) {
+    toast.error(`ওয়েভার তৈরি ব্যর্থ: ${err.status || "অজানা ত্রুটি"}`);
+  }
+};
 
   // Edit button handler
   const handleEditClick = (waiver) => {
@@ -990,20 +995,21 @@ const AddWaivers = () => {
 
                             {/* Description Input */}
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <input
-                                type="text"
-                                value={waiver.description || ""}
-                                onChange={(e) =>
-                                  handleWaiverChange(
-                                    student.id,
-                                    "description",
-                                    e.target.value
-                                  )
-                                }
-                                className={`w-[200px] bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 ${disabledClass}`}
-                                placeholder="বর্ণনা"
-                                disabled={isDisabled}
-                              />
+                         <input
+  type="text"
+  value={waiver.description || ""}
+  onChange={(e) =>
+    handleWaiverChange(
+      student.id,
+      "description",
+      e.target.value
+    )
+  }
+  className={`w-[200px] bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 ${disabledClass} ${!waiver.description?.trim() ? 'border-red-400' : ''}`}
+  placeholder="বর্ণনা (আবশ্যক)*"
+  disabled={isDisabled}
+  required
+/>
                             </td>
                           </tr>
                         );
@@ -1245,20 +1251,21 @@ const AddWaivers = () => {
               isDisabled={isUpdating}
               aria-label="ফান্ড নির্বাচন"
             />
-            <input
-              type="text"
-              value={editWaiverData.description}
-              onChange={(e) =>
-                setEditWaiverData({
-                  ...editWaiverData,
-                  description: e.target.value,
-                })
-              }
-              className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
-              placeholder="বর্ণনা (যেমন, প্রয়োজন-ভিত্তিক সহায়তা)"
-              disabled={isUpdating}
-              aria-label="বর্ণনা"
-            />
+       <input
+  type="text"
+  value={editWaiverData.description}
+  onChange={(e) =>
+    setEditWaiverData({
+      ...editWaiverData,
+      description: e.target.value,
+    })
+  }
+  className={`w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn ${!editWaiverData.description?.trim() ? 'border-red-400' : ''}`}
+  placeholder="বর্ণনা (আবশ্যক)*"
+  disabled={isUpdating}
+  aria-label="বর্ণনা"
+  required
+/>
             <div className="flex space-x-4">
               <button
                 type="submit"

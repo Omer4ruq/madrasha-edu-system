@@ -16,12 +16,13 @@ const AddClass = () => {
   const navigate = useNavigate();
   const { user, group_id } = useSelector((state) => state.auth);
   const { data: classData, isLoading, error } = useGetClassListApiQuery();
+  console.log("global class", classData)
   const {
     data: classList,
     isLoading: isListLoading,
     error: listError,
   } = useGetStudentClassApIQuery();
-  
+  console.log("classList", classList)
   // Initialize mutation hooks
   const [createClass, { isLoading: isCreating }] = useCreateStudentClassApIMutation();
   const [deleteClass, { isLoading: isDeleting }] = useDeleteStudentClassApIMutation(); // Initialized delete mutation hook

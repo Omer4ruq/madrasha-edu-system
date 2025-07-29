@@ -103,6 +103,9 @@ export default BASE_URL;
 
 
 
+// ///////// local
+// const BASE_URL = 'https://demo.easydr.xyz/api'
+// export default BASE_URL
 
 
 
@@ -112,7 +115,11 @@ export default BASE_URL;
 
 
 
-///// live code
+
+
+
+
+// ///// live code
 // const getSubdomain = () => {
 //   const host = window.location.hostname;
 //   const parts = host.split(".");
@@ -212,4 +219,3 @@ export default BASE_URL;
 // await validateTenant();
 
 // export default BASE_URL;
-

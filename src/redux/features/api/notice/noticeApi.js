@@ -44,20 +44,20 @@ export const noticeApi = createApi({
 
     // PUT: Update an existing notice
     updateNotice: builder.mutation({
-      query: ({ id, ...noticeData }) => ({
+      query: ({ id, formData }) => ({
         url: `/notices/${id}/`,
         method: 'PUT',
-        body: noticeData,
+        body: formData,
       }),
       invalidatesTags: ['noticeApi'],
     }),
 
     // PATCH: Partially update an existing notice
     patchNotice: builder.mutation({
-      query: ({ id, ...noticeData }) => ({
+      query: ({ id, formData }) => ({
         url: `/notices/${id}/`,
         method: 'PATCH',
-        body: noticeData,
+        body: formData,
       }),
       invalidatesTags: ['noticeApi'],
     }),

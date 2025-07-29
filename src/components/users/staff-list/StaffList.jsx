@@ -443,7 +443,7 @@ const StaffList = () => {
     page_size: pageSize,
     ...filters,
   }, { skip: !hasViewPermission });
-
+console.log("staffData", staffData)
   const [updateStaff, { isLoading: isUpdating, error: updateError }] =
     useUpdateStaffListApIMutation();
   const [deleteStaff, { isLoading: isDeleting, error: deleteError }] =
