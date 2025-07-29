@@ -203,7 +203,7 @@ const AddNotice = () => {
           date: "",
           notice_description: "",
           expire_date: "",
-          file_attached: null,
+          file_attached: "",
           academic_year: "",
         });
       } else if (modalAction === "update") {
@@ -222,7 +222,7 @@ const AddNotice = () => {
           date: "",
           notice_description: "",
           expire_date: "",
-          file_attached: null,
+          file_attached: "",
           academic_year: "",
         });
       } else if (modalAction === "delete") {
