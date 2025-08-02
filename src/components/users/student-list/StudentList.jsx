@@ -15,6 +15,7 @@ import { useGetStudentClassApIQuery } from "../../../redux/features/api/student/
 import { useSelector } from "react-redux";
 import { useGetGroupPermissionsQuery } from "../../../redux/features/api/permissionRole/groupsApi";
 import selectStyles from "../../../utilitis/selectStyles";
+import { useGetInstituteLatestQuery } from "../../../redux/features/api/institute/instituteLatestApi";
 
 
 
@@ -77,6 +78,7 @@ const StudentList = () => {
   );
 
   // Fetch dropdown data
+    const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
   const { data: classes, isLoading: isClassesLoading } =
     useGetStudentClassApIQuery({ skip: !hasViewPermission });
   const { data: sections, isLoading: isSectionsLoading } =
@@ -252,6 +254,14 @@ const StudentList = () => {
       toast.error("প্রোফাইল দেখার অনুমতি নেই।");
       return;
     }
+     if (instituteLoading) {
+      toast.error('ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!');
+      return;
+    }
+    if (!institute) {
+      toast.error('ইনস্টিটিউট তথ্য পাওয়া যায়নি!');
+      return;
+    }
 
     const fullAddress = [
       student.village,
@@ -420,8 +430,8 @@ const StudentList = () => {
       </head>
       <body>
         <div class="header">
-          <div class="school-name">আদর্শ বিদ্যালয়</div>
-          <div class="school-address">ঢাকা, বাংলাদেশ | ফোন: ০১৭xxxxxxxx | ইমেইল: info@school.edu.bd</div>
+          <div class="school-name">${institute.institute_name || 'আদর্শ বিদ্যালয়, ঢাকা'}</div>
+          <div class="school-address">${institute.institute_address || '১২৩ মেইন রোড, ঢাকা, বাংলাদেশ'}</div>
           <div class="title">ছাত্র তথ্য প্রতিবেদন</div>
         </div>
 
@@ -1002,7 +1012,7 @@ border: 1px solid rgba(0, 0, 0, 0.05);
                 <tr>
                   {tableHeaders.map((header) => {
                     const isFixed = header.fixed;
-                    const headerClasses = `table-cell text-xs font-medium uppercase tracking-wider ${isFixed ? `fixed-col ${header.key}` : ""
+                    const headerClasses = `table-cell text-xs font-medium uppercase tracking-wider ${isFixed ? ` ${header.key}` : ""
                       }`;
                     const style = { width: header.width };
                     return (
@@ -1031,13 +1041,13 @@ border: 1px solid rgba(0, 0, 0, 0.05);
                     >
                       {/* Fixed Columns */}
                       <td
-                        className="table-cell fixed-col serial"
+                        className="table-cell serial"
                         style={{ width: "70px" }}
                       >
                         {serial}
                       </td>
                       <td
-                        className="table-cell fixed-col name"
+                        className="table-cell name"
                         style={{ width: "150px" }}
                       >
                         <div className="font-semibold">{student.name}</div>
@@ -1048,7 +1058,7 @@ border: 1px solid rgba(0, 0, 0, 0.05);
                         )}
                       </td>
                       <td
-                        className="table-cell fixed-col user_id"
+                        className="table-cell user_id"
                         style={{ width: "120px" }}
                       >
                         <span className="font-mono text-xs">
