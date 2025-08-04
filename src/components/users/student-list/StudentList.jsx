@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useRef, useMemo } from "react";
-import { FaEdit, FaSpinner, FaTrash, FaEye, FaDownload } from "react-icons/fa";
+import React, { useState, useCallback, useMemo } from "react";
+import { FaEdit, FaSpinner, FaTrash, FaDownload } from "react-icons/fa";
 import toast, { Toaster } from "react-hot-toast";
 import debounce from "lodash.debounce";
 import Select from "react-select";
@@ -16,10 +16,10 @@ import { useSelector } from "react-redux";
 import { useGetGroupPermissionsQuery } from "../../../redux/features/api/permissionRole/groupsApi";
 import selectStyles from "../../../utilitis/selectStyles";
 import { useGetInstituteLatestQuery } from "../../../redux/features/api/institute/instituteLatestApi";
-
-
+import { useNavigate } from "react-router-dom";
 
 const StudentList = () => {
+  const navigate = useNavigate();
   const { user, group_id } = useSelector((state) => state.auth);
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
@@ -78,7 +78,7 @@ const StudentList = () => {
   );
 
   // Fetch dropdown data
-    const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
+  const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
   const { data: classes, isLoading: isClassesLoading } =
     useGetStudentClassApIQuery({ skip: !hasViewPermission });
   const { data: sections, isLoading: isSectionsLoading } =
@@ -173,47 +173,12 @@ const StudentList = () => {
   };
 
   // Handle edit button click
-  const handleEditClick = (student) => {
+  const handleEditClick = (studentId) => {
     if (!hasChangePermission) {
       toast.error("ছাত্রের তথ্য সম্পাদনা করার অনুমতি নেই।");
       return;
     }
-    setEditStudentId(student.id);
-    setEditStudentData({
-      name: student.name,
-      user_id: student.user_id,
-      class_name: student.class_name,
-      section_name: student.section_name,
-      shift_name: student.shift_name,
-    });
-  };
-
-  // Handle update form submission
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    if (!hasChangePermission) {
-      toast.error("ছাত্রের তথ্য আপডেট করার অনুমতি নেই।");
-      return;
-    }
-    if (!editStudentData.name.trim()) {
-      toast.error("অনুগ্রহ করে ছাত্রের নাম লিখুন");
-      return;
-    }
-    try {
-      await updateStudent({ id: editStudentId, ...editStudentData }).unwrap();
-      toast.success("ছাত্রের তথ্য সফলভাবে আপডেট হয়েছে!");
-      setEditStudentId(null);
-      setEditStudentData({
-        name: "",
-        user_id: "",
-        class_name: "",
-        section_name: "",
-        shift_name: "",
-      });
-    } catch (err) {
-      console.error("Error updating student:", err);
-      toast.error(`ছাত্রের তথ্য আপডেট ব্যর্থ: ${err.status || "অজানা ত্রুটি"}`);
-    }
+    navigate(`/users/student?edit=${studentId}`);
   };
 
   // Handle delete
@@ -254,7 +219,7 @@ const StudentList = () => {
       toast.error("প্রোফাইল দেখার অনুমতি নেই।");
       return;
     }
-     if (instituteLoading) {
+    if (instituteLoading) {
       toast.error('ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!');
       return;
     }
@@ -283,214 +248,329 @@ const StudentList = () => {
           body {
             font-family: 'Noto Sans Bengali', Arial, sans-serif;
             font-size: 12px;
-            margin: 30px;
+            margin: 20mm;
             padding: 0;
             color: #000;
             background-color: #fff;
           }
+          .container {
+            max-width: 210mm;
+            margin: 0 auto;
+          }
           .header {
             text-align: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
             border-bottom: 2px solid #000;
           }
+          .school-logo {
+            max-width: 80px;
+            margin-bottom: 10px;
+          }
           .school-name {
-            font-size: 16px;
+            font-size: 20px;
             font-weight: bold;
-            margin-bottom: 3px;
+            margin-bottom: 5px;
           }
           .school-address {
-            font-size: 8px;
-            margin-bottom: 8px;
+            font-size: 10px;
+            margin-bottom: 10px;
           }
           .title {
-            font-size: 12px;
+            font-size: 16px;
             font-weight: bold;
             text-decoration: underline;
           }
           .main-content {
             display: flex;
-            margin-top: 10px;
+            margin-top: 20px;
+            gap: 20px;
           }
           .left-section {
-            width: 65%;
-            padding-right: 15px;
+            width: 60%;
           }
           .right-section {
-            width: 35%;
-            align-items: center;
-          }
-          .photo-box {
-            width: 100px;
-            height: 120px;
-            border: 2px solid #000;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 10px;
-          }
-          .photo-text {
-            font-size: 8px;
+            width: 40%;
             text-align: center;
+          }
+          .student-photo {
+            width: 120px;
+            height: 150px;
+            object-fit: cover;
+            border: 2px solid #000;
+            margin-bottom: 10px;
+            background-color: #f0f0f0;
           }
           .section-title {
-            font-size: 10px;
+            font-size: 14px;
             font-weight: bold;
             background-color: #f0f0f0;
-            padding: 4px;
-            margin-top: 8px;
-            margin-bottom: 5px;
+            padding: 6px;
+            margin: 10px 0 5px;
             text-align: center;
             border: 1px solid #000;
+            border-radius: 4px;
           }
           .table {
-            margin-bottom: 8px;
+            width: 100%;
+            margin-bottom: 15px;
+            border-collapse: collapse;
           }
           .table-row {
             display: flex;
-            border-bottom: 0.5px solid #ccc;
-            min-height: 18px;
+            border-bottom: 1px solid #ccc;
+            min-height: 24px;
           }
           .label-cell {
-            width: 35%;
-            padding: 3px;
-            font-size: 8px;
+            width: 40%;
+            padding: 6px;
+            font-size: 10px;
             font-weight: bold;
             background-color: #f8f8f8;
-            border-right: 0.5px solid #ccc;
+            border-right: 1px solid #ccc;
           }
           .value-cell {
-            width: 65%;
-            padding: 3px;
-            font-size: 8px;
+            width: 60%;
+            padding: 6px;
+            font-size: 10px;
           }
           .two-col-row {
             display: flex;
-            border-bottom: 0.5px solid #ccc;
-            min-height: 18px;
+            border-bottom: 1px solid #ccc;
+            min-height: 24px;
           }
-          .two-col-label1 {
-            width: 18%;
-            padding: 3px;
-            font-size: 8px;
+          .two-col-label {
+            width: 20%;
+            padding: 6px;
+            font-size: 10px;
             font-weight: bold;
             background-color: #f8f8f8;
-            border-right: 0.5px solid #ccc;
+            border-right: 1px solid #ccc;
           }
-          .two-col-value1 {
-            width: 32%;
-            padding: 3px;
-            font-size: 8px;
-            border-right: 0.5px solid #ccc;
-          }
-          .two-col-label2 {
-            width: 18%;
-            padding: 3px;
-            font-size: 8px;
-            font-weight: bold;
-            background-color: #f8f8f8;
-            border-right: 0.5px solid #ccc;
-          }
-          .two-col-value2 {
-            width: 32%;
-            padding: 3px;
-            font-size: 8px;
+          .two-col-value {
+            width: 30%;
+            padding: 6px;
+            font-size: 10px;
           }
           .signature-section {
             display: flex;
             justify-content: space-between;
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #ccc;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #000;
           }
           .signature-box {
             width: 30%;
-            align-items: center;
+            text-align: center;
           }
           .signature-line {
             width: 100%;
             border-bottom: 1px solid #000;
-            height: 15px;
-            margin-bottom: 3px;
+            height: 20px;
+            margin-bottom: 5px;
           }
           .signature-label {
-            font-size: 7px;
+            font-size: 8px;
             font-weight: bold;
-            text-align: center;
           }
           .footer {
-            position: absolute;
-            bottom: 15px;
-            left: 25px;
-            right: 25px;
+            position: fixed;
+            bottom: 10mm;
+            left: 20mm;
+            right: 20mm;
             text-align: center;
-            font-size: 7px;
+            font-size: 8px;
             color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 5px;
           }
         </style>
       </head>
       <body>
-        <div class="header">
-          <div class="school-name">${institute.institute_name || 'আদর্শ বিদ্যালয়, ঢাকা'}</div>
-          <div class="school-address">${institute.institute_address || '১২৩ মেইন রোড, ঢাকা, বাংলাদেশ'}</div>
-          <div class="title">ছাত্র তথ্য প্রতিবেদন</div>
-        </div>
+        <div class="container">
+          <div class="header">
+            ${institute.logo ? `<img src="${institute.logo}" class="school-logo" alt="School Logo" />` : ''}
+            <div class="school-name">${institute.institute_name || 'আদর্শ বিদ্যালয়, ঢাকা'}</div>
+            <div class="school-address">${institute.institute_address || '১২৩ মেইন রোড, ঢাকা, বাংলাদেশ'}</div>
+            <div class="title">ছাত্র তথ্য প্রতিবেদন</div>
+          </div>
 
-        <div class="main-content">
-          <div class="left-section">
-            <div class="section-title">একাডেমিক তথ্য</div>
-            <div class="table">
-              <div class="table-row"><div class="label-cell">ক্লাস</div><div class="value-cell">${student.class_name || "N/A"}</div></div>
-              <div class="table-row"><div class="label-cell">সেকশন</div><div class="value-cell">${student.section_name || "N/A"}</div></div>
-              <div class="table-row"><div class="label-cell">শিফট</div><div class="value-cell">${student.shift_name || "N/A"}</div></div>
-              <div class="table-row"><div class="label-cell">রোল নং</div><div class="value-cell">${student.roll_no || "N/A"}</div></div>
-              <div class="table-row"><div class="label-cell">ভর্তির বছর</div><div class="value-cell">${student.admission_year || "N/A"}</div></div>
+          <div class="main-content">
+            <div class="left-section">
+              <div class="section-title">ব্যক্তিগত তথ্য</div>
+              <div class="table">
+                <div class="two-col-row">
+                  <div class="two-col-label">নাম</div>
+                  <div class="two-col-value">${student.name || "N/A"}</div>
+                  <div class="two-col-label">ইউজার আইডি</div>
+                  <div class="two-col-value">${student.user_id || "N/A"}</div>
+                </div>
+                <div class="two-col-row">
+                  <div class="two-col-label">জন্ম তারিখ</div>
+                  <div class="two-col-value">${student.dob || "N/A"}</div>
+                  <div class="two-col-label">লিঙ্গ</div>
+                  <div class="two-col-value">${student.gender || "N/A"}</div>
+                </div>
+                <div class="two-col-row">
+                  <div class="two-col-label">রক্তের গ্রুপ</div>
+                  <div class="two-col-value">${student.blood_group || "N/A"}</div>
+                  <div class="two-col-label">জাতীয়তা</div>
+                  <div class="two-col-value">${student.nationality || "N/A"}</div>
+                </div>
+                <div class="two-col-row">
+                  <div class="two-col-label">মোবাইল নং</div>
+                  <div class="two-col-value">${student.phone_number || "N/A"}</div>
+                  <div class="two-col-label">ইমেইল</div>
+                  <div class="two-col-value">${student.email || "N/A"}</div>
+                </div>
+                <div class="two-col-row">
+                  <div class="two-col-label">জন্ম সনদ নং</div>
+                  <div class="two-col-value">${student.birth_certificate_no || "N/A"}</div>
+                  <div class="two-col-label">আরএফআইডি</div>
+                  <div class="two-col-value">${student.rfid || "N/A"}</div>
+                </div>
+              </div>
+
+              <div class="section-title">একাডেমিক তথ্য</div>
+              <div class="table">
+                <div class="table-row">
+                  <div class="label-cell">ক্লাস</div>
+                  <div class="value-cell">${student.class_name || "N/A"}</div>
+                </div>
+                <div class="table-row">
+                  <div class="label-cell">সেকশন</div>
+                  <div class="value-cell">${student.section_name || "N/A"}</div>
+                </div>
+                <div class="table-row">
+                  <div class="label-cell">শিফট</div>
+                  <div class="value-cell">${student.shift_name || "N/A"}</div>
+                </div>
+                <div class="table-row">
+                  <div class="label-cell">রোল নং</div>
+                  <div class="value-cell">${student.roll_no || "N/A"}</div>
+                </div>
+                <div class="table-row">
+                  <div class="label-cell">ভর্তির বছর</div>
+                  <div class="value-cell">${student.admission_year || "N/A"}</div>
+                </div>
+                <div class="table-row">
+                  <div class="label-cell">ভর্তির তারিখ</div>
+                  <div class="value-cell">${student.admission_date || "N/A"}</div>
+                </div>
+                <div class="table-row">
+                  <div class="label-cell">নাম ট্যাগ</div>
+                  <div class="value-cell">${student.name_tag || "N/A"}</div>
+                </div>
+                <div class="table-row">
+                  <div class="label-cell">স্থানান্তর সনদ নং</div>
+                  <div class="value-cell">${student.tc_no || "N/A"}</div>
+                </div>
+                <div class="table-row">
+                  <div class="label-cell">আবাসিক অবস্থা</div>
+                  <div class="value-cell">${student.residential_status || "N/A"}</div>
+                </div>
+              </div>
+
+              <div class="section-title">ঠিকানা</div>
+              <div class="table">
+                <div class="table-row">
+                  <div class="label-cell">বর্তমান ঠিকানা</div>
+                  <div class="value-cell">${student.present_address || fullAddress}</div>
+                </div>
+                <div class="table-row">
+                  <div class="label-cell">স্থায়ী ঠিকানা</div>
+                  <div class="value-cell">${student.permanent_address || fullAddress}</div>
+                </div>
+                <div class="table-row">
+                  <div class="label-cell">গ্রাম</div>
+                  <div class="value-cell">${student.village || "N/A"}</div>
+                </div>
+                <div class="table-row">
+                  <div class="label-cell">পোস্ট অফিস</div>
+                  <div class="value-cell">${student.post_office || "N/A"}</div>
+                </div>
+                <div class="table-row">
+                  <div class="label-cell">থানা/উপজেলা</div>
+                  <div class="value-cell">${student.ps_or_upazilla || "N/A"}</div>
+                </div>
+                <div class="table-row">
+                  <div class="label-cell">জেলা</div>
+                  <div class="value-cell">${student.district || "N/A"}</div>
+                </div>
+              </div>
+
+              <div class="section-title">পারিবারিক তথ্য</div>
+              <div class="table">
+                <div class="two-col-row">
+                  <div class="two-col-label">অভিভাবকের নাম</div>
+                  <div class="two-col-value">${student.parent?.g_name || "N/A"}</div>
+                  <div class="two-col-label">অভিভাবকের ফোন</div>
+                  <div class="two-col-value">${student.parent?.g_mobile_no || "N/A"}</div>
+                </div>
+                <div class="two-col-row">
+                  <div class="two-col-label">পিতার নাম</div>
+                  <div class="two-col-value">${student.parent?.father_name || "N/A"}</div>
+                  <div class="two-col-label">পিতার ফোন</div>
+                  <div class="two-col-value">${student.parent?.father_mobile_no || "N/A"}</div>
+                </div>
+                <div class="two-col-row">
+                  <div class="two-col-label">মাতার নাম</div>
+                  <div class="two-col-value">${student.parent?.mother_name || "N/A"}</div>
+                  <div class="two-col-label">মাতার ফোন</div>
+                  <div class="two-col-value">${student.parent?.mother_mobile_no || "N/A"}</div>
+                </div>
+                <div class="two-col-row">
+                  <div class="two-col-label">সম্পর্ক</div>
+                  <div class="two-col-value">${student.parent?.relation || "N/A"}</div>
+                  <div class="two-col-label">পিতার পেশা</div>
+                  <div class="two-col-value">${student.parent?.f_occupation || "N/A"}</div>
+                </div>
+                <div class="two-col-row">
+                  <div class="two-col-label">মাতার পেশা</div>
+                  <div class="two-col-value">${student.parent?.m_occupation || "N/A"}</div>
+                  <div class="two-col-label">অভিভাবকের পেশা</div>
+                  <div class="two-col-value">${student.parent?.g_occupation || "N/A"}</div>
+                </div>
+                <div class="two-col-row">
+                  <div class="two-col-label">পিতার এনআইডি</div>
+                  <div class="two-col-value">${student.parent?.f_nid || "N/A"}</div>
+                  <div class="two-col-label">মাতার এনআইডি</div>
+                  <div class="two-col-value">${student.parent?.m_nid || "N/A"}</div>
+                </div>
+              </div>
+
+              <div class="section-title">অন্যান্য তথ্য</div>
+              <div class="table">
+                <div class="table-row">
+                  <div class="label-cell">প্রতিবন্ধকতার তথ্য</div>
+                  <div class="value-cell">${student.disability_info || "N/A"}</div>
+                </div>
+              </div>
             </div>
 
-            <div class="section-title">ব্যক্তিগত তথ্য</div>
-            <div class="table">
-              <div class="two-col-row"><div class="two-col-label1">নাম</div><div class="two-col-value1">${student.name || "N/A"}</div><div class="two-col-label2">আইডি নং</div><div class="two-col-value2">${student.user_id || "N/A"}</div></div>
-              <div class="two-col-row"><div class="two-col-label1">জন্ম তারিখ</div><div class="two-col-value1">${student.dob || "N/A"}</div><div class="two-col-label2">লিঙ্গ</div><div class="two-col-value2">${student.gender || "N/A"}</div></div>
-              <div class="two-col-row"><div class="two-col-label1">রক্তের গ্রুপ</div><div class="two-col-value1">${student.blood_group || "N/A"}</div><div class="two-col-label2">ধর্ম</div><div class="two-col-value2">${student.religion || "N/A"}</div></div>
-              <div class="two-col-row"><div class="two-col-label1">মোবাইল নং</div><div class="two-col-value1">${student.phone_number || "N/A"}</div><div class="two-col-label2">ইমেইল</div><div class="two-col-value2">${student.email || "N/A"}</div></div>
-            </div>
-
-            <div class="section-title">পারিবারিক তথ্য</div>
-            <div class="table">
-              <div class="two-col-row"><div class="two-col-label1">বাবার নাম</div><div class="two-col-value1">${student.father_name || "N/A"}</div><div class="two-col-label2">মায়ের নাম</div><div class="two-col-value2">${student.mother_name || "N/A"}</div></div>
-              <div class="two-col-row"><div class="two-col-label1">অভিভাবক</div><div class="two-col-value1">${student.guardian || "N/A"}</div><div class="two-col-label2">অভিভাবকের ফোন</div><div class="two-col-value2">${student.guardian_phone || "N/A"}</div></div>
-            </div>
-
-            <div class="section-title">ঠিকানা</div>
-            <div class="table">
-              <div class="table-row"><div class="label-cell">বর্তমান ঠিকানা</div><div class="value-cell">${fullAddress}</div></div>
-              <div class="table-row"><div class="label-cell">স্থায়ী ঠিকানা</div><div class="value-cell">${fullAddress}</div></div>
+            <div class="right-section">
+              <img src="${student.avatar || '/placeholder-avatar.png'}" class="student-photo" alt="Student Photo" />
             </div>
           </div>
 
-          <div class="right-section">
-            <div class="photo-box">
-              <div class="photo-text">ছাত্রের<br>ছবি</div>
+          <div class="signature-section">
+            <div class="signature-box">
+              <div class="signature-line"></div>
+              <div class="signature-label">ছাত্রের স্বাক্ষর</div>
+            </div>
+            <div class="signature-box">
+              <div class="signature-line"></div>
+              <div class="signature-label">অভিভাবকের স্বাক্ষর</div>
+            </div>
+            <div class="signature-box">
+              <div class="signature-line"></div>
+              <div class="signature-label">প্রধান শিক্ষকের স্বাক্ষর</div>
             </div>
           </div>
-        </div>
 
-        <div class="signature-section">
-          <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-label">ছাত্রের স্বাক্ষর</div>
+          <div class="footer">
+            প্রতিবেদন তৈরি: ${new Date().toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' })} | ${institute.institute_name || 'আদর্শ বিদ্যালয়'} - ছাত্র ব্যবস্থাপনা সিস্টেম
           </div>
-          <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-label">অভিভাবকের স্বাক্ষর</div>
-          </div>
-          <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-label">প্রশাসনিক স্বাক্ষর</div>
-          </div>
-        </div>
-
-        <div class="footer">
-          প্রতিবেদন তৈরি: ১৭ জুলাই, ২০২৫, ৬:৪৪ PM +০৬ | আদর্শ বিদ্যালয় - ছাত্র ব্যবস্থাপনা সিস্টেম
         </div>
 
         <script>
@@ -506,12 +586,11 @@ const StudentList = () => {
       </html>
     `;
 
-    const printWindow = window.open(' ', '_blank');
+    const printWindow = window.open('', '_blank');
     printWindow.document.write(htmlContent);
     printWindow.document.close();
     toast.success('ছাত্র প্রোফাইল তৈরি হয়েছে! প্রিন্ট বা সেভ করুন।', 'success');
   };
-
 
   if (
     isLoading ||
@@ -544,6 +623,7 @@ const StudentList = () => {
   // Table headers
   const tableHeaders = [
     { key: "serial", label: "ক্রমিক", fixed: true, width: "70px" },
+    { key: "avatar", label: "অ্যাভাটার", fixed: true, width: "100px" },
     { key: "name", label: "নাম", fixed: true, width: "150px" },
     { key: "user_id", label: "ইউজার আইডি", fixed: true, width: "120px" },
     { key: "roll_no", label: "রোল", fixed: false, width: "80px" },
@@ -553,21 +633,13 @@ const StudentList = () => {
     { key: "phone_number", label: "ফোন নম্বর", fixed: false, width: "120px" },
     { key: "dob", label: "জন্ম তারিখ", fixed: false, width: "120px" },
     { key: "gender", label: "লিঙ্গ", fixed: false, width: "80px" },
-    { key: "father_name", label: "বাবার নাম", fixed: false, width: "120px" },
-    { key: "mother_name", label: "মায়ের নাম", fixed: false, width: "120px" },
-    {
-      key: "admission_year",
-      label: "ভর্তির বছর",
-      fixed: false,
-      width: "120px",
-    },
-    {
-      key: "actions",
-      label: "কার্যক্রম",
-      fixed: false,
-      width: "120px",
-      actions: true,
-    },
+    { key: "blood_group", label: "রক্তের গ্রুপ", fixed: false, width: "100px" },
+    { key: "nationality", label: "জাতীয়তা", fixed: false, width: "100px" },
+    { key: "father_name", label: "পিতার নাম", fixed: false, width: "120px" },
+    { key: "mother_name", label: "মাতার নাম", fixed: false, width: "120px" },
+    { key: "admission_year", label: "ভর্তির বছর", fixed: false, width: "120px" },
+    { key: "admission_date", label: "ভর্তির তারিখ", fixed: false, width: "120px" },
+    { key: "actions", label: "কার্যক্রম", fixed: false, width: "150px", actions: true },
   ];
 
   return (
@@ -585,25 +657,24 @@ const StudentList = () => {
           .animate-slideDown { animation: slideDown 0.4s ease-out forwards; }
           .btn-glow:hover { box-shadow: 0 0 15px rgba(219, 158, 48, 0.3); }
           
-          /* Enhanced Table Styles with Professional Background */
           .table-container {
             position: relative;
             max-height: 70vh;
-            overflow: auto; /* Handles both vertical and horizontal scrolling */
+            overflow: auto;
             background: rgba(255, 255, 255, 0.2);
           }
 
           table {
-            width: 100%; /* Ensure table takes full width, allowing horizontal scroll */
+            width: 100%;
             border-collapse: separate;
-            text-align:center !important;
+            text-align: center;
             border-spacing: 0;
           }
           
           .sticky-header th {
-            text-align:center !important;
-            font-size: 12px !important;
-            text-wrap:nowrap;
+            text-align: center;
+            font-size: 12px;
+            text-wrap: nowrap;
             position: sticky;
             top: 0;
             background: #DB9E30;
@@ -617,44 +688,35 @@ const StudentList = () => {
             padding: 12px 16px;
           }
 
-          /* Styles for fixed columns (both header and body cells) */
           .fixed-col {
             position: sticky;
-          font-size:14px;
+            font-size: 14px;
             background: white;
-            // backdrop-filter: blur(10px);
             border-right: 1px solid rgba(255, 255, 255, 0.2);
-            transition: transform 0.3s ease; /* Smooth transition for fixed columns */
+            transition: transform 0.3s ease;
           }
           
           .fixed-col.serial { 
-           font-size: 12px !important;
             left: 0px; 
             background: #DB9E30;
             color: rgba(255, 255, 255, 0.9);
           }
-          .fixed-col.name { 
-      
+          .fixed-col.avatar { 
             left: 70px;
             background: rgba(255, 255, 255);
           }
+          .fixed-col.name { 
+            left: 170px;
+            background: rgba(255, 255, 255);
+          }
           .fixed-col.user_id { 
-            z-index:10px;
-            left: 220px;
+            left: 320px;
             background: rgba(255, 255, 255);
           }
 
-          /* Ensure fixed header cells match the background */
-          .sticky-header .fixed-col.serial {
-            z-index: 10;
-            background: #DB9E30;
-            color: rgba(255, 255, 255);
-          }
-          .sticky-header .fixed-col.name {
-            z-index: 10;
-            background: #DB9E30;
-            color: rgba(255, 255, 255);
-          }
+          .sticky-header .fixed-col.serial,
+          .sticky-header .fixed-col.avatar,
+          .sticky-header .fixed-col.name,
           .sticky-header .fixed-col.user_id {
             z-index: 10;
             background: #DB9E30;
@@ -674,27 +736,24 @@ const StudentList = () => {
             transform: translateX(2px);
           }
           
-          .table-row-edit {
-            background: rgba(219, 158, 48, 0.15);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(219, 158, 48, 0.3);
-          }
-          
           .table-cell {
-          text-wrap:nowrap;
-          font-size:14px;
+            text-wrap: nowrap;
+            font-size: 14px;
             padding: 12px 16px;
             color: #441a05;
             font-weight: 500;
-           border-right: 1px solid rgba(219, 158, 64, 0.15);
-border: 1px solid rgba(0, 0, 0, 0.05);
-
+            border-right: 1px solid rgba(219, 158, 64, 0.15);
+            border: 1px solid rgba(0, 0, 0, 0.05);
           }
 
-          td {
-            background: transparent;
+          .avatar-img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 1px solid #DB9E30;
           }
-          
+
           .status-badge {
             display: inline-block;
             padding: 4px 8px;
@@ -729,9 +788,9 @@ border: 1px solid rgba(0, 0, 0, 0.05);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
           }
           
-          .action-view:hover { background: rgba(34, 197, 94, 0.2); color: #059669; }
           .action-edit:hover { background: rgba(59, 130, 246, 0.2); color: #2563eb; }
           .action-delete:hover { background: rgba(239, 68, 68, 0.2); color: #dc2626; }
+          .action-download:hover { background: rgba(34, 197, 94, 0.2); color: #059669; }
           
           ::-webkit-scrollbar { width: 8px; height: 8px; }
           ::-webkit-scrollbar-track { 
@@ -753,13 +812,6 @@ border: 1px solid rgba(0, 0, 0, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
           }
-          
-          .edit-form-card {
-            background: rgba(219, 158, 48, 0.1);
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(219, 158, 48, 0.3);
-            box-shadow: 0 8px 32px rgba(219, 158, 48, 0.1);
-          }
         `}
       </style>
 
@@ -777,7 +829,7 @@ border: 1px solid rgba(0, 0, 0, 0.05);
               name="name"
               value={filters.name}
               onChange={handleFilterChange}
-              className="w-full bg-transparent  text-[#441a05] placeholder-[#441a05]/70 pl-3 py-2 outline-none border border-black/20 rounded-lg transition-all duration-300 focus:border-[#DB9E30]"
+              className="w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-3 py-2 outline-none border border-black/20 rounded-lg transition-all duration-300 focus:border-[#DB9E30]"
               placeholder="নাম"
             />
             <input
@@ -866,132 +918,6 @@ border: 1px solid rgba(0, 0, 0, 0.05);
           </div>
         </div>
 
-        {/* Edit Student Form */}
-        {editStudentId && hasChangePermission && (
-          <div className="edit-form-card p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-            <div className="flex items-center space-x-4 mb-6">
-              <FaEdit className="text-3xl text-[#441a05]" />
-              <h3 className="text-2xl font-bold text-[#441a05] tracking-tight">
-                ছাত্রের তথ্য সম্পাদনা
-              </h3>
-            </div>
-            <form
-              onSubmit={handleUpdate}
-              className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl"
-            >
-              <input
-                type="text"
-                name="name"
-                value={editStudentData.name}
-                onChange={(e) =>
-                  setEditStudentData({
-                    ...editStudentData,
-                    name: e.target.value,
-                  })
-                }
-                className="w-full bg-white/10 backdrop-blur-sm text-[#441a05] placeholder-[#441a05]/70 pl-3 py-2 border border-white/20 rounded-lg transition-all duration-300 animate-scaleIn focus:border-[#DB9E30] focus:bg-white/20"
-                placeholder="নাম"
-                disabled={isUpdating || !hasChangePermission}
-              />
-              <input
-                type="text"
-                name="user_id"
-                value={editStudentData.user_id}
-                onChange={(e) =>
-                  setEditStudentData({
-                    ...editStudentData,
-                    user_id: e.target.value,
-                  })
-                }
-                className="w-full bg-white/10 backdrop-blur-sm text-[#441a05] placeholder-[#441a05]/70 pl-3 py-2 border border-white/20 rounded-lg transition-all duration-300 animate-scaleIn focus:border-[#DB9E30] focus:bg-white/20"
-                placeholder="ইউজার আইডি"
-                disabled={isUpdating || !hasChangePermission}
-              />
-              <input
-                type="text"
-                name="class_name"
-                value={editStudentData.class_name}
-                onChange={(e) =>
-                  setEditStudentData({
-                    ...editStudentData,
-                    class_name: e.target.value,
-                  })
-                }
-                className="w-full bg-white/10 backdrop-blur-sm text-[#441a05] placeholder-[#441a05]/70 pl-3 py-2 border border-white/20 rounded-lg transition-all duration-300 animate-scaleIn focus:border-[#DB9E30] focus:bg-white/20"
-                placeholder="ক্লাস"
-                disabled={isUpdating || !hasChangePermission}
-              />
-              <input
-                type="text"
-                name="section_name"
-                value={editStudentData.section_name}
-                onChange={(e) =>
-                  setEditStudentData({
-                    ...editStudentData,
-                    section_name: e.target.value,
-                  })
-                }
-                className="w-full bg-white/10 backdrop-blur-sm text-[#441a05] placeholder-[#441a05]/70 pl-3 py-2 border border-white/20 rounded-lg transition-all duration-300 animate-scaleIn focus:border-[#DB9E30] focus:bg-white/20"
-                placeholder="সেকশন"
-                disabled={isUpdating || !hasChangePermission}
-              />
-              <input
-                type="text"
-                name="shift_name"
-                value={editStudentData.shift_name}
-                onChange={(e) =>
-                  setEditStudentData({
-                    ...editStudentData,
-                    shift_name: e.target.value,
-                  })
-                }
-                className="w-full bg-white/10 backdrop-blur-sm text-[#441a05] placeholder-[#441a05]/70 pl-3 py-2 border border-white/20 rounded-lg transition-all duration-300 animate-scaleIn focus:border-[#DB9E30] focus:bg-white/20"
-                placeholder="শিফট"
-                disabled={isUpdating || !hasChangePermission}
-              />
-              <button
-                type="submit"
-                disabled={isUpdating || !hasChangePermission}
-                className={`flex items-center justify-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn btn-glow ${isUpdating || !hasChangePermission
-                  ? "cursor-not-allowed opacity-70"
-                  : "hover:text-white hover:shadow-md"
-                  }`}
-              >
-                {isUpdating ? (
-                  <span className="flex items-center space-x-2">
-                    <FaSpinner className="animate-spin text-lg" />
-                    <span>আপডেট হচ্ছে...</span>
-                  </span>
-                ) : (
-                  <span>আপডেট করুন</span>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEditStudentId(null);
-                  setEditStudentData({
-                    name: "",
-                    user_id: "",
-                    class_name: "",
-                    section_name: "",
-                    shift_name: "",
-                  });
-                }}
-                className="flex items-center justify-center px-6 py-3 rounded-lg font-medium bg-gray-500/20 text-[#441a05] hover:bg-gray-500/30 hover:text-white transition-all duration-300 animate-scaleIn"
-              >
-                বাতিল
-              </button>
-            </form>
-            {updateError && (
-              <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
-                ত্রুটি: {updateError?.status || "অজানা"} -{" "}
-                {JSON.stringify(updateError?.data || {})}
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Student Table */}
         <div className="table-container">
           {isLoading ? (
@@ -1012,15 +938,10 @@ border: 1px solid rgba(0, 0, 0, 0.05);
                 <tr>
                   {tableHeaders.map((header) => {
                     const isFixed = header.fixed;
-                    const headerClasses = `table-cell text-xs font-medium uppercase tracking-wider ${isFixed ? ` ${header.key}` : ""
-                      }`;
+                    const headerClasses = `table-cell text-xs font-medium uppercase tracking-wider ${isFixed ? ` ${header.key}` : ""}`;
                     const style = { width: header.width };
                     return (
-                      <th
-                        key={header.key}
-                        className={headerClasses}
-                        style={style}
-                      >
+                      <th key={header.key} className={headerClasses} style={style}>
                         {header.label}
                       </th>
                     );
@@ -1030,121 +951,70 @@ border: 1px solid rgba(0, 0, 0, 0.05);
               <tbody>
                 {students.map((student, index) => {
                   const serial = (page - 1) * pageSize + index + 1;
-                  const rowClasses = `table-row ${editStudentId === student.id ? "table-row-edit" : ""
-                    } animate-fadeIn`;
-
                   return (
-                    <tr
-                      key={student.id}
-                      className={rowClasses}
-                      style={{ animationDelay: `${index * 0.05}s` }}
-                    >
-                      {/* Fixed Columns */}
-                      <td
-                        className="table-cell serial"
-                        style={{ width: "70px" }}
-                      >
-                        {serial}
+                    <tr key={student.id} className="table-row animate-fadeIn" style={{ animationDelay: `${index * 0.05}s` }}>
+                      <td className="table-cell serial" style={{ width: "70px" }}>{serial}</td>
+                      <td className="table-cell avatar" style={{ width: "100px" }}>
+                        <img 
+                          src={student.avatar || '/placeholder-avatar.png'} 
+                          alt={student.name} 
+                          className="avatar-img" 
+                        />
                       </td>
-                      <td
-                        className="table-cell name"
-                        style={{ width: "150px" }}
-                      >
+                      <td className="table-cell name" style={{ width: "150px" }}>
                         <div className="font-semibold">{student.name}</div>
                         {student.name_in_bangla && (
-                          <div className="text-xs opacity-75">
-                            {student.name_in_bangla}
-                          </div>
+                          <div className="text-xs opacity-75">{student.name_in_bangla}</div>
                         )}
                       </td>
-                      <td
-                        className="table-cell user_id"
-                        style={{ width: "120px" }}
-                      >
-                        <span className="font-mono text-xs">
-                          {student.user_id}
-                        </span>
+                      <td className="table-cell user_id" style={{ width: "120px" }}>
+                        <span className="font-mono text-xs">{student.user_id}</span>
                       </td>
-
-                      {/* Scrollable Columns */}
-                      <td
-                        className="table-cell"
-                        style={{ width: "80px" }}
-                      >
-                        {student.roll_no || "N/A"}
+                      <td className="table-cell" style={{ width: "80px" }}>{student.roll_no || "N/A"}</td>
+                      <td className="table-cell" style={{ width: "100px" }}>{student.class_name}</td>
+                      <td className="table-cell" style={{ width: "100px" }}>{student.section_name}</td>
+                      <td className="table-cell" style={{ width: "100px" }}>{student.shift_name}</td>
+                      <td className="table-cell" style={{ width: "120px" }}>{student.phone_number || "N/A"}</td>
+                      <td className="table-cell" style={{ width: "120px" }}>{student.dob || "N/A"}</td>
+                      <td className="table-cell" style={{ width: "80px" }}>{student.gender || "N/A"}</td>
+                      <td className="table-cell" style={{ width: "100px" }}>{student.blood_group || "N/A"}</td>
+                      <td className="table-cell" style={{ width: "100px" }}>{student.nationality || "N/A"}</td>
+                      <td className="table-cell" style={{ width: "120px" }}>{student.parent?.father_name || "N/A"}</td>
+                      <td className="table-cell" style={{ width: "120px" }}>{student.parent?.mother_name || "N/A"}</td>
+                      <td className="table-cell" style={{ width: "120px" }}>{student.admission_year || "N/A"}</td>
+                      <td className="table-cell" style={{ width: "120px" }}>{student.admission_date || "N/A"}</td>
+                      <td className="table-cell" style={{ width: "150px" }}>
+                        <div className="flex justify-center space-x-2">
+                          <button
+                            onClick={() => handleDownloadProfile(student)}
+                            className="action-button action-download"
+                            aria-label={`প্রোফাইল ডাউনলোড ${student.name}`}
+                            title="প্রোফাইল ডাউনলোড"
+                          >
+                            <FaDownload className="w-4 h-4" />
+                          </button>
+                          {hasChangePermission && (
+                            <button
+                              onClick={() => handleEditClick(student.student_field)}
+                              className="action-button action-edit"
+                              aria-label={`সম্পাদনা করুন ${student.name}`}
+                              title="সম্পাদনা করুন"
+                            >
+                              <FaEdit className="w-4 h-4" />
+                            </button>
+                          )}
+                          {hasDeletePermission && (
+                            <button
+                              onClick={() => handleDelete(student.id)}
+                              className="action-button action-delete"
+                              aria-label={`মুছুন ${student.name}`}
+                              title="মুছুন"
+                            >
+                              <FaTrash className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
                       </td>
-                      <td
-                        className="table-cell"
-                        style={{ width: "100px" }}
-                      >
-                        {student.class_name}
-                      </td>
-                      <td
-                        className="table-cell"
-                        style={{ width: "100px" }}
-                      >
-                        {student.section_name}
-                      </td>
-                      <td
-                        className="table-cell"
-                        style={{ width: "100px" }}
-                      >
-                        {student.shift_name}
-                      </td>
-                      <td
-                        className="table-cell"
-                        style={{ width: "120px" }}
-                      >
-                        {student.phone_number || "N/A"}
-                      </td>
-                      <td
-                        className="table-cell"
-                        style={{ width: "120px" }}
-                      >
-                        {student.dob || "N/A"}
-                      </td>
-                      <td
-                        className="table-cell"
-                        style={{ width: "80px" }}
-                      >
-                        {student.gender || "N/A"}
-                      </td>
-                      <td
-                        className="table-cell"
-                        style={{ width: "120px" }}
-                      >
-                        {student.father_name || "N/A"}
-                      </td>
-                      <td
-                        className="table-cell"
-                        style={{ width: "120px" }}
-                      >
-                        {student.mother_name || "N/A"}
-                      </td>
-                      <td
-                        className="table-cell"
-                        style={{ width: "120px" }}
-                      >
-                        {student.admission_year || "N/A"}
-                      </td>
-
-                      {/* Actions */}
-                      {(hasChangePermission ||
-                        hasDeletePermission ||
-                        hasViewPermission) && (
-                          <td className="table-cell" style={{ width: "120px" }}>
-                            <div className="flex justify-center space-x-2">
-                              <button
-                                onClick={() => handleDownloadProfile(student)}
-                                className="action-button action-view"
-                                aria-label={`প্রোফাইল দেখুন ${student.name}`}
-                                title="প্রোফাইল দেখুন (PDF ডাউনলোড)"
-                              >
-                                <FaDownload className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </td>
-                        )}
                     </tr>
                   );
                 })}
@@ -1155,8 +1025,7 @@ border: 1px solid rgba(0, 0, 0, 0.05);
             <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
               {isDeleting
                 ? "ছাত্র মুছছে..."
-                : `ছাত্র মুছতে ত্রুটি: ${deleteError?.status || "অজানা"
-                } - ${JSON.stringify(deleteError?.data || {})}`}
+                : `ছাত্র মুছতে ত্রুটি: ${deleteError?.status || "অজানা"} - ${JSON.stringify(deleteError?.data || {})}`}
             </div>
           )}
         </div>
