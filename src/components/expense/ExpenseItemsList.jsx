@@ -55,6 +55,9 @@ const ExpenseItemsList = ({ onEditClick }) => {
     return true;
   }) || [];
 
+  // Calculate total amount
+  const totalAmount = filteredItems.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0).toFixed(2);
+
   const handleDateFilterChange = (e) => {
     const { name, value } = e.target;
     setDateFilter((prev) => ({
@@ -227,6 +230,9 @@ const ExpenseItemsList = ({ onEditClick }) => {
             font-size: 8px;
             color: #555;
           }
+          tfoot td {
+            font-weight: bold;
+          }
         </style>
       </head>
       <body>
@@ -270,6 +276,15 @@ const ExpenseItemsList = ({ onEditClick }) => {
                   </tr>
                 `).join('')}
               </tbody>
+              ${pageIndex === expensePages.length - 1 ? `
+                <tfoot>
+                  <tr>
+                    <td colspan="6">মোট ব্যয়</td>
+                    <td>${totalAmount}</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              ` : ''}
             </table>
             <div class="date">
               রিপোর্ট তৈরির তারিখ: ${new Date().toLocaleDateString('bn-BD')}
@@ -401,72 +416,77 @@ const ExpenseItemsList = ({ onEditClick }) => {
           ) : filteredItems.length === 0 ? (
             <p className="p-4 text-[#441a05]/70 text-center">কোনো ব্যয় আইটেম পাওয়া যায়নি।</p>
           ) : (
-            <div className="table-container">
-              <table className="min-w-full divide-y divide-white/20">
-                <thead className="bg-white/5 sticky top-0 z-10">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ব্যয়ের ধরন
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      নাম
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      তহবিল
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      লেনদেন নম্বর
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      কর্মচারী আইডি
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      তারিখ
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      পরিমাণ
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      শিক্ষাবর্ষ
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/20">
-                  {filteredItems.map((item, index) => (
-                    <tr
-                      key={item.id}
-                      className="bg-white/5 animate-fadeIn"
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                        {expenseTypes.find((type) => type.id === item.expensetype_id)?.expensetype || "অজানা"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                        {item.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                        {fundTypes.find((fund) => fund.id === item.fund_id)?.name || item.fund_id}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                        {item.transaction_number || "-"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                        {item.employee_id || "-"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                        {item.expense_date}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                        {item.amount}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                        {academicYears.find((year) => year.id === item.academic_year)?.name || item.academic_year}
-                      </td>
+            <>
+              <div className="table-container">
+                <table className="min-w-full divide-y divide-white/20">
+                  <thead className="bg-white/5 sticky top-0 z-10">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        ব্যয়ের ধরন
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        নাম
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        তহবিল
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        লেনদেন নম্বর
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        কর্মচারী আইডি
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        তারিখ
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        পরিমাণ
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        শিক্ষাবর্ষ
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-white/20">
+                    {filteredItems.map((item, index) => (
+                      <tr
+                        key={item.id}
+                        className="bg-white/5 animate-fadeIn"
+                        style={{ animationDelay: `${index * 0.1}s` }}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                          {expenseTypes.find((type) => type.id === item.expensetype_id)?.expensetype || "অজানা"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                          {item.name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                          {fundTypes.find((fund) => fund.id === item.fund_id)?.name || item.fund_id}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                          {item.transaction_number || "-"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                          {item.employee_id || "-"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                          {item.expense_date}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                          {item.amount}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                          {academicYears.find((year) => year.id === item.academic_year)?.name || item.academic_year}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="p-4 text-right font-bold text-[#441a05]">
+                মোট ব্যয়: {totalAmount}
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -708,99 +728,104 @@ const ExpenseItemsList = ({ onEditClick }) => {
         ) : filteredItems.length === 0 ? (
           <p className="p-4 text-[#441a05]/70 text-center">কোনো ব্যয় আইটেম পাওয়া যায়নি।</p>
         ) : (
-          <div className="table-container">
-            <table className="min-w-full divide-y divide-white/20">
-              <thead className="bg-white/5 sticky top-0 z-10">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    ব্যয়ের ধরন
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    নাম
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    তহবিল
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    লেনদেন নম্বর
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    কর্মচারী আইডি
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    তারিখ
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    পরিমাণ
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                    শিক্ষাবর্ষ
-                  </th>
-                  {(hasChangePermission || hasDeletePermission) && (
+          <>
+            <div className="table-container">
+              <table className="min-w-full divide-y divide-white/20">
+                <thead className="bg-white/5 sticky top-0 z-10">
+                  <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      অ্যাকশন
+                      ব্যয়ের ধরন
                     </th>
-                  )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/20">
-                {filteredItems.map((item, index) => (
-                  <tr
-                    key={item.id}
-                    className="bg-white/5 animate-fadeIn"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {expenseTypes.find((type) => type.id === item.expensetype_id)?.expensetype || "অজানা"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {item.name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {fundTypes.find((fund) => fund.id === item.fund_id)?.name || item.fund_id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {item.transaction_number || "-"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {item.employee_id || "-"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {item.expense_date}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {item.amount}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
-                      {academicYears.find((year) => year.id === item.academic_year)?.name || item.academic_year}
-                    </td>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      নাম
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      তহবিল
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      লেনদেন নম্বর
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      কর্মচারী আইডি
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      তারিখ
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      পরিমাণ
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                      শিক্ষাবর্ষ
+                    </th>
                     {(hasChangePermission || hasDeletePermission) && (
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {hasChangePermission && (
-                          <button
-                            onClick={() => onEditClick(item)}
-                            className="text-[#441a05] hover:text-blue-500 mr-4 transition-all duration-300"
-                            aria-label={`সম্পাদনা ${item.name}`}
-                          >
-                            <FaEdit className="w-5 h-5" />
-                          </button>
-                        )}
-                        {hasDeletePermission && (
-                          <button
-                            onClick={() => handleDelete(item.id)}
-                            className="text-[#441a05] hover:text-red-500 transition-all duration-300"
-                            aria-label={`মুছুন ${item.name}`}
-                          >
-                            <FaTrash className="w-5 h-5" />
-                          </button>
-                        )}
-                      </td>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                        অ্যাকশন
+                      </th>
                     )}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-white/20">
+                  {filteredItems.map((item, index) => (
+                    <tr
+                      key={item.id}
+                      className="bg-white/5 animate-fadeIn"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {expenseTypes.find((type) => type.id === item.expensetype_id)?.expensetype || "অজানা"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {item.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {fundTypes.find((fund) => fund.id === item.fund_id)?.name || item.fund_id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {item.transaction_number || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {item.employee_id || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {item.expense_date}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {item.amount}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                        {academicYears.find((year) => year.id === item.academic_year)?.name || item.academic_year}
+                      </td>
+                      {(hasChangePermission || hasDeletePermission) && (
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {hasChangePermission && (
+                            <button
+                              onClick={() => onEditClick(item)}
+                              className="text-[#441a05] hover:text-blue-500 mr-4 transition-all duration-300"
+                              aria-label={`সম্পাদনা ${item.name}`}
+                            >
+                              <FaEdit className="w-5 h-5" />
+                            </button>
+                          )}
+                          {hasDeletePermission && (
+                            <button
+                              onClick={() => handleDelete(item.id)}
+                              className="text-[#441a05] hover:text-red-500 transition-all duration-300"
+                              aria-label={`মুছুন ${item.name}`}
+                            >
+                              <FaTrash className="w-5 h-5" />
+                            </button>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="p-4 text-right font-bold text-[#441a05]">
+              মোট ব্যয়: {totalAmount}
+            </div>
+          </>
         )}
         {(isDeleting || deleteError) && (
           <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">

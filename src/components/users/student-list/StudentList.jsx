@@ -133,7 +133,7 @@ const StudentList = () => {
     debounce((newFilters) => {
       setFilters(newFilters);
       setPage(1);
-    }, 300),
+    },),
     []
   );
 
@@ -675,6 +675,7 @@ const StudentList = () => {
     { key: "class_name", label: "ক্লাস", fixed: false, width: "100px" },
     { key: "section_name", label: "সেকশন", fixed: false, width: "100px" },
     { key: "shift_name", label: "শিফট", fixed: false, width: "100px" },
+    { key: "guardian", label: "অভিভাবকের নাম", fixed: false, width: "100px" },
     { key: "phone_number", label: "ফোন নম্বর", fixed: false, width: "120px" },
     { key: "dob", label: "জন্ম তারিখ", fixed: false, width: "120px" },
     { key: "gender", label: "লিঙ্গ", fixed: false, width: "80px" },
@@ -1019,6 +1020,7 @@ const StudentList = () => {
                       <td className="table-cell" style={{ width: "100px" }}>{student.class_name}</td>
                       <td className="table-cell" style={{ width: "100px" }}>{student.section_name}</td>
                       <td className="table-cell" style={{ width: "100px" }}>{student.shift_name}</td>
+                      <td className="table-cell" style={{ width: "100px" }}>{student.guardian}</td>
                       <td className="table-cell" style={{ width: "120px" }}>{student.phone_number || "N/A"}</td>
                       <td className="table-cell" style={{ width: "120px" }}>{student.dob || "N/A"}</td>
                       <td className="table-cell" style={{ width: "80px" }}>{student.gender || "N/A"}</td>
