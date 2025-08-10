@@ -20,11 +20,8 @@ export const staffRegistrationApi = createApi({
   }),
   tagTypes: ['staffRegistrationApi'],
   endpoints: (builder) => ({
-  
 
-  
-
-    // POST: Create a new staffRegistrationApi
+    // POST: Create a new staff
     createStaffRegistrationApi: builder.mutation({
       query: (staffRegistrationApiData) => ({
         url: '/register/staff/',
@@ -34,12 +31,21 @@ export const staffRegistrationApi = createApi({
       invalidatesTags: ['staffRegistrationApi'],
     }),
 
+    // PUT: Update an existing staff
+    updateStaffRegistrationApi: builder.mutation({
+      query: ({ id, updatedData }) => ({
+        url: `/register/staff/${id}/`, // Make sure your backend expects the ID in URL
+        method: 'PUT',
+        body: updatedData,
+      }),
+      invalidatesTags: ['staffRegistrationApi'],
+    }),
+
   }),
 });
 
 // Export hooks for usage in components
 export const {
-
   useCreateStaffRegistrationApiMutation,
-
+  useUpdateStaffRegistrationApiMutation,
 } = staffRegistrationApi;

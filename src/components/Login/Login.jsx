@@ -20,7 +20,7 @@ const Login = () => {
   const dispatch = useDispatch();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/dashboard";
-  console.log(from);
+
 
   // useEffect(() => {
   //   if (user) {

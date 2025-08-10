@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { FaPrint, FaSpinner } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import Select from 'react-select';
@@ -14,7 +14,7 @@ const SignatureSheet = () => {
   const [selectedExam, setSelectedExam] = useState(null);
   const tableRef = useRef();
 
-  console.log(selectedClass);
+
 
   const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
   const { data: classes = [], isLoading: isClassesLoading, error: classesError } = useGetclassConfigApiQuery();
@@ -30,16 +30,27 @@ const SignatureSheet = () => {
     error: subjectsError,
   } = useGetClassSubjectsByClassIdQuery(selectedClass?.value?.g_class_id, { skip: !selectedClass?.value?.g_class_id });
 
-  const activeClasses = classes.filter((cls) => cls.is_active);
+  // const activeClasses = classes.filter((cls) => cls.is_active);
+  const activeClasses = useMemo(() => classes.filter((cls) => cls.is_active), [classes]);
   const activeSubjects = subjects.filter((subject) => subject.is_active) || [];
   const currentDate = new Date().toLocaleDateString('bn-BD', { dateStyle: 'short' });
 
 
 
- const classOptions = activeClasses.map((cls) => ({
-    value: { id: cls.id, g_class_id: cls.g_class_id },
-    label: `${cls.class_name} ${cls.section_name} ${cls.shift_name}`,
-  }));
+//  const classOptions = activeClasses.map((cls) => ({
+//     value: { id: cls.id, g_class_id: cls.g_class_id },
+//     label: `${cls.class_name} ${cls.section_name} ${cls.shift_name}`,
+//   }));
+
+
+ const classOptions = useMemo(
+    () =>
+      activeClasses.map((cls) => ({
+        value: { id: cls.id, g_class_id: cls.g_class_id },
+        label: `${cls.class_name} ${cls.section_name} ${cls.shift_name}`,
+      })),
+    [activeClasses]
+  );
 
   const examOptions = exams.map((exam) => ({
     value: exam.id,

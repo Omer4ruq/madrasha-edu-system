@@ -46,7 +46,7 @@ export default function SidebarMenuItem({ item, itemId, setItemId }) {
   }
 
   return (
-    <li
+    <ul
       className={`leading-10 group/main hover:bg-[#00000020] duration-300 relative ${
         isOpen || isActive ? "bg-[#00000020]" : "text-white"
       }`}
@@ -120,6 +120,6 @@ export default function SidebarMenuItem({ item, itemId, setItemId }) {
           ))}
         </ul>
       )}
-    </li>
+    </ul>
   );
 }

@@ -1,13 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaAngleDown, FaAngleUp } from "react-icons/fa";
 import sidebarCover from "/images/sidebar-cover.jpg";
 import { Link } from "react-router-dom";
 
 
 export default function SidebarHeader({ searchTerm, setSearchTerm }) {
-  const [showSearchBar, setShowSearchBar] = useState(false);
 
-  if (!showSearchBar) { setSearchTerm(""); }
+const [showSearchBar, setShowSearchBar] = useState(false);
+
+  useEffect(() => {
+  if (!showSearchBar) {
+    setSearchTerm("");
+  }
+}, [showSearchBar]);
+
 
   return (
     <div className="text-center">
