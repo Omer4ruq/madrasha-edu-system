@@ -93,7 +93,7 @@ const ExamRoutine = () => {
     isLoading: isClassLoading,
     error: classError,
   } = useGetStudentClassApIQuery();
-  
+  console.log("classes", classes)
   const {
     data: subjects = [],
     isLoading: isSubjectsLoading,
@@ -371,7 +371,6 @@ const ExamRoutine = () => {
 
   return (
     <div className="py-8 w-full relative">
-      <Toaster position="top-right" reverseOrder={false} />
       <style>{customStyles}</style>
       <div className="">
         {/* Header */}

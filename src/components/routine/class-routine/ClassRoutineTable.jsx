@@ -243,11 +243,14 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
   const { user, group_id } = useSelector((state) => state.auth);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState(null);
-  const [searchType, setSearchType] = useState('class'); // 'class' or 'teacher'
+  const [searchType, setSearchType] = useState('class');
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [currentClassId, setCurrentClassId] = useState(selectedClassId);
-console.log("selectedClassId",selectedClassId)
+
+  console.log("selectedClassId from props:", selectedClassId);
+  console.log("currentClassId state:", currentClassId);
+
   // Map English day names to Bangla for display
   const dayMap = {
     Saturday: "শনিবার",
@@ -264,6 +267,8 @@ console.log("selectedClassId",selectedClassId)
   const { data: routines = [], isLoading: routinesLoading, refetch: refetchRoutines } = useGetRoutinesQuery();
   const { data: allClasses = [], isLoading: classesLoading } = useGetclassConfigApiQuery();
   const { data: allTeachers = [], isLoading: teachersLoading } = useGetTeacherStaffProfilesQuery();
+  
+  // FIXED: Use the correct class ID for subjects query
   const { data: allSubjects = [], isLoading: subjectsLoading } = useGetClassSubjectsQuery(
     currentClassId ? currentClassId : undefined,
     { skip: !currentClassId }
@@ -286,25 +291,36 @@ console.log("selectedClassId",selectedClassId)
   const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_routine') || false;
   const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_routine') || false;
 
-  // Update currentClassId when selectedClassId changes
+  // FIXED: Update currentClassId when selectedClassId changes - using the correct ID mapping
   useEffect(() => {
-    if (selectedClassId && searchType === 'class') {
+    console.log("useEffect triggered - selectedClassId:", selectedClassId, "allClasses:", allClasses);
+    
+    if (selectedClassId && searchType === 'class' && allClasses.length > 0) {
       setCurrentClassId(selectedClassId);
-      const classOption = allClasses.find(cls => cls.class_id === selectedClassId);
+      
+      // Find the correct class object - FIXED: Use selectedClassId directly
+      const classOption = allClasses.find(cls => cls.id === selectedClassId);
+      console.log("Found class option:", classOption);
+      
       if (classOption) {
         setSelectedClass({
-          value: classOption.class_id,
-          label: `${classOption.class_name} ${classOption.section_name}`
+          value: selectedClassId, // Use selectedClassId directly
+          label: `${classOption.class_name} ${classOption.section_name}`,
+          id: classOption.id,
+          class_id: classOption.class_id,
+          g_class_id: classOption.g_class_id
         });
       }
     }
   }, [selectedClassId, allClasses, searchType]);
 
-  // Prepare options for selects
+  // FIXED: Prepare options for selects using the correct ID mapping
   const classOptions = allClasses.map(cls => ({
-    value: cls.class_id,
+    value: cls.id, // Use cls.id as the value (this should match selectedClassId)
     label: `${cls.class_name} ${cls.section_name}`,
-    id: cls.id
+    id: cls.id,
+    class_id: cls.class_id,
+    g_class_id: cls.g_class_id
   }));
 
   const teacherOptions = allTeachers.map(teacher => ({
@@ -312,35 +328,45 @@ console.log("selectedClassId",selectedClassId)
     label: teacher.name
   }));
 
-  // Filter routines based on search type
+  // FIXED: Filter routines based on search type - use the correct class ID for filtering
   const getFilteredRoutines = () => {
+    console.log("Filtering routines - searchType:", searchType, "currentClassId:", currentClassId, "selectedTeacher:", selectedTeacher);
+    console.log("All routines:", routines);
+    
     if (searchType === 'class' && currentClassId) {
-      return routines.filter(routine => routine.class_id === currentClassId);
+      // Filter routines by class_id that matches the currentClassId
+      const filtered = routines.filter(routine => {
+        console.log("Checking routine:", routine.class_id, "against currentClassId:", currentClassId);
+        return routine.class_id === currentClassId;
+      });
+      console.log("Filtered routines for class:", filtered);
+      return filtered;
     } else if (searchType === 'teacher' && selectedTeacher) {
-      return routines.filter(routine => routine.teacher_name === selectedTeacher.value);
+      const filtered = routines.filter(routine => routine.teacher_name === selectedTeacher.value);
+      console.log("Filtered routines for teacher:", filtered);
+      return filtered;
     }
     return [];
   };
 
   const filteredRoutines = getFilteredRoutines();
+  console.log("Final filtered routines:", filteredRoutines);
 
   // FIXED: Get periods to display - Create a copy before sorting
   const getPeriodsToShow = () => {
     if (searchType === 'class' && classPeriods.length > 0) {
-      // Create a copy of the array before sorting to avoid mutating read-only array
       return [...classPeriods].sort((a, b) => a.start_time.localeCompare(b.start_time));
     } else if (searchType === 'teacher') {
-      // Get all unique periods from teacher's routines
       const teacherPeriodIds = [...new Set(filteredRoutines.map(r => r.period_id))];
       return teacherPeriodIds.map(id => ({ id, start_time: '', end_time: '' }));
     } else if (periods && periods.length > 0) {
-      // Create a copy of the array before sorting to avoid mutating read-only array
       return [...periods].sort((a, b) => a.start_time.localeCompare(b.start_time));
     }
     return [];
   };
 
   const periodsToShow = getPeriodsToShow();
+  console.log("Periods to show:", periodsToShow);
 
   // Create maps for subject, teacher, and class names
   const subjectMap = allSubjects.reduce((acc, subject) => {
@@ -354,13 +380,15 @@ console.log("selectedClassId",selectedClassId)
   }, {});
 
   const classMap = allClasses.reduce((acc, cls) => {
-    acc[cls.class_id] = `${cls.class_name} ${cls.section_name}`;
+    acc[cls.id] = `${cls.class_name} ${cls.section_name}`; // FIXED: Use cls.id as key
     return acc;
   }, {});
 
+  console.log("Maps - subject:", subjectMap, "teacher:", teacherMap, "class:", classMap);
+
   // Create routine map
   const createRoutineMap = () => {
-    return days.reduce((acc, banglaDay) => {
+    const routineMap = days.reduce((acc, banglaDay) => {
       const englishDay = Object.keys(dayMap).find(key => dayMap[key] === banglaDay);
       acc[banglaDay] = filteredRoutines
         .filter(routine => routine.day_name === englishDay)
@@ -375,12 +403,16 @@ console.log("selectedClassId",selectedClassId)
         }, {});
       return acc;
     }, {});
+    
+    console.log("Created routine map:", routineMap);
+    return routineMap;
   };
 
   const routineMap = createRoutineMap();
 
   // Handle class selection
   const handleClassSelect = (selectedOption) => {
+    console.log("Class selected:", selectedOption);
     setSelectedClass(selectedOption);
     setCurrentClassId(selectedOption?.value || null);
     setSearchType('class');
@@ -388,6 +420,7 @@ console.log("selectedClassId",selectedClassId)
 
   // Handle teacher selection
   const handleTeacherSelect = (selectedOption) => {
+    console.log("Teacher selected:", selectedOption);
     setSelectedTeacher(selectedOption);
     setSearchType('teacher');
     setCurrentClassId(null);
@@ -395,9 +428,14 @@ console.log("selectedClassId",selectedClassId)
 
   // Handle search type change
   const handleSearchTypeChange = (type) => {
+    console.log("Search type changed to:", type);
     setSearchType(type);
     if (type === 'class') {
       setSelectedTeacher(null);
+      // Reset to the original selectedClassId if available
+      if (selectedClassId) {
+        setCurrentClassId(selectedClassId);
+      }
     } else {
       setSelectedClass(null);
       setCurrentClassId(null);
@@ -622,6 +660,16 @@ console.log("selectedClassId",selectedClassId)
           </div>
         </div>
       </div>
+
+      {/* Debug Information */}
+      {/* <div className="bg-yellow-100 border border-yellow-400 p-4 rounded mb-4 text-sm">
+        <p><strong>Debug Info:</strong></p>
+        <p>selectedClassId (prop): {selectedClassId}</p>
+        <p>currentClassId (state): {currentClassId}</p>
+        <p>searchType: {searchType}</p>
+        <p>filteredRoutines count: {filteredRoutines.length}</p>
+        <p>periodsToShow count: {periodsToShow.length}</p>
+      </div> */}
 
       {/* Routine Display - Lower z-index */}
       <div className="bg-white rounded-2xl shadow-xl p-6 animate-fadeIn relative z-10">

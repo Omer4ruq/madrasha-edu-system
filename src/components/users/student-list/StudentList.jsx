@@ -12,11 +12,10 @@ import { useGetStudentSectionApiQuery } from "../../../redux/features/api/studen
 import { useGetStudentShiftApiQuery } from "../../../redux/features/api/student/studentShiftApi";
 import { useGetAcademicYearApiQuery } from "../../../redux/features/api/academic-year/academicYearApi";
 import { useGetStudentClassApIQuery } from "../../../redux/features/api/student/studentClassApi";
+import { useGetInstituteLatestQuery } from "../../../redux/features/api/institute/instituteLatestApi";
 import { useSelector } from "react-redux";
 import { useGetGroupPermissionsQuery } from "../../../redux/features/api/permissionRole/groupsApi";
 import selectStyles from "../../../utilitis/selectStyles";
-import { useGetInstituteLatestQuery } from "../../../redux/features/api/institute/instituteLatestApi";
-import { useNavigate } from "react-router-dom";
 
 const StudentList = () => {
   const navigate = useNavigate();
@@ -52,6 +51,9 @@ const StudentList = () => {
       skip: !group_id,
     });
 
+  // Fetch institute data
+  const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
+
   // Permission checks
   const hasViewPermission =
     groupPermissions?.some((perm) => perm.codename === "view_student") || false;
@@ -78,7 +80,7 @@ const StudentList = () => {
   );
 
   // Fetch dropdown data
-  const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
+  // const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
   const { data: classes, isLoading: isClassesLoading } =
     useGetStudentClassApIQuery({ skip: !hasViewPermission });
   const { data: sections, isLoading: isSectionsLoading } =
@@ -225,6 +227,16 @@ const StudentList = () => {
     }
     if (!institute) {
       toast.error('ইনস্টিটিউট তথ্য পাওয়া যায়নি!');
+      return;
+    }
+
+    if (instituteLoading) {
+      toast.error("ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!");
+      return;
+    }
+
+    if (!institute) {
+      toast.error("ইনস্টিটিউট তথ্য পাওয়া যায়নি!");
       return;
     }
 
@@ -387,6 +399,13 @@ const StudentList = () => {
         </style>
       </head>
       <body>
+<<<<<<< HEAD
+        <div class="header">
+          <div class="school-name">${institute.institute_name || 'আদর্শ বিদ্যালয়'}</div>
+          <div class="school-address">${institute.institute_address || 'ঢাকা, বাংলাদেশ'} | ফোন: ০১৭xxxxxxxx | ইমেইল: info@school.edu.bd</div>
+          <div class="title">ছাত্র তথ্য প্রতিবেদন</div>
+        </div>
+=======
         <div class="container">
           <div class="header">
             ${institute.logo ? `<img src="${institute.logo}" class="school-logo" alt="School Logo" />` : ''}
@@ -394,6 +413,7 @@ const StudentList = () => {
             <div class="school-address">${institute.institute_address || '১২৩ মেইন রোড, ঢাকা, বাংলাদেশ'}</div>
             <div class="title">ছাত্র তথ্য প্রতিবেদন</div>
           </div>
+>>>>>>> c6d9b35ca870c023d1820b5d6ab60b9cb870e7bc
 
           <div class="main-content">
             <div class="left-section">
@@ -571,6 +591,21 @@ const StudentList = () => {
           <div class="footer">
             প্রতিবেদন তৈরি: ${new Date().toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' })} | ${institute.institute_name || 'আদর্শ বিদ্যালয়'} - ছাত্র ব্যবস্থাপনা সিস্টেম
           </div>
+<<<<<<< HEAD
+          <div class="signature-box">
+            <div class="signature-line"></div>
+            <div class="signature-label">অভিভাবকের স্বাক্ষর</div>
+          </div>
+          <div class="signature-box">
+            <div class="signature-line"></div>
+            <div class="signature-label">প্রশাসনিক স্বাক্ষর</div>
+          </div>
+        </div>
+
+        <div class="footer">
+          প্রতিবেদন তৈরি: ${new Date().toLocaleDateString('bn')}, ${new Date().toLocaleTimeString('bn')} | ${institute.institute_name || 'আদর্শ বিদ্যালয়'} - ছাত্র ব্যবস্থাপনা সিস্টেম
+=======
+>>>>>>> c6d9b35ca870c023d1820b5d6ab60b9cb870e7bc
         </div>
 
         <script>
@@ -598,7 +633,8 @@ const StudentList = () => {
     isSectionsLoading ||
     isShiftsLoading ||
     isAcademicYearsLoading ||
-    permissionsLoading
+    permissionsLoading ||
+    instituteLoading
   ) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
@@ -616,6 +652,14 @@ const StudentList = () => {
     return (
       <div className="p-4 text-red-400 animate-fadeIn text-center text-lg font-semibold">
         এই পৃষ্ঠাটি দেখার অনুমতি নেই।
+      </div>
+    );
+  }
+
+  if (instituteError) {
+    return (
+      <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
+        প্রতিষ্ঠানের তথ্য ত্রুটি: {instituteError.status || 'অজানা'} - {JSON.stringify(instituteError.data || {})}
       </div>
     );
   }

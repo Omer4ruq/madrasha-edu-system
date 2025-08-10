@@ -109,17 +109,7 @@ export default BASE_URL;
 
 
 
-
-
-
-
-
-
-
-
-
-
-/////////// live code
+///// live code
 // const getSubdomain = () => {
 //   const host = window.location.hostname;
 //   const parts = host.split(".");
