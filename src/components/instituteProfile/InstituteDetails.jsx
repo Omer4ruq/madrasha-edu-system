@@ -270,7 +270,7 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
                     <h3 className="text-lg font-semibold flex items-center">
                       <FaInfoCircle className="mr-2 text-[#DB9E30]" /> অতিরিক্ত তথ্য
                     </h3>
-                    <p><span className="font-medium">দৃষ্টিভঙ্গি শিরোনাম:</span> {institute.institute_v_heading || 'অজানা'}</p>
+                    {/* <p><span className="font-medium">দৃষ্টিভঙ্গি শিরোনাম:</span> {institute.institute_v_heading || 'অজানা'}</p> */}
                     <p><span className="font-medium">স্বাক্ষর:</span> {institute.signature || 'অজানা'}</p>
                     <p><span className="font-medium">স্থিতি:</span> {institute.status === 'Active' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</p>
                   </div>

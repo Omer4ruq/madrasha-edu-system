@@ -572,7 +572,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
             </div>
             {openSections.additional && (
               <div className="border-t border-[#9d9087]/50 mt-4 pt-6 grid grid-cols-1 md:grid-cols-3 gap-3 animate-scaleIn">
-                <div className="relative input-icon">
+                {/* <div className="relative input-icon">
                   <label htmlFor="institute_v_heading" className="block text-lg font-medium text-[#441a05]">
                     দৃষ্টিভঙ্গি শিরোনাম
                   </label>
@@ -588,7 +588,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     aria-label="দৃষ্টিভঙ্গি শিরোনাম"
                     disabled={isFormDisabled}
                   />
-                </div>
+                </div> */}
                 <div className="relative input-icon">
                   <label htmlFor="signature" className="block text-lg font-medium text-[#441a05]">
                     স্বাক্ষর

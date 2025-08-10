@@ -12,11 +12,10 @@ import { useGetStudentSectionApiQuery } from "../../../redux/features/api/studen
 import { useGetStudentShiftApiQuery } from "../../../redux/features/api/student/studentShiftApi";
 import { useGetAcademicYearApiQuery } from "../../../redux/features/api/academic-year/academicYearApi";
 import { useGetStudentClassApIQuery } from "../../../redux/features/api/student/studentClassApi";
+import { useGetInstituteLatestQuery } from "../../../redux/features/api/institute/instituteLatestApi";
 import { useSelector } from "react-redux";
 import { useGetGroupPermissionsQuery } from "../../../redux/features/api/permissionRole/groupsApi";
 import selectStyles from "../../../utilitis/selectStyles";
-
-
 
 const StudentList = () => {
   const { user, group_id } = useSelector((state) => state.auth);
@@ -50,6 +49,9 @@ const StudentList = () => {
     useGetGroupPermissionsQuery(group_id, {
       skip: !group_id,
     });
+
+  // Fetch institute data
+  const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
 
   // Permission checks
   const hasViewPermission =
@@ -253,6 +255,16 @@ const StudentList = () => {
       return;
     }
 
+    if (instituteLoading) {
+      toast.error("ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!");
+      return;
+    }
+
+    if (!institute) {
+      toast.error("ইনস্টিটিউট তথ্য পাওয়া যায়নি!");
+      return;
+    }
+
     const fullAddress = [
       student.village,
       student.post_office,
@@ -420,8 +432,8 @@ const StudentList = () => {
       </head>
       <body>
         <div class="header">
-          <div class="school-name">আদর্শ বিদ্যালয়</div>
-          <div class="school-address">ঢাকা, বাংলাদেশ | ফোন: ০১৭xxxxxxxx | ইমেইল: info@school.edu.bd</div>
+          <div class="school-name">${institute.institute_name || 'আদর্শ বিদ্যালয়'}</div>
+          <div class="school-address">${institute.institute_address || 'ঢাকা, বাংলাদেশ'} | ফোন: ০১৭xxxxxxxx | ইমেইল: info@school.edu.bd</div>
           <div class="title">ছাত্র তথ্য প্রতিবেদন</div>
         </div>
 
@@ -480,7 +492,7 @@ const StudentList = () => {
         </div>
 
         <div class="footer">
-          প্রতিবেদন তৈরি: ১৭ জুলাই, ২০২৫, ৬:৪৪ PM +০৬ | আদর্শ বিদ্যালয় - ছাত্র ব্যবস্থাপনা সিস্টেম
+          প্রতিবেদন তৈরি: ${new Date().toLocaleDateString('bn')}, ${new Date().toLocaleTimeString('bn')} | ${institute.institute_name || 'আদর্শ বিদ্যালয়'} - ছাত্র ব্যবস্থাপনা সিস্টেম
         </div>
 
         <script>
@@ -496,12 +508,11 @@ const StudentList = () => {
       </html>
     `;
 
-    const printWindow = window.open(' ', '_blank');
+    const printWindow = window.open('', '_blank');
     printWindow.document.write(htmlContent);
     printWindow.document.close();
     toast.success('ছাত্র প্রোফাইল তৈরি হয়েছে! প্রিন্ট বা সেভ করুন।', 'success');
   };
-
 
   if (
     isLoading ||
@@ -509,7 +520,8 @@ const StudentList = () => {
     isSectionsLoading ||
     isShiftsLoading ||
     isAcademicYearsLoading ||
-    permissionsLoading
+    permissionsLoading ||
+    instituteLoading
   ) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
@@ -527,6 +539,14 @@ const StudentList = () => {
     return (
       <div className="p-4 text-red-400 animate-fadeIn text-center text-lg font-semibold">
         এই পৃষ্ঠাটি দেখার অনুমতি নেই।
+      </div>
+    );
+  }
+
+  if (instituteError) {
+    return (
+      <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
+        প্রতিষ্ঠানের তথ্য ত্রুটি: {instituteError.status || 'অজানা'} - {JSON.stringify(instituteError.data || {})}
       </div>
     );
   }
