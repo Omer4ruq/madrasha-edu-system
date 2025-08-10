@@ -1138,7 +1138,7 @@ const ExpenseItems = () => {
       )}
 
       {/* ব্যয় আইটেম তালিকা */}
-      <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh]">
+      {/* <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh]">
         {isItemsLoading ? (
           <p className="p-4 text-[#441a05]/70">লোড হচ্ছে...</p>
         ) : itemsError ? (
@@ -1164,7 +1164,7 @@ const ExpenseItems = () => {
             {isDeleting ? "মুছছে..." : `ব্যয় আইটেম মুছতে ত্রুটি: ${deleteError?.status || "অজানা"} - ${JSON.stringify(deleteError?.data || {})}`}
           </div>
         )}
-      </div>
+      </div> */}
     </div>
   );
 };
