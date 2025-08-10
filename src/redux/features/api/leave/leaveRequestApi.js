@@ -1,9 +1,8 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import BASE_URL from "../../../../utilitis/apiConfig";
 
-
 const getToken = () => {
-  return localStorage.getItem("token"); 
+  return localStorage.getItem("token");
 };
 
 export const leaveRequestApi = createApi({
@@ -15,7 +14,6 @@ export const leaveRequestApi = createApi({
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
       }
-      headers.set("Content-Type", "application/json");
       return headers;
     },
   }),
@@ -35,11 +33,17 @@ export const leaveRequestApi = createApi({
 
     // POST: Create a new leave request
     createLeaveRequestApi: builder.mutation({
-      query: (payload) => ({
-        url: "/leave-requests/",
-        method: "POST",
-        body: payload,
-      }),
+      query: (payload) => {
+        const formData = new FormData();
+        Object.keys(payload).forEach((key) => {
+          formData.append(key, payload[key]);
+        });
+        return {
+          url: "/leave-requests/",
+          method: "POST",
+          body: formData,
+        };
+      },
       invalidatesTags: ["leaveRequestApi"],
     }),
 
@@ -48,6 +52,24 @@ export const leaveRequestApi = createApi({
       query: (id) => ({
         url: `/leave-requests/${id}/`,
         method: "DELETE",
+      }),
+      invalidatesTags: ["leaveRequestApi"],
+    }),
+
+    // POST: Reject leave request
+    rejectLeaveRequestApi: builder.mutation({
+      query: (id) => ({
+        url: `/leave-requests/${id}/reject/`,
+        method: "POST",
+      }),
+      invalidatesTags: ["leaveRequestApi"],
+    }),
+
+    // POST: Approve leave request
+    approveLeaveRequestApi: builder.mutation({
+      query: (id) => ({
+        url: `/leave-requests/${id}/approve/`,
+        method: "POST",
       }),
       invalidatesTags: ["leaveRequestApi"],
     }),
@@ -60,4 +82,6 @@ export const {
   useGetLeaveRequestApiByIdQuery,
   useCreateLeaveRequestApiMutation,
   useDeleteLeaveRequestApiMutation,
+  useRejectLeaveRequestApiMutation,
+  useApproveLeaveRequestApiMutation,
 } = leaveRequestApi;

@@ -303,7 +303,7 @@ const StaffList = () => {
     debounce((newFilters) => {
       setFilters(newFilters);
       setPage(1);
-    }, 300),
+    },),
     []
   );
 
