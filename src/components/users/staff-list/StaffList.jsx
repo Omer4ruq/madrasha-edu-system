@@ -582,7 +582,7 @@ console.log("staffData", staffData)
     { key: 'email', label: 'ইমেইল', fixed: false, width: '150px' },
     { key: 'designation', label: 'পদবী', fixed: false, width: '120px' },
     { key: 'department', label: 'বিভাগ', fixed: false, width: '120px' },
-    { key: 'status', label: 'স্ট্যাটাস', fixed: false, width: '100px' },
+    // { key: 'status', label: 'স্ট্যাটাস', fixed: false, width: '100px' },
     { key: 'actions', label: 'কার্যক্রম', fixed: false, width: '120px', actions: true },
   ];
 
@@ -1015,11 +1015,11 @@ border: 1px solid rgba(0, 0, 0, 0.05);
                       <td className="table-cell" style={{ width: '120px' }}>
                         {staffMember.department || 'N/A'}
                       </td>
-                      <td className="table-cell" style={{ width: '100px' }}>
+                      {/* <td className="table-cell" style={{ width: '100px' }}>
                         <span className={`status-badge ${staffMember.status === 'active' ? 'status-active' : 'status-inactive'}`}>
                           {staffMember.status === 'active' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}
                         </span>
-                      </td>
+                      </td> */}
 
                       {/* Actions */}
                       {(hasChangePermission || hasDeletePermission || hasViewPermission) && (
