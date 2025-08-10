@@ -755,7 +755,7 @@ const ExpenseItems = () => {
               </select>
               {errors.fund_id && <p id="fund_id-error" className="text-red-400 text-sm mt-1">{errors.fund_id}</p>}
             </div>
-            <div>
+            {/* <div>
               <select
                 name="transaction_book_id"
                 value={formData.transaction_book_id}
@@ -774,8 +774,8 @@ const ExpenseItems = () => {
               {errors.transaction_book_id && (
                 <p id="transaction_book_id-error" className="text-red-400 text-sm mt-1">{errors.transaction_book_id}</p>
               )}
-            </div>
-            <div>
+            </div> */}
+            {/* <div>
               <input
                 type="number"
                 name="transaction_number"
@@ -789,7 +789,7 @@ const ExpenseItems = () => {
               {errors.transaction_number && (
                 <p id="transaction_number-error" className="text-red-400 text-sm mt-1">{errors.transaction_number}</p>
               )}
-            </div>
+            </div> */}
             <div>
               <input
                 type="text"
@@ -966,7 +966,7 @@ const ExpenseItems = () => {
               </select>
               {errors.fund_id && <p id="fund_id-error" className="text-red-400 text-sm mt-1">{errors.fund_id}</p>}
             </div>
-            <div>
+            {/* <div>
               <select
                 name="transaction_book_id"
                 value={formData.transaction_book_id}
@@ -985,8 +985,8 @@ const ExpenseItems = () => {
               {errors.transaction_book_id && (
                 <p id="transaction_book_id-error" className="text-red-400 text-sm mt-1">{errors.transaction_book_id}</p>
               )}
-            </div>
-            <div>
+            </div> */}
+            {/* <div>
               <input
                 type="number"
                 name="transaction_number"
@@ -1000,7 +1000,7 @@ const ExpenseItems = () => {
               {errors.transaction_number && (
                 <p id="transaction_number-error" className="text-red-400 text-sm mt-1">{errors.transaction_number}</p>
               )}
-            </div>
+            </div> */}
             <div>
               <input
                 type="text"

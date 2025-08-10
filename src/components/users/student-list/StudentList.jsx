@@ -16,6 +16,7 @@ import { useGetInstituteLatestQuery } from "../../../redux/features/api/institut
 import { useSelector } from "react-redux";
 import { useGetGroupPermissionsQuery } from "../../../redux/features/api/permissionRole/groupsApi";
 import selectStyles from "../../../utilitis/selectStyles";
+import { useNavigate } from "react-router-dom";
 
 const StudentList = () => {
   const navigate = useNavigate();

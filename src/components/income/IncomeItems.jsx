@@ -776,7 +776,7 @@ const IncomeItems = () => {
                   </p>
                 )}
               </div>
-              <div>
+              {/* <div>
                 <select
                   name="transaction_book_id"
                   value={formData.transaction_book_id}
@@ -800,8 +800,8 @@ const IncomeItems = () => {
                     {errors.transaction_book_id}
                   </p>
                 )}
-              </div>
-              <div>
+              </div> */}
+              {/* <div>
                 <input
                   type="number"
                   name="transaction_number"
@@ -818,7 +818,7 @@ const IncomeItems = () => {
                     {errors.transaction_number}
                   </p>
                 )}
-              </div>
+              </div> */}
               <div>
                 <input
                   type="text"
@@ -1040,7 +1040,7 @@ const IncomeItems = () => {
                   </p>
                 )}
               </div>
-              <div>
+              {/* <div>
                 <select
                   name="transaction_book_id"
                   value={formData.transaction_book_id}
@@ -1064,8 +1064,8 @@ const IncomeItems = () => {
                     {errors.transaction_book_id}
                   </p>
                 )}
-              </div>
-              <div>
+              </div> */}
+              {/* <div>
                 <input
                   type="number"
                   name="transaction_number"
@@ -1082,8 +1082,8 @@ const IncomeItems = () => {
                     {errors.transaction_number}
                   </p>
                 )}
-              </div>
-              <div>
+              </div> */}
+              {/* <div>
                 <input
                   type="text"
                   name="invoice_number"
@@ -1100,7 +1100,7 @@ const IncomeItems = () => {
                     {errors.invoice_number}
                   </p>
                 )}
-              </div>
+              </div> */}
               <div>
                 <input
                   type="date"
