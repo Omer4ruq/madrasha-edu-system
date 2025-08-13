@@ -1096,7 +1096,7 @@ const StudentList = () => {
                       <td className="table-cell" style={{ width: "100px" }}>{student.section_name}</td>
                       <td className="table-cell" style={{ width: "100px" }}>{student.shift_name}</td>
                       <td className="table-cell" style={{ width: "100px" }}>{student.guardian}</td>
-                      <td className="table-cell" style={{ width: "120px" }}>{student.phone_number || "N/A"}</td>
+                      <td className="table-cell" style={{ width: "120px" }}>{student.phoneno || "N/A"}</td>
                       <td className="table-cell" style={{ width: "120px" }}>{student.dob || "N/A"}</td>
                       <td className="table-cell" style={{ width: "80px" }}>{student.gender || "N/A"}</td>
                       <td className="table-cell" style={{ width: "100px" }}>{student.blood_group || "N/A"}</td>
