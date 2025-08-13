@@ -194,8 +194,6 @@ const customStyles = `
   }
 `;
 
-
-
 const ResultSheet = () => {
   const [selectedExam, setSelectedExam] = useState("");
   const [selectedClassConfig, setSelectedClassConfig] = useState("");
@@ -553,12 +551,12 @@ const ResultSheet = () => {
             classConfigs?.find((c) => c.id === Number(selectedClassConfig))
               ?.class_name || "ক্লাস নির্বাচিত হয়নি"
           } | শাখা: ${
-            classConfigs?.find((c) => c.id === Number(selectedClassConfig))
-              ?.section_name || "শাখা নির্বাচিত হয়নি"
-          } | শিফট: ${
-            classConfigs?.find((c) => c.id === Number(selectedClassConfig))
-              ?.shift_name || "শিফট নির্বাচিত হয়নি"
-          }</h3>
+      classConfigs?.find((c) => c.id === Number(selectedClassConfig))
+        ?.section_name || "শাখা নির্বাচিত হয়নি"
+    } | শিফট: ${
+      classConfigs?.find((c) => c.id === Number(selectedClassConfig))
+        ?.shift_name || "শিফট নির্বাচিত হয়নি"
+    }</h3>
           <h3>শিক্ষাবর্ষ: ${
             academicYears?.find((y) => y.id === Number(selectedAcademicYear))
               ?.name || "শিক্ষাবর্ষ নির্বাচিত হয়নি"
@@ -595,7 +593,9 @@ const ResultSheet = () => {
               ${subjectConfigs
                 ?.map(
                   (config) =>
-                    `<th style="width: 50px;">${config.subject_name || "N/A"}</th>`
+                    `<th style="width: 50px;">${
+                      config.subject_name || "N/A"
+                    }</th>`
                 )
                 .join("")}
               <th style="width: 40px;">মোট</th>
@@ -638,7 +638,9 @@ const ResultSheet = () => {
         <div class="stats-container">
           <div class="stats-box">
             <div class="stats-title">পরিসংখ্যান</div>
-            <div class="stats-text">মোট শিক্ষার্থী: ${statistics.totalStudents},</div>
+            <div class="stats-text">মোট শিক্ষার্থী: ${
+              statistics.totalStudents
+            },</div>
             <div class="stats-text">গ্রেড বিতরণ:</div>
             ${Object.entries(statistics.gradeDistribution)
               .map(
@@ -695,9 +697,11 @@ const ResultSheet = () => {
   useEffect(() => {
     if (examsError) toast.error("পরীক্ষার তালিকা লোড করতে ব্যর্থ হয়েছে!");
     if (classConfigsError) toast.error("ক্লাস তালিকা লোড করতে ব্যর্থ হয়েছে!");
-    if (academicYearsError) toast.error("শিক্ষাবর্ষ তালিকা লোড করতে ব্যর্থ হয়েছে!");
+    if (academicYearsError)
+      toast.error("শিক্ষাবর্ষ তালিকা লোড করতে ব্যর্থ হয়েছে!");
     if (studentsError) toast.error("ছাত্র তালিকা লোড করতে ব্যর্থ হয়েছে!");
-    if (subjectMarksError) toast.error("বিষয়ের মার্কস লোড করতে ব্যর্থ হয়েছে!");
+    if (subjectMarksError)
+      toast.error("বিষয়ের মার্কস লোড করতে ব্যর্থ হয়েছে!");
     if (subjectConfigsError) toast.error("বিষয় কনফিগ লোড করতে ব্যর্থ হয়েছে!");
     if (instituteError) toast.error("ইনস্টিটিউট তথ্য লোড করতে ব্যর্থ হয়েছে!");
   }, [
@@ -721,18 +725,24 @@ const ResultSheet = () => {
     isInstituteLoading;
 
   // Prepare options for react-select
-  const examOptions = exams?.map((exam) => ({
-    value: exam.id,
-    label: exam.name,
-  })) || [];
-  const classConfigOptions = classConfigs?.map((config) => ({
-    value: config.id,
-    label: `${config.class_name} - ${config.section_name} (${config.shift_name})`,
-  })) || [];
-  const academicYearOptions = academicYears?.map((year) => ({
-    value: year.id,
-    label: year.name,
-  })) || [];
+  const examOptions =
+    exams?.map((exam) => ({
+      value: exam.id,
+      label: exam.name,
+    })) || [];
+  const classConfigOptions =
+    classConfigs?.map((config) => ({
+      value: config.id,
+      label: `${config.class_name}${
+        config.section_name ? ` - ${config.section_name}` : ""
+      }${config.shift_name ? ` (${config.shift_name})` : ""}`,
+    })) || [];
+
+  const academicYearOptions =
+    academicYears?.map((year) => ({
+      value: year.id,
+      label: year.name,
+    })) || [];
 
   return (
     <div className="py-8 w-full relative">
@@ -746,14 +756,22 @@ const ResultSheet = () => {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="relative">
-              <label htmlFor="examSelect" className="block font-medium text-[#441a05]">
+              <label
+                htmlFor="examSelect"
+                className="block font-medium text-[#441a05]"
+              >
                 পরীক্ষা নির্বাচন <span className="text-red-600">*</span>
               </label>
               <Select
                 id="examSelect"
                 options={examOptions}
-                value={examOptions.find((option) => option.value === selectedExam) || null}
-                onChange={(option) => setSelectedExam(option ? option.value : "")}
+                value={
+                  examOptions.find((option) => option.value === selectedExam) ||
+                  null
+                }
+                onChange={(option) =>
+                  setSelectedExam(option ? option.value : "")
+                }
                 placeholder="পরীক্ষা নির্বাচন করুন"
                 isDisabled={isLoading}
                 styles={selectStyles}
@@ -763,14 +781,23 @@ const ResultSheet = () => {
               />
             </div>
             <div className="relative">
-              <label htmlFor="classSelect" className="block font-medium text-[#441a05]">
+              <label
+                htmlFor="classSelect"
+                className="block font-medium text-[#441a05]"
+              >
                 ক্লাস নির্বাচন <span className="text-red-600">*</span>
               </label>
               <Select
                 id="classSelect"
                 options={classConfigOptions}
-                value={classConfigOptions.find((option) => option.value === selectedClassConfig) || null}
-                onChange={(option) => setSelectedClassConfig(option ? option.value : "")}
+                value={
+                  classConfigOptions.find(
+                    (option) => option.value === selectedClassConfig
+                  ) || null
+                }
+                onChange={(option) =>
+                  setSelectedClassConfig(option ? option.value : "")
+                }
                 placeholder="ক্লাস নির্বাচন করুন"
                 isDisabled={isLoading}
                 styles={selectStyles}
@@ -780,14 +807,23 @@ const ResultSheet = () => {
               />
             </div>
             <div className="relative">
-              <label htmlFor="yearSelect" className="block font-medium text-[#441a05]">
+              <label
+                htmlFor="yearSelect"
+                className="block font-medium text-[#441a05]"
+              >
                 শিক্ষাবর্ষ নির্বাচন <span className="text-red-600">*</span>
               </label>
               <Select
                 id="yearSelect"
                 options={academicYearOptions}
-                value={academicYearOptions.find((option) => option.value === selectedAcademicYear) || null}
-                onChange={(option) => setSelectedAcademicYear(option ? option.value : "")}
+                value={
+                  academicYearOptions.find(
+                    (option) => option.value === selectedAcademicYear
+                  ) || null
+                }
+                onChange={(option) =>
+                  setSelectedAcademicYear(option ? option.value : "")
+                }
                 placeholder="শিক্ষাবর্ষ নির্বাচন করুন"
                 isDisabled={isLoading}
                 styles={selectStyles}
@@ -835,19 +871,35 @@ const ResultSheet = () => {
               <div className="head">
                 <div className="institute-info">
                   <h1>{instituteData?.institute_name || "অজানা ইনস্টিটিউট"}</h1>
-                  <p>{instituteData?.institute_address || "ঠিকানা উপলব্ধ নয়"}</p>
+                  <p>
+                    {instituteData?.institute_address || "ঠিকানা উপলব্ধ নয়"}
+                  </p>
                 </div>
                 <h2 className="title">ফলাফল শীট</h2>
                 <h3 className="text-[12px] mb-0 text-black">
-                  পরীক্ষা: {exams?.find((e) => e.id === Number(selectedExam))?.name || "পরীক্ষা নির্বাচিত হয়নি"}
+                  পরীক্ষা:{" "}
+                  {exams?.find((e) => e.id === Number(selectedExam))?.name ||
+                    "পরীক্ষা নির্বাচিত হয়নি"}
                 </h3>
                 <h3 className="text-[12px] mb-0 text-black">
-                  ক্লাস: {classConfigs?.find((c) => c.id === Number(selectedClassConfig))?.class_name || "ক্লাস নির্বাচিত হয়নি"} | 
-                  শাখা: {classConfigs?.find((c) => c.id === Number(selectedClassConfig))?.section_name || "শাখা নির্বাচিত হয়নি"} | 
-                  শিফট: {classConfigs?.find((c) => c.id === Number(selectedClassConfig))?.shift_name || "শিফট নির্বাচিত হয়নি"}
+                  ক্লাস:{" "}
+                  {classConfigs?.find(
+                    (c) => c.id === Number(selectedClassConfig)
+                  )?.class_name || "ক্লাস নির্বাচিত হয়নি"}{" "}
+                  | শাখা:{" "}
+                  {classConfigs?.find(
+                    (c) => c.id === Number(selectedClassConfig)
+                  )?.section_name || "শাখা নির্বাচিত হয়নি"}{" "}
+                  | শিফট:{" "}
+                  {classConfigs?.find(
+                    (c) => c.id === Number(selectedClassConfig)
+                  )?.shift_name || "শিফট নির্বাচিত হয়নি"}
                 </h3>
                 <h3 className="text-[12px] mb-0 text-black">
-                  শিক্ষাবর্ষ: {academicYears?.find((y) => y.id === Number(selectedAcademicYear))?.name || "শিক্ষাবর্ষ নির্বাচিত হয়নি"}
+                  শিক্ষাবর্ষ:{" "}
+                  {academicYears?.find(
+                    (y) => y.id === Number(selectedAcademicYear)
+                  )?.name || "শিক্ষাবর্ষ নির্বাচিত হয়নি"}
                 </h3>
               </div>
               <table className="grade-table">

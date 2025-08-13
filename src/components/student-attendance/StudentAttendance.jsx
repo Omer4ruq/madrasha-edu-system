@@ -110,7 +110,11 @@ const StudentAttendance = () => {
   const [selectedStudent, setSelectedStudent] = useState(null);
 
   // Fetch institute data
-  const { data: instituteData, isLoading: isInstituteLoading, error: instituteError } = useGetInstituteLatestQuery();
+  const {
+    data: instituteData,
+    isLoading: isInstituteLoading,
+    error: instituteError,
+  } = useGetInstituteLatestQuery();
 
   // Fetch other data
   const {
@@ -121,7 +125,9 @@ const StudentAttendance = () => {
   const classes = Array.isArray(classConfigData) ? classConfigData : [];
   const classOptions = classes.map((cls) => ({
     value: cls.id,
-    label: `${cls.class_name}-${cls.section_name} (${cls.shift_name})`,
+    label: `${cls.class_name}${cls.section_name ? `-${cls.section_name}` : ""}${
+      cls.shift_name ? ` (${cls.shift_name})` : ""
+    }`,
   }));
 
   const getClassId = classConfigData?.find(
@@ -237,7 +243,13 @@ const StudentAttendance = () => {
     if (studentsError) toast.error("ছাত্র তালিকা লোড করতে ব্যর্থ হয়েছে!");
     if (attendanceError) toast.error("উপস্থিতি তথ্য লোড করতে ব্যর্থ হয়েছে!");
     if (instituteError) toast.error("ইনস্টিটিউট তথ্য লোড করতে ব্যর্থ হয়েছে!");
-  }, [classesError, subjectsError, studentsError, attendanceError, instituteError]);
+  }, [
+    classesError,
+    subjectsError,
+    studentsError,
+    attendanceError,
+    instituteError,
+  ]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -279,7 +291,12 @@ const StudentAttendance = () => {
 
   // Generate PDF Report
   const generatePDFReport = () => {
-    if (!selectedClass || (tabValue === 0 && !classDate) || (tabValue === 1 && filterType === "month" && !month) || (tabValue === 1 && filterType === "dateRange" && (!startDate || !endDate))) {
+    if (
+      !selectedClass ||
+      (tabValue === 0 && !classDate) ||
+      (tabValue === 1 && filterType === "month" && !month) ||
+      (tabValue === 1 && filterType === "dateRange" && (!startDate || !endDate))
+    ) {
       toast.error("অনুগ্রহ করে সমস্ত প্রয়োজনীয় ফিল্ড পূরণ করুন!");
       return;
     }
@@ -362,22 +379,63 @@ const StudentAttendance = () => {
           </div>
           <h2>উপস্থিতি রিপোর্ট</h2>
           <h3>ক্লাস: ${selectedClass?.label || "N/A"}</h3>
-          ${tabValue === 0 ? `<h3>তারিখ: ${new Date(classDate).toLocaleDateString("bn-BD")}</h3>` : `<h3>${filterType === "month" ? `মাস: ${new Date(month + "-01").toLocaleDateString("bn-BD", { month: "long", year: "numeric" })}` : `তারিখের পরিসীমা: ${new Date(startDate).toLocaleDateString("bn-BD")} - ${new Date(endDate).toLocaleDateString("bn-BD")}`}</h3>`}
-          ${selectedStudent ? `<h3>ছাত্র: ${selectedStudent.name || "N/A"} (ID: ${selectedStudent.user_id || "N/A"})</h3>` : ""}
+          ${
+            tabValue === 0
+              ? `<h3>তারিখ: ${new Date(classDate).toLocaleDateString(
+                  "bn-BD"
+                )}</h3>`
+              : `<h3>${
+                  filterType === "month"
+                    ? `মাস: ${new Date(month + "-01").toLocaleDateString(
+                        "bn-BD",
+                        { month: "long", year: "numeric" }
+                      )}`
+                    : `তারিখের পরিসীমা: ${new Date(
+                        startDate
+                      ).toLocaleDateString("bn-BD")} - ${new Date(
+                        endDate
+                      ).toLocaleDateString("bn-BD")}`
+                }</h3>`
+          }
+          ${
+            selectedStudent
+              ? `<h3>ছাত্র: ${selectedStudent.name || "N/A"} (ID: ${
+                  selectedStudent.user_id || "N/A"
+                })</h3>`
+              : ""
+          }
         </div>
         <table>
           <thead>
             <tr>
-              ${tabValue === 0 ? `
+              ${
+                tabValue === 0
+                  ? `
                 <th>ছাত্র</th>
-                ${filteredSubjects.map((subject) => `<th>${subject.name || "N/A"}</th>`).join("")}
-              ` : selectedStudent ? `
+                ${filteredSubjects
+                  .map((subject) => `<th>${subject.name || "N/A"}</th>`)
+                  .join("")}
+              `
+                  : selectedStudent
+                  ? `
                 <th>বিষয়</th>
-                ${uniqueDates.map((date) => `<th>${new Date(date).toLocaleDateString("bn-BD")}</th>`).join("")}
-              ` : `
+                ${uniqueDates
+                  .map(
+                    (date) =>
+                      `<th>${new Date(date).toLocaleDateString("bn-BD")}</th>`
+                  )
+                  .join("")}
+              `
+                  : `
                 <th>ছাত্র</th>
-                ${uniqueDates.map((date) => `<th>${new Date(date).toLocaleDateString("bn-BD")}</th>`).join("")}
-              `}
+                ${uniqueDates
+                  .map(
+                    (date) =>
+                      `<th>${new Date(date).toLocaleDateString("bn-BD")}</th>`
+                  )
+                  .join("")}
+              `
+              }
             </tr>
           </thead>
           <tbody>
@@ -387,16 +445,26 @@ const StudentAttendance = () => {
       filteredStudents.forEach((student) => {
         htmlContent += `
           <tr>
-            <td>${student.name || "N/A"} (Roll: ${student.roll_no || "N/A"})</td>
-            ${filteredSubjects.map((subject) => {
-              const attendance = attendanceData?.attendance?.find(
-                (record) =>
-                  record.student === student.id &&
-                  record.class_subject === subject.id &&
-                  record.attendance_date === classDate
-              );
-              return `<td>${attendance?.status === "PRESENT" ? "উপস্থিত" : attendance?.status === "ABSENT" ? "অনুপস্থিত" : "N/A"}${attendance?.remarks ? ` (${attendance.remarks})` : ""}</td>`;
-            }).join("")}
+            <td>${student.name || "N/A"} (Roll: ${
+          student.roll_no || "N/A"
+        })</td>
+            ${filteredSubjects
+              .map((subject) => {
+                const attendance = attendanceData?.attendance?.find(
+                  (record) =>
+                    record.student === student.id &&
+                    record.class_subject === subject.id &&
+                    record.attendance_date === classDate
+                );
+                return `<td>${
+                  attendance?.status === "PRESENT"
+                    ? "উপস্থিত"
+                    : attendance?.status === "ABSENT"
+                    ? "অনুপস্থিত"
+                    : "N/A"
+                }${attendance?.remarks ? ` (${attendance.remarks})` : ""}</td>`;
+              })
+              .join("")}
           </tr>
         `;
       });
@@ -405,15 +473,23 @@ const StudentAttendance = () => {
         htmlContent += `
           <tr>
             <td>${subject.name || "N/A"}</td>
-            ${uniqueDates.map((date) => {
-              const attendance = attendanceData?.attendance?.find(
-                (record) =>
-                  record.student === selectedStudent.id &&
-                  record.class_subject === subject.id &&
-                  record.attendance_date === date
-              );
-              return `<td>${attendance?.status === "PRESENT" ? "উপস্থিত" : attendance?.status === "ABSENT" ? "অনুপস্থিত" : "N/A"}${attendance?.remarks ? ` (${attendance.remarks})` : ""}</td>`;
-            }).join("")}
+            ${uniqueDates
+              .map((date) => {
+                const attendance = attendanceData?.attendance?.find(
+                  (record) =>
+                    record.student === selectedStudent.id &&
+                    record.class_subject === subject.id &&
+                    record.attendance_date === date
+                );
+                return `<td>${
+                  attendance?.status === "PRESENT"
+                    ? "উপস্থিত"
+                    : attendance?.status === "ABSENT"
+                    ? "অনুপস্থিত"
+                    : "N/A"
+                }${attendance?.remarks ? ` (${attendance.remarks})` : ""}</td>`;
+              })
+              .join("")}
           </tr>
         `;
       });
@@ -422,14 +498,22 @@ const StudentAttendance = () => {
         htmlContent += `
           <tr>
             <td>${student.name || "N/A"} (ID: ${student.user_id || "N/A"})</td>
-            ${uniqueDates.map((date) => {
-              const attendance = attendanceData?.attendance?.find(
-                (record) =>
-                  record.student === student.id &&
-                  record.attendance_date === date
-              );
-              return `<td>${attendance?.status === "PRESENT" ? "উপস্থিত" : attendance?.status === "ABSENT" ? "অনুপস্থিত" : "N/A"}${attendance?.remarks ? ` (${attendance.remarks})` : ""}</td>`;
-            }).join("")}
+            ${uniqueDates
+              .map((date) => {
+                const attendance = attendanceData?.attendance?.find(
+                  (record) =>
+                    record.student === student.id &&
+                    record.attendance_date === date
+                );
+                return `<td>${
+                  attendance?.status === "PRESENT"
+                    ? "উপস্থিত"
+                    : attendance?.status === "ABSENT"
+                    ? "অনুপস্থিত"
+                    : "N/A"
+                }${attendance?.remarks ? ` (${attendance.remarks})` : ""}</td>`;
+              })
+              .join("")}
           </tr>
         `;
       });
@@ -462,7 +546,7 @@ const StudentAttendance = () => {
     printWindow.document.write(htmlContent);
     printWindow.document.close();
     printWindow.print();
-    
+
     toast.success("PDF রিপোর্ট তৈরি হয়েছে!");
   };
 
@@ -475,13 +559,14 @@ const StudentAttendance = () => {
 
   return (
     <div className="py-8 w-full relative">
-      <Toaster position="top-right" reverseOrder={false} />
       <style>{customStyles}</style>
       <div className="mx-auto">
         {/* Tabs */}
         <div className="flex border-b border-white/20 mb-6 animate-fadeIn">
           <button
-            className={`flex-1 py-3 px-6 sm:text-lg font-medium rounded-t-lg text-sm transition-all duration-300 ${tabValue === 0 ? "tab-active" : "tab-inactive"}`}
+            className={`flex-1 py-3 px-6 sm:text-lg font-medium rounded-t-lg text-sm transition-all duration-300 ${
+              tabValue === 0 ? "tab-active" : "tab-inactive"
+            }`}
             onClick={() => {
               setTabValue(0);
               setMonth("");
@@ -499,7 +584,9 @@ const StudentAttendance = () => {
             ক্লাস অনুযায়ী উপস্থিতি
           </button>
           <button
-            className={`flex-1 py-3 px-6 lg:text-lg text-sm font-medium rounded-t-lg transition-all duration-300 ${tabValue === 1 ? "tab-active" : "tab-inactive"}`}
+            className={`flex-1 py-3 px-6 lg:text-lg text-sm font-medium rounded-t-lg transition-all duration-300 ${
+              tabValue === 1 ? "tab-active" : "tab-inactive"
+            }`}
             onClick={() => {
               setTabValue(1);
               setStudentSearch("");
@@ -531,7 +618,10 @@ const StudentAttendance = () => {
           >
             {/* ক্লাস নির্বাচন */}
             <div className="relative">
-              <label htmlFor="classSelect" className="block font-medium text-[#441a05]">
+              <label
+                htmlFor="classSelect"
+                className="block font-medium text-[#441a05]"
+              >
                 ক্লাস নির্বাচন <span className="text-red-600">*</span>
               </label>
               <Select
@@ -557,7 +647,10 @@ const StudentAttendance = () => {
             {/* তারিখ নির্বাচন */}
             {tabValue === 0 && (
               <div className="relative input-icon">
-                <label htmlFor="classDate" className="block font-medium text-[#441a05]">
+                <label
+                  htmlFor="classDate"
+                  className="block font-medium text-[#441a05]"
+                >
                   তারিখ নির্বাচন <span className="text-red-600">*</span>
                 </label>
                 <input
@@ -579,14 +672,21 @@ const StudentAttendance = () => {
             {tabValue === 1 && (
               <>
                 <div className="relative">
-                  <label htmlFor="studentSelect" className="block font-medium text-[#441a05]">
+                  <label
+                    htmlFor="studentSelect"
+                    className="block font-medium text-[#441a05]"
+                  >
                     ছাত্র নির্বাচন
                   </label>
                   <Select
                     id="studentSelect"
                     options={studentOptions}
-                    value={studentOptions.find((option) => option.value === selectedStudent?.id)}
-                    onChange={(option) => setSelectedStudent(option?.student || null)}
+                    value={studentOptions.find(
+                      (option) => option.value === selectedStudent?.id
+                    )}
+                    onChange={(option) =>
+                      setSelectedStudent(option?.student || null)
+                    }
                     placeholder="ছাত্র নির্বাচন"
                     classNamePrefix="react-select"
                     className="mt-1"
@@ -597,14 +697,19 @@ const StudentAttendance = () => {
                     menuPosition="fixed"
                     isSearchable
                     filterOption={(option, inputValue) =>
-                      option.label.toLowerCase().includes(inputValue.toLowerCase())
+                      option.label
+                        .toLowerCase()
+                        .includes(inputValue.toLowerCase())
                     }
                     aria-label="ছাত্র নির্বাচন"
                   />
                 </div>
 
                 <div className="relative input-icon col-span-2">
-                  <label htmlFor="filterType" className="block font-medium text-[#441a05]">
+                  <label
+                    htmlFor="filterType"
+                    className="block font-medium text-[#441a05]"
+                  >
                     ফিল্টার প্রকার
                   </label>
                   <select
@@ -628,7 +733,9 @@ const StudentAttendance = () => {
 
                 <div className="relative input-icon col-span-2">
                   <label className="block font-medium text-[#441a05]">
-                    {filterType === "month" ? "মাস নির্বাচন করুন" : "তারিখের পরিসীমা"}
+                    {filterType === "month"
+                      ? "মাস নির্বাচন করুন"
+                      : "তারিখের পরিসীমা"}
                   </label>
                   {filterType === "month" ? (
                     <input
@@ -680,7 +787,11 @@ const StudentAttendance = () => {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className={`flex items-center text-nowrap justify-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn btn-ripple ${isLoading ? "cursor-not-allowed opacity-70" : "hover:text-white btn-glow"}`}
+                    className={`flex items-center text-nowrap justify-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn btn-ripple ${
+                      isLoading
+                        ? "cursor-not-allowed opacity-70"
+                        : "hover:text-white btn-glow"
+                    }`}
                     aria-label="উপস্থিতি দেখুন"
                   >
                     {isLoading ? (
@@ -706,7 +817,11 @@ const StudentAttendance = () => {
           <button
             onClick={generatePDFReport}
             disabled={isLoading || !attendanceData?.attendance?.length}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ${isLoading || !attendanceData?.attendance?.length ? "bg-gray-400 text-gray-600 cursor-not-allowed" : "bg-[#DB9E30] text-[#441a05] hover:text-white btn-glow"}`}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+              isLoading || !attendanceData?.attendance?.length
+                ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                : "bg-[#DB9E30] text-[#441a05] hover:text-white btn-glow"
+            }`}
             aria-label="PDF রিপোর্ট ডাউনলোড"
             title="PDF রিপোর্ট ডাউনলোড করুন / Download PDF report"
           >
@@ -833,7 +948,8 @@ const StudentAttendance = () => {
                       style={{ animationDelay: `${index * 0.05}s` }}
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                        {student.name || "N/A"} (Roll: ${student.roll_no || "N/A"})
+                        {student.name || "N/A"} (Roll: $
+                        {student.roll_no || "N/A"})
                       </td>
                       {filteredSubjects.map((subject) => {
                         const attendance = attendanceData?.attendance?.find(
@@ -852,8 +968,8 @@ const StudentAttendance = () => {
                                 {attendance?.status === "PRESENT"
                                   ? "✅ উপস্থিত"
                                   : attendance?.status === "ABSENT"
-                                    ? "❌ অনুপস্থিত"
-                                    : "N/A"}
+                                  ? "❌ অনুপস্থিত"
+                                  : "N/A"}
                               </span>
                             </Tooltip>
                           </td>
@@ -931,8 +1047,8 @@ const StudentAttendance = () => {
                                 {attendance?.status === "PRESENT"
                                   ? "✅ উপস্থিত"
                                   : attendance?.status === "ABSENT"
-                                    ? "❌ অনুপস্থিত"
-                                    : "N/A"}
+                                  ? "❌ অনুপস্থিত"
+                                  : "N/A"}
                               </span>
                             </Tooltip>
                           </td>
@@ -1014,7 +1130,8 @@ const StudentAttendance = () => {
                         className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05] cursor-pointer hover:underline"
                         onClick={() => handleStudentClick(student)}
                       >
-                        {student.name || "N/A"} (ID: ${student.user_id || "N/A"})
+                        {student.name || "N/A"} (ID: ${student.user_id || "N/A"}
+                        )
                       </td>
                       {uniqueDates.map((date) => {
                         const attendance = attendanceData?.attendance?.find(
@@ -1032,8 +1149,8 @@ const StudentAttendance = () => {
                                 {attendance?.status === "PRESENT"
                                   ? "✅ উপস্থিত"
                                   : attendance?.status === "ABSENT"
-                                    ? "❌ অনুপস্থিত"
-                                    : "N/A"}
+                                  ? "❌ অনুপস্থিত"
+                                  : "N/A"}
                               </span>
                             </Tooltip>
                           </td>

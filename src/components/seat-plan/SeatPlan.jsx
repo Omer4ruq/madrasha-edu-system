@@ -260,9 +260,9 @@ const SeatPlan = () => {
   };
 
   // Format select options
-  const classConfigOptions = classConfigs?.map(config => ({
-    value: config.id,
-    label: `${config.class_name} - ${config.section_name} (${config.shift_name})`,
+  const classConfigOptions = classConfigs?.map((cls) => ({
+    value: cls.id,
+    label: `${cls.class_name}${cls.shift_name ? ` ${cls.shift_name}` : ""}${cls.section_name ? ` ${cls.section_name}` : ""}`,
   })) || [];
 
   const academicYearOptions = academicYears?.map(year => ({

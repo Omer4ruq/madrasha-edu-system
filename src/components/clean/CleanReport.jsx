@@ -47,14 +47,19 @@ const CleanReport = () => {
   const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_clean_report') || false;
 
   // Transform class config data for react-select
-  const classOptions = useMemo(
-    () =>
-      classConfigs.map((cls) => ({
+const classOptions = useMemo(
+  () =>
+    classConfigs?.map((cls) => {
+      const section = cls.section_name ? ` - ${cls.section_name}` : '';
+      const shift = cls.shift_name ? ` (${cls.shift_name})` : '';
+      return {
         value: cls.id,
-        label: `${cls.class_name} - ${cls.section_name} (${cls.shift_name})`,
-      })),
-    [classConfigs]
-  );
+        label: `${cls.class_name}${section}${shift}`,
+      };
+    }) || [],
+  [classConfigs]
+);
+
 
   // Filter clean reports for the selected class and date
   const filteredReports = useMemo(() => {

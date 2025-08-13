@@ -324,13 +324,12 @@ const MarkSheet = () => {
       return;
     }
 
-
     if (!instituteData) {
-        toast.error("ইনস্টিটিউট তথ্য পাওয়া যায়নি!");
-        return;
-      }
-    
-      const institute = instituteData;
+      toast.error("ইনস্টিটিউট তথ্য পাওয়া যায়নি!");
+      return;
+    }
+
+    const institute = instituteData;
 
     const printWindow = window.open(" ", "_blank");
     let htmlContent = `
@@ -566,8 +565,11 @@ const MarkSheet = () => {
   const classConfigOptions =
     classConfigs?.map((config) => ({
       value: config.id,
-      label: `${config.class_name} - ${config.section_name} (${config.shift_name})`,
+      label: `${config.class_name}${
+        config.section_name ? ` - ${config.section_name}` : ""
+      }${config.shift_name ? ` (${config.shift_name})` : ""}`,
     })) || [];
+
   const academicYearOptions =
     academicYears?.map((year) => ({
       value: year.id,
@@ -696,7 +698,9 @@ const MarkSheet = () => {
               <div className="head">
                 <div className="institute-info">
                   <h1>{instituteData.institute_name || "অজানা ইনস্টিটিউট"}</h1>
-                  <p>{instituteData.institute_address || "ঠিকানা উপলব্ধ নয়"}</p>
+                  <p>
+                    {instituteData.institute_address || "ঠিকানা উপলব্ধ নয়"}
+                  </p>
                 </div>
                 <h2 className="title font-semibold">
                   ব্যক্তিগত ফলাফল শীট -{" "}

@@ -316,12 +316,13 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
 
   // FIXED: Prepare options for selects using the correct ID mapping
   const classOptions = allClasses.map(cls => ({
-    value: cls.id, // Use cls.id as the value (this should match selectedClassId)
-    label: `${cls.class_name} ${cls.section_name}`,
-    id: cls.id,
-    class_id: cls.class_id,
-    g_class_id: cls.g_class_id
-  }));
+  value: cls.id, // Use cls.id as the value (this should match selectedClassId)
+  label: `${cls.class_name}${cls.section_name ? ` ${cls.section_name}` : ''}`,
+  id: cls.id,
+  class_id: cls.class_id,
+  g_class_id: cls.g_class_id
+}));
+
 
   const teacherOptions = allTeachers.map(teacher => ({
     value: teacher.id,

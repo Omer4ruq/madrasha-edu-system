@@ -1,15 +1,15 @@
-import React, { useState, useRef } from 'react';
-import Select from 'react-select';
-import { useReactToPrint } from 'react-to-print';
-import { IoPrint, IoDocumentText } from 'react-icons/io5';
-import { FaSpinner } from 'react-icons/fa';
-import { toast } from 'react-toastify';
-import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
-import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
-import { useGetExamApiQuery } from '../../redux/features/api/exam/examApi';
-import { useGetInstituteLatestQuery } from '../../redux/features/api/institute/instituteLatestApi';
-import selectStyles from '../../utilitis/selectStyles';
-import { useGetClassExamStudentsQuery } from '../../redux/features/api/class-exam-students/classExamStudentApi ';
+import React, { useState, useRef } from "react";
+import Select from "react-select";
+import { useReactToPrint } from "react-to-print";
+import { IoPrint, IoDocumentText } from "react-icons/io5";
+import { FaSpinner } from "react-icons/fa";
+import { toast } from "react-toastify";
+import { useGetclassConfigApiQuery } from "../../redux/features/api/class/classConfigApi";
+import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
+import { useGetExamApiQuery } from "../../redux/features/api/exam/examApi";
+import { useGetInstituteLatestQuery } from "../../redux/features/api/institute/instituteLatestApi";
+import selectStyles from "../../utilitis/selectStyles";
+import { useGetClassExamStudentsQuery } from "../../redux/features/api/class-exam-students/classExamStudentApi ";
 
 const AdmitCard = () => {
   // State for filter selections and PDF generation
@@ -19,15 +19,31 @@ const AdmitCard = () => {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   // Fetch data from APIs
-  const { data: classConfigs, isLoading: classLoading, error: classError } = useGetclassConfigApiQuery();
-  const { data: academicYears, isLoading: yearLoading, error: yearError } = useGetAcademicYearApiQuery();
-  const { data: exams, isLoading: examLoading, error: examError } = useGetExamApiQuery();
-  const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
-  const { 
-    data: examStudents, 
-    isLoading: studentsLoading, 
-    isFetching: studentsFetching, 
-    error: studentsError 
+  const {
+    data: classConfigs,
+    isLoading: classLoading,
+    error: classError,
+  } = useGetclassConfigApiQuery();
+  const {
+    data: academicYears,
+    isLoading: yearLoading,
+    error: yearError,
+  } = useGetAcademicYearApiQuery();
+  const {
+    data: exams,
+    isLoading: examLoading,
+    error: examError,
+  } = useGetExamApiQuery();
+  const {
+    data: institute,
+    isLoading: instituteLoading,
+    error: instituteError,
+  } = useGetInstituteLatestQuery();
+  const {
+    data: examStudents,
+    isLoading: studentsLoading,
+    isFetching: studentsFetching,
+    error: studentsError,
   } = useGetClassExamStudentsQuery(
     {
       class_id: selectedClassConfig?.value,
@@ -84,23 +100,31 @@ const AdmitCard = () => {
   // Handle PDF download
   const handleDownloadPDF = () => {
     if (instituteLoading) {
-      toast.error('ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!');
+      toast.error("ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!");
       return;
     }
 
     if (!institute) {
-      toast.error('ইনস্টিটিউট তথ্য পাওয়া যায়নি!');
+      toast.error("ইনস্টিটিউট তথ্য পাওয়া যায়নি!");
       return;
     }
 
-    if (!selectedClassConfig || !selectedAcademicYear || !selectedExam || !examStudents?.students?.length) {
-      toast.error('ক্লাস, শিক্ষাবর্ষ, পরীক্ষা নির্বাচন করুন এবং শিক্ষার্থী তথ্য লোড হয়েছে কিনা দেখুন!');
+    if (
+      !selectedClassConfig ||
+      !selectedAcademicYear ||
+      !selectedExam ||
+      !examStudents?.students?.length
+    ) {
+      toast.error(
+        "ক্লাস, শিক্ষাবর্ষ, পরীক্ষা নির্বাচন করুন এবং শিক্ষার্থী তথ্য লোড হয়েছে কিনা দেখুন!"
+      );
       return;
     }
 
     setIsGeneratingPDF(true);
 
-    const examInfo = exams?.find(exam => exam.id === selectedExam?.value) || {};
+    const examInfo =
+      exams?.find((exam) => exam.id === selectedExam?.value) || {};
     const students = examStudents.students;
 
     // Group students into sets of 3 for each page
@@ -247,19 +271,33 @@ const AdmitCard = () => {
         </style>
       </head>
       <body>
-        ${studentGroups.map((group, pageIndex) => `
+        ${studentGroups
+          .map(
+            (group, pageIndex) => `
           <div class="page-container">
-            ${group.map(student => `
+            ${group
+              .map(
+                (student) => `
               <div class="admit-card">
                 <div class="background-image"></div>
                 <div class="header">
-                  <img src="${institute.institute_logo || 'https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg'}" alt="Institute Logo" />
+                  <img src="${
+                    institute.institute_logo ||
+                    "https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg"
+                  }" alt="Institute Logo" />
                   <div class="header-text">
-                    <h1>${institute.institute_name || 'Institute Name'}</h1>
-                    <p>${institute.institute_address || 'Address'}</p>
-                    <p><strong>পরীক্ষা:</strong> ${examInfo.name || 'Exam Name'} | <strong>তারিখ:</strong> ${examInfo.start_date || 'Date'}</p>
+                    <h1>${institute.institute_name || "Institute Name"}</h1>
+                    <p>${institute.institute_address || "Address"}</p>
+                    <p><strong>পরীক্ষা:</strong> ${
+                      examInfo.name || "Exam Name"
+                    } | <strong>তারিখ:</strong> ${
+                  examInfo.start_date || "Date"
+                }</p>
                   </div>
-                  <img src="${institute.institute_logo || 'https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg'}" alt="Institute Logo" />
+                  <img src="${
+                    institute.institute_logo ||
+                    "https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg"
+                  }" alt="Institute Logo" />
                 </div>
                 <div class="title">প্রবেশপত্র</div>
                 <div class="student-info">
@@ -267,10 +305,14 @@ const AdmitCard = () => {
                     <p><strong>নাম:</strong> ${student.student_name}</p>
                     <p><strong>শ্রেণি:</strong> ${student.class_name}</p>
                     <p><strong>সেকশন:</strong> ${student.section_name}</p>
-                    <p><strong>সেশন:</strong> ${selectedAcademicYear?.label || 'N/A'}</p>
+                    <p><strong>সেশন:</strong> ${
+                      selectedAcademicYear?.label || "N/A"
+                    }</p>
                   </div>
                   <div class="roll-reg">
-                    <p><strong>রোল:</strong> ${student.roll_no || student.user_id}</p>
+                    <p><strong>রোল:</strong> ${
+                      student.roll_no || student.user_id
+                    }</p>
                     <p><strong>রেজি:</strong> ${student.user_id}</p>
                   </div>
                 </div>
@@ -284,10 +326,18 @@ const AdmitCard = () => {
                   <p>পরীক্ষা নিয়ন্ত্রকের স্বাক্ষর</p>
                 </div>
               </div>
-            `).join('')}
-            ${pageIndex < studentGroups.length - 1 ? '<div class="page-break"></div>' : ''}
+            `
+              )
+              .join("")}
+            ${
+              pageIndex < studentGroups.length - 1
+                ? '<div class="page-break"></div>'
+                : ""
+            }
           </div>
-        `).join('')}
+        `
+          )
+          .join("")}
         <script>
           let printAttempted = false;
           window.onbeforeprint = () => { printAttempted = true; };
@@ -301,35 +351,47 @@ const AdmitCard = () => {
       </html>
     `;
 
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     printWindow.document.write(htmlContent);
     printWindow.document.close();
-    toast.success('প্রবেশপত্র তৈরি হয়েছে! প্রিন্ট বা সেভ করুন।');
+    toast.success("প্রবেশপত্র তৈরি হয়েছে! প্রিন্ট বা সেভ করুন।");
     setIsGeneratingPDF(false);
   };
 
   // Format select options
-  const classConfigOptions = classConfigs?.map(config => ({
-    value: config.id,
-    label: `${config.class_name} - ${config.section_name} (${config.shift_name})`,
-  })) || [];
+  const classConfigOptions =
+    classConfigs?.map((config) => {
+      const section = config.section_name ? ` - ${config.section_name}` : "";
+      const shift = config.shift_name ? ` (${config.shift_name})` : "";
+      return {
+        value: config.id,
+        label: `${config.class_name}${section}${shift}`,
+      };
+    }) || [];
 
-  const academicYearOptions = academicYears?.map(year => ({
-    value: year.id,
-    label: year.name,
-  })) || [];
+  const academicYearOptions =
+    academicYears?.map((year) => ({
+      value: year.id,
+      label: year.name,
+    })) || [];
 
-  const examOptions = exams?.map(exam => ({
-    value: exam.id,
-    label: exam.name,
-  })) || [];
+  const examOptions =
+    exams?.map((exam) => ({
+      value: exam.id,
+      label: exam.name,
+    })) || [];
 
   // Loading state
-  if (classLoading || yearLoading || examLoading || instituteLoading || studentsLoading || studentsFetching) {
+  if (
+    classLoading ||
+    yearLoading ||
+    examLoading ||
+    instituteLoading ||
+    studentsLoading ||
+    studentsFetching
+  ) {
     return (
-      <div className="p-8 text-[#441a05]/70 animate-fadeIn">
-        লোড হচ্ছে...
-      </div>
+      <div className="p-8 text-[#441a05]/70 animate-fadeIn">লোড হচ্ছে...</div>
     );
   }
 
@@ -337,7 +399,13 @@ const AdmitCard = () => {
   if (classError || yearError || examError || instituteError || studentsError) {
     return (
       <div className="p-8 text-[#441a05]/70 animate-fadeIn">
-        ডেটা লোড করতে ত্রুটি: {studentsError?.data?.message || classError?.data?.message || yearError?.data?.message || examError?.data?.message || instituteError?.data?.message || 'Unknown error'}
+        ডেটা লোড করতে ত্রুটি:{" "}
+        {studentsError?.data?.message ||
+          classError?.data?.message ||
+          yearError?.data?.message ||
+          examError?.data?.message ||
+          instituteError?.data?.message ||
+          "Unknown error"}
       </div>
     );
   }
@@ -345,7 +413,8 @@ const AdmitCard = () => {
   // Render single admit card
   const renderSingleCard = (student, index) => {
     const instituteInfo = institute || {};
-    const examInfo = exams?.find(exam => exam.id === selectedExam?.value) || {};
+    const examInfo =
+      exams?.find((exam) => exam.id === selectedExam?.value) || {};
 
     return (
       <div
@@ -353,29 +422,35 @@ const AdmitCard = () => {
         className="admit-card relative border border-[#DB9E30] rounded-lg w-[190mm] h-[90mm] overflow-hidden"
       >
         {/* Background Image Layer */}
-        <div
-          className="absolute inset-0 w-[80mm] h-[50mm] left-[28%] top-[30%] bg-[url('https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg')] bg-contain bg-center bg-no-repeat opacity-10 z-0"
-        ></div>
+        <div className="absolute inset-0 w-[80mm] h-[50mm] left-[28%] top-[30%] bg-[url('https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg')] bg-contain bg-center bg-no-repeat opacity-10 z-0"></div>
 
         {/* Header */}
         <div className="text-center flex justify-between items-center bg-[#DB9E30] rounded-t-lg py-1 px-4">
           <img
-            src={instituteInfo.institute_logo || 'https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg'}
+            src={
+              instituteInfo.institute_logo ||
+              "https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg"
+            }
             alt="Institute Logo"
             className="w-8 h-8 object-contain"
           />
           <div>
             <h1 className="text-xs font-bold text-white uppercase">
-              {instituteInfo.institute_name || 'Institute Name'}
+              {instituteInfo.institute_name || "Institute Name"}
             </h1>
-            <p className="text-[9px] text-white">{instituteInfo.institute_address || 'Address'}</p>
+            <p className="text-[9px] text-white">
+              {instituteInfo.institute_address || "Address"}
+            </p>
             <p className="text-[9px] mt-0.5 text-white">
-              <strong>পরীক্ষা:</strong> {examInfo.name || 'Exam Name'} |{' '}
-              <strong>তারিখ:</strong> {examInfo.start_date || 'Date'}
+              <strong>পরীক্ষা:</strong> {examInfo.name || "Exam Name"} |{" "}
+              <strong>তারিখ:</strong> {examInfo.start_date || "Date"}
             </p>
           </div>
           <img
-            src={instituteInfo.institute_logo || 'https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg'}
+            src={
+              instituteInfo.institute_logo ||
+              "https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg"
+            }
             alt="Institute Logo"
             className="w-8 h-8 object-contain"
           />
@@ -399,7 +474,7 @@ const AdmitCard = () => {
               <strong>সেকশন:</strong> {student.section_name}
             </p>
             <p className="text-[11px]">
-              <strong>সেশন:</strong> {selectedAcademicYear?.label || 'N/A'}
+              <strong>সেশন:</strong> {selectedAcademicYear?.label || "N/A"}
             </p>
           </div>
           <div className="border p-2 px-4 rounded-lg bg-[#DB9E30] translate-x-1">
@@ -415,13 +490,16 @@ const AdmitCard = () => {
         {/* Instructions */}
         <div className="mt-1 text-[9px] text-[#440d05] w-[70%] p-3">
           <p>
-            <strong>নির্দেশ:</strong> পরীক্ষার হলে এই প্রবেশপত্র অবশ্যই সঙ্গে আনতে হবে।
+            <strong>নির্দেশ:</strong> পরীক্ষার হলে এই প্রবেশপত্র অবশ্যই সঙ্গে
+            আনতে হবে।
           </p>
           <p>
-            <strong>নির্দেশ:</strong> পরীক্ষা শুরুর ১৫ মিনিট পূর্বে উপস্থিত থাকতে হবে।
+            <strong>নির্দেশ:</strong> পরীক্ষা শুরুর ১৫ মিনিট পূর্বে উপস্থিত
+            থাকতে হবে।
           </p>
           <p>
-            <strong>নির্দেশ:</strong> প্রয়োজনীয় সামগ্রী: বোর্ড, শার্পনার, রুলার, পেন্সিল, কলম, ইরেজার।
+            <strong>নির্দেশ:</strong> প্রয়োজনীয় সামগ্রী: বোর্ড, শার্পনার,
+            রুলার, পেন্সিল, কলম, ইরেজার।
           </p>
         </div>
 
@@ -489,12 +567,16 @@ const AdmitCard = () => {
       <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
         <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
           <IoPrint className="text-4xl text-[#441a05]" />
-          <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">প্রবেশপত্র</h3>
+          <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
+            প্রবেশপত্র
+          </h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 no-print">
           <div>
-            <label className="block text-sm font-medium text-[#441a05] mb-1">ক্লাস কনফিগারেশন</label>
+            <label className="block text-sm font-medium text-[#441a05] mb-1">
+              ক্লাস কনফিগারেশন
+            </label>
             <Select
               options={classConfigOptions}
               value={selectedClassConfig}
@@ -510,7 +592,9 @@ const AdmitCard = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#441a05] mb-1">শিক্ষাবর্ষ</label>
+            <label className="block text-sm font-medium text-[#441a05] mb-1">
+              শিক্ষাবর্ষ
+            </label>
             <Select
               options={academicYearOptions}
               value={selectedAcademicYear}
@@ -526,7 +610,9 @@ const AdmitCard = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#441a05] mb-1">পরীক্ষা</label>
+            <label className="block text-sm font-medium text-[#441a05] mb-1">
+              পরীক্ষা
+            </label>
             <Select
               options={examOptions}
               value={selectedExam}
@@ -547,7 +633,7 @@ const AdmitCard = () => {
         {selectedClassConfig && selectedAcademicYear && selectedExam && (
           <div className="mt-6 flex space-x-4 no-print">
             <button
-            onClick={handleDownloadPDF}
+              onClick={handleDownloadPDF}
               className="px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn hover:text-white btn-glow"
               aria-label="প্রবেশপত্র প্রিন্ট করুন"
               title="প্রবেশপত্র প্রিন্ট করুন / Print admit cards"
@@ -569,9 +655,10 @@ const AdmitCard = () => {
               {examStudents.students.map((student, index) => (
                 <React.Fragment key={student.user_id}>
                   {renderSingleCard(student, index)}
-                  {index % 3 === 2 && index < examStudents.students.length - 1 && (
-                    <div className="page-break"></div>
-                  )}
+                  {index % 3 === 2 &&
+                    index < examStudents.students.length - 1 && (
+                      <div className="page-break"></div>
+                    )}
                 </React.Fragment>
               ))}
             </div>
