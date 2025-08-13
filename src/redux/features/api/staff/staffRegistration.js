@@ -14,13 +14,12 @@ export const staffRegistrationApi = createApi({
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
-      headers.set('Content-Type', 'application/json');
+      // headers.set('Content-Type', 'application/json');
       return headers;
     },
   }),
   tagTypes: ['staffRegistrationApi'],
   endpoints: (builder) => ({
-
     // POST: Create a new staff
     createStaffRegistrationApi: builder.mutation({
       query: (staffRegistrationApiData) => ({
@@ -31,16 +30,34 @@ export const staffRegistrationApi = createApi({
       invalidatesTags: ['staffRegistrationApi'],
     }),
 
-    // PUT: Update an existing staff
+    // PUT: Update an existing staff (full update)
     updateStaffRegistrationApi: builder.mutation({
       query: ({ id, updatedData }) => ({
-        url: `/register/staff/${id}/`, // Make sure your backend expects the ID in URL
+        url: `/register/staff/${id}/`,
         method: 'PUT',
         body: updatedData,
       }),
       invalidatesTags: ['staffRegistrationApi'],
     }),
 
+    // PATCH: Partially update an existing staff using query parameter
+    patchStaffRegistrationApi: builder.mutation({
+      query: ({ id, updatedData }) => ({
+        url: `/register/staff/?id=${id}/`,
+        method: 'PATCH',
+        body: updatedData,
+      }),
+      invalidatesTags: ['staffRegistrationApi'],
+    }),
+
+    // GET: Fetch staff details by ID using query parameter
+    getStaffById: builder.query({
+      query: (id) => ({
+        url: `/register/staff/?id=${id}`,
+        method: 'GET',
+      }),
+      providesTags: ['staffRegistrationApi'],
+    }),
   }),
 });
 
@@ -48,4 +65,6 @@ export const staffRegistrationApi = createApi({
 export const {
   useCreateStaffRegistrationApiMutation,
   useUpdateStaffRegistrationApiMutation,
+  usePatchStaffRegistrationApiMutation,
+  useGetStaffByIdQuery,
 } = staffRegistrationApi;

@@ -402,35 +402,35 @@ const PersonalMarkSheet = () => {
 
   // Generate PDF Report (exact match with UI layout)
   const generatePDFReport = () => {
-  if (
-    !selectedExam ||
-    !selectedClassConfig ||
-    !selectedAcademicYear ||
-    !selectedStudent
-  ) {
-    toast.error("অনুগ্রহ করে সমস্ত প্রয়োজনীয় ফিল্ড পূরণ করুন!");
-    return;
-  }
+    if (
+      !selectedExam ||
+      !selectedClassConfig ||
+      !selectedAcademicYear ||
+      !selectedStudent
+    ) {
+      toast.error("অনুগ্রহ করে সমস্ত প্রয়োজনীয় ফিল্ড পূরণ করুন!");
+      return;
+    }
 
-  if (!marksData) {
-    toast.error("কোনো ফলাফল তথ্য পাওয়া যায়নি!");
-    return;
-  }
+    if (!marksData) {
+      toast.error("কোনো ফলাফল তথ্য পাওয়া যায়নি!");
+      return;
+    }
 
-  if (isInstituteLoading) {
-    toast.error("ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!");
-    return;
-  }
+    if (isInstituteLoading) {
+      toast.error("ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!");
+      return;
+    }
 
-  if (!instituteData) {
-    toast.error("ইনস্টিটিউট তথ্য পাওয়া যায়নি!");
-    return;
-  }
+    if (!instituteData) {
+      toast.error("ইনস্টিটিউট তথ্য পাওয়া যায়নি!");
+      return;
+    }
 
-  const institute = instituteData;
-  const printWindow = window.open(" ", "_blank");
+    const institute = instituteData;
+    const printWindow = window.open(" ", "_blank");
 
-  let htmlContent = `
+    let htmlContent = `
     <!DOCTYPE html>
     <html>
     <head>
@@ -536,7 +536,8 @@ const PersonalMarkSheet = () => {
         </div>
         <h2 class="title">
           ব্যক্তিগত ফলাফল শীট - ${
-            exams?.find((e) => e.id === Number(selectedExam))?.name || "পরীক্ষা নির্বাচিত হয়নি"
+            exams?.find((e) => e.id === Number(selectedExam))?.name ||
+            "পরীক্ষা নির্বাচিত হয়নি"
           }
         </h2>
         <h3 class="student-info">
@@ -544,16 +545,20 @@ const PersonalMarkSheet = () => {
         </h3>
         <h3 class="student-info">
           ক্লাস: ${
-            classConfigs?.find((c) => c.id === Number(selectedClassConfig))?.class_name || "ক্লাস নির্বাচিত হয়নি"
+            classConfigs?.find((c) => c.id === Number(selectedClassConfig))
+              ?.class_name || "ক্লাস নির্বাচিত হয়নি"
           } | শাখা: ${
-            classConfigs?.find((c) => c.id === Number(selectedClassConfig))?.section_name || "শাখা নির্বাচিত হয়নি"
-          } | শিফট: ${
-            classConfigs?.find((c) => c.id === Number(selectedClassConfig))?.shift_name || "শিফট নির্বাচিত হয়নি"
-          }
+      classConfigs?.find((c) => c.id === Number(selectedClassConfig))
+        ?.section_name || "শাখা নির্বাচিত হয়নি"
+    } | শিফট: ${
+      classConfigs?.find((c) => c.id === Number(selectedClassConfig))
+        ?.shift_name || "শিফট নির্বাচিত হয়নি"
+    }
         </h3>
         <h3 class="student-info">
           শিক্ষাবর্ষ: ${
-            academicYears?.find((y) => y.id === Number(selectedAcademicYear))?.name || "শিক্ষাবর্ষ নির্বাচিত হয়নি"
+            academicYears?.find((y) => y.id === Number(selectedAcademicYear))
+              ?.name || "শিক্ষাবর্ষ নির্বাচিত হয়নি"
           }
         </h3>
       </div>
@@ -633,11 +638,10 @@ const PersonalMarkSheet = () => {
     </html>
   `;
 
-  printWindow.document.write(htmlContent);
-  printWindow.document.close();
-  toast.success("PDF রিপোর্ট তৈরি হয়েছে!");
-};
-
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    toast.success("PDF রিপোর্ট তৈরি হয়েছে!");
+  };
 
   // Prepare options for react-select
   const examOptions =
@@ -648,8 +652,11 @@ const PersonalMarkSheet = () => {
   const classConfigOptions =
     classConfigs?.map((config) => ({
       value: config.id,
-      label: `${config.class_name} - ${config.section_name} (${config.shift_name})`,
+      label: `${config.class_name}${
+        config.section_name ? ` - ${config.section_name}` : ""
+      }${config.shift_name ? ` (${config.shift_name})` : ""}`,
     })) || [];
+
   const academicYearOptions =
     academicYears?.map((year) => ({
       value: year.id,
@@ -865,9 +872,15 @@ const PersonalMarkSheet = () => {
                 <table>
                   <thead>
                     <tr>
-                      <th style={{ width: "50px" }} className="text-xs">ক্রমিক নং</th>
-                      <th style={{ width: "200px" }} className="text-xs">বিষয়</th>
-                      <th style={{ width: "100px" }} className="text-xs">প্রাপ্ত নম্বর</th>
+                      <th style={{ width: "50px" }} className="text-xs">
+                        ক্রমিক নং
+                      </th>
+                      <th style={{ width: "200px" }} className="text-xs">
+                        বিষয়
+                      </th>
+                      <th style={{ width: "100px" }} className="text-xs">
+                        প্রাপ্ত নম্বর
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -921,7 +934,7 @@ const PersonalMarkSheet = () => {
                 </table>
               </div>
               <div className="mt-20 text-xs text-black">
-                পরীক্ষা নিয়ন্ত্রকের স্বাক্ষর: ____________________ 
+                পরীক্ষা নিয়ন্ত্রকের স্বাক্ষর: ____________________
               </div>
               <div className="date">
                 রিপোর্ট তৈরির তারিখ: {new Date().toLocaleDateString("bn-BD")}

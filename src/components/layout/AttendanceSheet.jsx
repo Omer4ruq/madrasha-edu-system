@@ -236,10 +236,11 @@ const AttendanceSheet = () => {
   };
 
   // Format class config options
-  const classConfigOptions = classConfigs?.map(config => ({
-    value: config.id,
-    label: `${config.class_name} - ${config.section_name} (${config.shift_name})`,
-  })) || [];
+const classConfigOptions = classConfigs?.map(config => ({
+  value: config.id,
+  label: `${config.class_name}${config.section_name ? ` - ${config.section_name}` : ''}${config.shift_name ? ` (${config.shift_name})` : ''}`,
+})) || [];
+
 
   // Format academic year options
   const academicYearOptions = academicYears?.map(year => ({

@@ -64,14 +64,15 @@ const MutalayaReport = () => {
   const activeSubjects = useMemo(() => subjects.filter((subject) => subject.is_active) || [], [subjects]);
 
   // Generate class options
-  const classConfigOptions = useMemo(
-    () =>
-      activeClasses.map((cls) => ({
-        value: { id: cls.id, g_class_id: cls.g_class_id },
-        label: `${cls.class_name} ${cls.section_name} ${cls.shift_name}`,
-      })),
-    [activeClasses]
-  );
+const classConfigOptions = useMemo(
+  () =>
+    activeClasses.map((cls) => ({
+      value: { id: cls.id, g_class_id: cls.g_class_id },
+      label: `${cls.class_name}${cls.section_name ? ` ${cls.section_name}` : ''}${cls.shift_name ? ` ${cls.shift_name}` : ''}`,
+    })),
+  [activeClasses]
+);
+
 
   // Memoize dynamic dates
   const dynamicDates = useMemo(() => generateDynamicDates(startDate, endDate), [startDate, endDate]);

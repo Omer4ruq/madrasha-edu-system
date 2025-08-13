@@ -26,7 +26,7 @@ const insInfoBn = {
    "districtName": "রংপুর",
    "division": "বিভাগ",
    "active": "সক্রিয়",
-   "principal": "প্রধান শিক্ষক",
+   "principal": "মুহতামিম বা পরিচালক",
    "incharge": "ইনচার্জ",
    "basic": "মৌলিক",
    "genderType": "ধরণ",

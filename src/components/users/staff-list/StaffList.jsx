@@ -6,14 +6,16 @@ import {
   useDeleteStaffListApIMutation,
   useGetStaffListApIQuery,
   useUpdateStaffListApIMutation,
-} from '../../../redux/features/api/staff/staffListApi';
-import { useSelector } from 'react-redux';
-import { useGetGroupPermissionsQuery } from '../../../redux/features/api/permissionRole/groupsApi';
-import { useGetInstituteLatestQuery } from '../../../redux/features/api/institute/instituteLatestApi';
+} from "../../../redux/features/api/staff/staffListApi";
+import { useSelector } from "react-redux";
+import { useGetGroupPermissionsQuery } from "../../../redux/features/api/permissionRole/groupsApi";
+import { useGetInstituteLatestQuery } from "../../../redux/features/api/institute/instituteLatestApi";
+import { useNavigate } from "react-router-dom";
 
 const StaffList = () => {
   const { user, group_id } = useSelector((state) => state.auth);
   const [page, setPage] = useState(1);
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({
     name: "",
     user_id: "",
@@ -41,7 +43,11 @@ const StaffList = () => {
     });
 
   // Fetch institute data
-  const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
+  const {
+    data: institute,
+    isLoading: instituteLoading,
+    error: instituteError,
+  } = useGetInstituteLatestQuery();
 
   // Permission checks
   const hasViewPermission =
@@ -73,7 +79,7 @@ const StaffList = () => {
     useUpdateStaffListApIMutation();
   const [deleteStaff, { isLoading: isDeleting, error: deleteError }] =
     useDeleteStaffListApIMutation();
-      // const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
+  // const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
 
   const staff = staffData?.staff || [];
   const totalItems = staffData?.total || 0;
@@ -86,7 +92,7 @@ const StaffList = () => {
     debounce((newFilters) => {
       setFilters(newFilters);
       setPage(1);
-    },),
+    }),
     []
   );
 
@@ -121,19 +127,12 @@ const StaffList = () => {
   };
 
   // Handle edit button click
-  const handleEditClick = (staffMember) => {
+  const handleEditClick = (id) => {
     if (!hasChangePermission) {
       toast.error("স্টাফের তথ্য সম্পাদনা করার অনুমতি নেই।");
       return;
     }
-    setEditStaffId(staffMember.id);
-    setEditStaffData({
-      name: staffMember.name,
-      user_id: staffMember.user_id,
-      phone_number: staffMember.phone_number,
-      email: staffMember.email,
-      designation: staffMember.designation,
-    });
+    navigate(`/users/staff?id=${id}`);
   };
 
   // Handle update form submission
@@ -204,355 +203,466 @@ const StaffList = () => {
     }
 
     if (instituteLoading) {
-      toast.error('ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!');
+      toast.error("ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!");
       return;
     }
 
     if (!institute) {
-      toast.error('ইনস্টিটিউট তথ্য পাওয়া যায়নি!');
+      toast.error("ইনস্টিটিউট তথ্য পাওয়া যায়নি!");
       return;
     }
 
     // Define data arrays similar to original PDF component
     const basicData = [
-      { label: 'নাম', value: staff.name || 'N/A' },
-      { label: 'ইউজার আইডি', value: staff.user_id || 'N/A' },
-      { label: 'পদবী', value: staff.designation || 'N/A' },
-      { label: 'বিভাগ', value: staff.department || 'N/A' },
-      { label: 'যোগদানের তারিখ', value: staff.joining_date || 'N/A' },
+      { label: "নাম", value: staff.name || "N/A" },
+      { label: "ইউজার আইডি", value: staff.user_id || "N/A" },
+      { label: "পদবী", value: staff.designation || "N/A" },
+      { label: "বিভাগ", value: staff.department || "N/A" },
+      { label: "যোগদানের তারিখ", value: staff.joining_date || "N/A" },
     ];
 
     const personalData = [
       {
-        label1: 'ফোন নম্বর', value1: staff.phone_number || 'N/A',
-        label2: 'ইমেইল', value2: staff.email || 'N/A'
+        label1: "ফোন নম্বর",
+        value1: staff.phone_number || "N/A",
+        label2: "ইমেইল",
+        value2: staff.email || "N/A",
       },
       {
-        label1: 'জন্ম তারিখ', value1: staff.date_of_birth || 'N/A',
-        label2: 'লিঙ্গ', value2: staff.gender || 'N/A'
+        label1: "জন্ম তারিখ",
+        value1: staff.date_of_birth || "N/A",
+        label2: "লিঙ্গ",
+        value2: staff.gender || "N/A",
       },
       {
-        label1: 'রক্তের গ্রুপ', value1: staff.blood_group || 'N/A',
-        label2: 'ধর্ম', value2: staff.religion || 'N/A'
+        label1: "রক্তের গ্রুপ",
+        value1: staff.blood_group || "N/A",
+        label2: "ধর্ম",
+        value2: staff.religion || "N/A",
       },
       {
-        label1: 'জাতীয় পরিচয়পত্র', value1: staff.nid || 'N/A',
-        label2: 'বৈবাহিক অবস্থা', value2: staff.marital_status || 'N/A'
+        label1: "জাতীয় পরিচয়পত্র",
+        value1: staff.nid || "N/A",
+        label2: "বৈবাহিক অবস্থা",
+        value2: staff.marital_status || "N/A",
       },
     ];
 
     const familyData = [
       {
-        label1: 'বাবার নাম', value1: staff.father_name || 'N/A',
-        label2: 'মায়ের নাম', value2: staff.mother_name || 'N/A'
+        label1: "বাবার নাম",
+        value1: staff.father_name || "N/A",
+        label2: "মায়ের নাম",
+        value2: staff.mother_name || "N/A",
       },
       {
-        label1: 'স্বামী/স্ত্রীর নাম', value1: staff.spouse_name || 'N/A',
-        label2: 'সন্তানের সংখ্যা', value2: staff.children_count || 'N/A'
+        label1: "স্বামী/স্ত্রীর নাম",
+        value1: staff.spouse_name || "N/A",
+        label2: "সন্তানের সংখ্যা",
+        value2: staff.children_count || "N/A",
       },
     ];
 
     const emergencyData = [
       {
-        label1: 'জরুরি যোগাযোগ', value1: staff.emergency_contact || 'N/A',
-        label2: 'সম্পর্ক', value2: staff.emergency_relation || 'N/A'
+        label1: "জরুরি যোগাযোগ",
+        value1: staff.emergency_contact || "N/A",
+        label2: "সম্পর্ক",
+        value2: staff.emergency_relation || "N/A",
       },
     ];
 
-    const fullAddress = [
-      staff.village,
-      staff.post_office,
-      staff.upazila,
-      staff.district
-    ].filter(Boolean).join(', ') || staff.address || 'N/A';
+    const fullAddress =
+      [staff.village, staff.post_office, staff.upazila, staff.district]
+        .filter(Boolean)
+        .join(", ") ||
+      staff.address ||
+      "N/A";
 
     const addressData = [
-      { label: 'বর্তমান ঠিকানা', value: fullAddress },
-      { label: 'স্থায়ী ঠিকানা', value: fullAddress },
+      { label: "বর্তমান ঠিকানা", value: fullAddress },
+      { label: "স্থায়ী ঠিকানা", value: fullAddress },
     ];
 
     const educationData = [
-      { label: 'শিক্ষাগত যোগ্যতা', value: staff.education || 'N/A' },
-      { label: 'প্রতিষ্ঠান', value: staff.institution || 'N/A' },
-      { label: 'পাসের বছর', value: staff.passing_year || 'N/A' },
-      { label: 'বিষয়', value: staff.subject || 'N/A' },
+      { label: "শিক্ষাগত যোগ্যতা", value: staff.education || "N/A" },
+      { label: "প্রতিষ্ঠান", value: staff.institution || "N/A" },
+      { label: "পাসের বছর", value: staff.passing_year || "N/A" },
+      { label: "বিষয়", value: staff.subject || "N/A" },
     ];
 
     // Generate HTML rows
-    const basicRows = basicData.map(item => `<div class="table-row"><div class="label-cell">${item.label}</div><div class="value-cell">${item.value}</div></div>`).join('');
-    const personalRows = personalData.map(row => `<div class="two-col-row"><div class="two-col-label1">${row.label1}</div><div class="two-col-value1">${row.value1}</div><div class="two-col-label2">${row.label2}</div><div class="two-col-value2">${row.value2}</div></div>`).join('');
-    const familyRows = familyData.map(row => `<div class="two-col-row"><div class="two-col-label1">${row.label1}</div><div class="two-col-value1">${row.value1}</div><div class="two-col-label2">${row.label2}</div><div class="two-col-value2">${row.value2}</div></div>`).join('');
-    const emergencyRows = emergencyData.map(row => `<div class="two-col-row"><div class="two-col-label1">${row.label1}</div><div class="two-col-value1">${row.value1}</div><div class="two-col-label2">${row.label2}</div><div class="two-col-value2">${row.value2}</div></div>`).join('');
-    const addressRows = addressData.map(item => `<div class="table-row"><div class="label-cell">${item.label}</div><div class="value-cell">${item.value}</div></div>`).join('');
-    const educationRows = educationData.map(item => `<div class="table-row"><div class="label-cell">${item.label}</div><div class="value-cell">${item.value}</div></div>`).join('');
+    const basicRows = basicData
+      .map(
+        (item) =>
+          `<div class="table-row"><div class="label-cell">${item.label}</div><div class="value-cell">${item.value}</div></div>`
+      )
+      .join("");
+    const personalRows = personalData
+      .map(
+        (row) =>
+          `<div class="two-col-row"><div class="two-col-label1">${row.label1}</div><div class="two-col-value1">${row.value1}</div><div class="two-col-label2">${row.label2}</div><div class="two-col-value2">${row.value2}</div></div>`
+      )
+      .join("");
+    const familyRows = familyData
+      .map(
+        (row) =>
+          `<div class="two-col-row"><div class="two-col-label1">${row.label1}</div><div class="two-col-value1">${row.value1}</div><div class="two-col-label2">${row.label2}</div><div class="two-col-value2">${row.value2}</div></div>`
+      )
+      .join("");
+    const emergencyRows = emergencyData
+      .map(
+        (row) =>
+          `<div class="two-col-row"><div class="two-col-label1">${row.label1}</div><div class="two-col-value1">${row.value1}</div><div class="two-col-label2">${row.label2}</div><div class="two-col-value2">${row.value2}</div></div>`
+      )
+      .join("");
+    const addressRows = addressData
+      .map(
+        (item) =>
+          `<div class="table-row"><div class="label-cell">${item.label}</div><div class="value-cell">${item.value}</div></div>`
+      )
+      .join("");
+    const educationRows = educationData
+      .map(
+        (item) =>
+          `<div class="table-row"><div class="label-cell">${item.label}</div><div class="value-cell">${item.value}</div></div>`
+      )
+      .join("");
 
-    const statusText = staff.status === 'active' ? 'সক্রিয়' : 'নিষ্ক্রিয়';
-
+    const statusText = staff.status === "active" ? "সক্রিয়" : "নিষ্ক্রিয়";
+// console.log(staff.avatar)
     const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>স্টাফ তথ্য প্রতিবেদন</title>
-        <meta charset="UTF-8">
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap" rel="stylesheet">
-        <style>
-          @page { size: A4 portrait; margin: 20mm; }
-          body {
-            font-family: 'Noto Sans Bengali', Arial, sans-serif;
-            font-size: 12px;
-            margin: 30px;
-            padding: 0;
-            color: #000;
-            background-color: #fff;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #000;
-          }
-          .school-name {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 3px;
-          }
-          .school-address {
-            font-size: 8px;
-            margin-bottom: 8px;
-          }
-          .title {
-            font-size: 12px;
-            font-weight: bold;
-            text-decoration: underline;
-          }
-          .main-content {
-            display: flex;
-            margin-top: 10px;
-          }
-          .left-section {
-            width: 65%;
-            padding-right: 15px;
-          }
-          .right-section {
-            width: 35%;
-            align-items: center;
-          }
-          .photo-box {
-            width: 100px;
-            height: 120px;
-            border: 2px solid #000;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 10px;
-          }
-          .photo-text {
-            font-size: 8px;
-            text-align: center;
-          }
-          .section-title {
-            font-size: 10px;
-            font-weight: bold;
-            background-color: #f0f0f0;
-            padding: 4px;
-            margin-top: 8px;
-            margin-bottom: 5px;
-            text-align: center;
-            border: 1px solid #000;
-          }
-          .table {
-            margin-bottom: 8px;
-          }
-          .table-row {
-            display: flex;
-            border-bottom: 0.5px solid #ccc;
-            min-height: 18px;
-          }
-          .label-cell {
-            width: 35%;
-            padding: 3px;
-            font-size: 8px;
-            font-weight: bold;
-            background-color: #f8f8f8;
-            border-right: 0.5px solid #ccc;
-          }
-          .value-cell {
-            width: 65%;
-            padding: 3px;
-            font-size: 8px;
-          }
-          .two-col-row {
-            display: flex;
-            border-bottom: 0.5px solid #ccc;
-            min-height: 18px;
-          }
-          .two-col-label1 {
-            width: 18%;
-            padding: 3px;
-            font-size: 8px;
-            font-weight: bold;
-            background-color: #f8f8f8;
-            border-right: 0.5px solid #ccc;
-          }
-          .two-col-value1 {
-            width: 32%;
-            padding: 3px;
-            font-size: 8px;
-            border-right: 0.5px solid #ccc;
-          }
-          .two-col-label2 {
-            width: 18%;
-            padding: 3px;
-            font-size: 8px;
-            font-weight: bold;
-            background-color: #f8f8f8;
-            border-right: 0.5px solid #ccc;
-          }
-          .two-col-value2 {
-            width: 32%;
-            padding: 3px;
-            font-size: 8px;
-          }
-          .status-row {
-            display: flex;
-            justify-content: center;
-            margin-top: 8px;
-            margin-bottom: 15px;
-          }
-          .status-box {
-            padding: 4px;
-            border: 1px solid #000000;
-            background-color: #f0f0f0;
-          }
-          .status-text {
-            font-size: 8px;
-            font-weight: bold;
-          }
-          .signature-section {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #ccc;
-          }
-          .signature-box {
-            width: 30%;
-            align-items: center;
-          }
-          .signature-line {
-            width: 100%;
-            border-bottom: 1px solid #000;
-            height: 15px;
-            margin-bottom: 3px;
-          }
-          .signature-label {
-            font-size: 7px;
-            font-weight: bold;
-            text-align: center;
-          }
-          .footer {
-            position: absolute;
-            bottom: 15px;
-            left: 25px;
-            right: 25px;
-            text-align: center;
-            font-size: 7px;
-            color: #666;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="school-name">${institute?.institute_name || 'আদর্শ বিদ্যালয়'}</div>
-          <div class="school-address">
-            ${institute?.institute_address || 'ঢাকা, বাংলাদেশ'} | ফোন: ০১৭xxxxxxxx | ইমেইল: info@school.edu.bd
-          </div>
-          <div class="title">স্টাফ তথ্য প্রতিবেদন</div>
+    <!DOCTYPE html>
+<html>
+<head>
+  <title>স্টাফ তথ্য প্রতিবেদন</title>
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    @page { 
+      size: A4 portrait; 
+      margin: 10mm;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Noto Sans Bengali', Arial, sans-serif;
+      font-size: 10pt;
+      line-height: 1.4;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      background-color: #fff;
+    }
+    .container {
+      width: 190mm;
+      min-height: 277mm;
+      margin: 0 auto;
+      padding: 5mm;
+      // border: 1px solid #e0e0e0;
+      border-radius: 3px;
+      background-color: #fff;
+      overflow: hidden;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 3mm;
+      padding-bottom: 2mm;
+      border-bottom: 2px solid #1a5276;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    .school-logo {
+      height: 20mm;
+      margin-bottom: 1mm;
+    }
+    .school-name {
+      font-size: 16pt;
+      font-weight: bold;
+      margin-bottom: 1mm;
+      color: #1a5276;
+    }
+    .school-address {
+      font-size: 9pt;
+      margin-bottom: 1mm;
+      color: #555;
+    }
+    .title {
+      font-size: 14pt;
+      font-weight: bold;
+      margin: 2mm 0;
+      color: #1a5276;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .main-content {
+      display: flex;
+      margin-top: 3mm;
+      gap: 3mm;
+    }
+    .left-section {
+      width: 65%;
+    }
+    .right-section {
+      width: 35%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .photo-box {
+      width: 30mm;
+      height: 40mm;
+      object-fit: cover;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      margin-bottom: 2mm;
+      background-color: #f5f5f5;
+    }
+    .photo-placeholder {
+      width: 30mm;
+      height: 40mm;
+      border: 1px dashed #999;
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 9pt;
+      color: #999;
+      text-align: center;
+      margin-bottom: 2mm;
+    }
+    .section-title {
+      font-size: 11pt;
+      font-weight: bold;
+      background-color: #1a5276;
+      color: white;
+      padding: 1.5mm 2mm;
+      margin: 2mm 0 1mm;
+      border-radius: 3px;
+      text-align: left;
+    }
+    .table {
+      margin-bottom: 2mm;
+    }
+    .table-row {
+      display: flex;
+      border-bottom: 0.5px solid #ddd;
+      min-height: 16px;
+    }
+    .label-cell {
+      width: 35%;
+      padding: 1.5mm 2mm;
+      font-size: 9pt;
+      font-weight: bold;
+      background-color: #f2f2f2;
+      border-right: 0.5px solid #ddd;
+    }
+    .value-cell {
+      width: 65%;
+      padding: 1.5mm 2mm;
+      font-size: 9pt;
+    }
+    .two-col-row {
+      display: flex;
+      border-bottom: 0.5px solid #ddd;
+      min-height: 16px;
+    }
+    .two-col-label1 {
+      width: 18%;
+      padding: 1.5mm 2mm;
+      font-size: 9pt;
+      font-weight: bold;
+      background-color: #f2f2f2;
+      border-right: 0.5px solid #ddd;
+    }
+    .two-col-value1 {
+      width: 32%;
+      padding: 1.5mm 2mm;
+      font-size: 9pt;
+      border-right: 0.5px solid #ddd;
+    }
+    .two-col-label2 {
+      width: 18%;
+      padding: 1.5mm 2mm;
+      font-size: 9pt;
+      font-weight: bold;
+      background-color: #f2f2f2;
+      border-right: 0.5px solid #ddd;
+    }
+    .two-col-value2 {
+      width: 32%;
+      padding: 1.5mm 2mm;
+      font-size: 9pt;
+    }
+    .status-row {
+      display: flex;
+      justify-content: center;
+      margin-top: 2mm;
+      margin-bottom: 2mm;
+    }
+    .status-box {
+      padding: 1mm 2mm;
+      border: 1px solid #1a5276;
+      background-color: #f9f9f9;
+      border-radius: 3px;
+    }
+    .status-text {
+      font-size: 9pt;
+      font-weight: bold;
+      color: #1a5276;
+    }
+    .signature-section {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 5mm;
+      padding-top: 2mm;
+      // border-top: 1px solid #1a5276;
+    }
+    .signature-box {
+      width: 30%;
+      text-align: center;
+    }
+    .signature-line {
+      width: 80%;
+      margin: 10mm auto;
+      border-bottom: 1px solid #000;
+      height: 10px;
+      margin-bottom: 1mm;
+    }
+    .signature-label {
+      font-size: 8pt;
+      font-weight: bold;
+      color: #555;
+    }
+    .footer {
+      position: fixed;
+      bottom: 5mm;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 7pt;
+      color: #666;
+      padding: 1mm 0;
+      border-top: 1px solid #ddd;
+      background-color: #fff;
+    }
+    .watermark {
+      position: fixed;
+      opacity: 0.08;
+      font-size: 60pt;
+      color: #1a5276;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      z-index: -1;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="watermark">${institute?.institute_name || 'বিদ্যালয়'}</div>
+  
+  <div class="container">
+    <div class="header">
+      ${institute?.logo ? `<img src="${institute.logo}" class="school-logo" alt="School Logo" />` : ''}
+      <div class="school-name">${institute?.institute_name || 'আদর্শ বিদ্যালয়'}</div>
+      <div class="school-address">${institute?.institute_address || '১২৩ মেইন রোড, ঢাকা, বাংলাদেশ'} | ফোন: ${institute?.phone || '০১৭xxxxxxxx'} | ইমেইল: ${institute?.email || 'info@school.edu.bd'}</div>
+      <div class="title">স্টাফ তথ্য প্রতিবেদন</div>
+    </div>
+
+    <div class="main-content">
+      <div class="left-section">
+        <div class="section-title">মৌলিক তথ্য</div>
+        <div class="table">
+          ${basicRows}
         </div>
 
-        <div class="main-content">
-          <div class="left-section">
-            <div class="section-title">মৌলিক তথ্য</div>
-            <div class="table">
-              ${basicRows}
-            </div>
-
-            <div class="section-title">ব্যক্তিগত তথ্য</div>
-            <div class="table">
-              ${personalRows}
-            </div>
-
-            <div class="section-title">পারিবারিক তথ্য</div>
-            <div class="table">
-              ${familyRows}
-            </div>
-
-            <div class="section-title">জরুরি যোগাযোগ</div>
-            <div class="table">
-              ${emergencyRows}
-            </div>
-
-            <div class="section-title">ঠিকানা</div>
-            <div class="table">
-              ${addressRows}
-            </div>
-
-            <div class="section-title">শিক্ষাগত তথ্য</div>
-            <div class="table">
-              ${educationRows}
-            </div>
-          </div>
-
-          <div class="right-section">
-            <div class="photo-box">
-              <div class="photo-text">স্টাফের<br>ছবি</div>
-            </div>
-
-            <div class="status-row">
-              <div class="status-box">
-                <div class="status-text">
-                  স্ট্যাটাস: ${statusText}
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="section-title">ব্যক্তিগত তথ্য</div>
+        <div class="table">
+          ${personalRows}
         </div>
 
-        <div class="signature-section">
-          <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-label">স্টাফের স্বাক্ষর</div>
-          </div>
-          <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-label">এইচআর স্বাক্ষর</div>
-          </div>
-          <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-label">প্রশাসনিক স্বাক্ষর</div>
-          </div>
+        <div class="section-title">পারিবারিক তথ্য</div>
+        <div class="table">
+          ${familyRows}
         </div>
 
-        <div class="footer">
-          প্রতিবেদন তৈরি: ${new Date().toLocaleDateString('bn-BD')}, ${new Date().toLocaleTimeString('bn-BD')} | ${institute?.institute_name || 'আদর্শ বিদ্যালয়'} - স্টাফ ব্যবস্থাপনা সিস্টেম
+        <div class="section-title">জরুরি যোগাযোগ</div>
+        <div class="table">
+          ${emergencyRows}
         </div>
 
-        <script>
-          let printAttempted = false;
-          window.onbeforeprint = () => { printAttempted = true; };
-          window.onafterprint = () => { window.close(); };
-          window.addEventListener('beforeunload', (event) => {
-            if (!printAttempted) { window.close(); }
-          });
-          window.print();
-        </script>
-      </body>
-      </html>
+        <div class="section-title">ঠিকানা</div>
+        <div class="table">
+          ${addressRows}
+        </div>
+
+        <div class="section-title">শিক্ষাগত তথ্য</div>
+        <div class="table">
+          ${educationRows}
+        </div>
+      </div>
+
+      <div class="right-section">
+        <div>
+          ${staff.avatar ? 
+            `<img src="${staff.avatar}" class="photo-box" alt="Staff Photo" />` : 
+            `<div class="photo-placeholder">ছবি নেই</div>`
+          }
+        </div>
+
+        <div class="status-row">
+          <div class="status-box">
+            <div class="status-text">স্ট্যাটাস: ${statusText}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="signature-section">
+      <div class="signature-box">
+        <div class="signature-line"></div>
+        <div class="signature-label">স্টাফের স্বাক্ষর</div>
+      </div>
+      <div class="signature-box">
+        <div class="signature-line"></div>
+        <div class="signature-label">এইচআর স্বাক্ষর</div>
+      </div>
+      <div class="signature-box">
+        <div class="signature-line"></div>
+        <div class="signature-label">প্রশাসনিক স্বাক্ষর</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    প্রতিবেদন তৈরি: ${new Date().toLocaleString('bn-BD', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Dhaka' 
+    })} | ${institute?.institute_name || 'আদর্শ বিদ্যালয়'} - স্টাফ ব্যবস্থাপনা সিস্টেম
+  </div>
+
+  <script>
+    let printAttempted = false;
+    window.onbeforeprint = () => { printAttempted = true; };
+    window.onafterprint = () => { window.close(); };
+    window.addEventListener('beforeunload', (event) => {
+      if (!printAttempted) { window.close(); }
+    });
+    setTimeout(() => { window.print(); }, 200);
+  </script>
+</body>
+</html>
     `;
 
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     printWindow.document.write(htmlContent);
     printWindow.document.close();
-    toast.success('স্টাফ প্রোফাইল তৈরি হয়েছে! প্রিন্ট বা সেভ করুন।');
+    toast.success("স্টাফ প্রোফাইল তৈরি হয়েছে! প্রিন্ট বা সেভ করুন।");
   };
 
   if (permissionsLoading || instituteLoading) {
@@ -579,232 +689,238 @@ const StaffList = () => {
   if (instituteError) {
     return (
       <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
-        প্রতিষ্ঠানের তথ্য ত্রুটি: {instituteError.status || 'অজানা'} - {JSON.stringify(instituteError.data || {})}
+        প্রতিষ্ঠানের তথ্য ত্রুটি: {instituteError.status || "অজানা"} -{" "}
+        {JSON.stringify(instituteError.data || {})}
       </div>
     );
   }
 
   // Table headers
   const tableHeaders = [
-    { key: 'serial', label: 'ক্রমিক', fixed: true, width: '70px' },
-    { key: 'name', label: 'নাম', fixed: true, width: '150px' },
-    { key: 'user_id', label: 'ইউজার আইডি', fixed: true, width: '120px' },
-    { key: 'phone_number', label: 'ফোন নম্বর', fixed: false, width: '120px' },
-    { key: 'email', label: 'ইমেইল', fixed: false, width: '150px' },
-    { key: 'designation', label: 'পদবী', fixed: false, width: '120px' },
-    { key: 'department', label: 'বিভাগ', fixed: false, width: '120px' },
+    { key: "serial", label: "ক্রমিক", fixed: true, width: "70px" },
+    { key: "avatar", label: "ছবি", fixed: true, width: "50px" },
+    { key: "name", label: "নাম", fixed: true, width: "150px" },
+    { key: "user_id", label: "ইউজার আইডি", fixed: true, width: "120px" },
+    { key: "phone_number", label: "ফোন নম্বর", fixed: false, width: "120px" },
+    { key: "email", label: "ইমেইল", fixed: false, width: "150px" },
+    { key: "designation", label: "পদবী", fixed: false, width: "120px" },
+    { key: "department", label: "বিভাগ", fixed: false, width: "120px" },
     // { key: 'status', label: 'স্ট্যাটাস', fixed: false, width: '100px' },
-    { key: 'actions', label: 'কার্যক্রম', fixed: false, width: '120px', actions: true },
-  ];
-
-
-
-
-const StaffProfilePDF = ({ staff }) => {
-
-  
-
-
-  const renderSimpleTable = (data) => (
-    <View style={styles.table}>
-      {data.map((item, index) => (
-        <View key={index} style={styles.tableRow}>
-          <Text style={styles.labelCell}>{item.label}</Text>
-          <Text style={styles.valueCell}>{item.value}</Text>
-        </View>
-      ))}
-    </View>
-  );
-
-  const renderTwoColumnTable = (data) => (
-    <View style={styles.table}>
-      {data.map((row, index) => (
-        <View key={index} style={styles.twoColRow}>
-          <Text style={styles.twoColLabel1}>{row.label1}</Text>
-          <Text style={styles.twoColValue1}>{row.value1}</Text>
-          <Text style={styles.twoColLabel2}>{row.label2}</Text>
-          <Text style={styles.twoColValue2}>{row.value2}</Text>
-        </View>
-      ))}
-    </View>
-  );
-
-  // Basic information
-  const basicData = [
-    { label: "নাম", value: staff.name || "N/A" },
-    { label: "ইউজার আইডি", value: staff.user_id || "N/A" },
-    { label: "পদবী", value: staff.designation || "N/A" },
-    { label: "বিভাগ", value: staff.department || "N/A" },
-    { label: "যোগদানের তারিখ", value: staff.joining_date || "N/A" },
-  ];
-
-  // Personal information in two columns
-  const personalData = [
     {
-      label1: "ফোন নম্বর",
-      value1: staff.phone_number || "N/A",
-      label2: "ইমেইল",
-      value2: staff.email || "N/A",
-    },
-    {
-      label1: "জন্ম তারিখ",
-      value1: staff.date_of_birth || "N/A",
-      label2: "লিঙ্গ",
-      value2: staff.gender || "N/A",
-    },
-    {
-      label1: "রক্তের গ্রুপ",
-      value1: staff.blood_group || "N/A",
-      label2: "ধর্ম",
-      value2: staff.religion || "N/A",
-    },
-    {
-      label1: "জাতীয় পরিচয়পত্র",
-      value1: staff.nid || "N/A",
-      label2: "বৈবাহিক অবস্থা",
-      value2: staff.marital_status || "N/A",
+      key: "actions",
+      label: "কার্যক্রম",
+      fixed: false,
+      width: "120px",
+      actions: true,
     },
   ];
 
-  // Family information
-  const familyData = [
-    {
-      label1: "বাবার নাম",
-      value1: staff.father_name || "N/A",
-      label2: "মায়ের নাম",
-      value2: staff.mother_name || "N/A",
-    },
-    {
-      label1: "স্বামী/স্ত্রীর নাম",
-      value1: staff.spouse_name || "N/A",
-      label2: "সন্তানের সংখ্যা",
-      value2: staff.children_count || "N/A",
-    },
-  ];
+  const StaffProfilePDF = ({ staff }) => {
+    const renderSimpleTable = (data) => (
+      <View style={styles.table}>
+        {data.map((item, index) => (
+          <View key={index} style={styles.tableRow}>
+            <Text style={styles.labelCell}>{item.label}</Text>
+            <Text style={styles.valueCell}>{item.value}</Text>
+          </View>
+        ))}
+      </View>
+    );
 
-  // Emergency contact
-  const emergencyData = [
-    {
-      label1: "জরুরি যোগাযোগ",
-      value1: staff.emergency_contact || "N/A",
-      label2: "সম্পর্ক",
-      value2: staff.emergency_relation || "N/A",
-    },
-  ];
+    const renderTwoColumnTable = (data) => (
+      <View style={styles.table}>
+        {data.map((row, index) => (
+          <View key={index} style={styles.twoColRow}>
+            <Text style={styles.twoColLabel1}>{row.label1}</Text>
+            <Text style={styles.twoColValue1}>{row.value1}</Text>
+            <Text style={styles.twoColLabel2}>{row.label2}</Text>
+            <Text style={styles.twoColValue2}>{row.value2}</Text>
+          </View>
+        ))}
+      </View>
+    );
 
-  // Address
-  const fullAddress =
-    [staff.village, staff.post_office, staff.upazila, staff.district]
-      .filter(Boolean)
-      .join(", ") ||
-    staff.address ||
-    "N/A";
+    // Basic information
+    const basicData = [
+      { label: "কর্মীদের ছবি", value: staff.avatar || "N/A" },
+      { label: "নাম", value: staff.name || "N/A" },
+      { label: "ইউজার আইডি", value: staff.user_id || "N/A" },
+      { label: "পদবী", value: staff.designation || "N/A" },
+      { label: "বিভাগ", value: staff.department || "N/A" },
+      { label: "যোগদানের তারিখ", value: staff.joining_date || "N/A" },
+    ];
 
-  const addressData = [
-    { label: "বর্তমান ঠিকানা", value: fullAddress },
-    { label: "স্থায়ী ঠিকানা", value: fullAddress },
-  ];
+    // Personal information in two columns
+    const personalData = [
+      {
+        label1: "ফোন নম্বর",
+        value1: staff.phone_number || "N/A",
+        label2: "ইমেইল",
+        value2: staff.email || "N/A",
+      },
+      {
+        label1: "জন্ম তারিখ",
+        value1: staff.date_of_birth || "N/A",
+        label2: "লিঙ্গ",
+        value2: staff.gender || "N/A",
+      },
+      {
+        label1: "রক্তের গ্রুপ",
+        value1: staff.blood_group || "N/A",
+        label2: "ধর্ম",
+        value2: staff.religion || "N/A",
+      },
+      {
+        label1: "জাতীয় পরিচয়পত্র",
+        value1: staff.nid || "N/A",
+        label2: "বৈবাহিক অবস্থা",
+        value2: staff.marital_status || "N/A",
+      },
+    ];
 
-  // Educational information
-  const educationData = [
-    { label: "শিক্ষাগত যোগ্যতা", value: staff.education || "N/A" },
-    { label: "প্রতিষ্ঠান", value: staff.institution || "N/A" },
-    { label: "পাসের বছর", value: staff.passing_year || "N/A" },
-    { label: "বিষয়", value: staff.subject || "N/A" },
-  ];
+    // Family information
+    const familyData = [
+      {
+        label1: "বাবার নাম",
+        value1: staff.father_name || "N/A",
+        label2: "মায়ের নাম",
+        value2: staff.mother_name || "N/A",
+      },
+      {
+        label1: "স্বামী/স্ত্রীর নাম",
+        value1: staff.spouse_name || "N/A",
+        label2: "সন্তানের সংখ্যা",
+        value2: staff.children_count || "N/A",
+      },
+    ];
 
-  return (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.schoolName}>{institute.institute_name || 'আদর্শ বিদ্যালয়, ঢাকা'}</Text>
-          <Text style={styles.schoolAddress}>
-           {institute.institute_address || '১২৩ মেইন রোড, ঢাকা, বাংলাদেশ'}
-          </Text>
-          <Text style={styles.title}>স্টাফ তথ্য প্রতিবেদন</Text>
-        </View>
+    // Emergency contact
+    const emergencyData = [
+      {
+        label1: "জরুরি যোগাযোগ",
+        value1: staff.emergency_contact || "N/A",
+        label2: "সম্পর্ক",
+        value2: staff.emergency_relation || "N/A",
+      },
+    ];
 
-        {/* Main Content */}
-        <View style={styles.mainContent}>
-          {/* Left Section */}
-          <View style={styles.leftSection}>
-            {/* Basic Information */}
-            <Text style={styles.sectionTitle}>মৌলিক তথ্য</Text>
-            {renderSimpleTable(basicData)}
+    // Address
+    const fullAddress =
+      [staff.village, staff.post_office, staff.upazila, staff.district]
+        .filter(Boolean)
+        .join(", ") ||
+      staff.address ||
+      "N/A";
 
-            {/* Personal Information */}
-            <Text style={styles.sectionTitle}>ব্যক্তিগত তথ্য</Text>
-            {renderTwoColumnTable(personalData)}
+    const addressData = [
+      { label: "বর্তমান ঠিকানা", value: fullAddress },
+      { label: "স্থায়ী ঠিকানা", value: fullAddress },
+    ];
 
-            {/* Family Information */}
-            <Text style={styles.sectionTitle}>পারিবারিক তথ্য</Text>
-            {renderTwoColumnTable(familyData)}
+    // Educational information
+    const educationData = [
+      { label: "শিক্ষাগত যোগ্যতা", value: staff.education || "N/A" },
+      { label: "প্রতিষ্ঠান", value: staff.institution || "N/A" },
+      { label: "পাসের বছর", value: staff.passing_year || "N/A" },
+      { label: "বিষয়", value: staff.subject || "N/A" },
+    ];
 
-            {/* Emergency Contact */}
-            <Text style={styles.sectionTitle}>জরুরি যোগাযোগ</Text>
-            {renderTwoColumnTable(emergencyData)}
-
-            {/* Address Information */}
-            <Text style={styles.sectionTitle}>ঠিকানা</Text>
-            {renderSimpleTable(addressData)}
-
-            {/* Educational Information */}
-            <Text style={styles.sectionTitle}>শিক্ষাগত তথ্য</Text>
-            {renderSimpleTable(educationData)}
+    return (
+      <Document>
+        <Page size="A4" style={styles.page}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.schoolName}>
+              {institute.institute_name || "আদর্শ বিদ্যালয়, ঢাকা"}
+            </Text>
+            <Text style={styles.schoolAddress}>
+              {institute.institute_address || "১২৩ মেইন রোড, ঢাকা, বাংলাদেশ"}
+            </Text>
+            <Text style={styles.title}>স্টাফ তথ্য প্রতিবেদন</Text>
           </View>
 
-          {/* Right Section */}
-          <View style={styles.rightSection}>
-            {/* Photo */}
-            <View style={styles.photoBox}>
-              <Text style={styles.photoText}>স্টাফের{"\n"}ছবি</Text>
+          {/* Main Content */}
+          <View style={styles.mainContent}>
+            {/* Left Section */}
+            <View style={styles.leftSection}>
+              {/* Basic Information */}
+              <Text style={styles.sectionTitle}>মৌলিক তথ্য</Text>
+              {renderSimpleTable(basicData)}
+
+              {/* Personal Information */}
+              <Text style={styles.sectionTitle}>ব্যক্তিগত তথ্য</Text>
+              {renderTwoColumnTable(personalData)}
+
+              {/* Family Information */}
+              <Text style={styles.sectionTitle}>পারিবারিক তথ্য</Text>
+              {renderTwoColumnTable(familyData)}
+
+              {/* Emergency Contact */}
+              <Text style={styles.sectionTitle}>জরুরি যোগাযোগ</Text>
+              {renderTwoColumnTable(emergencyData)}
+
+              {/* Address Information */}
+              <Text style={styles.sectionTitle}>ঠিকানা</Text>
+              {renderSimpleTable(addressData)}
+
+              {/* Educational Information */}
+              <Text style={styles.sectionTitle}>শিক্ষাগত তথ্য</Text>
+              {renderSimpleTable(educationData)}
             </View>
 
-            {/* Status */}
-            <View style={styles.statusRow}>
-              <View style={styles.statusBox}>
-                <Text style={styles.statusText}>
-                  স্ট্যাটাস:{" "}
-                  {staff.status === "active" ? "সক্রিয়" : "নিষ্ক্রিয়"}
-                </Text>
+            {/* Right Section */}
+            <View style={styles.rightSection}>
+              {/* Photo */}
+              <View style={styles.photoBox}>
+                <Text style={styles.photoText}>স্টাফের{"\n"}ছবি</Text>
+              </View>
+
+              {/* Status */}
+              <View style={styles.statusRow}>
+                <View style={styles.statusBox}>
+                  <Text style={styles.statusText}>
+                    স্ট্যাটাস:{" "}
+                    {staff.status === "active" ? "সক্রিয়" : "নিষ্ক্রিয়"}
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
-        </View>
 
-        {/* Signatures */}
-        <View style={styles.signatureSection}>
-          <View style={styles.signatureBox}>
-            <View style={styles.signatureLine} />
-            <Text style={styles.signatureLabel}>স্টাফের স্বাক্ষর</Text>
+          {/* Signatures */}
+          <View style={styles.signatureSection}>
+            <View style={styles.signatureBox}>
+              <View style={styles.signatureLine} />
+              <Text style={styles.signatureLabel}>স্টাফের স্বাক্ষর</Text>
+            </View>
+            <View style={styles.signatureBox}>
+              <View style={styles.signatureLine} />
+              <Text style={styles.signatureLabel}>এইচআর স্বাক্ষর</Text>
+            </View>
+            <View style={styles.signatureBox}>
+              <View style={styles.signatureLine} />
+              <Text style={styles.signatureLabel}>প্রশাসনিক স্বাক্ষর</Text>
+            </View>
           </View>
-          <View style={styles.signatureBox}>
-            <View style={styles.signatureLine} />
-            <Text style={styles.signatureLabel}>এইচআর স্বাক্ষর</Text>
-          </View>
-          <View style={styles.signatureBox}>
-            <View style={styles.signatureLine} />
-            <Text style={styles.signatureLabel}>প্রশাসনিক স্বাক্ষর</Text>
-          </View>
-        </View>
 
-        {/* Footer */}
-        <Text style={styles.footer}>
-          প্রতিবেদন তৈরি: {new Date().toLocaleDateString("bn-BD")} | আদর্শ
-          বিদ্যালয় - স্টাফ ব্যবস্থাপনা সিস্টেম
-        </Text>
-      </Page>
-    </Document>
-  );
-};
+          {/* Footer */}
+          <Text style={styles.footer}>
+            প্রতিবেদন তৈরি: {new Date().toLocaleDateString("bn-BD")} | আদর্শ
+            বিদ্যালয় - স্টাফ ব্যবস্থাপনা সিস্টেম
+          </Text>
+        </Page>
+      </Document>
+    );
+  };
 
-
-
-
-
-
-
+  // Handle edit redirect
+  // const handleEditClick = (id) => {
+  //   if (!hasChangePermission) {
+  //     toast.error("স্টাফের তথ্য সম্পাদনা করার অনুমতি নেই।");
+  //     return;
+  //   }
+  //   navigate(`/staff/${id}`);
+  // };
 
   return (
     <div className="py-8 w-full">
@@ -996,6 +1112,13 @@ border: 1px solid rgba(0, 0, 0, 0.05);
             border: 1px solid rgba(219, 158, 48, 0.3);
             box-shadow: 0 8px 32px rgba(219, 158, 48, 0.1);
           }
+            .avatar-img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 1px solid #DB9E30;
+          }
         `}
       </style>
 
@@ -1133,8 +1256,9 @@ border: 1px solid rgba(0, 0, 0, 0.05);
                 disabled={isUpdating || !hasChangePermission}
                 className={`flex items-center justify-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn btn-glow ${
                   isUpdating || !hasChangePermission
-                    ? 'cursor-not-allowed opacity-70'
-                    : 'hover:text-white hover:shadow-md'}
+                    ? "cursor-not-allowed opacity-70"
+                    : "hover:text-white hover:shadow-md"
+                }
                 }`}
               >
                 {isUpdating ? (
@@ -1228,6 +1352,13 @@ border: 1px solid rgba(0, 0, 0, 0.05);
                       >
                         {serial}
                       </td>
+                      <td className="table-cell">
+                        <img
+                          src={staffMember.avatar || "/placeholder-avatar.png"}
+                          alt={staffMember.name}
+                          className="avatar-img"
+                        />
+                      </td>
                       <td
                         className="table-cell name"
                         style={{ width: "150px" }}
@@ -1281,6 +1412,16 @@ border: 1px solid rgba(0, 0, 0, 0.05);
                             >
                               <FaDownload className="w-4 h-4" />
                             </button>
+                            <button
+                              onClick={() =>
+                                handleEditClick(staffMember.staff_field)
+                              }
+                              className="action-button action-edit"
+                              aria-label={`সম্পাদনা করুন ${staffMember.name}`}
+                              title="সম্পাদনা করুন"
+                            >
+                              <FaEdit className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       )}
@@ -1293,8 +1434,10 @@ border: 1px solid rgba(0, 0, 0, 0.05);
           {(isDeleting || deleteError) && (
             <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
               {isDeleting
-                ? 'স্টাফ মুছছে...'
-                : `স্টাফ মুছে ফেলা ব্যর্থ: ${deleteError?.status || 'অজানা ত্রুটি'}`}
+                ? "স্টাফ মুছছে..."
+                : `স্টাফ মুছে ফেলা ব্যর্থ: ${
+                    deleteError?.status || "অজানা ত্রুটি"
+                  }`}
             </div>
           )}
         </div>

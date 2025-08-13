@@ -43,14 +43,15 @@ const SignatureSheet = () => {
 //   }));
 
 
- const classOptions = useMemo(
-    () =>
-      activeClasses.map((cls) => ({
-        value: { id: cls.id, g_class_id: cls.g_class_id },
-        label: `${cls.class_name} ${cls.section_name} ${cls.shift_name}`,
-      })),
-    [activeClasses]
-  );
+const classOptions = useMemo(
+  () =>
+    activeClasses.map((cls) => ({
+      value: { id: cls.id, g_class_id: cls.g_class_id },
+      label: `${cls.class_name}${cls.section_name ? ` ${cls.section_name}` : ''}${cls.shift_name ? ` ${cls.shift_name}` : ''}`,
+    })),
+  [activeClasses]
+);
+
 
   const examOptions = exams.map((exam) => ({
     value: exam.id,
@@ -185,7 +186,7 @@ const SignatureSheet = () => {
           </table>
         </div>
         <div class="footer">
-          <p>প্রধান শিক্ষকের স্বাক্ষর: ____________________</p>
+          <p>মুহতামিম বা পরিচালকের স্বাক্ষর: ____________________</p>
           <p>মুফতির স্বাক্ষর: ____________________</p>
           <p>তারিখ: ${currentDate}</p>
         </div>
