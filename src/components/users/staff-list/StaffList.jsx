@@ -332,276 +332,331 @@ const StaffList = () => {
     const statusText = staff.status === "active" ? "সক্রিয়" : "নিষ্ক্রিয়";
 // console.log(staff.avatar)
     const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>স্টাফ তথ্য প্রতিবেদন</title>
-        <meta charset="UTF-8">
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap" rel="stylesheet">
-        <style>
-          @page { size: A4 portrait; margin: 20mm; }
-          body {
-            font-family: 'Noto Sans Bengali', Arial, sans-serif;
-            font-size: 12px;
-            margin: 30px;
-            padding: 0;
-            color: #000;
-            background-color: #fff;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #000;
-          }
-          .school-name {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 3px;
-          }
-          .school-address {
-            font-size: 8px;
-            margin-bottom: 8px;
-          }
-          .title {
-            font-size: 12px;
-            font-weight: bold;
-            text-decoration: underline;
-          }
-          .main-content {
-            display: flex;
-            margin-top: 10px;
-          }
-          .left-section {
-            width: 65%;
-            padding-right: 15px;
-          }
-          .right-section {
-            width: 35%;
-            align-items: center;
-          }
-          .photo-box {
-            width: 100px;
-            height: 120px;
-            border: 2px solid #000;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 10px;
-          }
-          .photo-text {
-            font-size: 8px;
-            text-align: center;
-          }
-          .section-title {
-            font-size: 10px;
-            font-weight: bold;
-            background-color: #f0f0f0;
-            padding: 4px;
-            margin-top: 8px;
-            margin-bottom: 5px;
-            text-align: center;
-            border: 1px solid #000;
-          }
-          .table {
-            margin-bottom: 8px;
-          }
-          .table-row {
-            display: flex;
-            border-bottom: 0.5px solid #ccc;
-            min-height: 18px;
-          }
-          .label-cell {
-            width: 35%;
-            padding: 3px;
-            font-size: 8px;
-            font-weight: bold;
-            background-color: #f8f8f8;
-            border-right: 0.5px solid #ccc;
-          }
-          .value-cell {
-            width: 65%;
-            padding: 3px;
-            font-size: 8px;
-          }
-          .two-col-row {
-            display: flex;
-            border-bottom: 0.5px solid #ccc;
-            min-height: 18px;
-          }
-          .two-col-label1 {
-            width: 18%;
-            padding: 3px;
-            font-size: 8px;
-            font-weight: bold;
-            background-color: #f8f8f8;
-            border-right: 0.5px solid #ccc;
-          }
-          .two-col-value1 {
-            width: 32%;
-            padding: 3px;
-            font-size: 8px;
-            border-right: 0.5px solid #ccc;
-          }
-          .two-col-label2 {
-            width: 18%;
-            padding: 3px;
-            font-size: 8px;
-            font-weight: bold;
-            background-color: #f8f8f8;
-            border-right: 0.5px solid #ccc;
-          }
-          .two-col-value2 {
-            width: 32%;
-            padding: 3px;
-            font-size: 8px;
-          }
-          .status-row {
-            display: flex;
-            justify-content: center;
-            margin-top: 8px;
-            margin-bottom: 15px;
-          }
-          .status-box {
-            padding: 4px;
-            border: 1px solid #000000;
-            background-color: #f0f0f0;
-          }
-          .status-text {
-            font-size: 8px;
-            font-weight: bold;
-          }
-          .signature-section {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #ccc;
-          }
-          .signature-box {
-            width: 30%;
-            align-items: center;
-          }
-          .signature-line {
-            width: 100%;
-            border-bottom: 1px solid #000;
-            height: 15px;
-            margin-bottom: 3px;
-          }
-          .signature-label {
-            font-size: 7px;
-            font-weight: bold;
-            text-align: center;
-          }
-          .footer {
-            position: absolute;
-            bottom: 15px;
-            left: 25px;
-            right: 25px;
-            text-align: center;
-            font-size: 7px;
-            color: #666;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="school-name">${
-            institute?.institute_name || "আদর্শ বিদ্যালয়"
-          }</div>
-          <div class="school-address">
-            ${
-              institute?.institute_address || "ঢাকা, বাংলাদেশ"
-            } | ফোন: ০১৭xxxxxxxx | ইমেইল: info@school.edu.bd
-          </div>
-          <div class="title">স্টাফ তথ্য প্রতিবেদন</div>
+    <!DOCTYPE html>
+<html>
+<head>
+  <title>স্টাফ তথ্য প্রতিবেদন</title>
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    @page { 
+      size: A4 portrait; 
+      margin: 10mm;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Noto Sans Bengali', Arial, sans-serif;
+      font-size: 10pt;
+      line-height: 1.4;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      background-color: #fff;
+    }
+    .container {
+      width: 190mm;
+      min-height: 277mm;
+      margin: 0 auto;
+      padding: 5mm;
+      // border: 1px solid #e0e0e0;
+      border-radius: 3px;
+      background-color: #fff;
+      overflow: hidden;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 3mm;
+      padding-bottom: 2mm;
+      border-bottom: 2px solid #1a5276;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    .school-logo {
+      height: 20mm;
+      margin-bottom: 1mm;
+    }
+    .school-name {
+      font-size: 16pt;
+      font-weight: bold;
+      margin-bottom: 1mm;
+      color: #1a5276;
+    }
+    .school-address {
+      font-size: 9pt;
+      margin-bottom: 1mm;
+      color: #555;
+    }
+    .title {
+      font-size: 14pt;
+      font-weight: bold;
+      margin: 2mm 0;
+      color: #1a5276;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .main-content {
+      display: flex;
+      margin-top: 3mm;
+      gap: 3mm;
+    }
+    .left-section {
+      width: 65%;
+    }
+    .right-section {
+      width: 35%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .photo-box {
+      width: 30mm;
+      height: 40mm;
+      object-fit: cover;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      margin-bottom: 2mm;
+      background-color: #f5f5f5;
+    }
+    .photo-placeholder {
+      width: 30mm;
+      height: 40mm;
+      border: 1px dashed #999;
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 9pt;
+      color: #999;
+      text-align: center;
+      margin-bottom: 2mm;
+    }
+    .section-title {
+      font-size: 11pt;
+      font-weight: bold;
+      background-color: #1a5276;
+      color: white;
+      padding: 1.5mm 2mm;
+      margin: 2mm 0 1mm;
+      border-radius: 3px;
+      text-align: left;
+    }
+    .table {
+      margin-bottom: 2mm;
+    }
+    .table-row {
+      display: flex;
+      border-bottom: 0.5px solid #ddd;
+      min-height: 16px;
+    }
+    .label-cell {
+      width: 35%;
+      padding: 1.5mm 2mm;
+      font-size: 9pt;
+      font-weight: bold;
+      background-color: #f2f2f2;
+      border-right: 0.5px solid #ddd;
+    }
+    .value-cell {
+      width: 65%;
+      padding: 1.5mm 2mm;
+      font-size: 9pt;
+    }
+    .two-col-row {
+      display: flex;
+      border-bottom: 0.5px solid #ddd;
+      min-height: 16px;
+    }
+    .two-col-label1 {
+      width: 18%;
+      padding: 1.5mm 2mm;
+      font-size: 9pt;
+      font-weight: bold;
+      background-color: #f2f2f2;
+      border-right: 0.5px solid #ddd;
+    }
+    .two-col-value1 {
+      width: 32%;
+      padding: 1.5mm 2mm;
+      font-size: 9pt;
+      border-right: 0.5px solid #ddd;
+    }
+    .two-col-label2 {
+      width: 18%;
+      padding: 1.5mm 2mm;
+      font-size: 9pt;
+      font-weight: bold;
+      background-color: #f2f2f2;
+      border-right: 0.5px solid #ddd;
+    }
+    .two-col-value2 {
+      width: 32%;
+      padding: 1.5mm 2mm;
+      font-size: 9pt;
+    }
+    .status-row {
+      display: flex;
+      justify-content: center;
+      margin-top: 2mm;
+      margin-bottom: 2mm;
+    }
+    .status-box {
+      padding: 1mm 2mm;
+      border: 1px solid #1a5276;
+      background-color: #f9f9f9;
+      border-radius: 3px;
+    }
+    .status-text {
+      font-size: 9pt;
+      font-weight: bold;
+      color: #1a5276;
+    }
+    .signature-section {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 5mm;
+      padding-top: 2mm;
+      // border-top: 1px solid #1a5276;
+    }
+    .signature-box {
+      width: 30%;
+      text-align: center;
+    }
+    .signature-line {
+      width: 80%;
+      margin: 10mm auto;
+      border-bottom: 1px solid #000;
+      height: 10px;
+      margin-bottom: 1mm;
+    }
+    .signature-label {
+      font-size: 8pt;
+      font-weight: bold;
+      color: #555;
+    }
+    .footer {
+      position: fixed;
+      bottom: 5mm;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 7pt;
+      color: #666;
+      padding: 1mm 0;
+      border-top: 1px solid #ddd;
+      background-color: #fff;
+    }
+    .watermark {
+      position: fixed;
+      opacity: 0.08;
+      font-size: 60pt;
+      color: #1a5276;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      z-index: -1;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="watermark">${institute?.institute_name || 'বিদ্যালয়'}</div>
+  
+  <div class="container">
+    <div class="header">
+      ${institute?.logo ? `<img src="${institute.logo}" class="school-logo" alt="School Logo" />` : ''}
+      <div class="school-name">${institute?.institute_name || 'আদর্শ বিদ্যালয়'}</div>
+      <div class="school-address">${institute?.institute_address || '১২৩ মেইন রোড, ঢাকা, বাংলাদেশ'} | ফোন: ${institute?.phone || '০১৭xxxxxxxx'} | ইমেইল: ${institute?.email || 'info@school.edu.bd'}</div>
+      <div class="title">স্টাফ তথ্য প্রতিবেদন</div>
+    </div>
+
+    <div class="main-content">
+      <div class="left-section">
+        <div class="section-title">মৌলিক তথ্য</div>
+        <div class="table">
+          ${basicRows}
         </div>
 
-        <div class="main-content">
-          <div class="left-section">
-            <div class="section-title">মৌলিক তথ্য</div>
-            <div class="table">
-              ${basicRows}
-            </div>
-
-            <div class="section-title">ব্যক্তিগত তথ্য</div>
-            <div class="table">
-              ${personalRows}
-            </div>
-
-            <div class="section-title">পারিবারিক তথ্য</div>
-            <div class="table">
-              ${familyRows}
-            </div>
-
-            <div class="section-title">জরুরি যোগাযোগ</div>
-            <div class="table">
-              ${emergencyRows}
-            </div>
-
-            <div class="section-title">ঠিকানা</div>
-            <div class="table">
-              ${addressRows}
-            </div>
-
-            <div class="section-title">শিক্ষাগত তথ্য</div>
-            <div class="table">
-              ${educationRows}
-            </div>
-          </div>
-
-          <div class="right-section">
-            <div >
-               ${
-                 staff.avatar
-                   ? `<img src="${staff.avatar}" class="photo-box" alt="Student Photo" />`
-                   : `<div class="photo-placeholder">ছবি নেই</div>`
-               }
-            </div>
-
-            <div class="status-row">
-              <div class="status-box">
-                <div class="status-text">
-                  স্ট্যাটাস: ${statusText}
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="section-title">ব্যক্তিগত তথ্য</div>
+        <div class="table">
+          ${personalRows}
         </div>
 
-        <div class="signature-section">
-          <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-label">স্টাফের স্বাক্ষর</div>
-          </div>
-          <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-label">এইচআর স্বাক্ষর</div>
-          </div>
-          <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-label">প্রশাসনিক স্বাক্ষর</div>
-          </div>
+        <div class="section-title">পারিবারিক তথ্য</div>
+        <div class="table">
+          ${familyRows}
         </div>
 
-        <div class="footer">
-          প্রতিবেদন তৈরি: ${new Date().toLocaleDateString(
-            "bn-BD"
-          )}, ${new Date().toLocaleTimeString("bn-BD")} | ${
-      institute?.institute_name || "আদর্শ বিদ্যালয়"
-    } - স্টাফ ব্যবস্থাপনা সিস্টেম
+        <div class="section-title">জরুরি যোগাযোগ</div>
+        <div class="table">
+          ${emergencyRows}
         </div>
 
-        <script>
-          let printAttempted = false;
-          window.onbeforeprint = () => { printAttempted = true; };
-          window.onafterprint = () => { window.close(); };
-          window.addEventListener('beforeunload', (event) => {
-            if (!printAttempted) { window.close(); }
-          });
-          window.print();
-        </script>
-      </body>
-      </html>
+        <div class="section-title">ঠিকানা</div>
+        <div class="table">
+          ${addressRows}
+        </div>
+
+        <div class="section-title">শিক্ষাগত তথ্য</div>
+        <div class="table">
+          ${educationRows}
+        </div>
+      </div>
+
+      <div class="right-section">
+        <div>
+          ${staff.avatar ? 
+            `<img src="${staff.avatar}" class="photo-box" alt="Staff Photo" />` : 
+            `<div class="photo-placeholder">ছবি নেই</div>`
+          }
+        </div>
+
+        <div class="status-row">
+          <div class="status-box">
+            <div class="status-text">স্ট্যাটাস: ${statusText}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="signature-section">
+      <div class="signature-box">
+        <div class="signature-line"></div>
+        <div class="signature-label">স্টাফের স্বাক্ষর</div>
+      </div>
+      <div class="signature-box">
+        <div class="signature-line"></div>
+        <div class="signature-label">এইচআর স্বাক্ষর</div>
+      </div>
+      <div class="signature-box">
+        <div class="signature-line"></div>
+        <div class="signature-label">প্রশাসনিক স্বাক্ষর</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    প্রতিবেদন তৈরি: ${new Date().toLocaleString('bn-BD', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Dhaka' 
+    })} | ${institute?.institute_name || 'আদর্শ বিদ্যালয়'} - স্টাফ ব্যবস্থাপনা সিস্টেম
+  </div>
+
+  <script>
+    let printAttempted = false;
+    window.onbeforeprint = () => { printAttempted = true; };
+    window.onafterprint = () => { window.close(); };
+    window.addEventListener('beforeunload', (event) => {
+      if (!printAttempted) { window.close(); }
+    });
+    setTimeout(() => { window.print(); }, 200);
+  </script>
+</body>
+</html>
     `;
 
     const printWindow = window.open("", "_blank");
