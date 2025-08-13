@@ -7,15 +7,16 @@ import {
   useCreateClassPeriodMutation,
   useGetClassPeriodsByClassIdQuery,
   usePatchClassPeriodMutation,
+  useDeleteClassPeriodMutation,
 } from "../../redux/features/api/periods/classPeriodsApi";
-import { useSelector } from "react-redux"; // Import useSelector
-import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi"; // Import permission hook
+import { useSelector } from "react-redux";
+import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi";
 
 const ClassPeriodSetup = () => {
-  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
+  const { user, group_id } = useSelector((state) => state.auth);
   const [selectedClassId, setSelectedClassId] = useState(null);
-  const [startTime, setStartTime] = useState("13:14"); // Current time (1:14 PM in 24-hour format)
-  const [endTime, setEndTime] = useState("14:14"); // 1 hour later
+  const [startTime, setStartTime] = useState("13:14");
+  const [endTime, setEndTime] = useState("14:14");
   const [isBreakTime, setIsBreakTime] = useState(false);
   const inputRef = useRef();
   const inputRef2 = useRef();
@@ -27,6 +28,7 @@ const ClassPeriodSetup = () => {
     endTime: "",
     breakTime: false,
   });
+  const [deletePeriodId, setDeletePeriodId] = useState(null);
 
   // Permissions hook
   const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
@@ -37,13 +39,14 @@ const ClassPeriodSetup = () => {
   const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_periodconfig') || false;
   const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_periodconfig') || false;
   const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_periodconfig') || false;
+  const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_periodconfig') || false;
 
   const handleClick = () => {
     if (inputRef.current) {
-      inputRef.current.focus(); // ফোকাস আগে
+      inputRef.current.focus();
       setTimeout(() => {
-        inputRef.current.showPicker(); // তারপর ড্রপডাউন
-      }, 0); // 0ms delay is enough
+        inputRef.current.showPicker();
+      }, 0);
     }
   };
   const handleClick2 = () => {
@@ -65,11 +68,12 @@ const ClassPeriodSetup = () => {
   } = useGetClassPeriodsByClassIdQuery(selectedClassId, {
     skip: !selectedClassId,
   });
-
+console.log("periods",periods)
   // Mutations
   const [createClassPeriod, { isLoading: isCreating }] =
     useCreateClassPeriodMutation();
   const [patchClassPeriod] = usePatchClassPeriodMutation();
+  const [deleteClassPeriod, { isLoading: isDeleting }] = useDeleteClassPeriodMutation();
 
   // Filter active classes
   const activeClasses = classes.filter((cls) => cls.is_active);
@@ -92,17 +96,29 @@ const ClassPeriodSetup = () => {
 
   // Handle period update
   const handleUpdate = (period) => {
+    console.log("period", period)
     if (!hasChangePermission) {
       toast.error('পিরিয়ড আপডেট করার অনুমতি নেই।');
       return;
     }
     setModalAction("update");
-    setModalData({ periodId: period.period_id });
+    setModalData({ periodId: period.id });
     setEditPeriod({
-      startTime: period.start_time.slice(0, 5), // Extract HH:MM
-      endTime: period.end_time.slice(0, 5), // Extract HH:MM
+      startTime: period.start_time.slice(0, 5),
+      endTime: period.end_time.slice(0, 5),
       breakTime: period.break_time,
     });
+    setIsModalOpen(true);
+  };
+
+  // Handle delete action
+  const handleDelete = (periodId) => {
+    if (!hasDeletePermission) {
+      toast.error('পিরিয়ড মুছে ফেলার অনুমতি নেই।');
+      return;
+    }
+    setModalAction("delete");
+    setDeletePeriodId(periodId);
     setIsModalOpen(true);
   };
 
@@ -124,8 +140,8 @@ const ClassPeriodSetup = () => {
           periods: [
             {
               period_id: nextPeriodId,
-              start_time: `${modalData.startTime}:00`, // Add :00 for seconds
-              end_time: `${modalData.endTime}:00`, // Add :00 for seconds
+              start_time: `${modalData.startTime}:00`,
+              end_time: `${modalData.endTime}:00`,
               break_time: modalData.breakTime,
             },
           ],
@@ -149,11 +165,19 @@ const ClassPeriodSetup = () => {
 
         await patchClassPeriod({
           id: modalData.periodId,
-          start_time: `${editPeriod.startTime}:00`, // Add :00 for seconds
-          end_time: `${editPeriod.endTime}:00`, // Add :00 for seconds
+          start_time: `${editPeriod.startTime}:00`,
+          end_time: `${editPeriod.endTime}:00`,
           break_time: editPeriod.breakTime,
         }).unwrap();
         toast.success("পিরিয়ড সফলভাবে আপডেট করা হয়েছে!");
+        refetch();
+      } else if (modalAction === "delete") {
+        if (!hasDeletePermission) {
+          toast.error('পিরিয়ড মুছে ফেলার অনুমতি নেই।');
+          return;
+        }
+        await deleteClassPeriod(deletePeriodId).unwrap();
+        toast.success("পিরিয়ড সফলভাবে মুছে ফেলা হয়েছে!");
         refetch();
       }
     } catch (error) {
@@ -171,6 +195,7 @@ const ClassPeriodSetup = () => {
       setModalAction(null);
       setModalData(null);
       setEditPeriod({ startTime: "", endTime: "", breakTime: false });
+      setDeletePeriodId(null);
     }
   };
 
@@ -179,7 +204,7 @@ const ClassPeriodSetup = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="bg-black/10 backdrop-blur-sm rounded-xl shadow-lg p-8 flex items-center space-x-4 animate-fadeIn">
           <FaSpinner className="animate-spin text-2xl text-[#441a05]" />
-          <span className="text-[#441a05] font-medium">লোড হচ্ছে...</span>
+          <span className="text-[#441a05]font-medium">লোড হচ্ছে...</span>
         </div>
       </div>
     );
@@ -266,16 +291,16 @@ const ClassPeriodSetup = () => {
         {/* Header */}
         <div className="flex items-center space-x-4 mb-6 animate-fadeIn ml-5">
           <IoAddCircle className="text-4xl text-[#441a05]" />
-          <h1 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
+          <h1 className="sm:text-2xl text-xl font-bold text-[#441a05]tracking-tight">
             ক্লাস ঘন্টা সেটআপ
           </h1>
         </div>
 
         {/* Class Tabs */}
         <div className="mb-6">
-          <div className="border-b border-white/20 bg-black/10 backdrop-blur-sm rounded-lg p-2">
-            <h2 className="text-xl font-semibold text-[#441a05] mb-4 flex items-center px-5 pt-3">
-              <span className="bg-[#DB9E30]/20 text-[#441a05] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">
+          <div className="border-b border-[#441a05]/20 bg-black/10 backdrop-blur-sm rounded-lg p-2">
+            <h2 className="text-xl font-semibold text-[#441a05]mb-4 flex items-center px-5 pt-3">
+              <span className="bg-pmColor/20 text-[#441a05]rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">
                 ১
               </span>
               ক্লাস নির্বাচন করুন
@@ -291,20 +316,20 @@ const ClassPeriodSetup = () => {
                 </span>
               ) : (
                 activeClasses.map((cls, index) => (
-                  <button
-                    key={cls.id}
-                    onClick={() => setSelectedClassId(cls.id)}
-                    className={`whitespace-nowrap py-2 px-4 font-medium text-sm rounded-md transition-all duration-300 animate-scaleIn ${
-                      selectedClassId === cls.id
-                        ? "bg-[#DB9E30] text-[#441a05] shadow-md"
-                        : "text-[#441a05] hover:bg-white/10 hover:text-[#441a05]"
-                    }`}
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                    aria-label={`ক্লাস নির্বাচন ${cls.class_name} ${cls.shift_name} ${cls.section_name}`}
-                    title={`ক্লাস নির্বাচন করুন / Select class ${cls.class_name} ${cls.shift_name} ${cls.section_name}`}
-                  >
-                    {`${cls.class_name} ${cls.shift_name} ${cls.section_name}`}
-                  </button>
+       <button
+  key={cls.id}
+  onClick={() => setSelectedClassId(cls.id)}
+  className={`[#441a05]space-nowrap py-2 px-4 font-medium text-sm rounded-md transition-all duration-300 animate-scaleIn ${
+    selectedClassId === cls.id
+      ? "bg-pmColor text-[#441a05]shadow-md"
+      : "text-[#441a05]hover:bg-[#441a05]/10 hover:text-[#441a05]"
+  }`}
+  style={{ animationDelay: `${index * 0.1}s` }}
+  aria-label={`ক্লাস নির্বাচন ${cls.class_name}${cls.section_name ? ` ${cls.section_name}` : ''}${cls.shift_name ? ` ${cls.shift_name}` : ''}`}
+  title={`ক্লাস নির্বাচন করুন / Select class ${cls.class_name}${cls.section_name ? ` ${cls.section_name}` : ''}${cls.shift_name ? ` ${cls.shift_name}` : ''}`}
+>
+  {`${cls.class_name}${cls.section_name ? ` ${cls.section_name}` : ''}${cls.shift_name ? ` ${cls.shift_name}` : ''}`}
+</button>
                 ))
               )}
             </nav>
@@ -314,8 +339,8 @@ const ClassPeriodSetup = () => {
         {/* Period Form */}
         {selectedClassId && hasAddPermission && (
           <div className="bg-black/10 backdrop-blur-sm p-6 rounded-2xl shadow-xl mb-10 animate-fadeIn">
-            <h2 className="text-lg font-semibold text-[#441a05] mb-4 flex items-center">
-              <span className="bg-[#DB9E30]/20 text-[#441a05] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">
+            <h2 className="text-lg font-semibold text-[#441a05]mb-4 flex items-center">
+              <span className="bg-pmColor/20 text-[#441a05]rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">
                 ২
               </span>
               নতুন ঘন্টা যোগ করুন
@@ -323,7 +348,7 @@ const ClassPeriodSetup = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-[#441a05] mb-2">
+                  <label className="block text-sm font-medium text-[#441a05]mb-2">
                     শুরুর সময়
                   </label>
                   <input
@@ -339,7 +364,7 @@ const ClassPeriodSetup = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#441a05] mb-2">
+                  <label className="block text-sm font-medium text-[#441a05]mb-2">
                     শেষের সময়
                   </label>
                   <input
@@ -368,13 +393,13 @@ const ClassPeriodSetup = () => {
                   <span
                     className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${
                       isBreakTime
-                        ? "bg-[#DB9E30] border-[#DB9E30]"
-                        : "bg-white/10 border-[#9d9087] hover:border-[#441a05]"
+                        ? "bg-pmColor border-pmColor"
+                        : "bg-[#441a05]/10 border-[#9d9087] hover:border-[#441a05]"
                     }`}
                   >
                     {isBreakTime && (
                       <svg
-                        className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                        className="w-4 h-4 text-[#441a05]animate-scaleIn"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -397,7 +422,7 @@ const ClassPeriodSetup = () => {
               <button
                 type="submit"
                 disabled={isCreating}
-                className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:bg-[#DB9E30]/80 transition-colors duration-300 btn-glow ${
+                className={`px-4 py-2 bg-pmColor text-[#441a05]rounded-lg hover:bg-pmColor/80 transition-colors duration-300 btn-glow ${
                   isCreating ? "opacity-50 cursor-not-allowed" : ""
                 }`}
                 title="পিরিয়ড যোগ করুন / Add period"
@@ -411,12 +436,12 @@ const ClassPeriodSetup = () => {
         {/* Existing Periods */}
         {selectedClassId && (
           <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
-            <h2 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">
+            <h2 className="text-lg font-semibold text-[#441a05]p-4 border-b border-[#441a05]/20">
               বিদ্যমান পিরিয়ডসমূহ
             </h2>
             {isPeriodsLoading ? (
               <div className="text-center animate-fadeIn">
-                <FaSpinner className="inline-block animate-spin text-2xl text-[#441a05] mb-2" />
+                <FaSpinner className="inline-block animate-spin text-2xl text-[#441a05]mb-2" />
                 <p className="text-[#441a05]/70">পিরিয়ড লোড হচ্ছে...</p>
               </div>
             ) : periods.length === 0 ? (
@@ -428,7 +453,7 @@ const ClassPeriodSetup = () => {
                 {periods.map((period, index) => (
                   <li
                     key={period.period_id}
-                    className="border border-white/20 p-4 rounded-md bg-white/10 hover:bg-white/20 transition-all duration-300 animate-fadeIn"
+                    className="border border-[#441a05]/20 p-4 rounded-md bg-[#441a05]/10 hover:bg-[#441a05]/20 transition-all duration-300 animate-fadeIn"
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
                     <div className="flex justify-between items-center">
@@ -449,10 +474,19 @@ const ClassPeriodSetup = () => {
                         {hasChangePermission && (
                           <button
                             onClick={() => handleUpdate(period)}
-                            className="px-3 py-1 bg-[#DB9E30] text-[#441a05] rounded-md hover:bg-[#DB9E30]/80 btn-glow"
+                            className="px-3 py-1 bg-pmColor text-[#441a05]rounded-md hover:bg-pmColor/80 btn-glow"
                             title="পিরিয়ড সম্পাদনা করুন / Edit period"
                           >
                             <FaEdit className="w-4 h-4" />
+                          </button>
+                        )}
+                        {hasDeletePermission && (
+                          <button
+                            onClick={() => handleDelete(period.id)}
+                            className="px-3 py-1 bg-red-500/20 text-red-500 rounded-md hover:bg-red-500/30"
+                            title="পিরিয়ড মুছে ফেলুন / Delete period"
+                          >
+                            <FaTrash className="w-4 h-4" />
                           </button>
                         )}
                       </div>
@@ -464,18 +498,19 @@ const ClassPeriodSetup = () => {
           </div>
         )}
 
-        {/* Confirmation/Update Modal */}
-        {isModalOpen && (hasAddPermission || hasChangePermission) && (
+        {/* Confirmation/Update/Delete Modal */}
+        {isModalOpen && (hasAddPermission || hasChangePermission || hasDeletePermission) && (
           <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[10000]">
-            <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
-              <h3 className="text-lg font-semibold text-[#441a05] mb-4">
+            <div className="bg-[#441a05]backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-[#441a05]/20 animate-slideUp">
+              <h3 className="text-lg font-semibold text-[#441a05]mb-4">
                 {modalAction === "add" && "পিরিয়ড যোগ নিশ্চিত করুন"}
                 {modalAction === "update" && "পিরিয়ড আপডেট নিশ্চিত করুন"}
+                {modalAction === "delete" && "পিরিয়ড মুছে ফেলা নিশ্চিত করুন"}
               </h3>
               {modalAction === "update" ? (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#441a05] mb-2">
+                    <label className="block text-sm font-medium text-[#441a05]mb-2">
                       শুরুর সময়
                     </label>
                     <input
@@ -494,7 +529,7 @@ const ClassPeriodSetup = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#441a05] mb-2">
+                    <label className="block text-sm font-medium text-[#441a05]mb-2">
                       শেষের সময়
                     </label>
                     <input
@@ -530,13 +565,13 @@ const ClassPeriodSetup = () => {
                       <span
                         className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn tick-glow ${
                           editPeriod.breakTime
-                            ? "bg-[#DB9E30] border-[#DB9E30]"
-                            : "bg-white/10 border-[#9d9087] hover:border-[#441a05]"
+                            ? "bg-pmColor border-pmColor"
+                            : "bg-[#441a05]/10 border-[#9d9087] hover:border-[#441a05]"
                         }`}
                       >
                         {editPeriod.breakTime && (
                           <svg
-                            className="w-4 h-4 text-[#441a05] animate-scaleIn"
+                            className="w-4 h-4 text-[#441a05]animate-scaleIn"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -557,25 +592,32 @@ const ClassPeriodSetup = () => {
                     </label>
                   </div>
                 </div>
+              ) : modalAction === "delete" ? (
+                <p className="text-[#441a05]mb-6">
+                  আপনি কি নিশ্চিত যে এই পিরিয়ডটি মুছে ফেলতে চান? এই অ্যাকশনটি পূর্বাবস্থায় ফেরানো যাবে না।
+                </p>
               ) : (
-                <p className="text-[#441a05] mb-6">
+                <p className="text-[#441a05]mb-6">
                   আপনি কি নিশ্চিত যে এই পিরিয়ড যোগ করতে চান?
                 </p>
               )}
               <div className="flex justify-end space-x-4">
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-gray-500/20 text-[#441a05] rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
+                  className="px-4 py-2 bg-gray-500/20 text-[#441a05]rounded-lg hover:bg-gray-500/30 transition-colors duration-300"
                   title="বাতিল করুন / Cancel"
                 >
                   বাতিল
                 </button>
                 <button
                   onClick={confirmAction}
-                  className="px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg hover:text-white transition-colors duration-300 btn-glow"
+                  disabled={isDeleting}
+                  className={`px-4 py-2 bg-pmColor text-[#441a05]rounded-lg hover:text-[#441a05]transition-colors duration-300 btn-glow ${
+                    modalAction === "delete" ? "bg-red-500/80 hover:bg-red-500" : ""
+                  }`}
                   title="নিশ্চিত করুন / Confirm"
                 >
-                  নিশ্চিত করুন
+                  {isDeleting ? "মুছে ফেলা হচ্ছে..." : "নিশ্চিত করুন"}
                 </button>
               </div>
             </div>

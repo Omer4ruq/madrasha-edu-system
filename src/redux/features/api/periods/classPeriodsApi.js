@@ -62,7 +62,7 @@ export const classPeriodsApi = createApi({
     // PATCH: Partially update a class period by ID
     patchClassPeriod: builder.mutation({
       query: ({ id, ...periodData }) => ({
-        url: `/class-periods/${id}/`,
+        url: `/class-periods/?id=${id}`,
         method: 'PATCH',
         body: periodData,
       }),
@@ -72,7 +72,7 @@ export const classPeriodsApi = createApi({
     // DELETE: Delete a class period by ID
     deleteClassPeriod: builder.mutation({
       query: (id) => ({
-        url: `/class-periods/${id}/`,
+        url: `/class-periods/?id=${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['ClassPeriods'],

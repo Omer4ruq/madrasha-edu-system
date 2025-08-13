@@ -5,20 +5,21 @@ import { Toaster, toast } from 'react-hot-toast';
 import { useGetExamApiQuery } from '../../redux/features/api/exam/examApi';
 import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
 import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
-import { useGetSubjectMarkConfigsByClassQuery, useGetSubjectMarkConfigsBySubjectQuery } from '../../redux/features/api/marks/subjectMarkConfigsApi';
+
 import { useGetStudentActiveByClassQuery } from '../../redux/features/api/student/studentActiveApi';
 import { useCreateSubjectMarkMutation, useGetSubjectMarksQuery, useUpdateSubjectMarkMutation, useDeleteSubjectMarkMutation } from '../../redux/features/api/marks/subjectMarksApi';
-import { useSelector } from "react-redux"; // Import useSelector
-import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi"; // Import permission hook
-
+import { useSelector } from "react-redux";
+import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi";
+import { useGetFilteredMarkConfigsQuery } from '../../redux/features/api/marks/markConfigsApi';
+import { useGetSubjectConfigByIdQuery } from '../../redux/features/api/subject-assign/subjectConfigsApi';
 
 const SubjectMarks = () => {
-  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
+  const { user, group_id } = useSelector((state) => state.auth);
   const [examId, setExamId] = useState('');
   const [academicYearId, setAcademicYearId] = useState('');
   const [selectedClassConfigId, setSelectedClassConfigId] = useState('');
   const [classId, setClassId] = useState('');
-  const [subjectId, setSubjectId] = useState('');
+  const [subjectConfId, setSubjectConfId] = useState(''); // Store subject config ID instead of subject ID
   const [marks, setMarks] = useState({});
   const [absentStudents, setAbsentStudents] = useState(new Set());
   const [savingStates, setSavingStates] = useState({});
@@ -28,28 +29,34 @@ const SubjectMarks = () => {
   const { data: exams, isLoading: examsLoading } = useGetExamApiQuery();
   const { data: academicYears, isLoading: yearsLoading } = useGetAcademicYearApiQuery();
   const { data: classes, isLoading: classesLoading } = useGetclassConfigApiQuery();
-  console.log("classes",classes)
+  
+  // Get subject configurations for the selected class
   const {
-    data: subjectMarkConfigs,
-    isLoading: configsLoading,
-    isFetching: configsFetching
-  } = useGetSubjectMarkConfigsByClassQuery(classId, { skip: !classId });
-  console.log("classId", classId)
-  console.log("subjectMarkConfigs", subjectMarkConfigs);
+    data: subjectConfigs,
+    isLoading: subjectConfigsLoading,
+    isFetching: subjectConfigsFetching
+  } = useGetSubjectConfigByIdQuery(classId, { skip: !classId });
+  
+  // Get filtered mark configs for the selected subject
   const {
-    data: subjectMarkConfigsBySubject,
-    isLoading: subjectConfigsLoading
-  } = useGetSubjectMarkConfigsBySubjectQuery(subjectId, { skip: !subjectId });
+    data: markConfigs,
+    isLoading: markConfigsLoading
+  } = useGetFilteredMarkConfigsQuery({ class_id: classId, subject_conf: subjectConfId }, { skip: !classId || !subjectConfId });
+  
   const {
     data: students,
     isLoading: studentsLoading,
     isFetching: studentsFetching
   } = useGetStudentActiveByClassQuery(selectedClassConfigId, { skip: !selectedClassConfigId });
+  
+  // Get current subject ID for the marks API
+  const currentSubjectId = subjectConfigs?.find(config => config.id.toString() === subjectConfId)?.subject_id;
+  
   const {
     data: existingMarks,
     isLoading: marksLoading,
     refetch: refetchMarks
-  } = useGetSubjectMarksQuery({ exam_id: examId, class_id: classId, subject_id: subjectId }, { skip: !examId || !classId || !subjectId });
+  } = useGetSubjectMarksQuery({ exam_id: examId, class_id: classId, subject_id: currentSubjectId }, { skip: !examId || !classId || !currentSubjectId });
 
   const [createSubjectMark] = useCreateSubjectMarkMutation();
   const [updateSubjectMark] = useUpdateSubjectMarkMutation();
@@ -72,7 +79,12 @@ const SubjectMarks = () => {
     setSelectedClassConfigId(selectedId);
     const selectedClass = classes?.find((cls) => cls.id.toString() === selectedId);
     setClassId(selectedClass ? selectedClass.class_id.toString() : '');
-    setSubjectId('');
+    setSubjectConfId(''); // Reset subject selection
+  };
+
+  // Handle subject selection
+  const handleSubjectChange = (e) => {
+    setSubjectConfId(e.target.value);
   };
 
   // Populate existing marks when fetched
@@ -96,7 +108,9 @@ const SubjectMarks = () => {
       toast.error('মার্ক পরিবর্তন করার অনুমতি নেই।');
       return;
     }
-    const config = subjectMarkConfigsBySubject?.[0]?.mark_configs.find(c => c.id === markConfigId);
+    
+    // Find the config from mark configs
+    const config = markConfigs?.find(c => c.id === markConfigId);
     const maxMark = config?.max_mark || 100;
     const numValue = Number(value);
 
@@ -123,7 +137,7 @@ const SubjectMarks = () => {
       toast.error('মার্ক সংরক্ষণ করার অনুমতি নেই।');
       return;
     }
-    if (!examId || !academicYearId || !classId || !subjectId) {
+    if (!examId || !academicYearId || !classId || !currentSubjectId) {
       toast.error('দয়া করে পরীক্ষা, শিক্ষাবর্ষ, ক্লাস এবং বিষয় নির্বাচন করুন।');
       return;
     }
@@ -206,14 +220,15 @@ const SubjectMarks = () => {
       return newSet;
     });
 
-    if (!examId || !academicYearId || !classId || !subjectId) {
+    if (!examId || !academicYearId || !classId || !currentSubjectId) {
       toast.error('দয়া করে পরীক্ষা, শিক্ষাবর্ষ, ক্লাস এবং বিষয় নির্বাচন করুন।');
       return;
     }
 
-    const markConfigs = subjectMarkConfigsBySubject?.[0]?.mark_configs || [];
+    // Get mark configs for the selected subject
+    const currentMarkConfigs = markConfigs || [];
 
-    for (const config of markConfigs) {
+    for (const config of currentMarkConfigs) {
       try {
         const markKey = `${studentId}_${config.id}`;
         const obtained = newAbsentState ? 0 : Number(marks[markKey] || 0);
@@ -271,9 +286,10 @@ const SubjectMarks = () => {
         await deleteSubjectMark(mark.id).unwrap();
       }
 
-      const markConfigs = subjectMarkConfigsBySubject?.[0]?.mark_configs || [];
+      // Clear marks from local state
+      const currentMarkConfigs = markConfigs || [];
       const updatedMarks = { ...marks };
-      markConfigs.forEach(config => {
+      currentMarkConfigs.forEach(config => {
         delete updatedMarks[`${modalData.studentId}_${config.id}`];
       });
       setMarks(updatedMarks);
@@ -327,11 +343,8 @@ const SubjectMarks = () => {
     }
   };
 
-  const selectedSubjectConfig = subjectMarkConfigsBySubject?.[0];
-  const markConfigs = selectedSubjectConfig?.mark_configs || [];
-
   // Loading states
-  if (configsLoading || configsFetching || studentsLoading || studentsFetching || examsLoading || yearsLoading || classesLoading || permissionsLoading) {
+  if (subjectConfigsLoading || subjectConfigsFetching || studentsLoading || studentsFetching || examsLoading || yearsLoading || classesLoading || permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="bg-black/10 backdrop-blur-sm rounded-xl shadow-lg p-8 flex items-center space-x-4 animate-fadeIn">
@@ -467,17 +480,17 @@ const SubjectMarks = () => {
             <div className="space-y-2">
               <label className="block text-sm font-medium text-[#441a05]">বিষয়</label>
               <select
-                value={subjectId}
-                onChange={(e) => setSubjectId(e.target.value)}
+                value={subjectConfId}
+                onChange={handleSubjectChange}
                 className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={!classId}
                 aria-label="বিষয় নির্বাচন করুন"
                 title="বিষয় নির্বাচন করুন / Select subject"
               >
                 <option value="">বিষয় নির্বাচন করুন</option>
-                {subjectMarkConfigs?.map((config) => (
-                  <option key={config.subject_id} value={config.subject_id}>
-                    {config.subject_name}
+                {subjectConfigs?.map((config) => (
+                  <option key={config.id} value={config.id}>
+                    {config.combined_subject_name}
                   </option>
                 ))}
               </select>
@@ -485,8 +498,17 @@ const SubjectMarks = () => {
           </div>
         </div>
 
+        {/* Debug Information */}
+        {subjectConfId && (
+          <div className="bg-blue-50/10 backdrop-blur-sm border border-blue-200/20 rounded-lg p-4 mb-4 animate-fadeIn">
+            <p className="text-sm text-[#441a05]">
+              <strong>Debug Info:</strong> Subject Config ID: {subjectConfId}, Class ID: {classId}, Mark Configs Found: {markConfigs?.length || 0}, Students: {students?.length || 0}
+            </p>
+          </div>
+        )}
+
         {/* No Data Messages */}
-        {selectedClassConfigId && !subjectMarkConfigs?.length && (
+        {selectedClassConfigId && !subjectConfigs?.length && (
           <div className="bg-black/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 mb-8 animate-fadeIn">
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-[#DB9E30]/20 rounded-full flex items-center justify-center">
@@ -519,7 +541,7 @@ const SubjectMarks = () => {
         )}
 
         {/* Marks Table */}
-        {students?.length > 0 && markConfigs.length > 0 && (
+        {students?.length > 0 && markConfigs?.length > 0 && (
           <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden animate-fadeIn">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -648,8 +670,34 @@ const SubjectMarks = () => {
           </div>
         )}
 
+        {/* No marks config message */}
+        {subjectConfId && markConfigs?.length === 0 && !markConfigsLoading && (
+          <div className="bg-black/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 mb-8 animate-fadeIn">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-[#DB9E30]/20 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-[#DB9E30]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-[#441a05]">কোনো মার্ক কনফিগারেশন পাওয়া যায়নি</h3>
+                <p className="text-[#441a05]/70">নির্বাচিত বিষয়ের জন্য কোনো মার্ক কনফিগারেশন তৈরি করা হয়নি।</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Empty state when no filters selected */}
+        {!examId && !academicYearId && !selectedClassConfigId && !subjectConfId && (
+          <div className="text-center py-12 animate-fadeIn">
+            <div className="text-6xl mb-4">📝</div>
+            <h3 className="text-xl font-semibold text-[#441a05] mb-2">মার্ক এন্ট্রি শুরু করতে প্রস্তুত?</h3>
+            <p className="text-[#441a05]/70">উপরের ফিল্টারগুলি ব্যবহার করে পরীক্ষা, শিক্ষাবর্ষ, ক্লাস এবং বিষয় নির্বাচন করুন</p>
+          </div>
+        )}
+
         {/* Confirmation Modal */}
-        {isModalOpen && (hasDeletePermission) && (
+        {isModalOpen && hasDeletePermission && (
           <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[10000]">
             <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-white/20 animate-slideUp">
               <h3 className="text-lg font-semibold text-[#441a05] mb-4">

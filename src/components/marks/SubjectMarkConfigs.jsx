@@ -39,7 +39,7 @@ const SubjectMarkConfigs = () => {
   const [updateSubjectMarkConfig] = useUpdateSubjectMarkConfigMutation();
   const [deleteSubjectMarkConfig] = useDeleteSubjectMarkConfigMutation();
   const [subjectConfigs, setSubjectConfigs] = useState({});
-
+console.log("markConfigs", markConfigs)
   // Permissions hook
   const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
     skip: !group_id,

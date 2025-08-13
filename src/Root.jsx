@@ -79,6 +79,9 @@ import PrivateRoute from "./PrivateRoute";
 import { SuperAdminRoute } from "./SuperAdminRoute";
 import UserProfile from "./components/user-profile/UserProfile";
 import AddNotice from "./components/notice/AddNotice";
+import SubjectConfigs from "./components/SubjectManagement/SubjectConfigs";
+import MarkConfigs from "./components/marks/MarkConfigs";
+
 
 function Root() {
   const router = createBrowserRouter([
@@ -205,11 +208,19 @@ function Root() {
                   ],
                 },
                 {
-                  path: "marks-config",
+                  path: "marks",
                   children: [
-                    {
-                      index: true,
-                      element: <SubjectMarkConfigs />,
+                    // {
+                    //   path: "marks-config",
+                    //   element: <SubjectMarkConfigs />,
+                    // },
+                        {
+                      path: "marks-config",
+                      element: <MarkConfigs/>,
+                    },
+                      {
+                      path: "subject-config",
+                      element: <SubjectConfigs />,
                     },
                   ],
                 },
