@@ -375,7 +375,7 @@ const ExamRoutineTable = ({
             পরীক্ষা নিয়ন্ত্রকের স্বাক্ষর
           </div>
           <div class="signature-box">
-            প্রধান শিক্ষকের স্বাক্ষর
+            মুহতামিম বা পরিচালকের স্বাক্ষর
           </div>
         </div>
       </body>

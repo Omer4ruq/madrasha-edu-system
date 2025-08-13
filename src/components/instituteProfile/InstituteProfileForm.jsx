@@ -265,7 +265,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                 </div>
                 <div className="relative input-icon">
                   <label htmlFor="headmaster_name" className="block text-lg font-medium text-red-600">
-                    প্রধান শিক্ষকের নাম <span className="text-red-600">*</span>
+                    মুহতামিম বা পরিচালকের নাম <span className="text-red-600">*</span>
                   </label>
                   <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                   <input
@@ -276,14 +276,14 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     onChange={handleChange}
                     required
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
-                    placeholder="প্রধান শিক্ষকের নাম লিখুন"
-                    aria-label="প্রধান শিক্ষকের নাম"
+                    placeholder="মুহতামিম বা পরিচালকের নাম লিখুন"
+                    aria-label="মুহতামিম বা পরিচালকের নাম"
                     disabled={isFormDisabled}
                   />
                 </div>
                 <div className="relative input-icon">
                   <label htmlFor="headmaster_mobile" className="block text-lg font-medium text-red-600">
-                    প্রধান শিক্ষকের মোবাইল <span className="text-red-600">*</span>
+                    মুহতামিম বা পরিচালকের মোবাইল <span className="text-red-600">*</span>
                   </label>
                   <FaUser className="absolute left-3 top-[50px] text-[#DB9E30]" />
                   <input
@@ -295,7 +295,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     required
                     className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
                     placeholder="মোবাইল নম্বর লিখুন"
-                    aria-label="প্রধান শিক্ষকের মোবাইল"
+                    aria-label="মুহতামিম বা পরিচালকের মোবাইল"
                     disabled={isFormDisabled}
                   />
                 </div>

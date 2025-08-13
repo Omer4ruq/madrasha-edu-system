@@ -169,7 +169,7 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
                     <h3 className="text-lg font-semibold flex items-center">
                       <FaBuilding className="mr-2 text-[#DB9E30]" /> মৌলিক তথ্য
                     </h3>
-                    <p><span className="font-medium">প্রধান শিক্ষক:</span> {institute.headmaster_name}</p>
+                    <p><span className="font-medium">মুহতামিম বা পরিচালক:</span> {institute.headmaster_name}</p>
                     <p><span className="font-medium">মোবাইল:</span> {institute.headmaster_mobile}</p>
                     <p><span className="font-medium">ঠিকানা:</span> {institute.institute_address || 'অজানা'}</p>
                   </div>

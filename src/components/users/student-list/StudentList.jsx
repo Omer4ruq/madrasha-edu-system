@@ -251,375 +251,400 @@ const StudentList = () => {
       .join(", ") || "N/A";
 
     const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>ছাত্র তথ্য প্রতিবেদন</title>
-        <meta charset="UTF-8">
-        <style>
-          @page { size: A4 portrait; margin: 20mm; }
-          body {
-            font-family: 'Noto Sans Bengali', Arial, sans-serif;
-            font-size: 12px;
-            margin: 20mm;
-            padding: 0;
-            color: #000;
-            background-color: #fff;
-          }
-          .container {
-            max-width: 210mm;
-            margin: 0 auto;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #000;
-          }
-          .school-logo {
-            max-width: 80px;
-            margin-bottom: 10px;
-          }
-          .school-name {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 5px;
-          }
-          .school-address {
-            font-size: 10px;
-            margin-bottom: 10px;
-          }
-          .title {
-            font-size: 16px;
-            font-weight: bold;
-            text-decoration: underline;
-          }
-          .main-content {
-            display: flex;
-            margin-top: 20px;
-            gap: 20px;
-          }
-          .left-section {
-            width: 60%;
-          }
-          .right-section {
-            width: 40%;
-            text-align: center;
-          }
-          .student-photo {
-            width: 120px;
-            height: 150px;
-            object-fit: cover;
-            border: 2px solid #000;
-            margin-bottom: 10px;
-            background-color: #f0f0f0;
-          }
-          .section-title {
-            font-size: 14px;
-            font-weight: bold;
-            background-color: #f0f0f0;
-            padding: 6px;
-            margin: 10px 0 5px;
-            text-align: center;
-            border: 1px solid #000;
-            border-radius: 4px;
-          }
-          .table {
-            width: 100%;
-            margin-bottom: 15px;
-            border-collapse: collapse;
-          }
-          .table-row {
-            display: flex;
-            border-bottom: 1px solid #ccc;
-            min-height: 24px;
-          }
-          .label-cell {
-            width: 40%;
-            padding: 6px;
-            font-size: 10px;
-            font-weight: bold;
-            background-color: #f8f8f8;
-            border-right: 1px solid #ccc;
-          }
-          .value-cell {
-            width: 60%;
-            padding: 6px;
-            font-size: 10px;
-          }
-          .two-col-row {
-            display: flex;
-            border-bottom: 1px solid #ccc;
-            min-height: 24px;
-          }
-          .two-col-label {
-            width: 20%;
-            padding: 6px;
-            font-size: 10px;
-            font-weight: bold;
-            background-color: #f8f8f8;
-            border-right: 1px solid #ccc;
-          }
-          .two-col-value {
-            width: 30%;
-            padding: 6px;
-            font-size: 10px;
-          }
-          .signature-section {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 30px;
-            padding-top: 15px;
-            border-top: 1px solid #000;
-          }
-          .signature-box {
-            width: 30%;
-            text-align: center;
-          }
-          .signature-line {
-            width: 100%;
-            border-bottom: 1px solid #000;
-            height: 20px;
-            margin-bottom: 5px;
-          }
-          .signature-label {
-            font-size: 8px;
-            font-weight: bold;
-          }
-          .footer {
-            position: fixed;
-            bottom: 10mm;
-            left: 20mm;
-            right: 20mm;
-            text-align: center;
-            font-size: 8px;
-            color: #666;
-            border-top: 1px solid #ccc;
-            padding-top: 5px;
-          }
-        </style>
-      </head>
-      <body>
-<<<<<<< HEAD
-        <div class="header">
-          <div class="school-name">${institute.institute_name || 'আদর্শ বিদ্যালয়'}</div>
-          <div class="school-address">${institute.institute_address || 'ঢাকা, বাংলাদেশ'} | ফোন: ০১৭xxxxxxxx | ইমেইল: info@school.edu.bd</div>
-          <div class="title">ছাত্র তথ্য প্রতিবেদন</div>
-        </div>
-=======
-        <div class="container">
-          <div class="header">
-            ${institute.logo ? `<img src="${institute.logo}" class="school-logo" alt="School Logo" />` : ''}
-            <div class="school-name">${institute.institute_name || 'আদর্শ বিদ্যালয়, ঢাকা'}</div>
-            <div class="school-address">${institute.institute_address || '১২৩ মেইন রোড, ঢাকা, বাংলাদেশ'}</div>
-            <div class="title">ছাত্র তথ্য প্রতিবেদন</div>
-          </div>
->>>>>>> c6d9b35ca870c023d1820b5d6ab60b9cb870e7bc
+     <!DOCTYPE html>
+<html>
+<head>
+  <title>ছাত্র তথ্য প্রতিবেদন</title>
+  <meta charset="UTF-8">
+  <style>
+    @page { 
+      size: A4 portrait; 
+      margin: 15mm 20mm;
+    }
+    body {
+      font-family: 'Noto Sans Bengali', 'SolaimanLipi', Arial, sans-serif;
+      font-size: 12pt;
+      line-height: 1.4;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      background-color: #fff;
+    }
+    .container {
+      width: 100%;
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 5mm;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 5mm;
+      padding-bottom: 3mm;
+      border-bottom: 1.5px solid #000;
+    }
+    .school-logo {
+      height: 25mm;
+      margin-bottom: 2mm;
+    }
+    .school-name {
+      font-size: 16pt;
+      font-weight: bold;
+      margin-bottom: 1mm;
+    }
+    .school-address {
+      font-size: 10pt;
+      margin-bottom: 2mm;
+    }
+    .report-title {
+      font-size: 14pt;
+      font-weight: bold;
+      margin: 3mm 0;
+      text-decoration: underline;
+    }
+    .main-content {
+      display: flex;
+      margin-top: 5mm;
+      gap: 5mm;
+    }
+    .left-section {
+      width: 70%;
+    }
+    .right-section {
+      width: 30%;
+      text-align: center;
+    }
+    .student-photo {
+      width: 35mm;
+      height: 45mm;
+      object-fit: cover;
+      border: 1px solid #000;
+      margin-bottom: 3mm;
+      background-color: #f5f5f5;
+    }
+    .section-title {
+      font-size: 12pt;
+      font-weight: bold;
+      background-color: #f0f0f0;
+      padding: 2mm;
+      margin: 3mm 0 1mm;
+      text-align: center;
+      border: 1px solid #000;
+      border-radius: 2px;
+    }
+    .info-table {
+      width: 100%;
+      margin-bottom: 3mm;
+      border-collapse: collapse;
+    }
+    .info-table tr {
+      border-bottom: 0.5px solid #ddd;
+    }
+    .info-table td {
+      padding: 2mm 3mm;
+      vertical-align: top;
+    }
+    .label-cell {
+      width: 35%;
+      font-weight: bold;
+      background-color: #f8f8f8;
+      border-right: 1px solid #ddd;
+    }
+    .value-cell {
+      width: 65%;
+    }
+    .two-col-row {
+      display: flex;
+      border-bottom: 0.5px solid #ddd;
+    }
+    .two-col-label {
+      width: 35%;
+      padding: 2mm;
+      font-weight: bold;
+      background-color: #f8f8f8;
+      border-right: 1px solid #ddd;
+    }
+    .two-col-value {
+      width: 65%;
+      padding: 2mm;
+    }
+    .signature-section {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8mm;
+      padding-top: 3mm;
+      border-top: 1px solid #000;
+    }
+    .signature-box {
+      width: 30%;
+      text-align: center;
+    }
+    .signature-line {
+      width: 80%;
+      margin: 0 auto;
+      border-bottom: 1px solid #000;
+      height: 15px;
+      margin-bottom: 1mm;
+    }
+    .signature-label {
+      font-size: 9pt;
+      font-weight: bold;
+    }
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 8pt;
+      color: #666;
+      padding: 2mm 0;
+      border-top: 0.5px solid #ccc;
+      background-color: #fff;
+    }
+    .full-width {
+      width: 100%;
+    }
+    .text-center {
+      text-align: center;
+    }
+    .photo-placeholder {
+      display: inline-block;
+      width: 35mm;
+      height: 45mm;
+      border: 1px dashed #999;
+      background-color: #f5f5f5;
+      line-height: 45mm;
+      color: #999;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      ${institute.logo ? `<img src="${institute.logo}" class="school-logo" alt="School Logo" />` : ''}
+      <div class="school-name">${institute.institute_name || 'আদর্শ বিদ্যালয়'}</div>
+      <div class="school-address">${institute.institute_address || '১২৩ মেইন রোড, ঢাকা, বাংলাদেশ'}</div>
+      <div class="report-title">ছাত্র তথ্য প্রতিবেদন</div>
+    </div>
 
-          <div class="main-content">
-            <div class="left-section">
-              <div class="section-title">ব্যক্তিগত তথ্য</div>
-              <div class="table">
-                <div class="two-col-row">
-                  <div class="two-col-label">নাম</div>
-                  <div class="two-col-value">${student.name || "N/A"}</div>
-                  <div class="two-col-label">ইউজার আইডি</div>
-                  <div class="two-col-value">${student.user_id || "N/A"}</div>
-                </div>
-                <div class="two-col-row">
-                  <div class="two-col-label">জন্ম তারিখ</div>
-                  <div class="two-col-value">${student.dob || "N/A"}</div>
-                  <div class="two-col-label">লিঙ্গ</div>
-                  <div class="two-col-value">${student.gender || "N/A"}</div>
-                </div>
-                <div class="two-col-row">
-                  <div class="two-col-label">রক্তের গ্রুপ</div>
-                  <div class="two-col-value">${student.blood_group || "N/A"}</div>
-                  <div class="two-col-label">জাতীয়তা</div>
-                  <div class="two-col-value">${student.nationality || "N/A"}</div>
-                </div>
-                <div class="two-col-row">
-                  <div class="two-col-label">মোবাইল নং</div>
-                  <div class="two-col-value">${student.phone_number || "N/A"}</div>
-                  <div class="two-col-label">ইমেইল</div>
-                  <div class="two-col-value">${student.email || "N/A"}</div>
-                </div>
-                <div class="two-col-row">
-                  <div class="two-col-label">জন্ম সনদ নং</div>
-                  <div class="two-col-value">${student.birth_certificate_no || "N/A"}</div>
-                  <div class="two-col-label">আরএফআইডি</div>
-                  <div class="two-col-value">${student.rfid || "N/A"}</div>
-                </div>
-              </div>
+    <div class="main-content">
+      <div class="left-section">
+        <!-- Personal Information -->
+        <div class="section-title">ব্যক্তিগত তথ্য</div>
+        <table class="info-table">
+          <tr>
+            <td class="label-cell">নাম</td>
+            <td class="value-cell">${student.name || "N/A"}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">ইউজার আইডি</td>
+            <td class="value-cell">${student.user_id || "N/A"}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">জন্ম তারিখ</td>
+            <td class="value-cell">${student.dob ? new Date(student.dob).toLocaleDateString('bn-BD') : "N/A"}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">লিঙ্গ</td>
+            <td class="value-cell">${student.gender === 'Male' ? 'পুরুষ' : student.gender === 'Female' ? 'নারী' : student.gender || "N/A"}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">রক্তের গ্রুপ</td>
+            <td class="value-cell">${student.blood_group || "N/A"}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">জাতীয়তা</td>
+            <td class="value-cell">${student.nationality || "বাংলাদেশী"}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">মোবাইল নং</td>
+            <td class="value-cell">${student.phone_number || "N/A"}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">ইমেইল</td>
+            <td class="value-cell">${student.email || "N/A"}</td>
+          </tr>
+        </table>
 
-              <div class="section-title">একাডেমিক তথ্য</div>
-              <div class="table">
-                <div class="table-row">
-                  <div class="label-cell">ক্লাস</div>
-                  <div class="value-cell">${student.class_name || "N/A"}</div>
-                </div>
-                <div class="table-row">
-                  <div class="label-cell">সেকশন</div>
-                  <div class="value-cell">${student.section_name || "N/A"}</div>
-                </div>
-                <div class="table-row">
-                  <div class="label-cell">শিফট</div>
-                  <div class="value-cell">${student.shift_name || "N/A"}</div>
-                </div>
-                <div class="table-row">
-                  <div class="label-cell">রোল নং</div>
-                  <div class="value-cell">${student.roll_no || "N/A"}</div>
-                </div>
-                <div class="table-row">
-                  <div class="label-cell">ভর্তির বছর</div>
-                  <div class="value-cell">${student.admission_year || "N/A"}</div>
-                </div>
-                <div class="table-row">
-                  <div class="label-cell">ভর্তির তারিখ</div>
-                  <div class="value-cell">${student.admission_date || "N/A"}</div>
-                </div>
-                <div class="table-row">
-                  <div class="label-cell">নাম ট্যাগ</div>
-                  <div class="value-cell">${student.name_tag || "N/A"}</div>
-                </div>
-                <div class="table-row">
-                  <div class="label-cell">স্থানান্তর সনদ নং</div>
-                  <div class="value-cell">${student.tc_no || "N/A"}</div>
-                </div>
-                <div class="table-row">
-                  <div class="label-cell">আবাসিক অবস্থা</div>
-                  <div class="value-cell">${student.residential_status || "N/A"}</div>
-                </div>
-              </div>
+        <!-- Academic Information -->
+        <div class="section-title">একাডেমিক তথ্য</div>
+        <table class="info-table">
+          <tr>
+            <td class="label-cell">ক্লাস</td>
+            <td class="value-cell">${student.class_name || "N/A"} ${student.section_name ? '('+student.section_name+')' : ''}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">শিফট</td>
+            <td class="value-cell">${student.shift_name || "N/A"}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">রোল নং</td>
+            <td class="value-cell">${student.roll_no || "N/A"}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">ভর্তির বছর</td>
+            <td class="value-cell">${student.admission_year || "N/A"}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">ভর্তির তারিখ</td>
+            <td class="value-cell">${student.admission_date ? new Date(student.admission_date).toLocaleDateString('bn-BD') : "N/A"}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">আবাসিক অবস্থা</td>
+            <td class="value-cell">${student.residential_status === 'Residential' ? 'আবাসিক' : student.residential_status === 'NonResidential' ? 'অ-আবাসিক' : "N/A"}</td>
+          </tr>
+        </table>
 
-              <div class="section-title">ঠিকানা</div>
-              <div class="table">
-                <div class="table-row">
-                  <div class="label-cell">বর্তমান ঠিকানা</div>
-                  <div class="value-cell">${student.present_address || fullAddress}</div>
-                </div>
-                <div class="table-row">
-                  <div class="label-cell">স্থায়ী ঠিকানা</div>
-                  <div class="value-cell">${student.permanent_address || fullAddress}</div>
-                </div>
-                <div class="table-row">
-                  <div class="label-cell">গ্রাম</div>
-                  <div class="value-cell">${student.village || "N/A"}</div>
-                </div>
-                <div class="table-row">
-                  <div class="label-cell">পোস্ট অফিস</div>
-                  <div class="value-cell">${student.post_office || "N/A"}</div>
-                </div>
-                <div class="table-row">
-                  <div class="label-cell">থানা/উপজেলা</div>
-                  <div class="value-cell">${student.ps_or_upazilla || "N/A"}</div>
-                </div>
-                <div class="table-row">
-                  <div class="label-cell">জেলা</div>
-                  <div class="value-cell">${student.district || "N/A"}</div>
-                </div>
-              </div>
+        <!-- Address Information -->
+        <div class="section-title">ঠিকানা</div>
+        <table class="info-table">
+          <tr>
+            <td class="label-cell">বর্তমান ঠিকানা</td>
+            <td class="value-cell">${student.present_address || fullAddress || "N/A"}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">স্থায়ী ঠিকানা</td>
+            <td class="value-cell">${student.permanent_address || fullAddress || "N/A"}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">গ্রাম/রোড</td>
+            <td class="value-cell">${student.village || "N/A"}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">পোস্ট অফিস</td>
+            <td class="value-cell">${student.post_office || "N/A"}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">থানা/উপজেলা</td>
+            <td class="value-cell">${student.ps_or_upazilla || "N/A"}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">জেলা</td>
+            <td class="value-cell">${student.district || "N/A"}</td>
+          </tr>
+        </table>
+      </div>
 
-              <div class="section-title">পারিবারিক তথ্য</div>
-              <div class="table">
-                <div class="two-col-row">
-                  <div class="two-col-label">অভিভাবকের নাম</div>
-                  <div class="two-col-value">${student.parent?.g_name || "N/A"}</div>
-                  <div class="two-col-label">অভিভাবকের ফোন</div>
-                  <div class="two-col-value">${student.parent?.g_mobile_no || "N/A"}</div>
-                </div>
-                <div class="two-col-row">
-                  <div class="two-col-label">পিতার নাম</div>
-                  <div class="two-col-value">${student.parent?.father_name || "N/A"}</div>
-                  <div class="two-col-label">পিতার ফোন</div>
-                  <div class="two-col-value">${student.parent?.father_mobile_no || "N/A"}</div>
-                </div>
-                <div class="two-col-row">
-                  <div class="two-col-label">মাতার নাম</div>
-                  <div class="two-col-value">${student.parent?.mother_name || "N/A"}</div>
-                  <div class="two-col-label">মাতার ফোন</div>
-                  <div class="two-col-value">${student.parent?.mother_mobile_no || "N/A"}</div>
-                </div>
-                <div class="two-col-row">
-                  <div class="two-col-label">সম্পর্ক</div>
-                  <div class="two-col-value">${student.parent?.relation || "N/A"}</div>
-                  <div class="two-col-label">পিতার পেশা</div>
-                  <div class="two-col-value">${student.parent?.f_occupation || "N/A"}</div>
-                </div>
-                <div class="two-col-row">
-                  <div class="two-col-label">মাতার পেশা</div>
-                  <div class="two-col-value">${student.parent?.m_occupation || "N/A"}</div>
-                  <div class="two-col-label">অভিভাবকের পেশা</div>
-                  <div class="two-col-value">${student.parent?.g_occupation || "N/A"}</div>
-                </div>
-                <div class="two-col-row">
-                  <div class="two-col-label">পিতার এনআইডি</div>
-                  <div class="two-col-value">${student.parent?.f_nid || "N/A"}</div>
-                  <div class="two-col-label">মাতার এনআইডি</div>
-                  <div class="two-col-value">${student.parent?.m_nid || "N/A"}</div>
-                </div>
-              </div>
+      <div class="right-section">
+        ${student.avatar ? 
+          `<img src="${student.avatar}" class="student-photo" alt="Student Photo" />` : 
+          `<div class="photo-placeholder">ছবি নেই</div>`
+        }
+        
+        <!-- Additional Right Section Info -->
+        <table class="info-table" style="margin-top: 5mm;">
+          <tr>
+            <td class="label-cell">জন্ম সনদ নং</td>
+            <td class="value-cell">${student.birth_certificate_no || "N/A"}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">আরএফআইডি</td>
+            <td class="value-cell">${student.rfid || "N/A"}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">নাম ট্যাগ</td>
+            <td class="value-cell">${student.name_tag || "N/A"}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">স্থানান্তর সনদ</td>
+            <td class="value-cell">${student.tc_no || "N/A"}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
 
-              <div class="section-title">অন্যান্য তথ্য</div>
-              <div class="table">
-                <div class="table-row">
-                  <div class="label-cell">প্রতিবন্ধকতার তথ্য</div>
-                  <div class="value-cell">${student.disability_info || "N/A"}</div>
-                </div>
-              </div>
-            </div>
+    <!-- Family Information -->
+    <div class="section-title">পারিবারিক তথ্য</div>
+    <table class="info-table full-width">
+      <tr>
+        <td class="label-cell">অভিভাবকের নাম</td>
+        <td class="value-cell">${student.parent?.g_name || student.parent?.name || "N/A"}</td>
+        <td class="label-cell">অভিভাবকের ফোন</td>
+        <td class="value-cell">${student.parent?.g_mobile_no || "N/A"}</td>
+      </tr>
+      <tr>
+        <td class="label-cell">পিতার নাম</td>
+        <td class="value-cell">${student.parent?.father_name || "N/A"}</td>
+        <td class="label-cell">পিতার ফোন</td>
+        <td class="value-cell">${student.parent?.father_mobile_no || "N/A"}</td>
+      </tr>
+      <tr>
+        <td class="label-cell">মাতার নাম</td>
+        <td class="value-cell">${student.parent?.mother_name || "N/A"}</td>
+        <td class="label-cell">মাতার ফোন</td>
+        <td class="value-cell">${student.parent?.mother_mobile_no || "N/A"}</td>
+      </tr>
+      <tr>
+        <td class="label-cell">সম্পর্ক</td>
+        <td class="value-cell">${student.parent?.relation === 'Father' ? 'পিতা' : 
+                              student.parent?.relation === 'Mother' ? 'মাতা' : 
+                              student.parent?.relation === 'Guardian' ? 'অভিভাবক' : 
+                              student.parent?.relation || "N/A"}</td>
+        <td class="label-cell">পিতার পেশা</td>
+        <td class="value-cell">${student.parent?.f_occupation || "N/A"}</td>
+      </tr>
+      <tr>
+        <td class="label-cell">মাতার পেশা</td>
+        <td class="value-cell">${student.parent?.m_occupation || "N/A"}</td>
+        <td class="label-cell">অভিভাবকের পেশা</td>
+        <td class="value-cell">${student.parent?.g_occupation || "N/A"}</td>
+      </tr>
+    </table>
 
-            <div class="right-section">
-              <img src="${student.avatar || '/placeholder-avatar.png'}" class="student-photo" alt="Student Photo" />
-            </div>
-          </div>
+    <!-- Other Information -->
+    <div class="section-title">অন্যান্য তথ্য</div>
+    <table class="info-table full-width">
+      <tr>
+        <td class="label-cell">প্রতিবন্ধকতার তথ্য</td>
+        <td class="value-cell">${student.disability_info || "N/A"}</td>
+      </tr>
+    </table>
 
-          <div class="signature-section">
-            <div class="signature-box">
-              <div class="signature-line"></div>
-              <div class="signature-label">ছাত্রের স্বাক্ষর</div>
-            </div>
-            <div class="signature-box">
-              <div class="signature-line"></div>
-              <div class="signature-label">অভিভাবকের স্বাক্ষর</div>
-            </div>
-            <div class="signature-box">
-              <div class="signature-line"></div>
-              <div class="signature-label">প্রধান শিক্ষকের স্বাক্ষর</div>
-            </div>
-          </div>
+    <!-- Signatures -->
+    <div class="signature-section">
+      <div class="signature-box">
+        <div class="signature-line"></div>
+        <div class="signature-label">ছাত্র/ছাত্রীর স্বাক্ষর</div>
+      </div>
+      <div class="signature-box">
+        <div class="signature-line"></div>
+        <div class="signature-label">অভিভাবকের স্বাক্ষর</div>
+      </div>
+      <div class="signature-box">
+        <div class="signature-line"></div>
+        <div class="signature-label">মুহতামিম বা পরিচালকের স্বাক্ষর</div>
+      </div>
+    </div>
+  </div>
 
-          <div class="footer">
-            প্রতিবেদন তৈরি: ${new Date().toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' })} | ${institute.institute_name || 'আদর্শ বিদ্যালয়'} - ছাত্র ব্যবস্থাপনা সিস্টেম
-          </div>
-<<<<<<< HEAD
-          <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-label">অভিভাবকের স্বাক্ষর</div>
-          </div>
-          <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-label">প্রশাসনিক স্বাক্ষর</div>
-          </div>
-        </div>
+  <div class="footer">
+    প্রতিবেদন তৈরি: ${new Date().toLocaleString('bn-BD', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Dhaka' 
+    })} | ${institute.institute_name || 'আদর্শ বিদ্যালয়'} - ছাত্র ব্যবস্থাপনা সিস্টেম
+  </div>
 
-        <div class="footer">
-          প্রতিবেদন তৈরি: ${new Date().toLocaleDateString('bn')}, ${new Date().toLocaleTimeString('bn')} | ${institute.institute_name || 'আদর্শ বিদ্যালয়'} - ছাত্র ব্যবস্থাপনা সিস্টেম
-=======
->>>>>>> c6d9b35ca870c023d1820b5d6ab60b9cb870e7bc
-        </div>
-
-        <script>
-          let printAttempted = false;
-          window.onbeforeprint = () => { printAttempted = true; };
-          window.onafterprint = () => { window.close(); };
-          window.addEventListener('beforeunload', (event) => {
-            if (!printAttempted) { window.close(); }
-          });
-          window.print();
-        </script>
-      </body>
-      </html>
+  <script>
+    // Auto-print and close functionality
+    window.onload = function() {
+      setTimeout(function() {
+        window.print();
+      }, 200);
+      
+      window.onafterprint = function() {
+        setTimeout(function() {
+          window.close();
+        }, 100);
+      };
+    };
+  </script>
+</body>
+</html>
     `;
 
     const printWindow = window.open('', '_blank');
@@ -668,7 +693,7 @@ const StudentList = () => {
   // Table headers
   const tableHeaders = [
     { key: "serial", label: "ক্রমিক", fixed: true, width: "70px" },
-    { key: "avatar", label: "অ্যাভাটার", fixed: true, width: "100px" },
+    { key: "avatar", label: "ছবি", fixed: true, width: "50px" },
     { key: "name", label: "নাম", fixed: true, width: "150px" },
     { key: "user_id", label: "ইউজার আইডি", fixed: true, width: "120px" },
     { key: "roll_no", label: "রোল", fixed: false, width: "80px" },
@@ -1000,7 +1025,7 @@ const StudentList = () => {
                   return (
                     <tr key={student.id} className="table-row animate-fadeIn" style={{ animationDelay: `${index * 0.05}s` }}>
                       <td className="table-cell serial" style={{ width: "70px" }}>{serial}</td>
-                      <td className="table-cell avatar" style={{ width: "100px" }}>
+                      <td className="table-cell avatar" style={{ width: "50px" }}>
                         <img 
                           src={student.avatar || '/placeholder-avatar.png'} 
                           alt={student.name} 
@@ -1050,7 +1075,7 @@ const StudentList = () => {
                               <FaEdit className="w-4 h-4" />
                             </button>
                           )}
-                          {hasDeletePermission && (
+                          {/* {hasDeletePermission && (
                             <button
                               onClick={() => handleDelete(student.id)}
                               className="action-button action-delete"
@@ -1059,7 +1084,7 @@ const StudentList = () => {
                             >
                               <FaTrash className="w-4 h-4" />
                             </button>
-                          )}
+                          )} */}
                         </div>
                       </td>
                     </tr>
