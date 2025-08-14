@@ -5,7 +5,7 @@ import { Toaster, toast } from 'react-hot-toast';
 import { useGetExamApiQuery } from '../../redux/features/api/exam/examApi';
 import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
 import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
-
+// import { useGetSubjectConfigByIdQuery } from '../../redux/features/api/subject-configs/subjectConfigsApi';
 import { useGetStudentActiveByClassQuery } from '../../redux/features/api/student/studentActiveApi';
 import { useCreateSubjectMarkMutation, useGetSubjectMarksQuery, useUpdateSubjectMarkMutation, useDeleteSubjectMarkMutation } from '../../redux/features/api/marks/subjectMarksApi';
 import { useSelector } from "react-redux";
@@ -49,6 +49,16 @@ const SubjectMarks = () => {
     isFetching: studentsFetching
   } = useGetStudentActiveByClassQuery(selectedClassConfigId, { skip: !selectedClassConfigId });
   
+  // Reset subject configs when classId changes
+  useEffect(() => {
+    if (classId) {
+      // Clear subject selection when class changes
+      setSubjectConfId('');
+      setMarks({});
+      setAbsentStudents(new Set());
+    }
+  }, [classId]);
+
   // Get current subject ID for the marks API
   const currentSubjectId = subjectConfigs?.find(config => config.id.toString() === subjectConfId)?.subject_id;
   
@@ -78,18 +88,46 @@ const SubjectMarks = () => {
     const selectedId = e.target.value;
     setSelectedClassConfigId(selectedId);
     const selectedClass = classes?.find((cls) => cls.id.toString() === selectedId);
-    setClassId(selectedClass ? selectedClass.class_id.toString() : '');
-    setSubjectConfId(''); // Reset subject selection
+    const newClassId = selectedClass ? selectedClass.class_id.toString() : '';
+    setClassId(newClassId);
+    
+    // Reset subject selection and related state immediately
+    setSubjectConfId('');
+    setMarks({});
+    setAbsentStudents(new Set());
   };
 
   // Handle subject selection
   const handleSubjectChange = (e) => {
     setSubjectConfId(e.target.value);
+    // Reset marks and absent students when subject changes
+    setMarks({});
+    setAbsentStudents(new Set());
   };
 
-  // Populate existing marks when fetched
+  // Handle exam selection
+  const handleExamChange = (e) => {
+    setExamId(e.target.value);
+    // Reset marks and absent students when exam changes
+    setMarks({});
+    setAbsentStudents(new Set());
+  };
+
+  // Handle academic year selection
+  const handleAcademicYearChange = (e) => {
+    setAcademicYearId(e.target.value);
+    // Reset marks and absent students when academic year changes
+    setMarks({});
+    setAbsentStudents(new Set());
+  };
+
+  // Populate existing marks when fetched - Reset first, then populate
   useEffect(() => {
-    if (existingMarks) {
+    // Reset marks and absent students first
+    setMarks({});
+    setAbsentStudents(new Set());
+    
+    if (existingMarks && existingMarks.length > 0) {
       const marksMap = {};
       const absentSet = new Set();
       existingMarks.forEach((mark) => {
@@ -101,7 +139,7 @@ const SubjectMarks = () => {
       setMarks(marksMap);
       setAbsentStudents(absentSet);
     }
-  }, [existingMarks]);
+  }, [existingMarks, examId, currentSubjectId, classId]); // Added dependencies to reset when these change
 
   const handleMarkChange = (studentId, markConfigId, value) => {
     if (!hasChangePermission) {
@@ -207,9 +245,16 @@ const SubjectMarks = () => {
       toast.error('উপস্থিতি স্ট্যাটাস পরিবর্তন করার অনুমতি নেই।');
       return;
     }
+    
+    if (!examId || !academicYearId || !classId || !currentSubjectId) {
+      toast.error('দয়া করে পরীক্ষা, শিক্ষাবর্ষ, ক্লাস এবং বিষয় নির্বাচন করুন।');
+      return;
+    }
+
     const isCurrentlyAbsent = absentStudents.has(studentId);
     const newAbsentState = !isCurrentlyAbsent;
 
+    // Update local state first
     setAbsentStudents((prev) => {
       const newSet = new Set(prev);
       if (newAbsentState) {
@@ -220,21 +265,21 @@ const SubjectMarks = () => {
       return newSet;
     });
 
-    if (!examId || !academicYearId || !classId || !currentSubjectId) {
-      toast.error('দয়া করে পরীক্ষা, শিক্ষাবর্ষ, ক্লাস এবং বিষয় নির্বাচন করুন।');
-      return;
-    }
-
-    // Get mark configs for the selected subject
+    // Get mark configs for the selected subject only
     const currentMarkConfigs = markConfigs || [];
 
+    // Update marks for this specific exam and subject only
     for (const config of currentMarkConfigs) {
       try {
         const markKey = `${studentId}_${config.id}`;
         const obtained = newAbsentState ? 0 : Number(marks[markKey] || 0);
 
+        // Find existing mark for this specific exam, student, and mark config
         const existingMark = existingMarks?.find(
-          (mark) => mark.student === studentId && mark.mark_conf === config.id && mark.exam === Number(examId)
+          (mark) => mark.student === studentId && 
+                   mark.mark_conf === config.id && 
+                   mark.exam === Number(examId) &&
+                   mark.class_id === Number(classId)
         );
 
         const markData = {
@@ -256,8 +301,21 @@ const SubjectMarks = () => {
       } catch (error) {
         console.error(`অনুপস্থিতি স্ট্যাটাস আপডেটে ত্রুটি ছাত্র ${studentId}:`, error);
         toast.error(`ত্রুটি: ${error?.data?.message || 'অনুপস্থিতি স্ট্যাটাস আপডেট ব্যর্থ।'}`);
+        
+        // Revert local state on error
+        setAbsentStudents((prev) => {
+          const newSet = new Set(prev);
+          if (isCurrentlyAbsent) {
+            newSet.add(studentId);
+          } else {
+            newSet.delete(studentId);
+          }
+          return newSet;
+        });
+        return;
       }
     }
+    
     toast.success(`ছাত্রের উপস্থিতি স্ট্যাটাস ${newAbsentState ? 'অনুপস্থিত' : 'উপস্থিত'} হিসেবে আপডেট করা হয়েছে!`);
     refetchMarks();
   };
@@ -278,15 +336,18 @@ const SubjectMarks = () => {
       return;
     }
     try {
+      // Filter marks for this specific exam only
       const studentMarks = existingMarks?.filter(
-        (mark) => mark.student === modalData.studentId && mark.exam === Number(examId)
+        (mark) => mark.student === modalData.studentId && 
+                 mark.exam === Number(examId) &&
+                 mark.class_id === Number(classId)
       ) || [];
 
       for (const mark of studentMarks) {
         await deleteSubjectMark(mark.id).unwrap();
       }
 
-      // Clear marks from local state
+      // Clear marks from local state for this student
       const currentMarkConfigs = markConfigs || [];
       const updatedMarks = { ...marks };
       currentMarkConfigs.forEach(config => {
@@ -294,6 +355,7 @@ const SubjectMarks = () => {
       });
       setMarks(updatedMarks);
 
+      // Remove from absent students
       setAbsentStudents(prev => {
         const newSet = new Set(prev);
         newSet.delete(modalData.studentId);
@@ -430,7 +492,7 @@ const SubjectMarks = () => {
               <label className="block text-sm font-medium text-[#441a05]">পরীক্ষা</label>
               <select
                 value={examId}
-                onChange={(e) => setExamId(e.target.value)}
+                onChange={handleExamChange}
                 className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
                 aria-label="পরীক্ষা নির্বাচন করুন"
                 title="পরীক্ষা নির্বাচন করুন / Select exam"
@@ -447,7 +509,7 @@ const SubjectMarks = () => {
               <label className="block text-sm font-medium text-[#441a05]">শিক্ষাবর্ষ</label>
               <select
                 value={academicYearId}
-                onChange={(e) => setAcademicYearId(e.target.value)}
+                onChange={handleAcademicYearChange}
                 className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
                 aria-label="শিক্ষাবর্ষ নির্বাচন করুন"
                 title="শিক্ষাবর্ষ নির্বাচন করুন / Select academic year"

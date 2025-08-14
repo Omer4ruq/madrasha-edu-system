@@ -14,9 +14,8 @@ const ResultSheet = () => {
   
   // State for processed data
   const [studentResults, setStudentResults] = useState([]);
-  const [subjects, setSubjects] = useState([]);
+  const [subjectGroups, setSubjectGroups] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   // Fetch all necessary data
   const { data: exams = [] } = useGetExamApiQuery();
@@ -24,12 +23,8 @@ const ResultSheet = () => {
   const { data: academicYears = [] } = useGetAcademicYearApiQuery();
   const { data: gradeRules = [] } = useGetGradeRulesQuery();
 
-  // Fetch filtered data based on selections
-  const {
-    data: subjectMarks = [],
-    isLoading: isLoadingSubjectMarks,
-    error: subjectMarksError
-  } = useGetFilteredSubjectMarksQuery(
+  // Fetch filtered subject marks
+  const { data: subjectMarks = [], isLoading: isLoadingMarks } = useGetFilteredSubjectMarksQuery(
     {
       exam_id: selectedExam,
       profile_class_id: selectedClassConfig,
@@ -38,172 +33,175 @@ const ResultSheet = () => {
     { skip: !selectedExam || !selectedClassConfig || !selectedAcademicYear }
   );
 
-  // Find the selected class config to get class_id
+  // Find selected class config
   const currentClassConfig = classConfigs.find(config => config.id === parseInt(selectedClassConfig));
-  
-  // Fetch mark configs based on class_id
-  const {
-    data: markConfigs = [],
-    isLoading: isLoadingMarkConfigs,
-    error: markConfigsError
-  } = useGetFilteredMarkConfigsQuery(
+
+  // Fetch mark configs
+  const { data: markConfigs = [], isLoading: isLoadingConfigs } = useGetFilteredMarkConfigsQuery(
     { class_id: currentClassConfig?.class_id },
     { skip: !currentClassConfig }
   );
 
-  // Process data when all required data is available
+  // Process data when all requirements are met
   useEffect(() => {
-    if (subjectMarks.length > 0 && markConfigs.length > 0 && !isLoadingSubjectMarks && !isLoadingMarkConfigs) {
+    if (subjectMarks.length > 0 && markConfigs.length > 0 && !isLoadingMarks && !isLoadingConfigs) {
       processResultData();
     }
-  }, [subjectMarks, markConfigs, isLoadingSubjectMarks, isLoadingMarkConfigs]);
+  }, [subjectMarks, markConfigs]);
 
   const processResultData = () => {
-    try {
-      setIsLoading(true);
-      setError(null);
+    setIsLoading(true);
+    
+    // Create mapping of subject_serial to combined_subject_name
+    const subjectNameMap = {};
+    subjectMarks.forEach(mark => {
+      if (!subjectNameMap[mark.subject_serial] && mark.combined_subject_name) {
+        subjectNameMap[mark.subject_serial] = mark.combined_subject_name;
+      }
+    });
 
-      // Group subject marks by student and subject_serial (summing obtained marks)
-      const studentsMap = new Map();
-      const subjectsMap = new Map(); // To track unique subjects
+    // 1. Group mark configs by subject_serial to get sum of max_mark and pass_mark
+    const subjectConfigGroups = {};
+    markConfigs.forEach(config => {
+      if (!subjectConfigGroups[config.subject_serial]) {
+        subjectConfigGroups[config.subject_serial] = {
+          serial: config.subject_serial,
+          maxMark: 0,
+          passMark: 0,
+          subjectName: subjectNameMap[config.subject_serial] || config.subject_name
+        };
+      }
+      subjectConfigGroups[config.subject_serial].maxMark += config.max_mark;
+      subjectConfigGroups[config.subject_serial].passMark += config.pass_mark;
+    });
+
+    // Convert to array and sort by serial
+    const sortedSubjectGroups = Object.values(subjectConfigGroups)
+      .sort((a, b) => a.serial - b.serial);
+    setSubjectGroups(sortedSubjectGroups);
+
+    // 2. Process student data with summed marks
+    const studentsMap = new Map();
+    
+    subjectMarks.forEach(mark => {
+      if (!studentsMap.has(mark.student)) {
+        studentsMap.set(mark.student, {
+          id: mark.student,
+          name: mark.student_name,
+          roll: mark.student_roll,
+          subjects: {},
+          totalObtained: 0,
+          totalMaxMark: 0,
+          hasFailed: false
+        });
+      }
       
-      subjectMarks.forEach(mark => {
-        // Skip if we've already processed this subject_serial
-        if (subjectsMap.has(mark.subject_serial)) return;
-        subjectsMap.set(mark.subject_serial, {
-          name: mark.combined_subject_name,
-          serial: mark.subject_serial
-        });
+      const student = studentsMap.get(mark.student);
+      if (!student.subjects[mark.subject_serial]) {
+        student.subjects[mark.subject_serial] = {
+          obtained: 0,
+          isAbsent: mark.is_absent,
+          subjectName: mark.combined_subject_name 
+        };
+      }
+      
+      student.subjects[mark.subject_serial].obtained += mark.obtained;
+      student.subjects[mark.subject_serial].isAbsent = 
+        student.subjects[mark.subject_serial].isAbsent || mark.is_absent;
+    });
 
-        // Initialize student if not exists
-        if (!studentsMap.has(mark.student)) {
-          studentsMap.set(mark.student, {
-            id: mark.student,
-            name: mark.student_name,
-            roll: mark.student_roll,
-            subjects: [],
-            totalObtained: 0,
-            totalMaxMark: 0,
-            isAbsent: false,
-            hasFailed: false
-          });
-        }
-        
-        const student = studentsMap.get(mark.student);
-        const subjectConfig = markConfigs.find(
-          config => config.subject_serial === mark.subject_serial
-        );
-        
-        if (subjectConfig) {
-          // Check if student already has this subject (shouldn't happen due to skip above)
-          const existingSubjectIndex = student.subjects.findIndex(
-            s => s.subjectSerial === mark.subject_serial
-          );
-          
-          if (existingSubjectIndex === -1) {
-            student.subjects.push({
-              id: mark.id,
-              subjectName: mark.combined_subject_name,
-              subjectSerial: mark.subject_serial,
-              obtained: mark.obtained,
-              isAbsent: mark.is_absent,
-              passMark: subjectConfig.pass_mark,
-              maxMark: subjectConfig.max_mark
-            });
-          }
-        }
-      });
+    // Calculate totals and determine pass/fail
+    const processedStudents = Array.from(studentsMap.values()).map(student => {
+      let totalObtained = 0;
+      let totalMaxMark = 0;
+      let hasFailed = false;
 
-      // Calculate totals and determine pass/fail for each student
-      const students = Array.from(studentsMap.values()).map(student => {
-        let totalObtained = 0;
-        let totalMaxMark = 0;
-        let hasFailed = false;
-        let isAbsent = false;
+      const studentSubjects = sortedSubjectGroups.map(group => {
+        const studentSubject = student.subjects[group.serial] || {
+          obtained: 0,
+          isAbsent: true,
+          subjectName: group.subjectName
+        };
 
-        // Sort subjects by serial
-        student.subjects.sort((a, b) => a.subjectSerial - b.subjectSerial);
-        
-        student.subjects.forEach(subject => {
-          if (subject.isAbsent) {
-            isAbsent = true;
-            hasFailed = true;
-          } else if (subject.obtained < subject.passMark) {
-            hasFailed = true;
-          }
-          
-          totalObtained += subject.obtained;
-          totalMaxMark += subject.maxMark;
-        });
+        const isFailed = studentSubject.isAbsent || 
+                        studentSubject.obtained < group.passMark;
 
-        const averageMark = totalMaxMark > 0 ? (totalObtained / totalMaxMark) * 100 : 0;
-        
-        // Determine grade based on average mark
-        let grade = 'Fail';
-        if (!hasFailed && !isAbsent) {
-          const matchingGrade = gradeRules.find(
-            rule => averageMark >= rule.min_mark && averageMark <= rule.max_mark
-          );
-          grade = matchingGrade ? matchingGrade.grade_name : 'Fail';
-        }
+        totalObtained += studentSubject.isAbsent ? 0 : studentSubject.obtained;
+        totalMaxMark += group.maxMark;
+
+        if (isFailed) hasFailed = true;
 
         return {
-          ...student,
-          totalObtained,
-          totalMaxMark,
-          averageMark,
-          grade,
-          isAbsent,
-          hasFailed
+          ...studentSubject,
+          serial: group.serial,
+          maxMark: group.maxMark,
+          passMark: group.passMark,
+          isFailed
         };
       });
 
-      // Sort students by roll number
-      students.sort((a, b) => a.roll - b.roll);
+      const averageMark = totalMaxMark > 0 ? (totalObtained / totalMaxMark) * 100 : 0;
+      const grade = hasFailed ? 'রাসেব' : 
+        gradeRules.find(rule => 
+          averageMark >= rule.min_mark && averageMark <= rule.max_mark
+        )?.grade_name || 'রাসেব';
 
-      // Add ranking
-      const rankedStudents = students.map((student, index) => ({
+      return {
         ...student,
-        ranking: index + 1
+        subjects: studentSubjects,
+        totalObtained,
+        totalMaxMark,
+        averageMark,
+        grade,
+        hasFailed
+      };
+    });
+
+    // Separate passed and failed students
+    const passedStudents = processedStudents.filter(s => !s.hasFailed);
+    const failedStudents = processedStudents.filter(s => s.hasFailed);
+
+    // First sort passed students by average to calculate rankings
+    const passedByAverage = [...passedStudents].sort((a, b) => b.averageMark - a.averageMark);
+    
+    // Add rankings based on average
+    const rankedPassedStudents = passedByAverage.map((student, index) => ({
+      ...student,
+      ranking: index + 1,
+      displayRank: (index + 1).toString()
+    }));
+
+    // Now sort passed students by roll number while keeping their rankings
+    const finalPassedStudents = [...rankedPassedStudents].sort((a, b) => a.roll - b.roll);
+
+    // Sort failed students by average (descending)
+    const rankedFailedStudents = failedStudents
+      .sort((a, b) => b.averageMark - a.averageMark)
+      .map(student => ({
+        ...student,
+        ranking: Infinity,
+        displayRank: 'রাসেব'
       }));
 
-      // Get unique subjects sorted by serial
-      const uniqueSubjects = Array.from(subjectsMap.values())
-        .sort((a, b) => a.serial - b.serial);
+    // Combine results
+    const allStudents = [...finalPassedStudents, ...rankedFailedStudents];
 
-      setStudentResults(rankedStudents);
-      setSubjects(uniqueSubjects);
-      setIsLoading(false);
-    } catch (err) {
-      setError('Failed to process result data');
-      setIsLoading(false);
-      console.error(err);
-    }
+    setStudentResults(allStudents);
+    setIsLoading(false);
   };
 
   const getCellStyle = (subject) => {
     if (!subject) return {};
-    if (subject.isAbsent) {
-      return { backgroundColor: '#ffcccc', color: '#cc0000' };
-    }
-    if (subject.obtained < subject.passMark) {
-      return { backgroundColor: '#ffcccc' };
+    if (subject.isAbsent || subject.isFailed) {
+      return { backgroundColor: '#ffdddd' };
     }
     return {};
   };
 
-  if (isLoading) {
-    return <div className="text-center py-8">Loading results...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center py-8 text-red-500">Error: {error}</div>;
-  }
+  if (isLoading) return <div className="text-center py-8">Loading results...</div>;
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6 text-center">Result Sheet</h1>
-      
+    <div className="p-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-gray-50 p-4 rounded-lg">
         <div>
           <label className="block mb-2 font-medium">Select Exam</label>
@@ -253,18 +251,18 @@ const ResultSheet = () => {
           </select>
         </div>
       </div>
-      
+
       {studentResults.length > 0 && (
         <div className="overflow-x-auto shadow-md rounded-lg">
           <table className="min-w-full bg-white">
             <thead className="bg-gray-100">
               <tr>
                 <th className="py-3 px-4 border font-semibold text-center">Rank</th>
-                <th className="py-3 px-4 border font-semibold text-center">Roll No.</th>
-                <th className="py-3 px-4 border font-semibold">Student Name</th>
-                {subjects.map((subject) => (
-                  <th key={subject.serial} className="py-3 px-4 border font-semibold text-center min-w-[120px]">
-                    {subject.name}
+                <th className="py-3 px-4 border font-semibold text-center">Roll</th>
+                <th className="py-3 px-4 border font-semibold">Name</th>
+                {subjectGroups.map(subject => (
+                  <th key={subject.serial} className="py-3 px-4 border font-semibold text-center">
+                    {subject.subjectName}
                   </th>
                 ))}
                 <th className="py-3 px-4 border font-semibold text-center">Total</th>
@@ -273,58 +271,37 @@ const ResultSheet = () => {
               </tr>
             </thead>
             <tbody>
-              {studentResults.map((student) => (
-                <tr key={student.id} className="hover:bg-gray-50 border-b">
-                  <td className="py-2 px-4 border text-center">{student.ranking}</td>
+              {studentResults.map((student, index) => (
+                <tr key={`${student.id}-${index}`} className="hover:bg-gray-50">
+                  <td className="py-2 px-4 border text-center">{student.displayRank}</td>
                   <td className="py-2 px-4 border text-center">{student.roll}</td>
                   <td className="py-2 px-4 border">{student.name}</td>
                   
-                  {subjects.map((subject) => {
-                    const studentSubject = student.subjects.find(
-                      s => s.subjectSerial === subject.serial
-                    );
-                    
-                    return (
-                      <td 
-                        key={`${student.id}-${subject.serial}`}
-                        className="py-2 px-4 border text-center"
-                        style={getCellStyle(studentSubject)}
-                      >
-                        {studentSubject ? (
-                          studentSubject.isAbsent ? (
-                            <span className="font-medium">Absent</span>
-                          ) : (
-                            studentSubject.obtained
-                          )
-                        ) : '-'}
-                      </td>
-                    );
-                  })}
+                  {student.subjects.map(subject => (
+                    <td 
+                      key={`${student.id}-${subject.serial}`}
+                      className="py-2 px-4 border text-center"
+                      style={getCellStyle(subject)}
+                    >
+                      {subject.isAbsent ? 'Absent' : subject.obtained}
+                    </td>
+                  ))}
                   
-                  <td className="py-2 px-4 border text-center font-medium">
-                    {student.totalObtained} / {student.totalMaxMark}
+                  <td className="py-2 px-4 border text-center">
+                    {student.totalObtained}/{student.totalMaxMark}
                   </td>
                   <td className="py-2 px-4 border text-center">
                     {student.averageMark.toFixed(2)}%
                   </td>
-                  <td 
-                    className="py-2 px-4 border text-center font-bold"
-                    style={{ 
-                      color: student.grade === 'Fail' ? '#dc2626' : '#16a34a',
-                    }}
-                  >
+                  <td className={`py-2 px-4 border text-center font-bold ${
+                    student.grade === 'রাসেব' ? 'text-red-600' : 'text-green-600'
+                  }`}>
                     {student.grade}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
-      )}
-      
-      {!isLoading && studentResults.length === 0 && selectedExam && selectedClassConfig && selectedAcademicYear && (
-        <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
-          No result data found for the selected criteria.
         </div>
       )}
     </div>
