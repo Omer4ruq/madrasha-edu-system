@@ -1101,8 +1101,8 @@ const StudentList = () => {
                       <td className="table-cell" style={{ width: "80px" }}>{student.gender || "N/A"}</td>
                       <td className="table-cell" style={{ width: "100px" }}>{student.blood_group || "N/A"}</td>
                       <td className="table-cell" style={{ width: "100px" }}>{student.nationality || "N/A"}</td>
-                      <td className="table-cell" style={{ width: "120px" }}>{student.parent?.father_name || "N/A"}</td>
-                      <td className="table-cell" style={{ width: "120px" }}>{student.parent?.mother_name || "N/A"}</td>
+                      <td className="table-cell" style={{ width: "120px" }}>{student.father_name || "N/A"}</td>
+                      <td className="table-cell" style={{ width: "120px" }}>{student.mother_name || "N/A"}</td>
                       <td className="table-cell" style={{ width: "120px" }}>{student.admission_year || "N/A"}</td>
                       <td className="table-cell" style={{ width: "120px" }}>{student.admission_date || "N/A"}</td>
                       <td className="table-cell" style={{ width: "150px" }}>
