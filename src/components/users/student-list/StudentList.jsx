@@ -592,42 +592,42 @@ const StudentList = () => {
           <table class="info-table">
             <tr>
               <td width="40%">পিতার নাম</td>
-              <td>${student.parent?.father_name || "N/A"}</td>
+              <td>${student.father_name || "N/A"}</td>
             </tr>
             <tr>
               <td>পিতার মোবাইল</td>
-              <td>${student.parent?.father_mobile_no || "N/A"}</td>
+              <td>${student.father_mobile_no || "N/A"}</td>
             </tr>
             <tr>
               <td>পিতার পেশা</td>
-              <td>${student.parent?.f_occupation || "N/A"}</td>
+              <td>${student.f_occupation || "N/A"}</td>
             </tr>
             <tr>
               <td>মাতার নাম</td>
-              <td>${student.parent?.mother_name || "N/A"}</td>
+              <td>${student.mother_name || "N/A"}</td>
             </tr>
             <tr>
               <td>মাতার মোবাইল</td>
-              <td>${student.parent?.mother_mobile_no || "N/A"}</td>
+              <td>${student.mother_mobile_no || "N/A"}</td>
             </tr>
             <tr>
               <td>মাতার পেশা</td>
-              <td>${student.parent?.m_occupation || "N/A"}</td>
+              <td>${student.m_occupation || "N/A"}</td>
             </tr>
             <tr>
               <td>অভিভাবকের নাম</td>
-              <td>${student.parent?.g_name || student.parent?.name || "N/A"}</td>
+              <td>${student.g_name || student.name || "N/A"}</td>
             </tr>
             <tr>
               <td>অভিভাবকের মোবাইল</td>
-              <td>${student.parent?.g_mobile_no || "N/A"}</td>
+              <td>${student.phoneno || "N/A"}</td>
             </tr>
             <tr>
               <td>সম্পর্ক</td>
-              <td>${student.parent?.relation === 'Father' ? 'পিতা' : 
-                   student.parent?.relation === 'Mother' ? 'মাতা' : 
-                   student.parent?.relation === 'Guardian' ? 'অভিভাবক' : 
-                   student.parent?.relation || "N/A"}</td>
+              <td>${student.relation === 'Father' ? 'পিতা' : 
+                   student.relation === 'Mother' ? 'মাতা' : 
+                   student.relation === 'Guardian' ? 'অভিভাবক' : 
+                   student.relation || "N/A"}</td>
             </tr>
           </table>
         </div>
