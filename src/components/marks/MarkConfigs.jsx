@@ -32,7 +32,9 @@ const MarkConfigs = () => {
     isLoading: subjectConfigsLoading,
     error: subjectConfigsError
   } = useGetSubjectConfigByIdQuery(selectedMainClassId, { skip: !selectedMainClassId });
-
+  console.log("selectedMainClassId",selectedMainClassId)
+console.log("subjectConfigs", subjectConfigs)
+  // FIXED: Filter mark configurations by selected class
   const {
     data: existingMarkConfigs = [],
     isLoading: markConfigsLoading
@@ -54,13 +56,18 @@ const MarkConfigs = () => {
   const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_markconfig') || false;
   const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_markconfig') || false;
 
-  // Load existing mark configurations
+  // FIXED: Filter existing mark configurations by selected class and subject configs
   useEffect(() => {
     if (existingMarkConfigs && selectedMainClassId && markTypes.length > 0 && subjectConfigs.length > 0) {
       const configs = {};
       
+      // Filter mark configurations for the selected class only
+      const classMarkConfigs = existingMarkConfigs.filter(
+        config => config.class_id === parseInt(selectedMainClassId)
+      );
+      
       subjectConfigs.forEach(subjectConfig => {
-        const subjectMarkConfigs = existingMarkConfigs.filter(
+        const subjectMarkConfigs = classMarkConfigs.filter(
           config => config.subject_conf === subjectConfig.id
         );
         
@@ -93,7 +100,7 @@ const MarkConfigs = () => {
   const handleClassChange = (classId) => {
     setSelectedClassId(classId?.student_class?.id);
     setSelectedMainClassId(classId?.id);
-    setMarkConfigs({});
+    setMarkConfigs({}); // Reset configurations when class changes
   };
 
   const handleInputChange = (subjectConfId, markTypeId, field, value) => {
@@ -555,16 +562,6 @@ const MarkConfigs = () => {
                           <span>মার্ক বণ্টন অগ্রগতি</span>
                           <span>{totalDistributed}/{subjectConfig.max_mark}</span>
                         </div>
-                        {/* <div className="w-full bg-white/20 rounded-full h-2 mb-2">
-                          <div
-                            className={`h-2 rounded-full transition-all duration-300 ${
-                              validationStatus.status === 'over' ? 'bg-red-500' :
-                              validationStatus.status === 'equal' ? 'bg-green-500' :
-                              'bg-[#DB9E30]'
-                            }`}
-                            style={{ width: `${Math.min((totalDistributed / subjectConfig.max_mark) * 100, 100)}%` }}
-                          ></div>
-                        </div> */}
                         {validationStatus.message && (
                           <p className={`text-xs mt-1 font-medium ${validationStatus.color}`}>
                             {validationStatus.message}

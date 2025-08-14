@@ -27,7 +27,7 @@ export const subjectConfigsApi = createApi({
 
     // GET: Single subject config by ID
     getSubjectConfigById: builder.query({
-      query: (id) => `/subject-configs/?class_id${id}/`,
+      query: (id) => `/subject-configs/?class_id=${id}`,
       providesTags: ['SubjectConfigs'],
     }),
     getSubjectConfigBySubject: builder.query({
