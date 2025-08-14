@@ -1,5 +1,4 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-
 import BASE_URL from '../../../../utilitis/apiConfig';
 
 const getToken = () => localStorage.getItem('token');
@@ -17,7 +16,7 @@ export const markConfigsApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ['MarkConfigs'],
+  tagTypes: ['MarkConfigs', 'FilteredMarkConfigs'],
   endpoints: (builder) => ({
     // GET: Fetch all mark configs
     getMarkConfigs: builder.query({
@@ -25,21 +24,30 @@ export const markConfigsApi = createApi({
       providesTags: ['MarkConfigs'],
     }),
 
-    // GET: Fetch a single mark config by ID
+    // GET: Fetch a single mark config by ID (path param)
     getMarkConfigById: builder.query({
       query: (id) => `/mark-configs/${id}/`,
       providesTags: ['MarkConfigs'],
     }),
- getMarkConfigByClass: builder.query({
+
+    // GET: Fetch by class_id (query param)
+    getMarkConfigByClass: builder.query({
       query: ({ class_id }) => `/mark-configs/?class_id=${class_id}`,
       providesTags: ['MarkConfigs'],
     }),
 
-    // GET: Fetch by subject ID
+    // GET: Fetch by subject_id (query param)
     getMarkConfigBySubject: builder.query({
       query: (subjectId) => `/mark-configs/?subject_id=${subjectId}`,
       providesTags: ['MarkConfigs'],
     }),
+
+    // GET: Filter by ID (query param)
+    getMarkConfigByFilterId: builder.query({
+      query: (id) => `/mark-configs/?id=${id}`,
+      providesTags: ['MarkConfigs'],
+    }),
+
     // POST: Create a new mark config
     createMarkConfig: builder.mutation({
       query: (data) => ({
@@ -78,23 +86,25 @@ export const markConfigsApi = createApi({
       }),
       invalidatesTags: ['MarkConfigs'],
     }),
+
+    // GET: Filter by class_id and subject_conf
     getFilteredMarkConfigs: builder.query({
       query: ({ class_id, subject_conf }) =>
-        `/mark-configs/?class_id=${class_id}&subject_conf=${subject_conf}`,
+        `/mark-configs/?class_id=${class_id}&subject_conf=${subject_conf ? subject_conf : ''}`,
       providesTags: ['FilteredMarkConfigs'],
     }),
-
   }),
 });
 
 export const {
   useGetMarkConfigsQuery,
   useGetMarkConfigByIdQuery,
+  useGetMarkConfigByClassQuery,
+  useGetMarkConfigBySubjectQuery,
+  useGetMarkConfigByFilterIdQuery,
   useCreateMarkConfigMutation,
   useUpdateMarkConfigMutation,
   usePatchMarkConfigMutation,
   useDeleteMarkConfigMutation,
   useGetFilteredMarkConfigsQuery,
-  useGetMarkConfigByClassQuery,
-  useGetMarkConfigBySubjectQuery,
 } = markConfigsApi;

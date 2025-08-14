@@ -1,7 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import BASE_URL from '../../../../utilitis/apiConfig';
 
-
 const getToken = () => {
   return localStorage.getItem('token');
 };
@@ -30,6 +29,13 @@ export const subjectMarksApi = createApi({
     // GET: Fetch a single subject mark by ID
     getSubjectMarkById: builder.query({
       query: (id) => `/subject-marks/${id}/`,
+      providesTags: ['SubjectMarks'],
+    }),
+
+    // GET: Filter by multiple query params
+    getFilteredSubjectMarks: builder.query({
+      query: ({ exam_id, student_id, profile_class_id, class_id, academic_year }) => 
+        `/subject-marks/?exam_id=${exam_id ? exam_id : ''}&student_id=${student_id ? student_id : ""}&profile_class_id=${profile_class_id ? profile_class_id : ""}&class_id=${class_id ? class_id : ""}&academic_year=${academic_year ? academic_year : ''}`,
       providesTags: ['SubjectMarks'],
     }),
 
@@ -78,6 +84,7 @@ export const subjectMarksApi = createApi({
 export const {
   useGetSubjectMarksQuery,
   useGetSubjectMarkByIdQuery,
+  useGetFilteredSubjectMarksQuery,
   useCreateSubjectMarkMutation,
   useUpdateSubjectMarkMutation,
   usePatchSubjectMarkMutation,
