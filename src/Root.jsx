@@ -81,6 +81,7 @@ import UserProfile from "./components/user-profile/UserProfile";
 import AddNotice from "./components/notice/AddNotice";
 import SubjectConfigs from "./components/SubjectManagement/SubjectConfigs";
 import MarkConfigs from "./components/marks/MarkConfigs";
+import LiabilityHead from "./components/accounts/Liability-head/LiabilityHead";
 
 
 function Root() {
@@ -331,6 +332,10 @@ function Root() {
                     {
                       path: "fee-heads",
                       element: <AddFeeHead />,
+                    },
+                       {
+                      path: "liability-heads",
+                      element: <LiabilityHead />,
                     },
                   ],
                 },

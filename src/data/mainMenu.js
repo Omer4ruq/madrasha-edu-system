@@ -297,6 +297,11 @@ const mainMenu = [
             title: "ফিসের ধরন",
             link: "/accounts/settings/fee-heads",
           },
+            {
+            id: "07/01/05",
+            title: "লায়াবিলিটিস ধরন",
+            link: "/accounts/settings/liability-heads",
+          },
         ],
       },
       {

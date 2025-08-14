@@ -72,6 +72,7 @@ import { gradeRuleApi } from "./features/api/result/gradeRuleApi";
 import { noticeApi } from "./features/api/notice/noticeApi";
 import { subjectConfigsApi } from "./features/api/subject-assign/subjectConfigsApi";
 import { markConfigsApi } from "./features/api/marks/markConfigsApi";
+import { liabilityHeadsApi } from "./features/api/liability-heads/liabilityHeadsApi";
 
 
 export const store = configureStore({
@@ -153,6 +154,7 @@ export const store = configureStore({
     [noticeApi.reducerPath]: noticeApi.reducer,
     [subjectConfigsApi.reducerPath]: subjectConfigsApi.reducer,
     [markConfigsApi.reducerPath]: markConfigsApi.reducer,
+    [liabilityHeadsApi.reducerPath]: liabilityHeadsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -227,6 +229,7 @@ export const store = configureStore({
       .concat(noticeApi.middleware)
       .concat(subjectConfigsApi.middleware)
       .concat(markConfigsApi.middleware)
+      .concat(liabilityHeadsApi.middleware)
 });
 
 // Enable refetchOnFocus/refetchOnReconnect behaviors
