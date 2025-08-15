@@ -351,15 +351,40 @@ const mainMenu = [
         children: [
           {
             id: "07/10/01",
-            title: "ব্যয়ের ধরন",
+            title: "ব্যয়ের লিস্ট",
             link: "/accounts/expense-items-list",
           },
           {
             id: "07/10/02",
-            title: "আয়ের ধরন",
+            title: "আয়ের লিস্ট",
             link: "/accounts/income-items-list",
           },
+             {
+            id: "07/10/03",
+            title: "উত্তলন লিস্ট",
+            link: "/accounts/withdraws-list",
+          },
+             {
+            id: "07/10/04",
+            title: "লায়াবিলিটিস লিস্ট",
+            link: "/accounts/liability-list",
+          },
         ],
+      },
+       {
+        id: "07/11",
+        title: "পার্টিস",
+        link: "/accounts/parties",
+      },
+       {
+        id: "07/12",
+        title: "উত্তলন",
+        link: "/accounts/withdraws",
+      },
+             {
+        id: "07/13",
+        title: "লায়াবিলিটি এন্ট্রিস",
+        link: "/accounts/liability-entries",
       },
     ],
   },

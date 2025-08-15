@@ -1,31 +1,37 @@
 import React, { useState } from 'react';
-import {  useGetWithdrawsQuery,
-  useGetWithdrawByIdQuery,
-  useCreateWithdrawMutation,
-  useUpdateWithdrawMutation,
-  useDeleteWithdrawMutation } from '../../redux/features/api/withdraw/withdrawsApi';
-import { useGetFundsQuery } from '../../redux/features/api/funds/fundsApi';
-import WithdrawTable from './WithdrawTable'; // Import the new table component
+import {   useGetLiabilityEntriesQuery,
+  useGetLiabilityEntryByIdQuery,
+  useCreateLiabilityEntryMutation,
+  useUpdateLiabilityEntryMutation,
+  useDeleteLiabilityEntryMutation } from '../../../redux/features/api/liability/liabilityEntriesApi';
+import { useGetLiabilityHeadsQuery } from '../../../redux/features/api/liability/liabilityHeadsApi';
+import { useGetFundsQuery } from '../../../redux/features/api/funds/fundsApi';
+import { useGetPartiesQuery } from '../../../redux/features/api/parties/partiesApi';
+import LiabilityTable from './LiabilityTable'; // Import the new table component
 
-const Withdraw = () => {
+const LiabilityEntries = () => {
   // Form state
   const [formData, setFormData] = useState({
+    head: '',
     fund: '',
+    party: '',
     date: new Date().toISOString().split('T')[0], // Today's date
     amount: '',
-    method: '',
+    movement: 'INCREASE',
     note: ''
   });
 
   // Edit state
-  const [editingWithdraw, setEditingWithdraw] = useState(null);
+  const [editingEntry, setEditingEntry] = useState(null);
 
   // RTK Query hooks
+  const { data: liabilityHeads = [], isLoading: isLoadingHeads } = useGetLiabilityHeadsQuery();
   const { data: funds = [], isLoading: isLoadingFunds } = useGetFundsQuery();
-  const { data: withdraws = [], isLoading: isLoadingWithdraws, error: fetchError, refetch } = useGetWithdrawsQuery();
-  const [createWithdraw, { isLoading: isCreating }] = useCreateWithdrawMutation();
-  const [updateWithdraw, { isLoading: isUpdating }] = useUpdateWithdrawMutation();
-  const [deleteWithdraw, { isLoading: isDeleting }] = useDeleteWithdrawMutation();
+  const { data: parties = [], isLoading: isLoadingParties } = useGetPartiesQuery();
+  const { data: liabilityEntries = [], isLoading: isLoadingEntries, error: fetchError, refetch } = useGetLiabilityEntriesQuery();
+  const [createLiabilityEntry, { isLoading: isCreating }] = useCreateLiabilityEntryMutation();
+  const [updateLiabilityEntry, { isLoading: isUpdating }] = useUpdateLiabilityEntryMutation();
+  const [deleteLiabilityEntry, { isLoading: isDeleting }] = useDeleteLiabilityEntryMutation();
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -41,108 +47,145 @@ const Withdraw = () => {
     e.preventDefault();
     
     // Basic validation
-    if (!formData.fund || !formData.date || !formData.amount || !formData.method) {
+    if (!formData.head || !formData.fund || !formData.party || !formData.date || !formData.amount || !formData.movement) {
       alert('Please fill in all required fields');
       return;
     }
 
     // Prepare data for submission
     const submitData = {
+      head: parseInt(formData.head),
       fund: parseInt(formData.fund),
+      party: parseInt(formData.party),
       date: formData.date,
-      amount: parseFloat(formData.amount),
-      method: formData.method,
+      amount: formData.amount,
+      movement: formData.movement,
       note: formData.note || ''
     };
 
     try {
-      if (editingWithdraw) {
-        // Update existing withdraw
-        await updateWithdraw({ id: editingWithdraw.id, ...submitData }).unwrap();
-        setEditingWithdraw(null);
-        alert('Withdraw updated successfully!');
+      if (editingEntry) {
+        // Update existing entry
+        await updateLiabilityEntry({ id: editingEntry.id, ...submitData }).unwrap();
+        setEditingEntry(null);
+        alert('Liability entry updated successfully!');
       } else {
-        // Create new withdraw
-        await createWithdraw(submitData).unwrap();
-        alert('Withdraw created successfully!');
+        // Create new entry
+        await createLiabilityEntry(submitData).unwrap();
+        alert('Liability entry created successfully!');
       }
       
       // Reset form
       setFormData({
+        head: '',
         fund: '',
+        party: '',
         date: new Date().toISOString().split('T')[0],
         amount: '',
-        method: '',
+        movement: 'INCREASE',
         note: ''
       });
       
       refetch();
     } catch (err) {
-      console.error('Failed to save withdraw:', err);
-      alert('Failed to save withdraw. Please try again.');
+      console.error('Failed to save liability entry:', err);
+      alert('Failed to save liability entry. Please try again.');
     }
   };
 
-  // Start editing a withdraw
-  const handleEdit = (withdraw) => {
-    setEditingWithdraw(withdraw);
+  // Start editing an entry
+  const handleEdit = (entry) => {
+    setEditingEntry(entry);
     setFormData({
-      fund: withdraw.fund?.toString() || '',
-      date: withdraw.date || '',
-      amount: withdraw.amount?.toString() || '',
-      method: withdraw.method || '',
-      note: withdraw.note || ''
+      head: entry.head?.toString() || '',
+      fund: entry.fund?.toString() || '',
+      party: entry.party?.toString() || '',
+      date: entry.date || '',
+      amount: entry.amount?.toString() || '',
+      movement: entry.movement || 'INCREASE',
+      note: entry.note || ''
     });
   };
 
   // Cancel editing
   const handleCancelEdit = () => {
-    setEditingWithdraw(null);
+    setEditingEntry(null);
     setFormData({
+      head: '',
       fund: '',
+      party: '',
       date: new Date().toISOString().split('T')[0],
       amount: '',
-      method: '',
+      movement: 'INCREASE',
       note: ''
     });
   };
 
   // Execute delete (called from table component)
-  const handleDelete = async (withdrawId) => {
+  const handleDelete = async (entryId) => {
     try {
-      await deleteWithdraw(withdrawId).unwrap();
-      alert('Withdraw deleted successfully!');
+      await deleteLiabilityEntry(entryId).unwrap();
+      alert('Liability entry deleted successfully!');
       refetch();
     } catch (err) {
-      console.error('Failed to delete withdraw:', err);
-      alert('Failed to delete withdraw. Please try again.');
+      console.error('Failed to delete liability entry:', err);
+      alert('Failed to delete liability entry. Please try again.');
     }
   };
 
   // Reset form
   const handleReset = () => {
     setFormData({
+      head: '',
       fund: '',
+      party: '',
       date: new Date().toISOString().split('T')[0],
       amount: '',
-      method: '',
+      movement: 'INCREASE',
       note: ''
     });
-    setEditingWithdraw(null);
+    setEditingEntry(null);
   };
 
   const isLoading = isCreating || isUpdating || isDeleting;
+  const isFormLoading = isLoadingHeads || isLoadingFunds || isLoadingParties;
 
   return (
     <div className="max-w-6xl mx-auto mt-8 p-6 space-y-8">
       {/* Form Section */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">
-          {editingWithdraw ? 'Edit Withdraw' : 'Create New Withdraw'}
+          {editingEntry ? 'Edit Liability Entry' : 'Create New Liability Entry'}
         </h2>
         
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Liability Head Selection */}
+            <div>
+              <label htmlFor="head" className="block text-sm font-medium text-gray-700 mb-1">
+                Liability Head *
+              </label>
+              <select
+                id="head"
+                name="head"
+                value={formData.head}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                disabled={isLoading || isLoadingHeads}
+                required
+              >
+                <option value="">Select liability head</option>
+                {liabilityHeads.map((head) => (
+                  <option key={head.id} value={head.id}>
+                    {head.name || `Head ${head.id}`}
+                  </option>
+                ))}
+              </select>
+              {isLoadingHeads && (
+                <p className="text-xs text-gray-500 mt-1">Loading liability heads...</p>
+              )}
+            </div>
+
             {/* Fund Selection */}
             <div>
               <label htmlFor="fund" className="block text-sm font-medium text-gray-700 mb-1">
@@ -157,7 +200,7 @@ const Withdraw = () => {
                 disabled={isLoading || isLoadingFunds}
                 required
               >
-                <option value="">Select a fund</option>
+                <option value="">Select fund</option>
                 {funds.map((fund) => (
                   <option key={fund.id} value={fund.id}>
                     {fund.name || `Fund ${fund.id}`}
@@ -166,6 +209,32 @@ const Withdraw = () => {
               </select>
               {isLoadingFunds && (
                 <p className="text-xs text-gray-500 mt-1">Loading funds...</p>
+              )}
+            </div>
+
+            {/* Party Selection */}
+            <div>
+              <label htmlFor="party" className="block text-sm font-medium text-gray-700 mb-1">
+                Party *
+              </label>
+              <select
+                id="party"
+                name="party"
+                value={formData.party}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                disabled={isLoading || isLoadingParties}
+                required
+              >
+                <option value="">Select party</option>
+                {parties.map((party) => (
+                  <option key={party.id} value={party.id}>
+                    {party.name || `Party ${party.id}`}
+                  </option>
+                ))}
+              </select>
+              {isLoadingParties && (
+                <p className="text-xs text-gray-500 mt-1">Loading parties...</p>
               )}
             </div>
 
@@ -206,32 +275,27 @@ const Withdraw = () => {
               />
             </div>
 
-            {/* Method */}
+            {/* Movement */}
             <div>
-              <label htmlFor="method" className="block text-sm font-medium text-gray-700 mb-1">
-                Method *
+              <label htmlFor="movement" className="block text-sm font-medium text-gray-700 mb-1">
+                Movement *
               </label>
               <select
-                id="method"
-                name="method"
-                value={formData.method}
+                id="movement"
+                name="movement"
+                value={formData.movement}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 disabled={isLoading}
                 required
               >
-                <option value="">Select method</option>
-                <option value="cash">Cash</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="check">Check</option>
-                <option value="online">Online Payment</option>
-                <option value="mobile_banking">Mobile Banking</option>
-                <option value="other">Other</option>
+                <option value="INCREASE">INCREASE</option>
+                <option value="DECREASE">DECREASE</option>
               </select>
             </div>
 
             {/* Note */}
-            <div className="md:col-span-2">
+            <div className="lg:col-span-3">
               <label htmlFor="note" className="block text-sm font-medium text-gray-700 mb-1">
                 Note
               </label>
@@ -248,13 +312,20 @@ const Withdraw = () => {
             </div>
           </div>
 
+          {/* Form Loading State */}
+          {isFormLoading && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-700">Loading form data...</p>
+            </div>
+          )}
+
           {/* Buttons */}
           <div className="flex space-x-3 pt-6">
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || isFormLoading}
               className={`flex-1 py-2 px-4 rounded-md text-white font-medium ${
-                isLoading
+                isLoading || isFormLoading
                   ? 'bg-gray-400 cursor-not-allowed'
                   : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
               } transition duration-200`}
@@ -265,14 +336,14 @@ const Withdraw = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  {editingWithdraw ? 'Updating...' : 'Creating...'}
+                  {editingEntry ? 'Updating...' : 'Creating...'}
                 </span>
               ) : (
-                editingWithdraw ? 'Update Withdraw' : 'Create Withdraw'
+                editingEntry ? 'Update Entry' : 'Create Entry'
               )}
             </button>
             
-            {editingWithdraw && (
+            {editingEntry && (
               <button
                 type="button"
                 onClick={handleCancelEdit}
@@ -295,11 +366,13 @@ const Withdraw = () => {
         </form>
       </div>
 
-      {/* Withdraw Table Component */}
-      <WithdrawTable
-        withdraws={withdraws}
+      {/* Liability Table Component */}
+      <LiabilityTable
+        liabilityEntries={liabilityEntries}
+        liabilityHeads={liabilityHeads}
         funds={funds}
-        isLoading={isLoadingWithdraws}
+        parties={parties}
+        isLoading={isLoadingEntries}
         error={fetchError}
         onEdit={handleEdit}
         onDelete={handleDelete}
@@ -311,4 +384,4 @@ const Withdraw = () => {
   );
 };
 
-export default Withdraw;
+export default LiabilityEntries;

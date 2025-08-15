@@ -72,7 +72,10 @@ import { gradeRuleApi } from "./features/api/result/gradeRuleApi";
 import { noticeApi } from "./features/api/notice/noticeApi";
 import { subjectConfigsApi } from "./features/api/subject-assign/subjectConfigsApi";
 import { markConfigsApi } from "./features/api/marks/markConfigsApi";
-import { liabilityHeadsApi } from "./features/api/liability-heads/liabilityHeadsApi";
+import { liabilityHeadsApi } from "./features/api/liability/liabilityHeadsApi";
+import { partiesApi } from "./features/api/parties/partiesApi";
+import { withdrawsApi } from "./features/api/withdraw/withdrawsApi";
+import { liabilityEntriesApi } from "./features/api/liability/liabilityEntriesApi";
 
 
 export const store = configureStore({
@@ -155,6 +158,9 @@ export const store = configureStore({
     [subjectConfigsApi.reducerPath]: subjectConfigsApi.reducer,
     [markConfigsApi.reducerPath]: markConfigsApi.reducer,
     [liabilityHeadsApi.reducerPath]: liabilityHeadsApi.reducer,
+    [liabilityEntriesApi.reducerPath]: liabilityEntriesApi.reducer,
+    [partiesApi.reducerPath]: partiesApi.reducer,
+    [withdrawsApi.reducerPath]: withdrawsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -230,6 +236,9 @@ export const store = configureStore({
       .concat(subjectConfigsApi.middleware)
       .concat(markConfigsApi.middleware)
       .concat(liabilityHeadsApi.middleware)
+      .concat(liabilityEntriesApi.middleware)
+      .concat(partiesApi.middleware)
+      .concat(withdrawsApi.middleware)
 });
 
 // Enable refetchOnFocus/refetchOnReconnect behaviors
