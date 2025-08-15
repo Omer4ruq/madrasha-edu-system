@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import { Toaster, toast } from "react-hot-toast";
 import { FaSpinner, FaDownload } from "react-icons/fa";
 import Select from "react-select";
-import { useGetExamApiQuery } from "../../redux/features/api/exam/examApi";
-import { useGetclassConfigApiQuery } from "../../redux/features/api/class/classConfigApi";
-import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
-import { useGetStudentActiveByClassQuery } from "../../redux/features/api/student/studentActiveApi";
-import { useGetSubjectMarksQuery } from "../../redux/features/api/marks/subjectMarksApi";
-import { useGetSubjectMarkConfigsByClassQuery } from "../../redux/features/api/marks/subjectMarkConfigsApi";
-import { useGetGradeRulesQuery } from "../../redux/features/api/result/gradeRuleApi";
+import { useGetFilteredSubjectMarksQuery } from '../../redux/features/api/marks/subjectMarksApi';
+import { useGetFilteredMarkConfigsQuery } from '../../redux/features/api/marks/markConfigsApi';
+import { useGetExamApiQuery } from '../../redux/features/api/exam/examApi';
+import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classConfigApi';
+import { useGetAcademicYearApiQuery } from '../../redux/features/api/academic-year/academicYearApi';
+import { useGetGradeRulesQuery } from '../../redux/features/api/result/gradeRuleApi';
 import { useGetInstituteLatestQuery } from "../../redux/features/api/institute/instituteLatestApi";
 import selectStyles from "../../utilitis/selectStyles";
 
@@ -195,75 +194,53 @@ const customStyles = `
 `;
 
 const ResultSheet = () => {
-  const [selectedExam, setSelectedExam] = useState("");
-  const [selectedClassConfig, setSelectedClassConfig] = useState("");
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState("");
+  // State for selected values
+  const [selectedExam, setSelectedExam] = useState('');
+  const [selectedClassConfig, setSelectedClassConfig] = useState('');
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
+  
+  // State for processed data
+  const [studentResults, setStudentResults] = useState([]);
+  const [subjectGroups, setSubjectGroups] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [grades, setGrades] = useState([]);
-  const [resultData, setResultData] = useState([]);
   const [statistics, setStatistics] = useState({
     totalStudents: 0,
     gradeDistribution: {},
     failedSubjects: {},
   });
 
-  // Fetch data from APIs
-  const {
-    data: instituteData,
-    isLoading: isInstituteLoading,
-    error: instituteError,
-  } = useGetInstituteLatestQuery();
-  const {
-    data: exams,
-    isLoading: examsLoading,
-    error: examsError,
-  } = useGetExamApiQuery();
-  const {
-    data: classConfigs,
-    isLoading: classConfigsLoading,
-    error: classConfigsError,
-  } = useGetclassConfigApiQuery();
-  const {
-    data: academicYears,
-    isLoading: academicYearsLoading,
-    error: academicYearsError,
-  } = useGetAcademicYearApiQuery();
-  const {
-    data: students,
-    isLoading: studentsLoading,
-    error: studentsError,
-  } = useGetStudentActiveByClassQuery(selectedClassConfig, {
-    skip: !selectedClassConfig,
-  });
-  const {
-    data: subjectMarks,
-    isLoading: subjectMarksLoading,
-    error: subjectMarksError,
-  } = useGetSubjectMarksQuery(
+  // Fetch all necessary data
+  const { data: exams = [] } = useGetExamApiQuery();
+  const { data: classConfigs = [] } = useGetclassConfigApiQuery();
+  const { data: academicYears = [] } = useGetAcademicYearApiQuery();
+  const { data: gradeRules = [], isLoading: gradesLoading, error: gradesError } = useGetGradeRulesQuery();
+  const { data: instituteData, isLoading: isInstituteLoading, error: instituteError } = useGetInstituteLatestQuery();
+
+  // Fetch filtered subject marks
+  const { data: subjectMarks = [], isLoading: isLoadingMarks, error: subjectMarksError } = useGetFilteredSubjectMarksQuery(
     {
-      exam: selectedExam,
-      classConfig: selectedClassConfig,
-      academicYear: selectedAcademicYear,
+      exam_id: selectedExam,
+      profile_class_id: selectedClassConfig,
+      academic_year: selectedAcademicYear
     },
     { skip: !selectedExam || !selectedClassConfig || !selectedAcademicYear }
   );
-  const {
-    data: subjectConfigs,
-    isLoading: subjectConfigsLoading,
-    error: subjectConfigsError,
-  } = useGetSubjectMarkConfigsByClassQuery(selectedClassConfig, {
-    skip: !selectedClassConfig,
-  });
-  const {
-    data: gradesData,
-    isLoading: gradesLoading,
-    error: gradesError,
-  } = useGetGradeRulesQuery();
+
+  // Find selected class config
+  const currentClassConfig = classConfigs.find(config => config.id === parseInt(selectedClassConfig));
+
+  // Fetch mark configs
+  const { data: markConfigs = [], isLoading: isLoadingConfigs, error: subjectConfigsError } = useGetFilteredMarkConfigsQuery(
+    { class_id: currentClassConfig?.class_id },
+    { skip: !currentClassConfig }
+  );
 
   // Load grades from gradeRuleApi
   useEffect(() => {
-    if (gradesData) {
+    if (gradeRules) {
       setGrades(
-        gradesData.map((g) => ({
+        gradeRules.map((g) => ({
           id: g.id,
           grade: g.grade_name,
           min: g.min_mark,
@@ -274,122 +251,189 @@ const ResultSheet = () => {
     } else if (gradesError) {
       toast.error("গ্রেড তালিকা লোড করতে ব্যর্থ হয়েছে!");
     }
-  }, [gradesData, gradesError]);
+  }, [gradeRules, gradesError]);
 
-  // Calculate results when data changes
+  // Process data when all requirements are met
   useEffect(() => {
-    if (
-      subjectMarks &&
-      students &&
-      subjectConfigs &&
-      selectedExam &&
-      selectedClassConfig &&
-      selectedAcademicYear &&
-      grades.length > 0
-    ) {
-      const filteredMarks = subjectMarks.filter(
-        (mark) =>
-          mark.exam === Number(selectedExam) &&
-          mark.class_name ===
-            classConfigs.find((c) => c.id === Number(selectedClassConfig))
-              ?.class_name &&
-          mark.academic_year === Number(selectedAcademicYear)
-      );
+    if (subjectMarks.length > 0 && markConfigs.length > 0 && !isLoadingMarks && !isLoadingConfigs) {
+      processResultData();
+    }
+  }, [subjectMarks, markConfigs, isLoadingMarks, isLoadingConfigs]);
 
-      const result = students.map((student) => {
-        const studentMarks = filteredMarks.filter(
-          (mark) => mark.student === student.id
-        );
-        let totalObtained = 0;
-        let totalMaxMarks = 0;
-        let hasCompulsoryFail = false;
-        const subjectResults = subjectConfigs.map((config) => {
-          const mark = studentMarks.find(
-            (m) =>
-              m.mark_conf === config.mark_configs[0]?.id ||
-              m.mark_conf === config.mark_configs[1]?.id
-          );
-          const obtained = mark ? mark.obtained : 0;
-          const isAbsent = mark ? mark.is_absent : false;
-          const maxMark = config.mark_configs.reduce(
-            (sum, mc) => sum + mc.max_mark,
-            0
-          );
-          const passMark = config.mark_configs.reduce(
-            (sum, mc) => sum + mc.pass_mark,
-            0
-          );
-          const isFailed = !isAbsent && obtained < passMark;
-          if (isFailed && config.subject_type === "COMPULSORY") {
-            hasCompulsoryFail = true;
-          }
-          totalObtained += obtained;
-          totalMaxMarks += maxMark;
-          return {
-            subject: config.subject_name,
-            obtained,
-            maxMark,
-            isFailed,
-            isAbsent,
-            subjectType: config.subject_type,
-          };
+  const processResultData = () => {
+    setIsLoading(true);
+    
+    // Create mapping of subject_serial to combined_subject_name
+    const subjectNameMap = {};
+    subjectMarks.forEach(mark => {
+      if (!subjectNameMap[mark.subject_serial] && mark.combined_subject_name) {
+        subjectNameMap[mark.subject_serial] = mark.combined_subject_name;
+      }
+    });
+
+    // 1. Group mark configs by subject_serial to get sum of max_mark and pass_mark
+    const subjectConfigGroups = {};
+    markConfigs.forEach(config => {
+      if (!subjectConfigGroups[config.subject_serial]) {
+        subjectConfigGroups[config.subject_serial] = {
+          serial: config.subject_serial,
+          maxMark: 0,
+          passMark: 0,
+          subjectName: subjectNameMap[config.subject_serial] || config.subject_name
+        };
+      }
+      subjectConfigGroups[config.subject_serial].maxMark += config.max_mark;
+      subjectConfigGroups[config.subject_serial].passMark += config.pass_mark;
+    });
+
+    // Convert to array and sort by serial
+    const sortedSubjectGroups = Object.values(subjectConfigGroups)
+      .sort((a, b) => a.serial - b.serial);
+    setSubjectGroups(sortedSubjectGroups);
+
+    // 2. Process student data with summed marks
+    const studentsMap = new Map();
+    
+    subjectMarks.forEach(mark => {
+      if (!studentsMap.has(mark.student)) {
+        studentsMap.set(mark.student, {
+          id: mark.student,
+          name: mark.student_name,
+          roll: mark.student_roll,
+          subjects: {},
+          totalObtained: 0,
+          totalMaxMark: 0,
+          hasFailed: false
         });
+      }
+      
+      const student = studentsMap.get(mark.student);
+      if (!student.subjects[mark.subject_serial]) {
+        student.subjects[mark.subject_serial] = {
+          obtained: 0,
+          isAbsent: mark.is_absent,
+          subjectName: mark.combined_subject_name 
+        };
+      }
+      
+      student.subjects[mark.subject_serial].obtained += mark.obtained;
+      student.subjects[mark.subject_serial].isAbsent = 
+        student.subjects[mark.subject_serial].isAbsent || mark.is_absent;
+    });
 
-        const averageMarks =
-          totalMaxMarks > 0 ? (totalObtained / totalMaxMarks) * 100 : 0;
-        const grade = hasCompulsoryFail
-          ? "ফেল"
-          : grades.find((g) => averageMarks >= g.min && averageMarks <= g.max)
-              ?.grade || "N/A";
+    // Calculate totals and determine pass/fail
+    const processedStudents = Array.from(studentsMap.values()).map(student => {
+      let totalObtained = 0;
+      let totalMaxMark = 0;
+      let hasFailed = false;
+
+      const studentSubjects = sortedSubjectGroups.map(group => {
+        const studentSubject = student.subjects[group.serial] || {
+          obtained: 0,
+          isAbsent: true,
+          subjectName: group.subjectName
+        };
+
+        const isFailed = studentSubject.isAbsent || 
+                        studentSubject.obtained < group.passMark;
+
+        totalObtained += studentSubject.isAbsent ? 0 : studentSubject.obtained;
+        totalMaxMark += group.maxMark;
+
+        if (isFailed) hasFailed = true;
+
         return {
-          studentId: student.id,
-          studentName: student.name,
-          rollNo: student.roll_no,
-          subjects: subjectResults,
-          totalObtained,
-          totalMaxMarks,
-          averageMarks: averageMarks.toFixed(2),
-          grade,
+          ...studentSubject,
+          serial: group.serial,
+          maxMark: group.maxMark,
+          passMark: group.passMark,
+          isFailed
         };
       });
 
-      const rankedResult = result
-        .sort((a, b) => b.averageMarks - a.averageMarks)
-        .map((res, index) => ({ ...res, rank: index + 1 }));
+      const averageMark = totalMaxMark > 0 ? (totalObtained / totalMaxMark) * 100 : 0;
+      const grade = hasFailed ? 'রাসেব' : 
+        gradeRules.find(rule => 
+          averageMark >= rule.min_mark && averageMark <= rule.max_mark
+        )?.grade_name || 'রাসেব';
 
-      const totalStudents = rankedResult.length;
-      const gradeDistribution = rankedResult.reduce((acc, res) => {
-        acc[res.grade] = (acc[res.grade] || 0) + 1;
-        return acc;
-      }, {});
-      const failedSubjects = rankedResult.reduce((acc, res) => {
-        res.subjects.forEach((sub) => {
-          if (sub.isFailed) {
-            acc[sub.subject] = (acc[sub.subject] || 0) + 1;
-          }
-        });
-        return acc;
-      }, {});
+      return {
+        ...student,
+        subjects: studentSubjects,
+        totalObtained,
+        totalMaxMark,
+        averageMark,
+        grade,
+        hasFailed
+      };
+    });
 
-      setResultData(rankedResult);
-      setStatistics({ totalStudents, gradeDistribution, failedSubjects });
-    } else {
-      setResultData([]);
-      setStatistics({
-        totalStudents: 0,
-        gradeDistribution: {},
-        failedSubjects: {},
+    // Separate passed and failed students
+    const passedStudents = processedStudents.filter(s => !s.hasFailed);
+    const failedStudents = processedStudents.filter(s => s.hasFailed);
+
+    // First sort passed students by average to calculate rankings
+    const passedByAverage = [...passedStudents].sort((a, b) => b.averageMark - a.averageMark);
+    
+    // Add rankings based on average
+    const rankedPassedStudents = passedByAverage.map((student, index) => ({
+      ...student,
+      ranking: index + 1,
+      displayRank: (index + 1).toString()
+    }));
+
+    // Now sort passed students by roll number while keeping their rankings
+    const finalPassedStudents = [...rankedPassedStudents].sort((a, b) => a.roll - b.roll);
+
+    // Sort failed students by average (descending)
+    const rankedFailedStudents = failedStudents
+      .sort((a, b) => b.averageMark - a.averageMark)
+      .map(student => ({
+        ...student,
+        ranking: Infinity,
+        displayRank: 'রাসেব'
+      }));
+
+    // Combine results
+    const allStudents = [...finalPassedStudents, ...rankedFailedStudents];
+
+    // Calculate statistics
+    const totalStudents = allStudents.length;
+    const gradeDistribution = allStudents.reduce((acc, res) => {
+      acc[res.grade] = (acc[res.grade] || 0) + 1;
+      return acc;
+    }, {});
+    const failedSubjects = allStudents.reduce((acc, res) => {
+      res.subjects.forEach((sub) => {
+        if (sub.isFailed) {
+          acc[sub.subjectName] = (acc[sub.subjectName] || 0) + 1;
+        }
       });
+      return acc;
+    }, {});
+
+    setStatistics({ totalStudents, gradeDistribution, failedSubjects });
+    setStudentResults(allStudents);
+    setIsLoading(false);
+  };
+
+  // Handle API errors
+  useEffect(() => {
+    if (subjectMarksError) toast.error("বিষয়ের মার্কস লোড করতে ব্যর্থ হয়েছে!");
+    if (subjectConfigsError) toast.error("বিষয় কনফিগ লোড করতে ব্যর্থ হয়েছে!");
+    if (instituteError) toast.error("ইনস্টিটিউট তথ্য লোড করতে ব্যর্থ হয়েছে!");
+  }, [subjectMarksError, subjectConfigsError, instituteError]);
+
+  const getCellStyle = (subject) => {
+    if (!subject) return {};
+    if (subject.isAbsent) {
+      return { backgroundColor: '#FFF7E6', color: '#000' };
     }
-  }, [
-    subjectMarks,
-    students,
-    subjectConfigs,
-    selectedExam,
-    selectedClassConfig,
-    selectedAcademicYear,
-    grades,
-  ]);
+    if (subject.isFailed) {
+      return { backgroundColor: '#FFE6E6', color: '#9B1C1C' };
+    }
+    return {};
+  };
 
   // Generate PDF Report
   const generatePDFReport = () => {
@@ -398,7 +442,7 @@ const ResultSheet = () => {
       return;
     }
 
-    if (!resultData.length) {
+    if (!studentResults.length) {
       toast.error("কোনো ফলাফল তথ্য পাওয়া যায়নি!");
       return;
     }
@@ -413,8 +457,8 @@ const ResultSheet = () => {
       return;
     }
 
-    const institute = instituteData; // Assuming the first institute is used
-    const printWindow = window.open(" ", "_blank");
+    const institute = instituteData;
+    const printWindow = window.open("", "_blank");
 
     let htmlContent = `
       <!DOCTYPE html>
@@ -590,11 +634,11 @@ const ResultSheet = () => {
               <th style="width: 40px;">মেধা স্থান</th>
               <th style="width: 40px;">রোল</th>
               <th style="width: 100px;">নাম</th>
-              ${subjectConfigs
-                ?.map(
-                  (config) =>
+              ${subjectGroups
+                .map(
+                  (subject) =>
                     `<th style="width: 50px;">${
-                      config.subject_name || "N/A"
+                      subject.subjectName || "N/A"
                     }</th>`
                 )
                 .join("")}
@@ -604,13 +648,13 @@ const ResultSheet = () => {
             </tr>
           </thead>
           <tbody>
-            ${resultData
+            ${studentResults
               .map(
                 (student) => `
               <tr>
-                <td>${student.rank}</td>
-                <td>${student.rollNo || "N/A"}</td>
-                <td>${student.studentName || "N/A"}</td>
+                <td>${student.displayRank}</td>
+                <td>${student.roll || "N/A"}</td>
+                <td>${student.name || "N/A"}</td>
                 ${student.subjects
                   .map(
                     (sub) => `
@@ -627,7 +671,7 @@ const ResultSheet = () => {
                   )
                   .join("")}
                 <td>${student.totalObtained}</td>
-                <td>${student.averageMarks}</td>
+                <td>${student.averageMark.toFixed(2)}</td>
                 <td>${student.grade}</td>
               </tr>
             `
@@ -638,9 +682,9 @@ const ResultSheet = () => {
         <div class="stats-container">
           <div class="stats-box">
             <div class="stats-title">পরিসংখ্যান</div>
-            <div class="stats-text">মোট শিক্ষার্থী: ${
-              statistics.totalStudents
-            },</div>
+            <div class="stats-text">
+              মোট শিক্ষার্থী: ${statistics.totalStudents},
+            </div>
             <div class="stats-text">গ্রেড বিতরণ:</div>
             ${Object.entries(statistics.gradeDistribution)
               .map(
@@ -693,37 +737,6 @@ const ResultSheet = () => {
     toast.success("PDF রিপোর্ট তৈরি হয়েছে!");
   };
 
-  // Handle API errors
-  useEffect(() => {
-    if (examsError) toast.error("পরীক্ষার তালিকা লোড করতে ব্যর্থ হয়েছে!");
-    if (classConfigsError) toast.error("ক্লাস তালিকা লোড করতে ব্যর্থ হয়েছে!");
-    if (academicYearsError)
-      toast.error("শিক্ষাবর্ষ তালিকা লোড করতে ব্যর্থ হয়েছে!");
-    if (studentsError) toast.error("ছাত্র তালিকা লোড করতে ব্যর্থ হয়েছে!");
-    if (subjectMarksError)
-      toast.error("বিষয়ের মার্কস লোড করতে ব্যর্থ হয়েছে!");
-    if (subjectConfigsError) toast.error("বিষয় কনফিগ লোড করতে ব্যর্থ হয়েছে!");
-    if (instituteError) toast.error("ইনস্টিটিউট তথ্য লোড করতে ব্যর্থ হয়েছে!");
-  }, [
-    examsError,
-    classConfigsError,
-    academicYearsError,
-    studentsError,
-    subjectMarksError,
-    subjectConfigsError,
-    instituteError,
-  ]);
-
-  const isLoading =
-    examsLoading ||
-    classConfigsLoading ||
-    academicYearsLoading ||
-    studentsLoading ||
-    subjectMarksLoading ||
-    subjectConfigsLoading ||
-    gradesLoading ||
-    isInstituteLoading;
-
   // Prepare options for react-select
   const examOptions =
     exams?.map((exam) => ({
@@ -737,16 +750,18 @@ const ResultSheet = () => {
         config.section_name ? ` - ${config.section_name}` : ""
       }${config.shift_name ? ` (${config.shift_name})` : ""}`,
     })) || [];
-
   const academicYearOptions =
     academicYears?.map((year) => ({
       value: year.id,
       label: year.name,
     })) || [];
 
+  // Update loading condition to include API loading states
+  const isDataLoading =
+    isLoading || isLoadingMarks || isLoadingConfigs || gradesLoading || isInstituteLoading;
+
   return (
     <div className="py-8 w-full relative">
-      <Toaster position="top-right" reverseOrder={false} />
       <style>{customStyles}</style>
       <div className="mx-auto">
         {/* Selection Form */}
@@ -773,7 +788,7 @@ const ResultSheet = () => {
                   setSelectedExam(option ? option.value : "")
                 }
                 placeholder="পরীক্ষা নির্বাচন করুন"
-                isDisabled={isLoading}
+                isDisabled={isDataLoading}
                 styles={selectStyles}
                 menuPortalTarget={document.body}
                 menuPosition="fixed"
@@ -799,7 +814,7 @@ const ResultSheet = () => {
                   setSelectedClassConfig(option ? option.value : "")
                 }
                 placeholder="ক্লাস নির্বাচন করুন"
-                isDisabled={isLoading}
+                isDisabled={isDataLoading}
                 styles={selectStyles}
                 menuPortalTarget={document.body}
                 menuPosition="fixed"
@@ -825,7 +840,7 @@ const ResultSheet = () => {
                   setSelectedAcademicYear(option ? option.value : "")
                 }
                 placeholder="শিক্ষাবর্ষ নির্বাচন করুন"
-                isDisabled={isLoading}
+                isDisabled={isDataLoading}
                 styles={selectStyles}
                 menuPortalTarget={document.body}
                 menuPosition="fixed"
@@ -836,9 +851,9 @@ const ResultSheet = () => {
           <div className="flex justify-end mt-6">
             <button
               onClick={generatePDFReport}
-              disabled={isLoading || !resultData.length}
+              disabled={isDataLoading || !studentResults.length}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 btn-ripple ${
-                isLoading || !resultData.length
+                isDataLoading || !studentResults.length
                   ? "bg-gray-400 text-gray-600 cursor-not-allowed"
                   : "bg-[#DB9E30] text-[#441a05] hover:text-white btn-glow"
               }`}
@@ -853,7 +868,7 @@ const ResultSheet = () => {
 
         {/* Result Display (aligned with PDF layout) */}
         <div className="">
-          {isLoading ? (
+          {isDataLoading ? (
             <p className="p-4 text-[#441a05]/70 animate-scaleIn flex justify-center items-center h-full">
               <FaSpinner className="animate-spin text-lg mr-2" />
               ফলাফল লোড হচ্ছে...
@@ -862,7 +877,7 @@ const ResultSheet = () => {
             <p className="p-4 text-[#441a05]/70 animate-scaleIn flex justify-center items-center h-full">
               অনুগ্রহ করে পরীক্ষা, ক্লাস এবং শিক্ষাবর্ষ নির্বাচন করুন।
             </p>
-          ) : resultData.length === 0 ? (
+          ) : studentResults.length === 0 ? (
             <p className="p-4 text-[#441a05]/70 animate-scaleIn flex justify-center items-center h-full">
               কোনো ফলাফল পাওয়া যায়নি।
             </p>
@@ -927,9 +942,9 @@ const ResultSheet = () => {
                       <th style={{ width: "40px" }}>মেধা স্থান</th>
                       <th style={{ width: "40px" }}>রোল</th>
                       <th style={{ width: "100px" }}>নাম</th>
-                      {subjectConfigs?.map((config) => (
-                        <th key={config.id} style={{ width: "50px" }}>
-                          {config.subject_name || "N/A"}
+                      {subjectGroups?.map((subject) => (
+                        <th key={subject.serial} style={{ width: "50px" }}>
+                          {subject.subjectName || "N/A"}
                         </th>
                       ))}
                       <th style={{ width: "40px" }}>মোট</th>
@@ -938,14 +953,14 @@ const ResultSheet = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {resultData.map((student) => (
-                      <tr key={student.studentId}>
-                        <td>{student.rank}</td>
-                        <td>{student.rollNo || "N/A"}</td>
-                        <td>{student.studentName || "N/A"}</td>
-                        {student.subjects.map((sub, idx) => (
+                    {studentResults.map((student) => (
+                      <tr key={student.id}>
+                        <td>{student.displayRank}</td>
+                        <td>{student.roll || "N/A"}</td>
+                        <td>{student.name || "N/A"}</td>
+                        {student.subjects.map((sub) => (
                           <td
-                            key={idx}
+                            key={`${student.id}-${sub.serial}`}
                             className={
                               sub.isFailed
                                 ? "fail-cell"
@@ -958,7 +973,7 @@ const ResultSheet = () => {
                           </td>
                         ))}
                         <td>{student.totalObtained}</td>
-                        <td>{student.averageMarks}</td>
+                        <td>{student.averageMark.toFixed(2)}</td>
                         <td>{student.grade}</td>
                       </tr>
                     ))}

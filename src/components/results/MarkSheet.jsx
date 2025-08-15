@@ -3,16 +3,16 @@ import { Toaster, toast } from "react-hot-toast";
 import { FaSpinner, FaDownload } from "react-icons/fa";
 import Select from "react-select";
 import { useGetStudentActiveByClassQuery } from "../../redux/features/api/student/studentActiveApi";
-import { useGetSubjectMarksQuery } from "../../redux/features/api/marks/subjectMarksApi";
+import { useGetFilteredSubjectMarksQuery } from "../../redux/features/api/marks/subjectMarksApi";
+import { useGetFilteredMarkConfigsQuery } from "../../redux/features/api/marks/markConfigsApi";
 import { useGetGradeRulesQuery } from "../../redux/features/api/result/gradeRuleApi";
 import { useGetExamApiQuery } from "../../redux/features/api/exam/examApi";
 import { useGetclassConfigApiQuery } from "../../redux/features/api/class/classConfigApi";
 import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
-import { useGetSubjectMarkConfigsByClassQuery } from "../../redux/features/api/marks/subjectMarkConfigsApi";
 import { useGetInstituteLatestQuery } from "../../redux/features/api/institute/instituteLatestApi";
 import selectStyles from "../../utilitis/selectStyles";
 
-// Custom CSS aligned with PersonalMarkSheet.jsx
+// Custom CSS aligned with original MarkSheet.jsx
 const customStyles = `
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
@@ -77,7 +77,6 @@ const customStyles = `
     background: #441a05;
   }
   .table-container {
-    // border: 1px solid #000;
     overflow-x: auto;
   }
   table {
@@ -143,6 +142,33 @@ const customStyles = `
     position: relative;
     overflow: hidden;
   }
+  .student-info {
+    font-size: 14px;
+    margin: 5px 0;
+    font-weight: 600;
+    color: #000;
+  }
+  .footer-label {
+    text-align: right;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .footer-value {
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .signature {
+    margin-top: 80px;
+    font-size: 12px;
+    color: #000;
+  }
+  .date {
+    margin-top: 20px;
+    text-align: right;
+    font-size: 10px;
+    color: #000;
+  }
+  .page-break { page-break-before: always; }
 `;
 
 const MarkSheet = () => {
@@ -150,7 +176,14 @@ const MarkSheet = () => {
   const [selectedClassConfig, setSelectedClassConfig] = useState(null);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState(null);
   const [resultData, setResultData] = useState([]);
+  const [subjectGroups, setSubjectGroups] = useState([]);
   const [grades, setGrades] = useState([]);
+  const [statistics, setStatistics] = useState({
+    totalStudents: 0,
+    gradeDistribution: {},
+    failedSubjects: {},
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
   // Fetch data from APIs
   const {
@@ -168,21 +201,21 @@ const MarkSheet = () => {
       skip: !selectedClassConfig,
     });
   const { data: subjectMarks, isLoading: subjectMarksLoading } =
-    useGetSubjectMarksQuery(
+    useGetFilteredSubjectMarksQuery(
       {
-        exam: selectedExam?.value,
-        classConfig: selectedClassConfig?.value,
-        academicYear: selectedAcademicYear?.value,
-        skip: !selectedExam || !selectedClassConfig || !selectedAcademicYear,
+        exam_id: selectedExam?.value,
+        profile_class_id: selectedClassConfig?.value,
+        academic_year: selectedAcademicYear?.value,
       },
       {
         skip: !selectedExam || !selectedClassConfig || !selectedAcademicYear,
       }
     );
-  const { data: subjectConfigs, isLoading: subjectConfigsLoading } =
-    useGetSubjectMarkConfigsByClassQuery(selectedClassConfig?.value, {
-      skip: !selectedClassConfig,
-    });
+  const { data: markConfigs, isLoading: markConfigsLoading } =
+    useGetFilteredMarkConfigsQuery(
+      { class_id: classConfigs?.find((c) => c.id === Number(selectedClassConfig?.value))?.class_id },
+      { skip: !selectedClassConfig }
+    );
   const {
     data: gradesData,
     isLoading: gradesLoading,
@@ -196,10 +229,8 @@ const MarkSheet = () => {
         gradesData.map((g) => ({
           id: g.id,
           grade: g.grade_name,
-          grade_name_op: g.grade_name_op,
-          gpa: g.gpa,
-          min_mark: g.min_mark,
-          max_mark: g.max_mark,
+          min: g.min_mark,
+          max: g.max_mark,
           remarks: g.remarks,
         }))
       );
@@ -209,110 +240,185 @@ const MarkSheet = () => {
     }
   }, [gradesData, gradesError]);
 
-  // Calculate results for all students
+  // Handle API errors
+  useEffect(() => {
+    if (instituteError) toast.error("ইনস্টিটিউট তথ্য লোড করতে ব্যর্থ হয়েছে!");
+    if (gradesError) toast.error("গ্রেড তালিকা লোড করতে ব্যর্থ হয়েছে!");
+  }, [instituteError, gradesError]);
+
+  // Process data when all requirements are met
   useEffect(() => {
     if (
-      subjectMarks &&
-      students &&
-      subjectConfigs &&
-      selectedExam &&
-      selectedClassConfig &&
-      selectedAcademicYear &&
-      grades.length > 0
+      subjectMarks?.length > 0 &&
+      markConfigs?.length > 0 &&
+      students?.length > 0 &&
+      !subjectMarksLoading &&
+      !markConfigsLoading &&
+      !studentsLoading
     ) {
-      const filteredMarks = subjectMarks.filter(
-        (mark) =>
-          mark.exam === Number(selectedExam.value) &&
-          mark.class_name ===
-            classConfigs.find((c) => c.id === Number(selectedClassConfig.value))
-              ?.class_name &&
-          mark.academic_year === Number(selectedAcademicYear.value)
-      );
+      processResultData();
+    }
+  }, [subjectMarks, markConfigs, students, subjectMarksLoading, markConfigsLoading, studentsLoading]);
 
-      const result = students.map((student) => {
-        const studentMarks = filteredMarks.filter(
-          (mark) => mark.student === student.id
-        );
-        let totalObtained = 0;
-        let totalMaxMarks = 0;
-        let hasCompulsoryFail = false;
-        const subjectResults = subjectConfigs.map((config) => {
-          const mark = studentMarks.find(
-            (m) =>
-              m.mark_conf === config.mark_configs[0]?.id ||
-              m.mark_conf === config.mark_configs[1]?.id
-          );
-          const obtained = mark ? mark.obtained : 0;
-          const isAbsent = mark ? mark.is_absent : false;
-          const maxMark = config.mark_configs.reduce(
-            (sum, mc) => sum + mc.max_mark,
-            0
-          );
-          const passMark = config.mark_configs.reduce(
-            (sum, mc) => sum + mc.pass_mark,
-            0
-          );
-          const isFailed = !isAbsent && obtained < passMark;
-          if (isFailed && config.subject_type === "COMPULSORY") {
-            hasCompulsoryFail = true;
-          }
-          totalObtained += obtained;
-          totalMaxMarks += maxMark;
-          return {
-            subject: config.subject_name,
-            obtained,
-            maxMark,
-            passMark,
-            isFailed,
-            isAbsent,
-            subjectType: config.subject_type,
-          };
+  const processResultData = () => {
+    setIsLoading(true);
+
+    // Create mapping of subject_serial to combined_subject_name
+    const subjectNameMap = {};
+    subjectMarks.forEach((mark) => {
+      if (!subjectNameMap[mark.subject_serial] && mark.combined_subject_name) {
+        subjectNameMap[mark.subject_serial] = mark.combined_subject_name;
+      }
+    });
+
+    // Group mark configs by subject_serial to get sum of max_mark and pass_mark
+    const subjectConfigGroups = {};
+    markConfigs.forEach((config) => {
+      if (!subjectConfigGroups[config.subject_serial]) {
+        subjectConfigGroups[config.subject_serial] = {
+          serial: config.subject_serial,
+          maxMark: 0,
+          passMark: 0,
+          subjectName: subjectNameMap[config.subject_serial] || config.subject_name,
+        };
+      }
+      subjectConfigGroups[config.subject_serial].maxMark += config.max_mark;
+      subjectConfigGroups[config.subject_serial].passMark += config.pass_mark;
+    });
+
+    // Convert to array and sort by serial
+    const sortedSubjectGroups = Object.values(subjectConfigGroups).sort(
+      (a, b) => a.serial - b.serial
+    );
+    setSubjectGroups(sortedSubjectGroups);
+
+    // Process student data with summed marks
+    const studentsMap = new Map();
+
+    subjectMarks.forEach((mark) => {
+      if (!studentsMap.has(mark.student)) {
+        studentsMap.set(mark.student, {
+          id: mark.student,
+          name: mark.student_name,
+          roll: mark.student_roll,
+          subjects: {},
+          totalObtained: 0,
+          totalMaxMark: 0,
+          hasFailed: false,
         });
+      }
 
-        const averageMarks =
-          totalMaxMarks > 0 ? (totalObtained / totalMaxMarks) * 100 : 0;
-        const grade = hasCompulsoryFail ? "ফেল" : calculateGrade(averageMarks);
+      const student = studentsMap.get(mark.student);
+      if (!student.subjects[mark.subject_serial]) {
+        student.subjects[mark.subject_serial] = {
+          obtained: 0,
+          isAbsent: mark.is_absent,
+          subjectName: mark.combined_subject_name,
+        };
+      }
+
+      student.subjects[mark.subject_serial].obtained += mark.obtained;
+      student.subjects[mark.subject_serial].isAbsent =
+        student.subjects[mark.subject_serial].isAbsent || mark.is_absent;
+    });
+
+    // Calculate totals and determine pass/fail
+    const processedStudents = Array.from(studentsMap.values()).map((student) => {
+      let totalObtained = 0;
+      let totalMaxMark = 0;
+      let hasFailed = false;
+
+      const studentSubjects = sortedSubjectGroups.map((group) => {
+        const studentSubject = student.subjects[group.serial] || {
+          obtained: 0,
+          isAbsent: true,
+          subjectName: group.subjectName,
+        };
+
+        const isFailed = studentSubject.isAbsent || studentSubject.obtained < group.passMark;
+
+        totalObtained += studentSubject.isAbsent ? 0 : studentSubject.obtained;
+        totalMaxMark += group.maxMark;
+
+        if (isFailed) hasFailed = true;
+
         return {
-          studentId: student.id,
-          studentName: student.name,
-          rollNo: student.roll_no,
-          subjects: subjectResults,
-          totalObtained,
-          totalMaxMarks,
-          averageMarks: averageMarks.toFixed(2),
-          grade,
+          ...studentSubject,
+          serial: group.serial,
+          maxMark: group.maxMark,
+          passMark: group.passMark,
+          isFailed,
         };
       });
 
-      // Sort by total marks for ranking
-      const rankedResult = result
-        .sort((a, b) => b.totalObtained - a.totalObtained)
-        .map((res, index) => ({
-          ...res,
-          rank: index + 1,
-          rankDisplay: `${index + 1}`,
-        }));
+      const averageMark = totalMaxMark > 0 ? (totalObtained / totalMaxMark) * 100 : 0;
+      const grade = hasFailed
+        ? "রাসেব"
+        : grades.find(
+            (rule) => averageMark >= rule.min && averageMark <= rule.max
+          )?.grade || "রাসেব";
 
-      setResultData(rankedResult);
-    }
-  }, [
-    subjectMarks,
-    students,
-    subjectConfigs,
-    selectedExam,
-    selectedClassConfig,
-    selectedAcademicYear,
-    grades,
-  ]);
+      return {
+        ...student,
+        subjects: studentSubjects,
+        totalObtained,
+        totalMaxMark,
+        averageMark,
+        grade,
+        hasFailed,
+      };
+    });
 
-  const calculateGrade = (averageMarks) => {
-    const grade = grades.find(
-      (g) => averageMarks >= g.min_mark && averageMarks <= g.max_mark
-    );
-    return grade ? grade.grade : "N/A";
+    // Separate passed and failed students
+    const passedStudents = processedStudents.filter((s) => !s.hasFailed);
+    const failedStudents = processedStudents.filter((s) => s.hasFailed);
+
+    // Sort passed students by average to calculate rankings
+    const passedByAverage = [...passedStudents].sort((a, b) => b.averageMark - a.averageMark);
+
+    // Add rankings based on average
+    const rankedPassedStudents = passedByAverage.map((student, index) => ({
+      ...student,
+      ranking: index + 1,
+      rankDisplay: (index + 1).toString(),
+    }));
+
+    // Sort passed students by roll number while keeping their rankings
+    const finalPassedStudents = [...rankedPassedStudents].sort((a, b) => a.roll - b.roll);
+
+    // Sort failed students by average (descending)
+    const rankedFailedStudents = failedStudents
+      .sort((a, b) => b.averageMark - a.averageMark)
+      .map((student) => ({
+        ...student,
+        ranking: Infinity,
+        rankDisplay: "রাসেব",
+      }));
+
+    // Combine results
+    const allStudents = [...finalPassedStudents, ...rankedFailedStudents];
+
+    // Calculate statistics
+    const totalStudents = allStudents.length;
+    const gradeDistribution = allStudents.reduce((acc, res) => {
+      acc[res.grade] = (acc[res.grade] || 0) + 1;
+      return acc;
+    }, {});
+    const failedSubjects = allStudents.reduce((acc, res) => {
+      res.subjects.forEach((sub) => {
+        if (sub.isFailed) {
+          acc[sub.subjectName] = (acc[sub.subjectName] || 0) + 1;
+        }
+      });
+      return acc;
+    }, {});
+
+    setStatistics({ totalStudents, gradeDistribution, failedSubjects });
+    setResultData(allStudents);
+    setIsLoading(false);
   };
 
-  // Generate bulk PDF report using window.print() similar to PersonalMarkSheet
+  // Generate bulk PDF report
   const generateBulkPDF = () => {
     if (!selectedExam || !selectedClassConfig || !selectedAcademicYear) {
       toast.error("অনুগ্রহ করে সমস্ত প্রয়োজনীয় ফিল্ড পূরণ করুন!");
@@ -324,6 +430,11 @@ const MarkSheet = () => {
       return;
     }
 
+    if (isInstituteLoading) {
+      toast.error("ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!");
+      return;
+    }
+
     if (!instituteData) {
       toast.error("ইনস্টিটিউট তথ্য পাওয়া যায়নি!");
       return;
@@ -331,7 +442,7 @@ const MarkSheet = () => {
 
     const institute = instituteData;
 
-    const printWindow = window.open(" ", "_blank");
+    const printWindow = window.open("", "_blank");
     let htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -349,7 +460,6 @@ const MarkSheet = () => {
           }
           .head {
             text-align: center;
-            // margin-top: 30px;
             margin-bottom: 15px;
             padding-bottom: 10px;
           }
@@ -379,7 +489,6 @@ const MarkSheet = () => {
             color: #000;
           }
           .table-container {
-            // border: 1px solid #000;
             overflow-x: auto;
           }
           table {
@@ -395,11 +504,13 @@ const MarkSheet = () => {
           th {
             background-color: #f5f5f5;
             font-weight: bold;
+            font-size:14px;
             color: #000;
             text-transform: uppercase;
           }
           td {
             color: #000;
+              font-size:14px;
           }
           .fail-cell {
             background-color: #FFE6E6;
@@ -411,11 +522,11 @@ const MarkSheet = () => {
           }
           .footer-label {
             text-align: right;
-            font-size: 10px;
+              font-size:14px;
             font-weight: 600;
           }
           .footer-value {
-            font-size: 10px;
+              font-size:14px;
             font-weight: 600;
           }
           .signature {
@@ -444,12 +555,12 @@ const MarkSheet = () => {
               </div>
               <h2 class="title">
                 ব্যক্তিগত ফলাফল শীট - ${
-                  exams?.find((e) => e.id === Number(selectedExam.value))
-                    ?.name || "পরীক্ষা নির্বাচিত হয়নি"
+                  exams?.find((e) => e.id === Number(selectedExam.value))?.name ||
+                  "পরীক্ষা নির্বাচিত হয়নি"
                 }
               </h2>
               <h3 class="student-info">
-                নাম: ${student.studentName} | রোল: ${student.rollNo}
+                নাম: ${student.name} | রোল: ${student.roll}
               </h3>
               <h3 class="student-info">
                 ক্লাস: ${
@@ -492,7 +603,7 @@ const MarkSheet = () => {
                       (sub, idx) => `
                       <tr>
                         <td>${idx + 1}</td>
-                        <td>${sub.subject}</td>
+                        <td>${sub.subjectName}</td>
                         <td class="${
                           sub.isAbsent
                             ? "absent-cell"
@@ -511,7 +622,7 @@ const MarkSheet = () => {
                   <tr>
                     <td></td>
                     <td class="footer-label">মোট প্রাপ্ত নম্বর :</td>
-                    <td class="footer-value">${student.averageMarks}</td>
+                    <td class="footer-value">${student.averageMark.toFixed(2)}</td>
                   </tr>
                   <tr>
                     <td></td>
@@ -569,21 +680,23 @@ const MarkSheet = () => {
         config.section_name ? ` - ${config.section_name}` : ""
       }${config.shift_name ? ` (${config.shift_name})` : ""}`,
     })) || [];
-
   const academicYearOptions =
     academicYears?.map((year) => ({
       value: year.id,
       label: year.name,
     })) || [];
 
-  const isLoading =
+  // Combined loading state
+  const isDataLoading =
+    isLoading ||
     examsLoading ||
     classConfigsLoading ||
     academicYearsLoading ||
     studentsLoading ||
     subjectMarksLoading ||
-    subjectConfigsLoading ||
-    gradesLoading;
+    markConfigsLoading ||
+    gradesLoading ||
+    isInstituteLoading;
 
   return (
     <div className="py-8 w-full relative">
@@ -613,7 +726,7 @@ const MarkSheet = () => {
                 }
                 onChange={(option) => setSelectedExam(option)}
                 placeholder="পরীক্ষা নির্বাচন করুন"
-                isDisabled={isLoading}
+                isDisabled={isDataLoading}
                 styles={selectStyles}
                 menuPortalTarget={document.body}
                 menuPosition="fixed"
@@ -637,7 +750,7 @@ const MarkSheet = () => {
                 }
                 onChange={(option) => setSelectedClassConfig(option)}
                 placeholder="ক্লাস নির্বাচন করুন"
-                isDisabled={isLoading}
+                isDisabled={isDataLoading}
                 styles={selectStyles}
                 menuPortalTarget={document.body}
                 menuPosition="fixed"
@@ -661,7 +774,7 @@ const MarkSheet = () => {
                 }
                 onChange={(option) => setSelectedAcademicYear(option)}
                 placeholder="শিক্ষাবর্ষ নির্বাচন করুন"
-                isDisabled={isLoading}
+                isDisabled={isDataLoading}
                 styles={selectStyles}
                 menuPortalTarget={document.body}
                 menuPosition="fixed"
@@ -672,9 +785,9 @@ const MarkSheet = () => {
           <div className="flex justify-end mt-6">
             <button
               onClick={generateBulkPDF}
-              disabled={isLoading || resultData.length === 0}
+              disabled={isDataLoading || resultData.length === 0}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 btn-ripple ${
-                isLoading || resultData.length === 0
+                isDataLoading || resultData.length === 0
                   ? "bg-gray-400 text-gray-600 cursor-not-allowed"
                   : "bg-[#DB9E30] text-[#441a05] hover:text-white btn-glow"
               }`}
@@ -688,49 +801,50 @@ const MarkSheet = () => {
         </div>
 
         {/* Result Display */}
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <FaSpinner className="animate-spin text-4xl text-[#441a05]" />
-          </div>
-        ) : resultData.length > 0 ? (
+        {isDataLoading ? (
+          <p className="p-4 text-[#441a05]/70 animate-scaleIn flex justify-center items-center h-full">
+            <FaSpinner className="animate-spin text-lg mr-2" />
+            ফলাফল লোড হচ্ছে...
+          </p>
+        ) : !selectedExam || !selectedClassConfig || !selectedAcademicYear ? (
+          <p className="p-4 text-[#441a05]/70 animate-scaleIn flex justify-center items-center h-full">
+            ফলাফল দেখতে উপরের ফিল্টার নির্বাচন করুন।
+          </p>
+        ) : resultData.length === 0 ? (
+          <p className="p-4 text-[#441a05]/70 animate-scaleIn flex justify-center items-center h-full">
+            কোনো ফলাফল পাওয়া যায়নি।
+          </p>
+        ) : (
           resultData.map((student) => (
-            <div key={student.studentId} className="a4-portrait animate-fadeIn">
+            <div key={student.id} className="a4-portrait animate-fadeIn">
               <div className="head">
                 <div className="institute-info">
-                  <h1>{instituteData.institute_name || "অজানা ইনস্টিটিউট"}</h1>
-                  <p>
-                    {instituteData.institute_address || "ঠিকানা উপলব্ধ নয়"}
-                  </p>
+                  <h1>{instituteData?.institute_name || "অজানা ইনস্টিটিউট"}</h1>
+                  <p>{instituteData?.institute_address || "ঠিকানা উপলব্ধ নয়"}</p>
                 </div>
                 <h2 className="title font-semibold">
                   ব্যক্তিগত ফলাফল শীট -{" "}
-                  {
-                    exams?.find((e) => e.id === Number(selectedExam?.value))
-                      ?.name
-                  }
+                  {exams?.find((e) => e.id === Number(selectedExam?.value))?.name ||
+                    "পরীক্ষা নির্বাচিত হয়নি"}
                 </h2>
-                <h3 className="text-[14px] mb-0 text-black font-semibold">
-                  নাম: {student.studentName} | রোল: {student.rollNo}
+                <h3 className="student-info">
+                  নাম: {student.name} | রোল: {student.roll}
                 </h3>
-                <h3 className="text-[14px] mb-0 text-black font-semibold">
+                <h3 className="student-info">
                   ক্লাস:{" "}
-                  {classConfigs?.find(
-                    (c) => c.id === Number(selectedClassConfig?.value)
-                  )?.class_name || "ক্লাস নির্বাচিত হয়নি"}{" "}
+                  {classConfigs?.find((c) => c.id === Number(selectedClassConfig?.value))?.class_name ||
+                    "ক্লাস নির্বাচিত হয়নি"}{" "}
                   | শাখা:{" "}
-                  {classConfigs?.find(
-                    (c) => c.id === Number(selectedClassConfig?.value)
-                  )?.section_name || "শাখা নির্বাচিত হয়নি"}{" "}
+                  {classConfigs?.find((c) => c.id === Number(selectedClassConfig?.value))?.section_name ||
+                    "শাখা নির্বাচিত হয়নি"}{" "}
                   | শিফট:{" "}
-                  {classConfigs?.find(
-                    (c) => c.id === Number(selectedClassConfig?.value)
-                  )?.shift_name || "শিফট নির্বাচিত হয়নি"}
+                  {classConfigs?.find((c) => c.id === Number(selectedClassConfig?.value))?.shift_name ||
+                    "শিফট নির্বাচিত হয়নি"}
                 </h3>
-                <h3 className="text-[14px] mb-0 text-black font-semibold">
+                <h3 className="student-info">
                   শিক্ষাবর্ষ:{" "}
-                  {academicYears?.find(
-                    (y) => y.id === Number(selectedAcademicYear?.value)
-                  )?.name || "শিক্ষাবর্ষ নির্বাচিত হয়nি"}
+                  {academicYears?.find((y) => y.id === Number(selectedAcademicYear?.value))?.name ||
+                    "শিক্ষাবর্ষ নির্বাচিত হয়নি"}
                 </h3>
               </div>
 
@@ -753,7 +867,7 @@ const MarkSheet = () => {
                     {student.subjects.map((sub, index) => (
                       <tr key={index}>
                         <td className="text-xs">{index + 1}</td>
-                        <td className="text-xs">{sub.subject}</td>
+                        <td className="text-xs">{sub.subjectName}</td>
                         <td
                           className={
                             sub.isAbsent
@@ -775,7 +889,7 @@ const MarkSheet = () => {
                         মোট প্রাপ্ত নম্বর :
                       </td>
                       <td className="border-none text-xs font-semibold">
-                        {student.averageMarks}
+                        {student.averageMark.toFixed(2)}
                       </td>
                     </tr>
                     <tr className="border border-black">
@@ -799,18 +913,14 @@ const MarkSheet = () => {
                   </tfoot>
                 </table>
               </div>
-              <div className="mt-20 text-xs text-black">
+              <div className="signature">
                 পরীক্ষা নিয়ন্ত্রকের স্বাক্ষর: ____________________
               </div>
-              {/* <div className="date">
+              <div className="date">
                 রিপোর্ট তৈরির তারিখ: {new Date().toLocaleDateString("bn-BD")}
-              </div> */}
+              </div>
             </div>
           ))
-        ) : (
-          <p className="p-4 text-[#441a05]/70 animate-scaleIn flex justify-center items-center h-full">
-            ফলাফল দেখতে উপরের ফিল্টার নির্বাচন করুন।
-          </p>
         )}
       </div>
     </div>

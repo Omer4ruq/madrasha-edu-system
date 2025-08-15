@@ -31,6 +31,19 @@ const SubjectConfigs = () => {
   const [modalData, setModalData] = useState(null);
   const [modalAction, setModalAction] = useState(null);
 
+
+
+  useEffect(() => {
+    if (classes.length > 0 && !selectedMainClassId) {
+      const firstClass = classes[0];
+      if (firstClass?.student_class?.id && firstClass?.id) {
+        setSelectedClassId(firstClass.student_class.id);
+        setSelectedMainClassId(firstClass.id);
+      }
+    }
+  }, [classes, selectedMainClassId]);
+
+
   // Fetch subjects based on selected class ID (student_class.id)
   const {
     data: subjects = [],
@@ -376,8 +389,7 @@ const SubjectConfigs = () => {
 
   return (
     <div className="py-8">
-      <Toaster position="top-right" reverseOrder={false} />
-      {/* CSS Animations */}
+
       <style>
         {`
           @keyframes fadeIn {
@@ -472,17 +484,17 @@ const SubjectConfigs = () => {
         {selectedMainClassId && (
           <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl p-6">
             <h2 className="text-xl font-semibold text-[#441a05] mb-6 flex items-center">
-              <span className="bg-[#DB9E30]/20 text-[#441a05] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">২</span>
+              <span className=" text-[#441a05] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">২</span>
               বিষয় কনফিগার করুন ({subjects.length}টি বিষয়)
             </h2>
 
             {/* Render grouped subjects */}
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 w-full">
               {sortedAndGroupedSubjects.map((group, groupIndex) => (
                 <div
                   key={`group-${group.serial}`}
-                  className="rounded-2xl p-4 animate-fadeIn"
-                  style={{ backgroundColor: group.color, animationDelay: `${groupIndex * 0.1}s` }}
+                  className="rounded-2xl p-4 animate-fadeIn "
+                  style={{animationDelay: `${groupIndex * 0.1}s` }}
                 >
                   {/* Display serial number header for the group if serial > 0 */}
                   {group.serial > 0 && (
@@ -496,7 +508,7 @@ const SubjectConfigs = () => {
                     </h3>
                   )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {group.subjects.map((subject) => {
                       const config = subject.config || {
                         subject_id: subject.id,
@@ -507,7 +519,7 @@ const SubjectConfigs = () => {
                       };
 
                       return (
-                        <div key={subject.id} className="bg-white/10 border border-white/20 rounded-2xl p-6 hover:shadow-lg transition-all duration-200">
+                        <div key={subject.id} className="bg-black/5 border border-white/20 rounded-2xl p-6 hover:shadow-lg transition-all duration-200">
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-bold text-[#441a05] truncate flex-1">{subject?.name}</h3>
                             <div className="flex space-x-2">
