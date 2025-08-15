@@ -27,6 +27,18 @@ const MarkConfigs = () => {
   const [modalAction, setModalAction] = useState(null);
   const [markConfigs, setMarkConfigs] = useState({});
 
+
+
+   useEffect(() => {
+    if (classes.length > 0 && !selectedMainClassId) {
+      const firstClass = classes[0];
+      if (firstClass?.student_class?.id && firstClass?.id) {
+        setSelectedClassId(firstClass.student_class.id);
+        setSelectedMainClassId(firstClass.id);
+      }
+    }
+  }, [classes, selectedMainClassId]);
+
   const {
     data: subjectConfigs = [],
     isLoading: subjectConfigsLoading,

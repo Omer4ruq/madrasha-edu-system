@@ -216,7 +216,7 @@ function Root() {
                     //   element: <SubjectMarkConfigs />,
                     // },
                         {
-                      path: "marks-config",
+                      index: true,
                       element: <MarkConfigs/>,
                     },
                       {
