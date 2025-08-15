@@ -138,16 +138,17 @@ const mainMenu = [
         title: "মার্কস কনফিগার",
         link: "/talimat/marks",
         children: [
-          {
+                {
             id: "05/03/01",
-            title: "মার্কস-কনফিগার",
-            link: "/talimat/marks",
-          },
-             {
-            id: "05/03/02",
             title: "বিষয়-কনফিগারেশন",
             link: "/talimat/marks/subject-config",
           },
+          {
+            id: "05/03/02",
+            title: "মার্কস-কনফিগার",
+            link: "/talimat/marks",
+          },
+       
           
         ],
       },
