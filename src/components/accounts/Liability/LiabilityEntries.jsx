@@ -2,32 +2,38 @@ import React, { useState } from 'react';
 import { FaEdit, FaSpinner, FaTrash } from 'react-icons/fa';
 import { IoAdd, IoAddCircle } from 'react-icons/io5';
 import { Toaster, toast } from 'react-hot-toast';
-import { useGetWithdrawsQuery, useCreateWithdrawMutation, useUpdateWithdrawMutation, useDeleteWithdrawMutation } from '../../redux/features/api/withdraw/withdrawsApi';
-import { useGetFundsQuery } from '../../redux/features/api/funds/fundsApi';
-import WithdrawTable from './WithdrawTable';
+import { useGetLiabilityEntriesQuery, useCreateLiabilityEntryMutation, useUpdateLiabilityEntryMutation, useDeleteLiabilityEntryMutation } from '../../../redux/features/api/liability/liabilityEntriesApi';
+import { useGetLiabilityHeadsQuery } from '../../../redux/features/api/liability/liabilityHeadsApi';
+import { useGetFundsQuery } from '../../../redux/features/api/funds/fundsApi';
+import { useGetPartiesQuery } from '../../../redux/features/api/parties/partiesApi';
+import LiabilityTable from './LiabilityTable';
 
-const Withdraw = () => {
+const LiabilityEntries = () => {
   // ফর্মের স্টেট
   const [formData, setFormData] = useState({
+    head: '',
     fund: '',
+    party: '',
     date: new Date().toISOString().split('T')[0], // আজকের তারিখ
     amount: '',
-    method: '',
+    movement: 'INCREASE',
     note: ''
   });
 
   // সম্পাদনা এবং মডাল স্টেট
-  const [editingWithdraw, setEditingWithdraw] = useState(null);
+  const [editingEntry, setEditingEntry] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalData, setModalData] = useState(null);
 
   // RTK কোয়েরি হুক
+  const { data: liabilityHeads = [], isLoading: isLoadingHeads } = useGetLiabilityHeadsQuery();
   const { data: funds = [], isLoading: isLoadingFunds } = useGetFundsQuery();
-  const { data: withdraws = [], isLoading: isLoadingWithdraws, error: fetchError, refetch } = useGetWithdrawsQuery();
-  const [createWithdraw, { isLoading: isCreating, error: createError }] = useCreateWithdrawMutation();
-  const [updateWithdraw, { isLoading: isUpdating, error: updateError }] = useUpdateWithdrawMutation();
-  const [deleteWithdraw, { isLoading: isDeleting, error: deleteError }] = useDeleteWithdrawMutation();
+  const { data: parties = [], isLoading: isLoadingParties } = useGetPartiesQuery();
+  const { data: liabilityEntries = [], isLoading: isLoadingEntries, error: fetchError, refetch } = useGetLiabilityEntriesQuery();
+  const [createLiabilityEntry, { isLoading: isCreating, error: createError }] = useCreateLiabilityEntryMutation();
+  const [updateLiabilityEntry, { isLoading: isUpdating, error: updateError }] = useUpdateLiabilityEntryMutation();
+  const [deleteLiabilityEntry, { isLoading: isDeleting, error: deleteError }] = useDeleteLiabilityEntryMutation();
 
   // ইনপুট পরিবর্তন হ্যান্ডলার
   const handleInputChange = (e) => {
@@ -43,21 +49,23 @@ const Withdraw = () => {
     e.preventDefault();
     
     // বেসিক ভ্যালিডেশন
-    if (!formData.fund || !formData.date || !formData.amount || !formData.method) {
+    if (!formData.head || !formData.fund || !formData.party || !formData.date || !formData.amount || !formData.movement) {
       toast.error('অনুগ্রহ করে সব প্রয়োজনীয় ক্ষেত্র পূরণ করুন');
       return;
     }
 
     // জমা দেওয়ার জন্য ডেটা প্রস্তুত করা
     const submitData = {
+      head: parseInt(formData.head),
       fund: parseInt(formData.fund),
+      party: parseInt(formData.party),
       date: formData.date,
-      amount: parseFloat(formData.amount),
-      method: formData.method,
+      amount: formData.amount,
+      movement: formData.movement,
       note: formData.note || ''
     };
 
-    setModalAction(editingWithdraw ? 'update' : 'create');
+    setModalAction(editingEntry ? 'update' : 'create');
     setModalData(submitData);
     setIsModalOpen(true);
   };
@@ -66,34 +74,38 @@ const Withdraw = () => {
   const confirmAction = async () => {
     try {
       if (modalAction === 'create') {
-        await createWithdraw(modalData).unwrap();
-        toast.success('উত্তোলন সফলভাবে তৈরি করা হয়েছে!');
+        await createLiabilityEntry(modalData).unwrap();
+        toast.success('দায়বদ্ধতা এন্ট্রি সফলভাবে তৈরি করা হয়েছে!');
         setFormData({
+          head: '',
           fund: '',
+          party: '',
           date: new Date().toISOString().split('T')[0],
           amount: '',
-          method: '',
+          movement: 'INCREASE',
           note: ''
         });
       } else if (modalAction === 'update') {
-        await updateWithdraw({ id: editingWithdraw.id, ...modalData }).unwrap();
-        toast.success('উত্তোলন সফলভাবে আপডেট করা হয়েছে!');
-        setEditingWithdraw(null);
+        await updateLiabilityEntry({ id: editingEntry.id, ...modalData }).unwrap();
+        toast.success('দায়বদ্ধতা এন্ট্রি সফলভাবে আপডেট করা হয়েছে!');
+        setEditingEntry(null);
         setFormData({
+          head: '',
           fund: '',
+          party: '',
           date: new Date().toISOString().split('T')[0],
           amount: '',
-          method: '',
+          movement: 'INCREASE',
           note: ''
         });
       } else if (modalAction === 'delete') {
-        await deleteWithdraw(modalData.id).unwrap();
-        toast.success('উত্তোলন সফলভাবে মুছে ফেলা হয়েছে!');
+        await deleteLiabilityEntry(modalData.id).unwrap();
+        toast.success('দায়বদ্ধতা এন্ট্রি সফলভাবে মুছে ফেলা হয়েছে!');
       }
       refetch();
     } catch (err) {
       console.error(`ত্রুটি ${modalAction === 'create' ? 'তৈরি করার' : modalAction === 'update' ? 'আপডেট করার' : 'মুছে ফেলার'}:`, err);
-      toast.error(`উত্তোলন ${modalAction === 'create' ? 'তৈরি' : modalAction === 'update' ? 'আপডেট' : 'মুছে ফেলা'} ব্যর্থ: ${err.status || 'অজানা'} - ${JSON.stringify(err.data || {})}`);
+      toast.error(`দায়বদ্ধতা এন্ট্রি ${modalAction === 'create' ? 'তৈরি' : modalAction === 'update' ? 'আপডেট' : 'মুছে ফেলা'} ব্যর্থ: ${err.status || 'অজানা'} - ${JSON.stringify(err.data || {})}`);
     } finally {
       setIsModalOpen(false);
       setModalAction(null);
@@ -101,55 +113,62 @@ const Withdraw = () => {
     }
   };
 
-  // উত্তোলন সম্পাদনা শুরু
-  const handleEdit = (withdraw) => {
-    setEditingWithdraw(withdraw);
+  // দায়বদ্ধতা এন্ট্রি সম্পাদনা শুরু
+  const handleEdit = (entry) => {
+    setEditingEntry(entry);
     setFormData({
-      fund: withdraw.fund?.toString() || '',
-      date: withdraw.date || '',
-      amount: withdraw.amount?.toString() || '',
-      method: withdraw.method || '',
-      note: withdraw.note || ''
+      head: entry.head?.toString() || '',
+      fund: entry.fund?.toString() || '',
+      party: entry.party?.toString() || '',
+      date: entry.date || '',
+      amount: entry.amount?.toString() || '',
+      movement: entry.movement || 'INCREASE',
+      note: entry.note || ''
     });
   };
 
   // সম্পাদনা বাতিল
   const handleCancelEdit = () => {
-    setEditingWithdraw(null);
+    setEditingEntry(null);
     setFormData({
+      head: '',
       fund: '',
+      party: '',
       date: new Date().toISOString().split('T')[0],
       amount: '',
-      method: '',
+      movement: 'INCREASE',
       note: ''
     });
   };
 
   // মুছে ফেলার নিশ্চিতকরণ
-  const handleDeleteConfirm = (withdraw) => {
+  const handleDeleteConfirm = (entry) => {
     setModalAction('delete');
-    setModalData({ id: withdraw.id, amount: withdraw.amount, fund: withdraw.fund });
+    setModalData({ id: entry.id, amount: entry.amount, head: entry.head });
     setIsModalOpen(true);
   };
 
   // ফর্ম রিসেট
   const handleReset = () => {
     setFormData({
+      head: '',
       fund: '',
+      party: '',
       date: new Date().toISOString().split('T')[0],
       amount: '',
-      method: '',
+      movement: 'INCREASE',
       note: ''
     });
-    setEditingWithdraw(null);
+    setEditingEntry(null);
   };
 
   const isLoading = isCreating || isUpdating || isDeleting;
+  const isFormLoading = isLoadingHeads || isLoadingFunds || isLoadingParties;
 
-  // ফান্ডের নাম পাওয়া
-  const getFundName = (fundId) => {
-    const fund = funds.find(f => f.id === fundId);
-    return fund ? fund.name : `ফান্ড ${fundId}`;
+  // এন্টিটির নাম পাওয়া
+  const getHeadName = (headId) => {
+    const head = liabilityHeads.find(h => h.id === headId);
+    return head ? head.name : `হেড ${headId}`;
   };
 
   return (
@@ -204,19 +223,48 @@ const Withdraw = () => {
       </style>
 
       <div>
-        {/* উত্তোলন ফর্ম */}
+        {/* দায়বদ্ধতা এন্ট্রি ফর্ম */}
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
           <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-            {editingWithdraw ? (
+            {editingEntry ? (
               <FaEdit className="text-4xl text-[#441a05]" />
             ) : (
               <IoAddCircle className="text-4xl text-[#441a05]" />
             )}
             <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
-              {editingWithdraw ? 'উত্তোলন সম্পাদনা করুন' : 'নতুন উত্তোলন তৈরি করুন'}
+              {editingEntry ? 'দায়বদ্ধতা এন্ট্রি সম্পাদনা করুন' : 'নতুন দায়বদ্ধতা এন্ট্রি তৈরি করুন'}
             </h3>
           </div>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* দায়বদ্ধতা হেড নির্বাচন */}
+            <div>
+              <label htmlFor="head" className="block text-sm font-medium text-[#441a05] mb-1">
+                দায়বদ্ধতা হেড *
+              </label>
+              <select
+                id="head"
+                name="head"
+                value={formData.head}
+                onChange={handleInputChange}
+                className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
+                disabled={isLoading || isLoadingHeads}
+                aria-label="দায়বদ্ধতা হেড নির্বাচন করুন"
+                title="একটি দায়বদ্ধতা হেড নির্বাচন করুন"
+                required
+                aria-describedby={createError || updateError ? 'liability-error' : undefined}
+              >
+                <option value="">দায়বদ্ধতা হেড নির্বাচন করুন</option>
+                {liabilityHeads.map((head) => (
+                  <option key={head.id} value={head.id}>
+                    {head.name || `হেড ${head.id}`}
+                  </option>
+                ))}
+              </select>
+              {isLoadingHeads && (
+                <p className="text-xs text-[#441a05]/70 mt-1">দায়বদ্ধতা হেড লোড হচ্ছে...</p>
+              )}
+            </div>
+
             {/* ফান্ড নির্বাচন */}
             <div>
               <label htmlFor="fund" className="block text-sm font-medium text-[#441a05] mb-1">
@@ -232,9 +280,9 @@ const Withdraw = () => {
                 aria-label="ফান্ড নির্বাচন করুন"
                 title="একটি ফান্ড নির্বাচন করুন"
                 required
-                aria-describedby={createError || updateError ? 'withdraw-error' : undefined}
+                aria-describedby={createError || updateError ? 'liability-error' : undefined}
               >
-                <option value="">একটি ফান্ড নির্বাচন করুন</option>
+                <option value="">ফান্ড নির্বাচন করুন</option>
                 {funds.map((fund) => (
                   <option key={fund.id} value={fund.id}>
                     {fund.name || `ফান্ড ${fund.id}`}
@@ -243,6 +291,35 @@ const Withdraw = () => {
               </select>
               {isLoadingFunds && (
                 <p className="text-xs text-[#441a05]/70 mt-1">ফান্ড লোড হচ্ছে...</p>
+              )}
+            </div>
+
+            {/* পার্টি নির্বাচন */}
+            <div>
+              <label htmlFor="party" className="block text-sm font-medium text-[#441a05] mb-1">
+                পার্টি *
+              </label>
+              <select
+                id="party"
+                name="party"
+                value={formData.party}
+                onChange={handleInputChange}
+                className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
+                disabled={isLoading || isLoadingParties}
+                aria-label="পার্টি নির্বাচন করুন"
+                title="একটি পার্টি নির্বাচন করুন"
+                required
+                aria-describedby={createError || updateError ? 'liability-error' : undefined}
+              >
+                <option value="">পার্টি নির্বাচন করুন</option>
+                {parties.map((party) => (
+                  <option key={party.id} value={party.id}>
+                    {party.name || `পার্টি ${party.id}`}
+                  </option>
+                ))}
+              </select>
+              {isLoadingParties && (
+                <p className="text-xs text-[#441a05]/70 mt-1">পার্টি লোড হচ্ছে...</p>
               )}
             </div>
 
@@ -260,9 +337,9 @@ const Withdraw = () => {
                 className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
                 disabled={isLoading}
                 aria-label="তারিখ"
-                title="উত্তোলনের তারিখ নির্বাচন করুন"
+                title="দায়বদ্ধতার তারিখ নির্বাচন করুন"
                 required
-                aria-describedby={createError || updateError ? 'withdraw-error' : undefined}
+                aria-describedby={createError || updateError ? 'liability-error' : undefined}
               />
             </div>
 
@@ -283,41 +360,36 @@ const Withdraw = () => {
                 placeholder="পরিমাণ লিখুন"
                 disabled={isLoading}
                 aria-label="পরিমাণ"
-                title="উত্তোলনের পরিমাণ লিখুন"
+                title="দায়বদ্ধতার পরিমাণ লিখুন"
                 required
-                aria-describedby={createError || updateError ? 'withdraw-error' : undefined}
+                aria-describedby={createError || updateError ? 'liability-error' : undefined}
               />
             </div>
 
-            {/* পদ্ধতি */}
+            {/* মুভমেন্ট */}
             <div>
-              <label htmlFor="method" className="block text-sm font-medium text-[#441a05] mb-1">
-                পদ্ধতি *
+              <label htmlFor="movement" className="block text-sm font-medium text-[#441a05] mb-1">
+                মুভমেন্ট *
               </label>
               <select
-                id="method"
-                name="method"
-                value={formData.method}
+                id="movement"
+                name="movement"
+                value={formData.movement}
                 onChange={handleInputChange}
                 className="w-full p-2 bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300"
                 disabled={isLoading}
-                aria-label="পদ্ধতি নির্বাচন করুন"
-                title="উত্তোলনের পদ্ধতি নির্বাচন করুন"
+                aria-label="মুভমেন্ট নির্বাচন করুন"
+                title="মুভমেন্ট নির্বাচন করুন"
                 required
-                aria-describedby={createError || updateError ? 'withdraw-error' : undefined}
+                aria-describedby={createError || updateError ? 'liability-error' : undefined}
               >
-                <option value="">পদ্ধতি নির্বাচন করুন</option>
-                <option value="cash">নগদ</option>
-                <option value="bank_transfer">ব্যাংক ট্রান্সফার</option>
-                <option value="check">চেক</option>
-                <option value="online">অনলাইন পেমেন্ট</option>
-                <option value="mobile_banking">মোবাইল ব্যাংকিং</option>
-                <option value="other">অন্যান্য</option>
+                <option value="INCREASE">বৃদ্ধি</option>
+                <option value="DECREASE">হ্রাস</option>
               </select>
             </div>
 
             {/* নোট */}
-            <div className="md:col-span-2">
+            <div className="md:col-span-3">
               <label htmlFor="note" className="block text-sm font-medium text-[#441a05] mb-1">
                 নোট
               </label>
@@ -336,23 +408,23 @@ const Withdraw = () => {
             </div>
             <button
               type="submit"
-              disabled={isLoading}
-              title={editingWithdraw ? 'উত্তোলন আপডেট করুন' : 'নতুন উত্তোলন তৈরি করুন'}
-              className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${isLoading ? 'cursor-not-allowed opacity-50' : 'hover:text-white hover:shadow-md'}`}
+              disabled={isLoading || isFormLoading}
+              title={editingEntry ? 'দায়বদ্ধতা এন্ট্রি আপডেট করুন' : 'নতুন দায়বদ্ধতা এন্ট্রি তৈরি করুন'}
+              className={`relative inline-flex items-center hover:text-white px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${isLoading || isFormLoading ? 'cursor-not-allowed opacity-50' : 'hover:text-white hover:shadow-md'}`}
             >
               {isLoading ? (
                 <span className="flex items-center space-x-3">
                   <FaSpinner className="animate-spin text-lg" />
-                  <span>{editingWithdraw ? 'আপডেট হচ্ছে...' : 'তৈরি হচ্ছে...'}</span>
+                  <span>{editingEntry ? 'আপডেট হচ্ছে...' : 'তৈরি হচ্ছে...'}</span>
                 </span>
               ) : (
                 <span className="flex items-center space-x-2">
                   <IoAdd className="w-5 h-5" />
-                  <span>{editingWithdraw ? 'উত্তোলন আপডেট করুন' : 'উত্তোলন তৈরি করুন'}</span>
+                  <span>{editingEntry ? 'এন্ট্রি আপডেট করুন' : 'এন্ট্রি তৈরি করুন'}</span>
                 </span>
               )}
             </button>
-            {editingWithdraw && (
+            {editingEntry && (
               <button
                 type="button"
                 onClick={handleCancelEdit}
@@ -371,9 +443,15 @@ const Withdraw = () => {
               রিসেট
             </button>
           </form>
+          {/* ফর্ম লোডিং স্টেট */}
+          {isFormLoading && (
+            <div className="mt-4 p-3 bg-[#DB9E30]/10 border border-[#DB9E30]/20 rounded-lg">
+              <p className="text-sm text-[#441a05]/70">ফর্ম ডেটা লোড হচ্ছে...</p>
+            </div>
+          )}
           {(createError || updateError || deleteError) && (
             <div
-              id="withdraw-error"
+              id="liability-error"
               className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn"
               style={{ animationDelay: '0.4s' }}
             >
@@ -383,11 +461,13 @@ const Withdraw = () => {
           )}
         </div>
 
-        {/* উত্তোলন তালিকা */}
-        <WithdrawTable
-          withdraws={withdraws}
+        {/* দায়বদ্ধতা তালিকা */}
+        <LiabilityTable
+          liabilityEntries={liabilityEntries}
+          liabilityHeads={liabilityHeads}
           funds={funds}
-          isLoading={isLoadingWithdraws}
+          parties={parties}
+          isLoading={isLoadingEntries}
           error={fetchError}
           onEdit={handleEdit}
           onDelete={handleDeleteConfirm}
@@ -403,14 +483,14 @@ const Withdraw = () => {
               className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border-t border-white/20 animate-slideUp"
             >
               <h3 className="text-lg font-semibold text-[#441a05] mb-4">
-                {modalAction === 'create' && 'নতুন উত্তোলন নিশ্চিত করুন'}
-                {modalAction === 'update' && 'উত্তোলন আপডেট নিশ্চিত করুন'}
-                {modalAction === 'delete' && 'উত্তোলন মুছে ফেলা নিশ্চিত করুন'}
+                {modalAction === 'create' && 'নতুন দায়বদ্ধতা এন্ট্রি নিশ্চিত করুন'}
+                {modalAction === 'update' && 'দায়বদ্ধতা এন্ট্রি আপডেট নিশ্চিত করুন'}
+                {modalAction === 'delete' && 'দায়বদ্ধতা এন্ট্রি মুছে ফেলা নিশ্চিত করুন'}
               </h3>
               <p className="text-[#441a05] mb-6">
-                {modalAction === 'create' && 'আপনি কি নিশ্চিত যে নতুন উত্তোলন তৈরি করতে চান?'}
-                {modalAction === 'update' && 'আপনি কি নিশ্চিত যে এই উত্তোলন আপডেট করতে চান?'}
-                {modalAction === 'delete' && `আপনি কি নিশ্চিত যে ${getFundName(modalData.fund)} থেকে ${Math.abs(modalData.amount).toLocaleString()} টাকার এই উত্তোলন মুছে ফেলতে চান? এই ক্রিয়াটি পূর্বাবস্থায় ফেরানো যাবে না।`}
+                {modalAction === 'create' && 'আপনি কি নিশ্চিত যে নতুন দায়বদ্ধতা এন্ট্রি তৈরি করতে চান?'}
+                {modalAction === 'update' && 'আপনি কি নিশ্চিত যে এই দায়বদ্ধতা এন্ট্রি আপডেট করতে চান?'}
+                {modalAction === 'delete' && `আপনি কি নিশ্চিত যে ${getHeadName(modalData.head)} এর জন্য ${parseInt(modalData.amount).toLocaleString('bn-BD')} টাকার এই দায়বদ্ধতা এন্ট্রি মুছে ফেলতে চান? এই ক্রিয়াটি পূর্বাবস্থায় ফেরানো যাবে না।`}
               </p>
               <div className="flex justify-end space-x-4">
                 <button
@@ -436,4 +516,4 @@ const Withdraw = () => {
   );
 };
 
-export default Withdraw;
+export default LiabilityEntries;

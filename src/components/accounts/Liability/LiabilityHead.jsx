@@ -5,7 +5,7 @@ import { IoAdd, IoAddCircle } from "react-icons/io5";
 // import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi";
 import { useSelector } from "react-redux";
 import toast, { Toaster } from "react-hot-toast";
-import { useCreateLiabilityHeadMutation, useDeleteLiabilityHeadMutation, useGetLiabilityHeadsQuery, useUpdateLiabilityHeadMutation } from "../../../redux/features/api/liability-heads/liabilityHeadsApi";
+import { useCreateLiabilityHeadMutation, useDeleteLiabilityHeadMutation, useGetLiabilityHeadsQuery, useUpdateLiabilityHeadMutation } from "../../../redux/features/api/liability/liabilityHeadsApi";
 import { useGetGroupPermissionsQuery } from "../../../redux/features/api/permissionRole/groupsApi";
 
 const LiabilityHead = () => {

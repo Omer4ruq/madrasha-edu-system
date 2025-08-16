@@ -81,7 +81,12 @@ import UserProfile from "./components/user-profile/UserProfile";
 import AddNotice from "./components/notice/AddNotice";
 import SubjectConfigs from "./components/SubjectManagement/SubjectConfigs";
 import MarkConfigs from "./components/marks/MarkConfigs";
-import LiabilityHead from "./components/accounts/Liability-head/LiabilityHead";
+import LiabilityHead from "./components/accounts/Liability/LiabilityHead";
+import AddParties from "./components/parties/AddParties";
+import Withdraw from "./components/withdraw/Withdraw";
+import LiabilityEntries from "./components/accounts/Liability/LiabilityEntries";
+import WithdrawTable from "./components/withdraw/WithdrawTable";
+import LiabilityTable from "./components/accounts/Liability/LiabilityTable";
 
 
 function Root() {
@@ -343,6 +348,18 @@ function Root() {
                   path: "waivers",
                   element: <AddWaivers></AddWaivers>,
                 },
+                  {
+                  path: "parties",
+                  element: <AddParties/>,
+                },
+                   {
+                  path: "withdraws",
+                  element: <Withdraw/>,
+                },
+                    {
+                  path: "liability-entries",
+                  element: <LiabilityEntries/>,
+                },
                 {
                   path: "income-list",
                   element: <IncomeItems />,
@@ -384,6 +401,15 @@ function Root() {
                   path: "income-items-list",
                   element: <IncomeItemsList />,
                 },
+                   {
+                  path: "withdraws-list",
+                  element: <WithdrawTable />,
+                },
+                   {
+                  path: "liability-list",
+                  element: <LiabilityTable />,
+                },
+
               ],
             },
             {

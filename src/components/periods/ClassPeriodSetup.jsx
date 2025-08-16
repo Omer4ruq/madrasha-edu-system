@@ -501,7 +501,7 @@ console.log("periods",periods)
         {/* Confirmation/Update/Delete Modal */}
         {isModalOpen && (hasAddPermission || hasChangePermission || hasDeletePermission) && (
           <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[10000]">
-            <div className="bg-[#441a05]backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md border border-[#441a05]/20 animate-slideUp">
+            <div className="bg-white backdrop-blur-sm rounded-t-2xl p-6 w-full max-w-md animate-slideUp">
               <h3 className="text-lg font-semibold text-[#441a05]mb-4">
                 {modalAction === "add" && "পিরিয়ড যোগ নিশ্চিত করুন"}
                 {modalAction === "update" && "পিরিয়ড আপডেট নিশ্চিত করুন"}
@@ -510,7 +510,7 @@ console.log("periods",periods)
               {modalAction === "update" ? (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#441a05]mb-2">
+                    <label className="block text-sm font-medium text-[#441a05] mb-2">
                       শুরুর সময়
                     </label>
                     <input
