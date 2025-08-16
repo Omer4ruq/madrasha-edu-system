@@ -647,7 +647,7 @@ const StudentList = () => {
           <td>${student.admission_date ? new Date(student.admission_date).toLocaleDateString('bn-BD') : "N/A"}</td>
           <td>${student.class_name || "N/A"} ${student.section_name ? '('+student.section_name+')' : ''}</td>
           <td>${student.shift_name || "N/A"}</td>
-          <td>${student.residential_status === 'Residential' ? 'আবাসিক' : student.residential_status === 'NonResidential' ? 'অ-আবাসিক' : "N/A"}</td>
+          <td>${student.residential_status === 'Residential' ? 'আবাসিক' : student.residential_status === 'NonResidential' ? 'অনাবাসিক' : "N/A"}</td>
         </tr>
       </table>
     </div>
@@ -750,6 +750,7 @@ const StudentList = () => {
     { key: "class_name", label: "ক্লাস", fixed: false, width: "100px" },
     { key: "section_name", label: "সেকশন", fixed: false, width: "100px" },
     { key: "shift_name", label: "শিফট", fixed: false, width: "100px" },
+    { key: "residential_status", label: "আ/অ-আ", fixed: false, width: "100px" },
     { key: "guardian", label: "অভিভাবকের নাম", fixed: false, width: "100px" },
     { key: "phone_number", label: "ফোন নম্বর", fixed: false, width: "120px" },
     { key: "dob", label: "জন্ম তারিখ", fixed: false, width: "120px" },
@@ -1095,6 +1096,7 @@ const StudentList = () => {
                       <td className="table-cell" style={{ width: "100px" }}>{student.class_name}</td>
                       <td className="table-cell" style={{ width: "100px" }}>{student.section_name}</td>
                       <td className="table-cell" style={{ width: "100px" }}>{student.shift_name}</td>
+                      <td className="table-cell" style={{ width: "100px" }}>{student.residential_status == "NonResidential" ? "অনাবাসিক" : "আবাসিক"}</td>
                       <td className="table-cell" style={{ width: "100px" }}>{student.guardian}</td>
                       <td className="table-cell" style={{ width: "120px" }}>{student.phoneno || "N/A"}</td>
                       <td className="table-cell" style={{ width: "120px" }}>{student.dob || "N/A"}</td>

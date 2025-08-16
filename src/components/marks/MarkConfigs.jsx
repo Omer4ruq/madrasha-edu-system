@@ -639,7 +639,7 @@ console.log("subjectConfigs", subjectConfigs)
                       </div>
 
                       {/* Subject-level action buttons */}
-                      <div className="mt-4 flex justify-end space-x-2">
+                      <div className="mt-4 flex justify-end flex-wrap gap-2">
                         {hasAddPermission && (
                           <button
                             onClick={() => handleSave(subjectConfig.id)}

@@ -1080,7 +1080,7 @@ const StudentRegistrationForm = () => {
                           )}
                         </span>
                         <span className="ml-3 text-[#441a05] font-medium group-hover:text-[#DB9E30] transition-colors duration-300">
-                          অ-আবাসিক
+                          অনাবাসিক
                         </span>
                       </span>
                     </label>
