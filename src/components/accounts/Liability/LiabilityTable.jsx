@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { FaEdit, FaSpinner, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaTrash } from 'react-icons/fa';
+import { Toaster, toast } from 'react-hot-toast';
 
 const LiabilityTable = ({ 
   liabilityEntries = [], 
@@ -15,7 +16,6 @@ const LiabilityTable = ({
   hasViewPermission = true
 }) => {
   const [activeTab, setActiveTab] = useState('all');
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [dateFilter, setDateFilter] = useState({
     start_date: '',
     end_date: '',
@@ -24,15 +24,15 @@ const LiabilityTable = ({
     party_id: '',
     movement: ''
   });
-  const [viewMode, setViewMode] = useState('table'); // 'table' or 'card'
+  const [viewMode, setViewMode] = useState('table'); // 'table' বা 'card'
 
-  // Available movement types
+  // মুভমেন্ট টাইপ
   const movementTypes = [
-    { value: 'INCREASE', label: 'Increase' },
-    { value: 'DECREASE', label: 'Decrease' }
+    { value: 'INCREASE', label: 'বৃদ্ধি' },
+    { value: 'DECREASE', label: 'হ্রাস' }
   ];
 
-  // Filter liability entries based on active tab and filter selections
+  // ফিল্টার করা এন্ট্রি
   const filteredEntries = useMemo(() => {
     return liabilityEntries.filter((entry) => {
       if (activeTab === 'all') return true;
@@ -64,7 +64,7 @@ const LiabilityTable = ({
     });
   }, [liabilityEntries, activeTab, dateFilter]);
 
-  // Calculate total amount for filtered entries (considering movement)
+  // ফিল্টার করা এন্ট্রির মোট পরিমাণ (মুভমেন্ট বিবেচনা করে)
   const totalAmount = useMemo(() => {
     return filteredEntries.reduce((sum, entry) => {
       const amount = parseFloat(entry.amount) || 0;
@@ -72,7 +72,7 @@ const LiabilityTable = ({
     }, 0).toFixed(2);
   }, [filteredEntries]);
 
-  // Handle filter changes
+  // ফিল্টার পরিবর্তন হ্যান্ডলার
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setDateFilter((prev) => ({
@@ -81,83 +81,66 @@ const LiabilityTable = ({
     }));
   };
 
-  // Get entity names by ID
+  // এন্টিটির নাম পাওয়া
   const getHeadName = (headId) => {
     const head = liabilityHeads.find(h => h.id === headId);
-    return head ? head.name : `Head ${headId}`;
+    return head ? head.name : `হেড ${headId}`;
   };
 
   const getFundName = (fundId) => {
     const fund = funds.find(f => f.id === fundId);
-    return fund ? fund.name : `Fund ${fundId}`;
+    return fund ? fund.name : `ফান্ড ${fundId}`;
   };
 
   const getPartyName = (partyId) => {
     const party = parties.find(p => p.id === partyId);
-    return party ? party.name : `Party ${partyId}`;
+    return party ? party.name : `পার্টি ${partyId}`;
   };
 
-  // Handle delete confirmation
-  const handleDeleteConfirm = (entry) => {
-    if (!hasDeletePermission) return;
-    setShowDeleteConfirm(entry);
-  };
-
-  // Execute delete
-  const handleDelete = async () => {
-    if (!hasDeletePermission || !showDeleteConfirm) return;
-    try {
-      await onDelete(showDeleteConfirm.id);
-      setShowDeleteConfirm(null);
-    } catch (err) {
-      console.error('Failed to delete liability entry:', err);
-    }
-  };
-
-  // Generate report for printing
+  // রিপোর্ট জেনারেট করা
   const generateReport = () => {
     if (!hasViewPermission) {
-      alert('You do not have permission to generate reports');
+      toast.error('আপনার রিপোর্ট তৈরি করার অনুমতি নেই');
       return;
     }
     
     if (activeTab === 'date' && (!dateFilter.start_date || !dateFilter.end_date)) {
-      alert('Please select start and end dates for date filter');
+      toast.error('তারিখ ফিল্টারের জন্য শুরু এবং শেষ তারিখ নির্বাচন করুন');
       return;
     }
     
     if (activeTab === 'head' && !dateFilter.head_id) {
-      alert('Please select a liability head for head filter');
+      toast.error('হেড ফিল্টারের জন্য একটি দায়বদ্ধতা হেড নির্বাচন করুন');
       return;
     }
     
     if (activeTab === 'fund' && !dateFilter.fund_id) {
-      alert('Please select a fund for fund filter');
+      toast.error('ফান্ড ফিল্টারের জন্য একটি ফান্ড নির্বাচন করুন');
       return;
     }
     
     if (activeTab === 'party' && !dateFilter.party_id) {
-      alert('Please select a party for party filter');
+      toast.error('পার্টি ফিল্টারের জন্য একটি পার্টি নির্বাচন করুন');
       return;
     }
     
     if (activeTab === 'movement' && !dateFilter.movement) {
-      alert('Please select a movement type for movement filter');
+      toast.error('মুভমেন্ট ফিল্টারের জন্য একটি মুভমেন্ট টাইপ নির্বাচন করুন');
       return;
     }
     
     if (isLoading) {
-      alert('Data is loading, please wait');
+      toast.error('ডেটা লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন');
       return;
     }
     
     if (error) {
-      alert(`Error loading data: ${error.status || 'Unknown error'}`);
+      toast.error(`ডেটা লোড করতে ত্রুটি: ${error.status || 'অজানা ত্রুটি'}`);
       return;
     }
     
     if (!filteredEntries.length) {
-      alert('No liability entries found for the selected filter');
+      toast.error('নির্বাচিত ফিল্টারের জন্য কোনো দায়বদ্ধতা এন্ট্রি পাওয়া যায়নি');
       return;
     }
 
@@ -173,7 +156,7 @@ const LiabilityTable = ({
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Liability Entries Report</title>
+        <title>দায়বদ্ধতা এন্ট্রি রিপোর্ট</title>
         <meta charset="UTF-8">
         <style>
           @page { 
@@ -282,23 +265,23 @@ const LiabilityTable = ({
         ${entryPages.map((pageItems, pageIndex) => `
           <div class="page-container">
             <div class="header">
-              <h1>Liability Entries Report</h1>
-              <h2 class="title">Financial Liability Summary</h2>
+              <h1>দায়বদ্ধতা এন্ট্রি রিপোর্ট</h1>
+              <h2 class="title">আর্থিক দায়বদ্ধতার সারাংশ</h2>
               <div class="meta-container">
-                <span>Date Range: ${activeTab === "date" ? (dateFilter.start_date ? new Date(dateFilter.start_date).toLocaleDateString() : 'Start') + ' to ' + (dateFilter.end_date ? new Date(dateFilter.end_date).toLocaleDateString() : 'End') : 'All'}</span>
-                <span>Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</span>
+                <span>তারিখের সীমা: ${activeTab === "date" ? (dateFilter.start_date ? new Date(dateFilter.start_date).toLocaleDateString('bn-BD') : 'শুরু') + ' থেকে ' + (dateFilter.end_date ? new Date(dateFilter.end_date).toLocaleDateString('bn-BD') : 'শেষ') : 'সব'}</span>
+                <span>তৈরি করা হয়েছে: ${new Date().toLocaleDateString('bn-BD')} ${new Date().toLocaleTimeString()}</span>
               </div>
             </div>
             <table>
               <thead>
                 <tr>
-                  <th style="width: 150px;">Liability Head</th>
-                  <th style="width: 100px;">Fund</th>
-                  <th style="width: 100px;">Party</th>
-                  <th style="width: 100px;">Date</th>
-                  <th style="width: 120px;">Amount (BDT)</th>
-                  <th style="width: 100px;">Movement</th>
-                  <th style="width: 200px;">Note</th>
+                  <th style="width: 150px;">দায়বদ্ধতা হেড</th>
+                  <th style="width: 100px;">ফান্ড</th>
+                  <th style="width: 100px;">পার্টি</th>
+                  <th style="width: 100px;">তারিখ</th>
+                  <th style="width: 120px;">পরিমাণ (টাকা)</th>
+                  <th style="width: 100px;">মুভমেন্ট</th>
+                  <th style="width: 200px;">নোট</th>
                 </tr>
               </thead>
               <tbody>
@@ -308,12 +291,8 @@ const LiabilityTable = ({
                     <td>${getFundName(entry.fund)}</td>
                     <td>${getPartyName(entry.party)}</td>
                     <td>${entry.date || 'N/A'}</td>
-                    <td class="amount-cell ${entry.movement === 'INCREASE' ? 'increase' : 'decrease'}">${(entry.amount || 0).toLocaleString()}</td>
-                    <td>
-                      <span class="movement-badge movement-${entry.movement.toLowerCase()}">
-                        ${entry.movement}
-                      </span>
-                    </td>
+                    <td class="amount-cell ${entry.movement === 'INCREASE' ? 'increase' : 'decrease'}">${entry.movement === 'INCREASE' ? '+' : '-'}${parseFloat(entry.amount || 0).toLocaleString('bn-BD')}</td>
+                    <td><span class="movement-badge movement-${entry.movement.toLowerCase()}">${movementTypes.find(m => m.value === entry.movement)?.label || entry.movement}</span></td>
                     <td style="text-align: left;">${entry.note || '-'}</td>
                   </tr>
                 `).join('')}
@@ -321,19 +300,19 @@ const LiabilityTable = ({
               ${pageIndex === entryPages.length - 1 ? `
                 <tfoot>
                   <tr>
-                    <td colspan="4"><strong>Net Liability Amount</strong></td>
-                    <td class="amount-cell ${parseFloat(totalAmount) >= 0 ? 'increase' : 'decrease'}"><strong>${totalAmount}</strong></td>
+                    <td colspan="4"><strong>নেট দায়বদ্ধতার পরিমাণ</strong></td>
+                    <td class="amount-cell"><strong>${totalAmount.toLocaleString('bn-BD')}</strong></td>
                     <td colspan="2"></td>
                   </tr>
                 </tfoot>
               ` : ''}
             </table>
             <div class="date">
-              Report generated on: ${new Date().toLocaleDateString()}
+              রিপোর্ট তৈরি করা হয়েছে: ${new Date().toLocaleDateString('bn-BD')}
             </div>
             <div class="footer">
-              <span>This report was generated automatically.</span>
-              <span>Page ${pageIndex + 1} of ${entryPages.length}</span>
+              <span>এই রিপোর্ট স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে।</span>
+              <span>পৃষ্ঠা ${pageIndex + 1} এর মধ্যে ${entryPages.length}</span>
             </div>
           </div>
         `).join('')}
@@ -356,112 +335,110 @@ const LiabilityTable = ({
 
   if (!hasViewPermission) {
     return (
-      <div className="p-4 text-red-500 text-center">
-        You do not have permission to view liability entries.
+      <div className="p-4 text-red-400 bg-red-500/10 rounded-lg animate-fadeIn text-center">
+        আপনার দায়বদ্ধতা দেখার অনুমতি নেই।
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
+      <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
-          .table-container {
-            max-height: 60vh;
-            overflow-x: auto;
-            overflow-y: auto;
-            position: relative;
-          }
           .tab {
             padding: 8px 16px;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #9d9087;
           }
           .tab-active {
-            background-color: #3b82f6;
-            color: white;
+            background-color: #DB9E30;
+            color: #441a05;
             font-weight: bold;
-            border-color: #3b82f6;
+            border-color: #DB9E30;
           }
           .tab-inactive {
-            background-color: white;
-            color: #374151;
+            background-color: transparent;
+            color: #441a05;
           }
           .tab-inactive:hover {
-            background-color: #f3f4f6;
+            background-color: #DB9E30/20;
           }
           .report-button {
-            background-color: #059669;
-            color: white;
+            background-color: #DB9E30;
+            color: #441a05;
             padding: 8px 16px;
             border-radius: 8px;
-            transition: background-color 0.3s;
+            transition: all 0.3s;
             border: none;
             cursor: pointer;
           }
           .report-button:hover {
-            background-color: #047857;
+            color: white;
+            background-color: #b38226;
           }
         `}
       </style>
 
-      {/* Header with filters */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Liability Entries List</h2>
+      {/* হেডার এবং ফিল্টার */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">
+          দায়বদ্ধতা তালিকা
+        </h3>
         
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 w-full md:w-auto">
-          {/* Tabs */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          {/* ট্যাব */}
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setActiveTab('all')}
               className={`tab ${activeTab === 'all' ? 'tab-active' : 'tab-inactive'}`}
             >
-              All
+              সব
             </button>
             <button
               onClick={() => setActiveTab('head')}
               className={`tab ${activeTab === 'head' ? 'tab-active' : 'tab-inactive'}`}
             >
-              Head
+              হেড
             </button>
             <button
               onClick={() => setActiveTab('fund')}
               className={`tab ${activeTab === 'fund' ? 'tab-active' : 'tab-inactive'}`}
             >
-              Fund
+              ফান্ড
             </button>
             <button
               onClick={() => setActiveTab('party')}
               className={`tab ${activeTab === 'party' ? 'tab-active' : 'tab-inactive'}`}
             >
-              Party
+              পার্টি
             </button>
             <button
               onClick={() => setActiveTab('movement')}
               className={`tab ${activeTab === 'movement' ? 'tab-active' : 'tab-inactive'}`}
             >
-              Movement
+              মুভমেন্ট
             </button>
             <button
               onClick={() => setActiveTab('date')}
               className={`tab ${activeTab === 'date' ? 'tab-active' : 'tab-inactive'}`}
             >
-              Date
+              তারিখ
             </button>
           </div>
 
-          {/* Filters */}
+          {/* ফিল্টার */}
           <div className="flex flex-col sm:flex-row gap-3">
             {activeTab === 'head' && (
               <select
                 name="head_id"
                 value={dateFilter.head_id}
                 onChange={handleFilterChange}
-                className="bg-white min-w-[150px] text-gray-700 pl-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="bg-transparent min-w-[150px] text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30]"
               >
-                <option value="">Select Liability Head</option>
+                <option value="">হেড নির্বাচন করুন</option>
                 {liabilityHeads.map((head) => (
                   <option key={head.id} value={head.id}>
                     {head.name}
@@ -475,9 +452,9 @@ const LiabilityTable = ({
                 name="fund_id"
                 value={dateFilter.fund_id}
                 onChange={handleFilterChange}
-                className="bg-white min-w-[150px] text-gray-700 pl-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="bg-transparent min-w-[150px] text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30]"
               >
-                <option value="">Select Fund</option>
+                <option value="">ফান্ড নির্বাচন করুন</option>
                 {funds.map((fund) => (
                   <option key={fund.id} value={fund.id}>
                     {fund.name}
@@ -491,9 +468,9 @@ const LiabilityTable = ({
                 name="party_id"
                 value={dateFilter.party_id}
                 onChange={handleFilterChange}
-                className="bg-white min-w-[150px] text-gray-700 pl-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="bg-transparent min-w-[150px] text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30]"
               >
-                <option value="">Select Party</option>
+                <option value="">পার্টি নির্বাচন করুন</option>
                 {parties.map((party) => (
                   <option key={party.id} value={party.id}>
                     {party.name}
@@ -507,12 +484,12 @@ const LiabilityTable = ({
                 name="movement"
                 value={dateFilter.movement}
                 onChange={handleFilterChange}
-                className="bg-white min-w-[150px] text-gray-700 pl-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="bg-transparent min-w-[150px] text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30]"
               >
-                <option value="">Select Movement</option>
-                {movementTypes.map((movement) => (
-                  <option key={movement.value} value={movement.value}>
-                    {movement.label}
+                <option value="">মুভমেন্ট নির্বাচন করুন</option>
+                {movementTypes.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
                   </option>
                 ))}
               </select>
@@ -525,272 +502,283 @@ const LiabilityTable = ({
                   name="start_date"
                   value={dateFilter.start_date}
                   onChange={handleFilterChange}
-                  className="bg-white text-gray-700 pl-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Start Date"
+                  className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30]"
+                  placeholder="শুরু তারিখ"
                 />
                 <input
                   type="date"
                   name="end_date"
                   value={dateFilter.end_date}
                   onChange={handleFilterChange}
-                  className="bg-white text-gray-700 pl-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="End Date"
+                  className="bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30]"
+                  placeholder="শেষ তারিখ"
                 />
               </>
             )}
           </div>
 
-          {/* View Mode Toggle */}
-          <div className="flex border border-gray-300 rounded-md overflow-hidden">
+          {/* ভিউ মোড টগল */}
+          <div className="flex border border-[#9d9087] rounded-lg overflow-hidden">
             <button
               onClick={() => setViewMode('table')}
               className={`px-3 py-2 text-sm font-medium transition-colors ${
                 viewMode === 'table'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                  ? 'bg-[#DB9E30] text-[#441a05]'
+                  : 'bg-transparent text-[#441a05] hover:bg-[#DB9E30]/20'
               }`}
             >
-              Table
+              <svg className="w-4 h-4 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 6h18m-9 8h9m-9 4h9m-9-8h9m-9 4h9" />
+              </svg>
+              টেবিল
             </button>
             <button
               onClick={() => setViewMode('card')}
               className={`px-3 py-2 text-sm font-medium transition-colors ${
                 viewMode === 'card'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                  ? 'bg-[#DB9E30] text-[#441a05]'
+                  : 'bg-transparent text-[#441a05] hover:bg-[#DB9E30]/20'
               }`}
             >
-              Cards
+              <svg className="w-4 h-4 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14-7H5a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2z" />
+              </svg>
+              কার্ড
             </button>
           </div>
 
-          {/* Report Button */}
+          {/* রিপোর্ট বাটন */}
           <button
             onClick={generateReport}
-            className="report-button w-full sm:w-auto"
-            title="Generate Liability Report"
+            className="report-button w-full sm:w-auto animate-scaleIn"
+            title="দায়বদ্ধতা রিপোর্ট তৈরি করুন"
           >
-            Report
+            রিপোর্ট
           </button>
         </div>
       </div>
 
-      {/* Results Count */}
+      {/* ফলাফলের সংখ্যা */}
       {!isLoading && !error && liabilityEntries.length > 0 && (
-        <div className="text-sm text-gray-600 mb-4">
-          Showing {filteredEntries.length} of {liabilityEntries.length} entries
+        <div className="text-sm text-[#441a05]/70 mb-4">
+          {dateFilter.start_date || dateFilter.end_date || dateFilter.head_id || dateFilter.fund_id || dateFilter.party_id || dateFilter.movement ? (
+            <>মোট {liabilityEntries.length}টি এন্ট্রির মধ্যে {filteredEntries.length}টি দেখানো হচ্ছে</>
+          ) : (
+            <>মোট {liabilityEntries.length}টি এন্ট্রি</>
+          )}
         </div>
       )}
 
-      {/* Loading State */}
+      {/* লোডিং স্টেট */}
       {isLoading && (
         <div className="text-center py-8">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-2 text-gray-600">Loading liability entries...</p>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#DB9E30]"></div>
+          <p className="mt-2 text-[#441a05]/70">দায়বদ্ধতা লোড হচ্ছে...</p>
         </div>
       )}
 
-      {/* Error State */}
+      {/* ত্রুটি স্টেট */}
       {error && (
-        <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-md">
-          <p>Error loading entries: {error?.data?.message || error?.message || 'Unknown error'}</p>
+        <div className="p-4 text-red-400 bg-red-500/10 rounded-lg animate-fadeIn">
+          <p>দায়বদ্ধতা লোড করতে ত্রুটি: {error?.data?.message || error?.message || 'অজানা ত্রুটি'}</p>
         </div>
       )}
 
-      {/* Empty State */}
+      {/* খালি স্টেট */}
       {!isLoading && !error && filteredEntries.length === 0 && liabilityEntries.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          <p className="text-lg">No liability entries found</p>
-          <p className="text-sm">Create your first liability entry using the form above</p>
+        <div className="text-center py-8 text-[#441a05]/70">
+          <p className="text-lg">কোনো দায়বদ্ধতা এন্ট্রি পাওয়া যায়নি</p>
+          <p className="text-sm">উপরের ফর্ম ব্যবহার করে আপনার প্রথম এন্ট্রি তৈরি করুন</p>
         </div>
       )}
 
-      {/* No Filter Results */}
+      {/* ফিল্টারে কোনো ফলাফল নেই */}
       {!isLoading && !error && filteredEntries.length === 0 && liabilityEntries.length > 0 && (
-        <div className="text-center py-8 text-gray-500">
-          <p className="text-lg">No entries match your filter</p>
-          <p className="text-sm">Try adjusting your search criteria</p>
+        <div className="text-center py-8 text-[#441a05]/70">
+          <p className="text-lg">আপনার ফিল্টারের সাথে কোনো দায়বদ্ধতা এন্ট্রি মেলেনি</p>
+          <p className="text-sm">আপনার অনুসন্ধানের মানদণ্ড সামঞ্জস্য করুন</p>
           <button
             onClick={() => setDateFilter({ start_date: '', end_date: '', head_id: '', fund_id: '', party_id: '', movement: '' })}
-            className="mt-2 text-blue-600 hover:text-blue-800 text-sm underline"
+            className="mt-2 text-[#DB9E30] hover:text-[#441a05] text-sm underline"
           >
-            Clear filter
+            ফিল্টার সাফ করুন
           </button>
         </div>
       )}
 
-      {/* Table View */}
+      {/* টেবিল ভিউ */}
       {!isLoading && !error && filteredEntries.length > 0 && viewMode === 'table' && (
-        <div className="table-container">
-          <div className="inline-block min-w-full py-2 align-middle">
-            <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead className="bg-gray-50 sticky top-0 z-10">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Liability Head
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Fund
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Party
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Amount
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Movement
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Note
-                    </th>
-                    {(hasEditPermission || hasDeletePermission) && (
-                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    )}
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredEntries.map((entry, index) => (
-                    <tr
-                      key={entry.id}
-                      className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
-                    >
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {getHeadName(entry.head)}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {getFundName(entry.fund)}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {getPartyName(entry.party)}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {entry.date}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
-                        {parseInt(entry.amount).toLocaleString()} BDT
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-center">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          entry.movement === 'INCREASE' 
-                            ? 'bg-red-100 text-red-700' 
-                            : 'bg-green-100 text-green-700'
-                        }`}>
-                          {entry.movement}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-900 max-w-xs truncate">
-                        {entry.note || '-'}
-                      </td>
-                      {(hasEditPermission || hasDeletePermission) && (
-                        <td className="px-4 py-4 whitespace-nowrap text-sm">
-                          <div className="flex space-x-2 justify-center">
-                            {hasEditPermission && (
-                              <button
-                                onClick={() => onEdit(entry)}
-                                className="text-blue-600 hover:text-blue-500 transition-colors"
-                                title="Edit entry"
-                              >
-                                <FaEdit className="w-4 h-4" />
-                              </button>
-                            )}
-                            {hasDeletePermission && (
-                              <button
-                                onClick={() => handleDeleteConfirm(entry)}
-                                className="text-red-600 hover:text-red-500 transition-colors"
-                                title="Delete entry"
-                              >
-                                <FaTrash className="w-4 h-4" />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-gray-50">
-                  <tr>
-                    <td colSpan={hasEditPermission || hasDeletePermission ? "4" : "4"} className="px-4 py-4 text-sm font-bold text-gray-900">
-                      Net Liability Amount:
-                    </td>
-                    <td className="px-4 py-4 text-sm font-bold text-gray-900 text-right">
-                      {totalAmount} BDT
-                    </td>
-                    <td colSpan={hasEditPermission || hasDeletePermission ? "3" : "2"}></td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Card View */}
-      {!isLoading && !error && filteredEntries.length > 0 && viewMode === 'card' && (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-            {filteredEntries.map((entry) => (
-              <div key={entry.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow h-full flex flex-col">
-                <div className="flex-grow space-y-3">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-semibold text-lg text-gray-800 line-clamp-1">{getHeadName(entry.head)}</h3>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-white/20">
+            <thead className="bg-white/5 sticky top-0 z-10">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                  দায়বদ্ধতা হেড
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                  ফান্ড
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                  পার্টি
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                  তারিখ
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                  পরিমাণ
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                  মুভমেন্ট
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                  নোট
+                </th>
+                {(hasEditPermission || hasDeletePermission) && (
+                  <th className="px-4 py-3 text-center text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">
+                    ক্রিয়াকলাপ
+                  </th>
+                )}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/20">
+              {filteredEntries.map((entry, index) => (
+                <tr
+                  key={entry.id}
+                  className="bg-white/5 animate-fadeIn"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                    {getHeadName(entry.head)}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                    {getFundName(entry.fund)}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                    {getPartyName(entry.party)}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-[#441a05]">
+                    {entry.date}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-[#441a05] text-right">
+                    {parseInt(entry.amount).toLocaleString('bn-BD')} টাকা
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-center">
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                       entry.movement === 'INCREASE' 
                         ? 'bg-red-100 text-red-700' 
                         : 'bg-green-100 text-green-700'
                     }`}>
-                      {entry.movement}
+                      {movementTypes.find(m => m.value === entry.movement)?.label || entry.movement}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 text-sm text-[#441a05] max-w-xs truncate">
+                    {entry.note || '-'}
+                  </td>
+                  {(hasEditPermission || hasDeletePermission) && (
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2 justify-center">
+                        {hasEditPermission && (
+                          <button
+                            onClick={() => onEdit(entry)}
+                            className="text-[#441a05] hover:text-blue-500 transition-colors duration-300"
+                            title="এন্ট্রি সম্পাদনা করুন"
+                          >
+                            <FaEdit className="w-5 h-5" />
+                          </button>
+                        )}
+                        {hasDeletePermission && (
+                          <button
+                            onClick={() => onDelete(entry)}
+                            className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
+                            title="এন্ট্রি মুছে ফেলুন"
+                          >
+                            <FaTrash className="w-5 h-5" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+            <tfoot className="bg-white/5">
+              <tr>
+                <td colSpan={hasEditPermission || hasDeletePermission ? "4" : "4"} className="px-4 py-4 text-sm font-bold text-[#441a05]">
+                  নেট দায়বদ্ধতার পরিমাণ:
+                </td>
+                <td className="px-4 py-4 text-sm font-bold text-[#441a05] text-right">
+                  {totalAmount.toLocaleString('bn-BD')} টাকা
+                </td>
+                <td colSpan={hasEditPermission || hasDeletePermission ? "3" : "2"}></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
+
+      {/* কার্ড ভিউ */}
+      {!isLoading && !error && filteredEntries.length > 0 && viewMode === 'card' && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+            {filteredEntries.map((entry, index) => (
+              <div
+                key={entry.id}
+                className="bg-white/5 border border-white/20 rounded-lg p-4 hover:shadow-md transition-shadow h-full flex flex-col animate-fadeIn"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="flex-grow space-y-3">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-semibold text-lg text-[#441a05] line-clamp-1">{getHeadName(entry.head)}</h3>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      entry.movement === 'INCREASE' 
+                        ? 'bg-red-100 text-red-700' 
+                        : 'bg-green-100 text-green-700'
+                    }`}>
+                      {movementTypes.find(m => m.value === entry.movement)?.label || entry.movement}
                     </span>
                   </div>
-                  
                   <div className="space-y-2">
-                    <p className="text-xl font-bold text-gray-900">
-                      {parseInt(entry.amount).toLocaleString()} BDT
+                    <p className="text-xl font-bold text-[#441a05]">
+                      {parseInt(entry.amount).toLocaleString('bn-BD')} টাকা
                     </p>
-                    <p className="text-gray-600 flex items-center text-sm">
+                    <p className="text-[#441a05]/70 flex items-center text-sm">
                       <span className="inline-block w-4 h-4 mr-2">💰</span>
                       <span className="truncate">{getFundName(entry.fund)}</span>
                     </p>
-                    <p className="text-gray-600 flex items-center text-sm">
+                    <p className="text-[#441a05]/70 flex items-center text-sm">
                       <span className="inline-block w-4 h-4 mr-2">👤</span>
                       <span className="truncate">{getPartyName(entry.party)}</span>
                     </p>
-                    <p className="text-gray-600 flex items-center text-sm">
+                    <p className="text-[#441a05]/70 flex items-center text-sm">
                       <span className="inline-block w-4 h-4 mr-2">📅</span>
                       <span>{entry.date}</span>
                     </p>
                     {entry.note && (
-                      <p className="text-gray-600 text-sm">
+                      <p className="text-[#441a05]/70 text-sm">
                         <span className="inline-block w-4 h-4 mr-2">📝</span>
                         <span className="break-words line-clamp-2">{entry.note}</span>
                       </p>
                     )}
                   </div>
                 </div>
-                
                 {(hasEditPermission || hasDeletePermission) && (
-                  <div className="flex space-x-2 mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex space-x-2 mt-4 pt-4 border-t border-white/20">
                     {hasEditPermission && (
                       <button
                         onClick={() => onEdit(entry)}
-                        className="flex-1 px-3 py-2 text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-md transition duration-200"
+                        className="flex-1 px-3 py-2 text-sm text-[#441a05] hover:text-blue-500 rounded-lg transition-colors duration-300"
+                        title="এন্ট্রি সম্পাদনা করুন"
                       >
-                        Edit
+                        <FaEdit className="w-5 h-5 mx-auto" />
                       </button>
                     )}
                     {hasDeletePermission && (
                       <button
-                        onClick={() => handleDeleteConfirm(entry)}
-                        className="flex-1 px-3 py-2 text-sm bg-red-100 text-red-700 hover:bg-red-200 rounded-md transition duration-200"
+                        onClick={() => onDelete(entry)}
+                        className="flex-1 px-3 py-2 text-sm text-[#441a05] hover:text-red-500 rounded-lg transition-colors duration-300"
+                        title="এন্ট্রি মুছে ফেলুন"
                       >
-                        Delete
+                        <FaTrash className="w-5 h-5 mx-auto" />
                       </button>
                     )}
                   </div>
@@ -799,37 +787,11 @@ const LiabilityTable = ({
             ))}
           </div>
           
-          {/* Total for Card View */}
-          <div className="p-4 text-right font-bold text-gray-800 bg-gray-50 rounded-lg">
-            Net Liability Amount: {totalAmount} BDT
+          {/* কার্ড ভিউয়ের জন্য নেট */}
+          <div className="p-4 text-right font-bold text-[#441a05] bg-white/5 rounded-lg">
+            নেট দায়বদ্ধতার পরিমাণ: {totalAmount.toLocaleString('bn-BD')} টাকা
           </div>
         </>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && hasDeletePermission && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Confirm Delete</h3>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to delete this liability entry of {parseInt(showDeleteConfirm.amount).toLocaleString()} BDT for {getHeadName(showDeleteConfirm.head)}? This action cannot be undone.
-            </p>
-            <div className="flex space-x-3">
-              <button
-                onClick={handleDelete}
-                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md font-medium transition duration-200"
-              >
-                Delete
-              </button>
-              <button
-                onClick={() => setShowDeleteConfirm(null)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md font-medium transition duration-200"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );
