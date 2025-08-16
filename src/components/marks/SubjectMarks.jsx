@@ -142,10 +142,8 @@ const SubjectMarks = () => {
 
       if (existingMark) {
         await updateSubjectMark({ id: existingMark.id, ...markData }).unwrap();
-        toast.success('মার্ক সফলভাবে আপডেট করা হয়েছে!');
       } else {
         await createSubjectMark(markData).unwrap();
-        toast.success('মার্ক সফলভাবে সংরক্ষিত!');
       }
       refetchMarks();
     } catch (error) {
@@ -221,17 +219,15 @@ const SubjectMarks = () => {
   if (subjectConfigsLoading || subjectConfigsFetching || studentsLoading || studentsFetching || examsLoading || yearsLoading || classesLoading || permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-black/10 backdrop-blur-sm rounded-xl shadow-lg p-8 flex items-center space-x-4 animate-fadeIn">
-          <FaSpinner className="animate-spin text-2xl text-[#441a05]" />
-          <span className="text-[#441a05] font-medium">লোড হচ্ছে...</span>
-        </div>
+        <FaSpinner className="animate-spin text-2xl text-[#441a05]" />
+        <span className="ml-2 text-[#441a05]">লোড হচ্ছে...</span>
       </div>
     );
   }
 
   // Permission check
   if (!hasViewPermission) {
-    return <div className="p-4 text-red-400 animate-fadeIn">এই পৃষ্ঠাটি দেখার অনুমতি নেই।</div>;
+    return <div className="p-4 text-red-400">এই পৃষ্ঠাটি দেখার অনুমতি নেই।</div>;
   }
 
   return (
