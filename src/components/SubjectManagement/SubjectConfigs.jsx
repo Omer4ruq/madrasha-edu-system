@@ -6,12 +6,12 @@ import { useSelector } from "react-redux";
 
 // New API Hooks for SubjectConfigs
 import {
-  useGetSubjectConfigsQuery, // Still imported, but not used for main data fetching
+  useGetSubjectConfigsQuery,
   useCreateSubjectConfigMutation,
   useUpdateSubjectConfigMutation,
   usePatchSubjectConfigMutation,
   useDeleteSubjectConfigMutation,
-  useGetRawSubjectConfigsQuery, // NEW: Import for fetching configured subjects
+  useGetRawSubjectConfigsQuery,
 } from '../../redux/features/api/subject-assign/subjectConfigsApi';
 
 // Keep existing hooks for classes and subjects
@@ -19,19 +19,15 @@ import { useGetClassSubjectsByClassIdQuery } from '../../redux/features/api/clas
 import { useGetStudentClassApIQuery } from '../../redux/features/api/student/studentClassApi';
 import { useGetGroupPermissionsQuery } from "../../redux/features/api/permissionRole/groupsApi";
 
-
 const SubjectConfigs = () => {
   const { user, group_id } = useSelector((state) => state.auth);
   const { data: classes = [], isLoading: classesLoading } = useGetStudentClassApIQuery();
 
   const [selectedClassId, setSelectedClassId] = useState('');
   const [selectedMainClassId, setSelectedMainClassId] = useState('');
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState(null);
   const [modalAction, setModalAction] = useState(null);
-
-
 
   useEffect(() => {
     if (classes.length > 0 && !selectedMainClassId) {
@@ -43,7 +39,6 @@ const SubjectConfigs = () => {
     }
   }, [classes, selectedMainClassId]);
 
-
   // Fetch subjects based on selected class ID (student_class.id)
   const {
     data: subjects = [],
@@ -51,20 +46,19 @@ const SubjectConfigs = () => {
     error: subjectsError
   } = useGetClassSubjectsByClassIdQuery(selectedClassId, { skip: !selectedClassId });
 
-  // NEW: Fetch existing raw subject configurations by class_id
+  // Fetch existing raw subject configurations by class_id
   const {
-    data: rawSubjectConfigsData = [], // Changed variable name to avoid confusion
+    data: rawSubjectConfigsData = [],
     isLoading: configsLoading,
-    refetch: refetchRawSubjectConfigs // Refetch for raw configs
-  } = useGetRawSubjectConfigsQuery(selectedMainClassId, { skip: !selectedMainClassId }); // Use selectedMainClassId for raw configs
+    refetch: refetchRawSubjectConfigs
+  } = useGetRawSubjectConfigsQuery(selectedMainClassId, { skip: !selectedMainClassId });
 
-  // Mutation hooks for SubjectConfigs (remain the same)
+  // Mutation hooks for SubjectConfigs
   const [createSubjectConfig] = useCreateSubjectConfigMutation();
   const [updateSubjectConfig] = useUpdateSubjectConfigMutation();
   const [deleteSubjectConfig] = useDeleteSubjectConfigMutation();
 
   // State to manage subject configurations in the UI
-  // This state holds an object where keys are subject_ids and values are their configs
   const [subjectConfigs, setSubjectConfigs] = useState({});
 
   // Permissions hook
@@ -84,22 +78,22 @@ const SubjectConfigs = () => {
       const configs = rawSubjectConfigsData.reduce((acc, config) => {
         if (config.class_id === Number(selectedMainClassId)) {
           acc[config.subject_id] = {
-            id: config.id, // Ensure ID is preserved for update/delete
+            id: config.id,
             subject_id: config.subject_id,
             subject_serial: config.subject_serial,
             subject_type: config.subject_type,
             max_mark: config.max_mark,
-            is_show: config.is_show, // Directly use is_show from fetched data
-            combined_subject_name: config.combined_subject_name // Store combined name for grouping if needed
+            is_show: config.is_show,
+            combined_subject_name: config.combined_subject_name
           };
         }
         return acc;
       }, {});
       setSubjectConfigs(configs);
     } else {
-      setSubjectConfigs({}); // Clear configs if no class selected or data is empty
+      setSubjectConfigs({});
     }
-  }, [rawSubjectConfigsData, selectedMainClassId]); // Re-run when raw data or selected class changes
+  }, [rawSubjectConfigsData, selectedMainClassId]);
 
   // Colors for grouping subjects by serial number
   const serialColors = useMemo(() => [
@@ -111,7 +105,7 @@ const SubjectConfigs = () => {
   const handleClassChange = (cls) => {
     setSelectedClassId(cls?.student_class?.id);
     setSelectedMainClassId(cls?.id);
-    setSubjectConfigs({}); // Clear previous configs when class changes
+    setSubjectConfigs({});
   };
 
   // Handle input changes for subject configurations
@@ -127,8 +121,8 @@ const SubjectConfigs = () => {
         subject_id: subjectId,
         max_mark: 100,
         subject_type: 'COMPULSARY',
-        subject_serial: 1,
-        is_show: true // Default, will be recalculated on bulk submit
+        subject_serial: '', // Initialize as empty to require user input
+        is_show: true
       };
     }
 
@@ -176,14 +170,12 @@ const SubjectConfigs = () => {
         subject_serial: Number(config.subject_serial) || 1,
         subject_type: config.subject_type || 'COMPULSARY',
         max_mark: Number(config.max_mark) || 100,
-        // is_show is handled by the backend on update for existing records
-        // For individual updates, we send what was initially loaded or user might have changed
         is_show: config.is_show
       };
 
       await updateSubjectConfig(payload).unwrap();
       toast.success('বিষয় কনফিগারেশন সফলভাবে আপডেট করা হয়েছে!');
-      refetchRawSubjectConfigs(); // Re-fetch raw data to ensure UI is up-to-date
+      refetchRawSubjectConfigs();
     } catch (error) {
       console.error('কনফিগারেশন আপডেটে ত্রুটি:', error);
       toast.error(`ত্রুটি: ${error?.data?.message || 'কনফিগারেশন আপডেট ব্যর্থ।'}`);
@@ -225,7 +217,7 @@ const SubjectConfigs = () => {
       const newConfigs = { ...subjectConfigs };
       delete newConfigs[modalData.subjectId];
       setSubjectConfigs(newConfigs);
-      refetchRawSubjectConfigs(); // Re-fetch raw data to ensure consistency with backend
+      refetchRawSubjectConfigs();
     } catch (error) {
       console.error('কনফিগারেশন মুছে ফেলায় ত্রুটি:', {
         subjectId: modalData.subjectId,
@@ -250,8 +242,7 @@ const SubjectConfigs = () => {
     }
   };
 
-  // Handle bulk submission (create/update based on existing IDs)
-  // This will send all current UI configurations to the backend for processing
+  // Handle bulk submission
   const handleSubmit = async () => {
     if (!hasAddPermission) {
       toast.error('কনফিগারেশন সংরক্ষণ করার অনুমতি নেই।');
@@ -264,11 +255,10 @@ const SubjectConfigs = () => {
       }
 
       const payloadSubjects = [];
-      const serialsSeen = new Set(); // To track which serials have already assigned is_show: true
+      const serialsSeen = new Set();
 
       const subjectsToProcess = Object.values(subjectConfigs).filter(config => config.subject_id);
 
-      // Group subjects by subject_serial for ordering and is_show logic
       const groupedBySerial = {};
       subjectsToProcess.forEach(config => {
         const serial = Number(config.subject_serial) || 1;
@@ -278,29 +268,21 @@ const SubjectConfigs = () => {
         groupedBySerial[serial].push(config);
       });
 
-      // Iterate through grouped subjects to assign is_show and build the final payload
-      // Sort by serial for consistent processing order
       Object.keys(groupedBySerial).sort((a, b) => Number(a) - Number(b)).forEach(serialKey => {
-        // Within each serial group, sort by subject_id for deterministic is_show assignment
         groupedBySerial[serialKey].sort((a, b) => a.subject_id - b.subject_id).forEach(config => {
-          // If a subject already has an 'id', it means it exists on the backend.
-          // The backend should handle its 'is_show' when it's updated.
-          // For *new* subjects within a serial group, or if the backend re-evaluates 'is_show' on bulk upsert,
-          // this logic applies for the initial setup.
           const isShow = config.id ? config.is_show : !serialsSeen.has(Number(serialKey));
-          if (isShow && !config.id) { // Only add to seen if it's a new subject with isShow: true
+          if (isShow && !config.id) {
             serialsSeen.add(Number(serialKey));
           }
 
           payloadSubjects.push({
-            // Include 'id' if exists for proper backend upsert/update
             ...(config.id && { id: config.id }),
             class_id: Number(selectedMainClassId),
             subject_id: Number(config.subject_id),
             subject_serial: Number(config.subject_serial) || 1,
             subject_type: config.subject_type || 'COMPULSARY',
             max_mark: Number(config.max_mark) || 100,
-            is_show: isShow // Apply the calculated or existing is_show
+            is_show: isShow
           });
         });
       });
@@ -310,55 +292,48 @@ const SubjectConfigs = () => {
         return;
       }
 
-      // This endpoint is for bulk creation/upsert. Backend should handle if 'id' exists.
       await createSubjectConfig(payloadSubjects).unwrap();
       toast.success('বিষয় কনফিগারেশন সফলভাবে সংরক্ষিত!');
-      refetchRawSubjectConfigs(); // Re-fetch raw data to update the list
+      refetchRawSubjectConfigs();
     } catch (error) {
       console.error('কনফিগারেশন সংরক্ষণে ত্রুটি:', error);
       toast.error(`ত্রুটি: ${error?.data?.message || 'কনফিগারেশন সংরক্ষণ ব্যর্থ।'}`);
     }
   };
 
-
   // Helper to get selected class object for display
   const getSelectedClass = () => {
     return classes.find(cls => cls.id === selectedMainClassId);
   };
 
-
-  // Sort and group subjects for rendering with consistent colors and side-by-side display
+  // Sort and group subjects for rendering
   const sortedAndGroupedSubjects = useMemo(() => {
     const grouped = {};
-    // Iterate over original subjects list from API (all available subjects for the class),
-    // and combine with local configs (which contain the configured state from rawSubjectConfigsData)
     subjects.forEach(subject => {
-      // Get the current configuration for this subject from local state, or a default if not yet configured
       const config = subjectConfigs[subject.id] || {
         subject_id: subject.id,
         max_mark: 100,
         subject_type: 'COMPULSARY',
-        subject_serial: 0, // Default to 0 for subjects not yet configured, to group them separately
+        subject_serial: '',
         is_show: true
       };
-      const serial = config.subject_serial || 0; // Use 0 for subjects without explicit serial for grouping
+      const serial = config.subject_serial || 0;
 
       if (!grouped[serial]) {
         grouped[serial] = [];
       }
-      grouped[serial].push({ ...subject, config }); // Attach the combined config to the subject object
+      grouped[serial].push({ ...subject, config });
     });
 
     const sortedGroups = Object.keys(grouped)
-      .sort((a, b) => Number(a) - Number(b)) // Sort groups by serial number
+      .sort((a, b) => Number(a) - Number(b))
       .map((serialKey, groupIndex) => ({
         serial: Number(serialKey),
-        subjects: grouped[serialKey].sort((a, b) => a.id - b.id), // Sort by subject ID within group for consistent order
-        color: serialColors[groupIndex % serialColors.length] // Assign a color to the group
+        subjects: grouped[serialKey].sort((a, b) => a.id - b.id),
+        color: serialColors[groupIndex % serialColors.length]
       }));
     return sortedGroups;
-  }, [subjects, subjectConfigs, serialColors]); // Dependencies for useMemo
-
+  }, [subjects, subjectConfigs, serialColors]);
 
   if (classesLoading || subjectsLoading || configsLoading || permissionsLoading) {
     return (
@@ -389,7 +364,6 @@ const SubjectConfigs = () => {
 
   return (
     <div className="py-8">
-
       <style>
         {`
           @keyframes fadeIn {
@@ -496,7 +470,6 @@ const SubjectConfigs = () => {
                   className="rounded-2xl p-4 animate-fadeIn "
                   style={{animationDelay: `${groupIndex * 0.1}s` }}
                 >
-                  {/* Display serial number header for the group if serial > 0 */}
                   {group.serial > 0 && (
                     <h3 className="text-lg font-bold text-[#441a05] mb-4">
                       ক্রমিক নং: {group.serial}
@@ -514,9 +487,12 @@ const SubjectConfigs = () => {
                         subject_id: subject.id,
                         max_mark: 100,
                         subject_type: 'COMPULSARY',
-                        subject_serial: 1,
+                        subject_serial: '',
                         is_show: true
                       };
+
+                      // Check if subject_serial is valid (non-empty and greater than 0)
+                      const isSerialValid = config.subject_serial !== '' && Number(config.subject_serial) > 0;
 
                       return (
                         <div key={subject.id} className="bg-black/5 border border-white/20 rounded-2xl p-6 hover:shadow-lg transition-all duration-200">
@@ -542,7 +518,7 @@ const SubjectConfigs = () => {
                                 </button>
                               )}
                               <span className="bg-[#DB9E30]/20 text-[#441a05] text-xs font-medium px-2 py-1 rounded-full">
-                                ক্রমিক: {config.subject_serial}
+                                ক্রমিক: {config.subject_serial || 'নির্ধারিত নয়'}
                               </span>
                             </div>
                           </div>
@@ -575,8 +551,8 @@ const SubjectConfigs = () => {
                                   placeholder="100"
                                   min="0"
                                   aria-label={`সর্বোচ্চ মার্ক ${subject.name}`}
-                                  title={`সর্বোচ্চ মার্ক নির্ধারণ করুন / Set max marks for ${subject.name}`}
-                                  disabled={!hasChangePermission}
+                                  title={isSerialValid ? `সর্বোচ্চ মার্ক নির্ধারণ করুন / Set max marks for ${subject.name}` : 'প্রথমে বৈধ ক্রমিক নং নির্ধারণ করুন'}
+                                  disabled={!hasChangePermission || !isSerialValid}
                                 />
                               </div>
                               <div>
@@ -586,7 +562,7 @@ const SubjectConfigs = () => {
                                   value={config.subject_serial || ''}
                                   onChange={(e) => handleInputChange(subject.id, 'subject_serial', e.target.value)}
                                   className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
-                                  placeholder={config.subject_serial || '1'}
+                                  placeholder="1"
                                   min="1"
                                   aria-label={`ক্রমিক নং ${subject.name}`}
                                   title={`ক্রমিক নং নির্ধারণ করুন / Set serial number for ${subject.name}`}
@@ -595,10 +571,6 @@ const SubjectConfigs = () => {
                               </div>
                             </div>
                           </div>
-                          {/* Optional: is_show indicator for debugging/visual confirmation */}
-                          {/* <div className={`text-sm text-center py-1 rounded-md mt-2 ${config.is_show ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                            {config.is_show ? 'দৃশ্যমান (Visible)' : 'লুকানো (Hidden)'}
-                          </div> */}
                         </div>
                       );
                     })}
