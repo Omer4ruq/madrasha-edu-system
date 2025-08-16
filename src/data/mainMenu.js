@@ -141,12 +141,12 @@ const mainMenu = [
                 {
             id: "05/03/01",
             title: "বিষয়-কনফিগারেশন",
-            link: "/talimat/marks/subject-config",
+            link: "/talimat/marks",
           },
           {
             id: "05/03/02",
             title: "মার্কস-কনফিগার",
-            link: "/talimat/marks",
+            link: "/talimat/marks/mark-config",
           },
        
           

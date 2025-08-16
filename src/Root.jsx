@@ -88,7 +88,6 @@ import LiabilityEntries from "./components/accounts/Liability/LiabilityEntries";
 import WithdrawTable from "./components/withdraw/WithdrawTable";
 import LiabilityTable from "./components/accounts/Liability/LiabilityTable";
 
-
 function Root() {
   const router = createBrowserRouter([
     {
@@ -220,13 +219,13 @@ function Root() {
                     //   path: "marks-config",
                     //   element: <SubjectMarkConfigs />,
                     // },
-                        {
+                    {
                       index: true,
-                      element: <MarkConfigs/>,
-                    },
-                      {
-                      path: "subject-config",
                       element: <SubjectConfigs />,
+                    },
+                    {
+                      path: "mark-config",
+                      element: <MarkConfigs />,
                     },
                   ],
                 },
@@ -275,7 +274,7 @@ function Root() {
                 },
                 {
                   path: "notice",
-                  element: <AddNotice/>,
+                  element: <AddNotice />,
                 },
                 {
                   path: "routine",
@@ -338,7 +337,7 @@ function Root() {
                       path: "fee-heads",
                       element: <AddFeeHead />,
                     },
-                       {
+                    {
                       path: "liability-heads",
                       element: <LiabilityHead />,
                     },
@@ -348,17 +347,17 @@ function Root() {
                   path: "waivers",
                   element: <AddWaivers></AddWaivers>,
                 },
-                  {
+                {
                   path: "parties",
-                  element: <AddParties/>,
+                  element: <AddParties />,
                 },
-                   {
+                {
                   path: "withdraws",
-                  element: <Withdraw/>,
+                  element: <Withdraw />,
                 },
-                    {
+                {
                   path: "liability-entries",
-                  element: <LiabilityEntries/>,
+                  element: <LiabilityEntries />,
                 },
                 {
                   path: "income-list",
@@ -401,15 +400,14 @@ function Root() {
                   path: "income-items-list",
                   element: <IncomeItemsList />,
                 },
-                   {
+                {
                   path: "withdraws-list",
                   element: <WithdrawTable />,
                 },
-                   {
+                {
                   path: "liability-list",
                   element: <LiabilityTable />,
                 },
-
               ],
             },
             {
