@@ -502,26 +502,69 @@ console.log("institute", institute)
   };
 
   // Calculate payable amount with waiver
-  const calculatePayableAmount = (fee, waivers) => {
-    const feeHeadId = parseInt(fee.fee_head_id);
-    const waiver = waivers?.find(
-      (w) =>
-        w.student_id === selectedStudent?.id &&
-        w?.academic_year === selectedAcademicYear &&
-        Array.isArray(w.fee_types) &&
-        w.fee_types.map(Number).includes(feeHeadId)
-    );
-    console.log("get waiver", waiver)
-    const waiverPercentage = waiver ? parseFloat(waiver.waiver_amount) / 100 : 0;
-    const feeAmount = parseFloat(fee.amount) || 0;
-    const waiverAmount = feeAmount * waiverPercentage;
-    const payableAfterWaiver = feeAmount - waiverAmount;
+// Calculate payable amount with waiver - Fixed version
+const calculatePayableAmount = (fee, waivers) => {
+  console.log('Calculating waiver for fee:', fee);
+  console.log('Available waivers:', waivers);
+  console.log('Selected student:', selectedStudent);
+  console.log('Selected academic year:', selectedAcademicYear);
+  
+  if (!fee || !waivers || !selectedStudent || !selectedAcademicYear) {
+    console.log('Missing required data for waiver calculation');
     return {
-      waiverAmount: waiverAmount.toFixed(2),
-      payableAfterWaiver: payableAfterWaiver.toFixed(2)
+      waiverAmount: '0.00',
+      payableAfterWaiver: parseFloat(fee?.amount || 0).toFixed(2)
     };
-  };
+  }
 
+  const feeHeadId = parseInt(fee.fee_head_id);
+  console.log('Looking for fee head ID:', feeHeadId);
+  
+  // Find waiver for this student and academic year
+  const waiver = waivers?.find((w) => {
+    console.log('Checking waiver:', w);
+    console.log('Waiver student_id:', w.student_id, 'Selected student ID:', selectedStudent.id);
+    console.log('Waiver academic_year:', w.academic_year, 'Selected academic year:', selectedAcademicYear);
+    console.log('Waiver fee_types:', w.fee_types);
+    
+    // Check if student matches
+    const studentMatches = w.student_id === selectedStudent.id;
+    
+    // Check if academic year matches (convert both to string for comparison)
+    const academicYearMatches = String(w.academic_year) === String(selectedAcademicYear);
+    
+    // Check if fee type is included
+    let feeTypeMatches = false;
+    if (Array.isArray(w.fee_types)) {
+      // Convert all fee types to numbers for comparison
+      const feeTypesAsNumbers = w.fee_types.map(ft => parseInt(ft));
+      feeTypeMatches = feeTypesAsNumbers.includes(feeHeadId);
+    }
+    
+    console.log('Student matches:', studentMatches);
+    console.log('Academic year matches:', academicYearMatches);
+    console.log('Fee type matches:', feeTypeMatches);
+    
+    return studentMatches && academicYearMatches && feeTypeMatches;
+  });
+  
+  console.log('Found waiver:', waiver);
+  
+  const waiverPercentage = waiver ? parseFloat(waiver.waiver_amount) / 100 : 0;
+  const feeAmount = parseFloat(fee.amount) || 0;
+  const waiverAmount = feeAmount * waiverPercentage;
+  const payableAfterWaiver = feeAmount - waiverAmount;
+  
+  console.log('Waiver percentage:', waiverPercentage);
+  console.log('Fee amount:', feeAmount);
+  console.log('Waiver amount:', waiverAmount);
+  console.log('Payable after waiver:', payableAfterWaiver);
+  
+  return {
+    waiverAmount: waiverAmount.toFixed(2),
+    payableAfterWaiver: payableAfterWaiver.toFixed(2)
+  };
+};
   // Filter out deleted fees
   const filteredFees = feesData?.fees_name_records?.filter(
     (fee) =>
