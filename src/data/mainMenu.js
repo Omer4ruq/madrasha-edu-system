@@ -141,12 +141,12 @@ const mainMenu = [
                 {
             id: "05/03/01",
             title: "বিষয়-কনফিগারেশন",
-            link: "/talimat/marks/subject-config",
+            link: "/talimat/marks",
           },
           {
             id: "05/03/02",
             title: "মার্কস-কনফিগার",
-            link: "/talimat/marks",
+            link: "/talimat/marks/mark-config",
           },
        
           
@@ -300,7 +300,7 @@ const mainMenu = [
           },
             {
             id: "07/01/05",
-            title: "লায়াবিলিটিস ধরন",
+            title: "দায় ধরন",
             link: "/accounts/settings/liability-heads",
           },
         ],
@@ -367,7 +367,7 @@ const mainMenu = [
           },
              {
             id: "07/10/04",
-            title: "লায়াবিলিটিস লিস্ট",
+            title: "দায় লিস্ট",
             link: "/accounts/liability-list",
           },
            {
@@ -394,7 +394,7 @@ const mainMenu = [
       },
              {
         id: "07/13",
-        title: "লায়াবিলিটি এন্ট্রিস",
+        title: "দায় এন্ট্রিস",
         link: "/accounts/liability-entries",
       },
     ],

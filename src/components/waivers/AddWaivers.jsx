@@ -84,11 +84,11 @@ const AddWaivers = () => {
     groupPermissions?.some((perm) => perm.codename === "view_waiver") || false;
 
   // Class options
-const classOptions =
-  classes?.map((cls) => ({
-    value: cls.id,
-    label: `${cls.class_name}${cls.section_name ? `-${cls.section_name}` : ''}${cls.shift_name ? `-${cls.shift_name}` : ''}`,
-  })) || [];
+  const classOptions =
+    classes?.map((cls) => ({
+      value: cls.id,
+      label: `${cls.class_name}${cls.section_name ? `-${cls.section_name}` : ''}${cls.shift_name ? `-${cls.shift_name}` : ''}`,
+    })) || [];
 
 
   // Fund options
@@ -501,8 +501,8 @@ const classOptions =
       </head>
       <body>
         ${waiverPages
-          .map(
-            (pageWaivers, pageIndex) => `
+        .map(
+          (pageWaivers, pageIndex) => `
           <div class="page-container">
             <div class="header">
               <div class="institute-info">
@@ -524,8 +524,8 @@ const classOptions =
               </thead>
               <tbody>
                 ${pageWaivers
-                  .map(
-                    (waiver) => `
+              .map(
+                (waiver) => `
                   <tr>
                     <td>${getStudentName(waiver.student_id)}</td>
                     <td>${waiver.waiver_amount}%</td>
@@ -535,8 +535,8 @@ const classOptions =
                     <td>${waiver.description || "-"}</td>
                   </tr>
                 `
-                  )
-                  .join("")}
+              )
+              .join("")}
               </tbody>
             </table>
             <div class="date">
@@ -544,8 +544,8 @@ const classOptions =
             </div>
           </div>
         `
-          )
-          .join("")}
+        )
+        .join("")}
         <script>
           let printAttempted = false;
           window.onbeforeprint = () => { printAttempted = true; };
@@ -623,10 +623,10 @@ const classOptions =
           {/* Waiver List Table (View Only Mode) */}
           <div className="overflow-y-auto max-h-[60vh]">
             {isWaiverLoading ||
-            isStudentLoading ||
-            isAcademicYearLoading ||
-            isFeeHeadsLoading ||
-            isFundsLoading ? (
+              isStudentLoading ||
+              isAcademicYearLoading ||
+              isFeeHeadsLoading ||
+              isFundsLoading ? (
               <p className="p-4 text-[#441a05]/70">ওয়েভার লোড হচ্ছে...</p>
             ) : filteredWaivers.length === 0 ? (
               <p className="p-4 text-[#441a05]/70">
@@ -803,11 +803,10 @@ const classOptions =
                 <button
                   onClick={confirmDelete}
                   disabled={isDeleting}
-                  className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg transition-colors duration-300 btn-glow ${
-                    isDeleting
+                  className={`px-4 py-2 bg-[#DB9E30] text-[#441a05] rounded-lg transition-colors duration-300 btn-glow ${isDeleting
                       ? "cursor-not-allowed opacity-60"
                       : "hover:text-white"
-                  }`}
+                    }`}
                   aria-label="নিশ্চিত করুন"
                 >
                   {isDeleting ? (
@@ -935,11 +934,10 @@ const classOptions =
                                   className="hidden"
                                 />
                                 <span
-                                  className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn ${
-                                    selectedStudents.includes(student.id)
+                                  className={`w-6 h-6 border-2 rounded-md flex items-center justify-center transition-all duration-300 animate-scaleIn ${selectedStudents.includes(student.id)
                                       ? "bg-[#DB9E30] border-[#DB9E30]"
                                       : "bg-white/10 border-[#9d9087] hover:border-[#441a05]"
-                                  }`}
+                                    }`}
                                 >
                                   {selectedStudents.includes(student.id) && (
                                     <svg
@@ -969,7 +967,7 @@ const classOptions =
                             </td>
 
                             {/* Fee Types Select */}
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-6 py-4 whitespace-nowrap min-w-[300px]">
                               <Select
                                 isMulti
                                 options={feeTypeOptions}
@@ -1079,11 +1077,10 @@ const classOptions =
                                     e.target.value
                                   )
                                 }
-                                className={`w-[200px] bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 ${disabledClass} ${
-                                  !waiver.description?.trim()
+                                className={`w-[200px] bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 ${disabledClass} ${!waiver.description?.trim()
                                     ? "border-red-400"
                                     : ""
-                                }`}
+                                  }`}
                                 placeholder="বর্ণনা (আবশ্যক)*"
                                 disabled={isDisabled}
                                 required
@@ -1188,11 +1185,10 @@ const classOptions =
               onClick={handleSubmitWaivers}
               disabled={isCreating}
               title="ওয়েভার তৈরি করুন"
-              className={`relative inline-flex items-center px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                isCreating
+              className={`relative inline-flex items-center px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${isCreating
                   ? "cursor-not-allowed opacity-70"
                   : "hover:text-white btn-glow"
-              }`}
+                }`}
               aria-label="ওয়েভার তৈরি করুন"
             >
               {isCreating ? (
@@ -1234,15 +1230,13 @@ const classOptions =
               value={
                 students?.find((s) => s.id === editWaiverData.student_id)
                   ? {
-                      value: editWaiverData.student_id,
-                      label: `${
-                        students.find((s) => s.id === editWaiverData.student_id)
-                          .name
-                      } - ${
-                        students.find((s) => s.id === editWaiverData.student_id)
-                          .user_id
+                    value: editWaiverData.student_id,
+                    label: `${students.find((s) => s.id === editWaiverData.student_id)
+                        .name
+                      } - ${students.find((s) => s.id === editWaiverData.student_id)
+                        .user_id
                       }`,
-                    }
+                  }
                   : null
               }
               onChange={(selected) =>
@@ -1258,25 +1252,27 @@ const classOptions =
               isDisabled={isUpdating}
               aria-label="ছাত্র নির্বাচন করুন"
             />
-            <Select
-              isMulti
-              options={feeTypeOptions}
-              value={feeTypeOptions.filter((option) =>
-                editWaiverData.fee_types.includes(option.value)
-              )}
-              onChange={(selected) =>
-                setEditWaiverData({
-                  ...editWaiverData,
-                  fee_types: selected.map((opt) => opt.value),
-                })
-              }
-              placeholder="ফি প্রকার নির্বাচন"
-              isLoading={isFeeHeadsLoading}
-              styles={selectStyles}
-              className="w-full"
-              isDisabled={isUpdating}
-              aria-label="ফি প্রকার নির্বাচন"
-            />
+            <div className="w-full md:min-w-[300px]"> {/* Adjust width as needed */}
+              <Select
+                isMulti
+                options={feeTypeOptions}
+                value={feeTypeOptions.filter((option) =>
+                  editWaiverData.fee_types.includes(option.value)
+                )}
+                onChange={(selected) =>
+                  setEditWaiverData({
+                    ...editWaiverData,
+                    fee_types: selected.map((opt) => opt.value),
+                  })
+                }
+                placeholder="ফি প্রকার নির্বাচন"
+                isLoading={isFeeHeadsLoading}
+                styles={selectStyles}
+                className="w-full"
+                isDisabled={isUpdating}
+                aria-label="ফি প্রকার নির্বাচন"
+              />
+            </div>
             <input
               type="number"
               value={editWaiverData.waiver_amount}
@@ -1347,9 +1343,8 @@ const classOptions =
                   description: e.target.value,
                 })
               }
-              className={`w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn ${
-                !editWaiverData.description?.trim() ? "border-red-400" : ""
-              }`}
+              className={`w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn ${!editWaiverData.description?.trim() ? "border-red-400" : ""
+                }`}
               placeholder="বর্ণনা (আবশ্যক)*"
               disabled={isUpdating}
               aria-label="বর্ণনা"
@@ -1360,11 +1355,10 @@ const classOptions =
                 type="submit"
                 disabled={isUpdating}
                 title="ওয়েভার আপডেট করুন"
-                className={`relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                  isUpdating
+                className={`relative inline-flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${isUpdating
                     ? "cursor-not-allowed opacity-70"
                     : "hover:text-white btn-glow"
-                }`}
+                  }`}
                 aria-label="ওয়েভার আপডেট করুন"
               >
                 {isUpdating ? (
@@ -1464,10 +1458,10 @@ const classOptions =
         </div>
         <div className="overflow-y-auto max-h-[60vh]">
           {isWaiverLoading ||
-          isStudentLoading ||
-          isAcademicYearLoading ||
-          isFeeHeadsLoading ||
-          isFundsLoading ? (
+            isStudentLoading ||
+            isAcademicYearLoading ||
+            isFeeHeadsLoading ||
+            isFundsLoading ? (
             <p className="p-4 text-[#441a05]/70">ওয়েভার লোড হচ্ছে...</p>
           ) : filteredWaivers.length === 0 ? (
             <p className="p-4 text-[#441a05]/70">কোনো ওয়েভার পাওয়া যায়নি।</p>
@@ -1571,9 +1565,8 @@ const classOptions =
           <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
             {isDeleting
               ? "মুছছে..."
-              : `ওয়েভার মুছতে ত্রুটি: ${
-                  deleteError?.status || "অজানা"
-                } - ${JSON.stringify(deleteError?.data || {})}`}
+              : `ওয়েভার মুছতে ত্রুটি: ${deleteError?.status || "অজানা"
+              } - ${JSON.stringify(deleteError?.data || {})}`}
           </div>
         )}
       </div>

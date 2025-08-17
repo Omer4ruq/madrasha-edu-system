@@ -1,7 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import BASE_URL from '../../../../utilitis/apiConfig';
 
-
 const getToken = () => {
   return localStorage.getItem('token');
 };
@@ -61,6 +60,17 @@ export const mealStatusApi = createApi({
       }),
       invalidatesTags: ['MealStatus'],
     }),
+
+    // GET: Count meal statuses by a single date
+    getMealStatusCountByDate: builder.query({
+      query: (date) => `/meal-status/deactivated-list/?date=${date}`,
+    }),
+
+    // GET: Count meal statuses by a date range
+    getMealStatusCountByRange: builder.query({
+      query: ({ start_date, end_date }) =>
+        `/meal-status/deactivated-list/?start_date=${start_date}&end_date=${end_date}`,
+    }),
   }),
 });
 
@@ -71,4 +81,6 @@ export const {
   useCreateMealStatusMutation,
   useUpdateMealStatusMutation,
   useDeleteMealStatusMutation,
+  useGetMealStatusCountByDateQuery,
+  useGetMealStatusCountByRangeQuery,
 } = mealStatusApi;

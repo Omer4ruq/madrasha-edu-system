@@ -948,8 +948,7 @@ const StudentAttendance = () => {
                       style={{ animationDelay: `${index * 0.05}s` }}
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                        {student.name || "N/A"} (Roll: $
-                        {student.roll_no || "N/A"})
+                        {student.name || "N/A"} (Roll: {student.roll_no || " N/A"})
                       </td>
                       {filteredSubjects.map((subject) => {
                         const attendance = attendanceData?.attendance?.find(
