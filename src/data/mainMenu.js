@@ -370,6 +370,16 @@ const mainMenu = [
             title: "লায়াবিলিটিস লিস্ট",
             link: "/accounts/liability-list",
           },
+           {
+            id: "07/10/05",
+            title: "পেইড লিস্ট",
+            link: "/accounts/paid-list",
+          },
+             {
+            id: "07/10/06",
+            title: "বকেয়া লিস্ট",
+            link: "/accounts/due-fees-list",
+          },
         ],
       },
        {

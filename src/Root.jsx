@@ -87,6 +87,8 @@ import Withdraw from "./components/withdraw/Withdraw";
 import LiabilityEntries from "./components/accounts/Liability/LiabilityEntries";
 import WithdrawTable from "./components/withdraw/WithdrawTable";
 import LiabilityTable from "./components/accounts/Liability/LiabilityTable";
+import PaidTable from "./components/fees/PaidTable";
+import DueFeeList from "./components/fees/DueFeeList";
 
 
 function Root() {
@@ -342,6 +344,7 @@ function Root() {
                       path: "liability-heads",
                       element: <LiabilityHead />,
                     },
+                    
                   ],
                 },
                 {
@@ -408,6 +411,14 @@ function Root() {
                    {
                   path: "liability-list",
                   element: <LiabilityTable />,
+                },
+                   {
+                  path: "paid-list",
+                  element: <PaidTable />,
+                },
+                 {
+                  path: "due-fees-list",
+                  element: <DueFeeList />,
                 },
 
               ],
