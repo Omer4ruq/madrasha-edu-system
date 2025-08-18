@@ -11,12 +11,18 @@ import { useGetInstituteLatestQuery } from "../../redux/features/api/institute/i
 import selectStyles from "../../utilitis/selectStyles";
 import { useGetClassExamStudentsQuery } from "../../redux/features/api/class-exam-students/classExamStudentApi ";
 
+// Import default background images
+import defaultBgImage from '../../../public/images/admit-card-bg.jpg';
+import defaultBackImage from '../../../public/images/admit-card-back-bg.jpg'; // Add your back image
+
 const AdmitCard = () => {
   // State for filter selections and PDF generation
   const [selectedClassConfig, setSelectedClassConfig] = useState(null);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState(null);
   const [selectedExam, setSelectedExam] = useState(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [backgroundImage, setBackgroundImage] = useState(defaultBgImage);
+  const [isBackPrint, setIsBackPrint] = useState(false); // New state for back print mode
 
   // Fetch data from APIs
   const {
@@ -56,49 +62,175 @@ const AdmitCard = () => {
   // Print ref
   const printRef = useRef();
 
-  // Handle print
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    pageStyle: `
-      @page {
-        size: A4 portrait;
-        margin: 5mm;
-      }
-      @media print {
-        body {
-          -webkit-print-color-adjust: exact;
-        }
-        .admit-card-container {
-          width: 200mm;
-          margin: 0;
-          padding: 5mm;
-          box-sizing: border-box;
-          display: flex;
-          flex-direction: column;
-          gap: 2mm;
-        }
-        .admit-card {
-          width: 190mm;
-          height: 90mm;
-          page-break-inside: avoid;
-          background: white;
-          border: 1px solid #DB9E30;
-          border-radius: 4mm;
-          overflow: hidden;
-          font-size: 10pt;
-        }
-        .page-break {
-          page-break-after: always;
-        }
-        .no-print {
-          display: none !important;
-        }
-      }
-    `,
-  });
+  // Toggle back print mode
+  const toggleBackPrint = () => {
+    setIsBackPrint(!isBackPrint);
+    if (!isBackPrint) {
+      setBackgroundImage(defaultBackImage);
+    } else {
+      setBackgroundImage(defaultBgImage);
+    }
+  };
 
-  // Handle PDF download
-  const handleDownloadPDF = () => {
+  // Handle background image upload
+  const handleBackgroundUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setBackgroundImage(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Reset to default background
+  const resetToDefaultBackground = () => {
+    if (isBackPrint) {
+      setBackgroundImage(defaultBackImage);
+    } else {
+      setBackgroundImage(defaultBgImage);
+    }
+  };
+
+  // Convert image to base64 for reliable printing
+  const convertImageToBase64 = (imageUrl) => {
+    return new Promise((resolve) => {
+      if (imageUrl.startsWith('data:')) {
+        resolve(imageUrl);
+        return;
+      }
+      
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.onerror = () => resolve(imageUrl);
+      img.src = imageUrl;
+    });
+  };
+
+  // Handle back print PDF generation
+  const handleBackPrintPDF = async () => {
+    if (!examStudents?.students?.length) {
+      toast.error("প্রথমে ফ্রন্ট পেজের জন্য শিক্ষার্থী নির্বাচন করুন!");
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+
+    try {
+      // Convert background image to base64
+      const base64Background = await convertImageToBase64(backgroundImage);
+      
+      const students = examStudents.students;
+      const totalCards = students.length;
+
+      // Group into sets of 3 for each page to match front pages
+      const pageCount = Math.ceil(totalCards / 3);
+      const pages = [];
+      for (let i = 0; i < pageCount; i++) {
+        pages.push(i);
+      }
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>প্রবেশপত্র - পেছনের অংশ</title>
+          <meta charset="UTF-8">
+          <style>
+            @page { 
+              size: A4 portrait; 
+              margin: 5mm; 
+            }
+            body {
+              font-family: 'Noto Sans Bengali', Arial, sans-serif;
+              margin: 0;
+              padding: 5mm;
+              -webkit-print-color-adjust: exact !important;
+              color-adjust: exact !important;
+            }
+            * {
+              -webkit-print-color-adjust: exact !important;
+              color-adjust: exact !important;
+            }
+            .page-container {
+              width: 200mm;
+              margin: 0 auto;
+              display: flex;
+              flex-direction: column;
+              gap: 2mm;
+              box-sizing: border-box;
+            }
+            .admit-card-back {
+              width: 190mm;
+              height: 90mm;
+              background: white;
+              border: 1px solid #DB9E30;
+              margin: 0 auto 5px;
+              border-radius: 4mm;
+              overflow: hidden;
+              position: relative;
+              page-break-inside: avoid;
+              background-image: url('${base64Background}');
+              background-size: 100% 100%;
+              background-position: center;
+              background-repeat: no-repeat;
+            }
+            .page-break {
+              page-break-after: always;
+            }
+          </style>
+        </head>
+        <body>
+          ${pages
+            .map(
+              (pageIndex) => `
+            <div class="page-container">
+              ${Array(3).fill(0).map((_, cardIndex) => `
+                <div class="admit-card-back"></div>
+              `).join("")}
+              ${pageIndex < pages.length - 1 ? '<div class="page-break"></div>' : ""}
+            </div>
+          `
+            )
+            .join("")}
+          <script>
+            let printAttempted = false;
+            window.onbeforeprint = () => { printAttempted = true; };
+            window.onafterprint = () => { window.close(); };
+            window.addEventListener('beforeunload', (event) => {
+              if (!printAttempted) { window.close(); }
+            });
+            setTimeout(() => {
+              window.print();
+            }, 500);
+          </script>
+        </body>
+        </html>
+      `;
+
+      const printWindow = window.open("", "_blank");
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      toast.success("প্রবেশপত্রের পেছনের অংশ তৈরি হয়েছে! প্রিন্ট বা সেভ করুন।");
+    } catch (error) {
+      console.error("Error generating back print PDF:", error);
+      toast.error("পেছনের অংশ তৈরি করতে সমস্যা হয়েছে!");
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  // Handle front print PDF generation
+  const handleDownloadPDF = async () => {
     if (instituteLoading) {
       toast.error("ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!");
       return;
@@ -123,239 +255,323 @@ const AdmitCard = () => {
 
     setIsGeneratingPDF(true);
 
-    const examInfo =
-      exams?.find((exam) => exam.id === selectedExam?.value) || {};
-    const students = examStudents.students;
+    try {
+      // Convert background image to base64
+      const base64Background = await convertImageToBase64(backgroundImage);
+      
+      // Convert institute logo to base64 if exists
+      let instituteLogoBase64 = null;
+      if (institute.institute_logo) {
+        try {
+          instituteLogoBase64 = await convertImageToBase64(institute.institute_logo);
+        } catch (error) {
+          console.log("Failed to convert logo to base64:", error);
+        }
+      }
 
-    // Group students into sets of 3 for each page
-    const studentGroups = [];
-    for (let i = 0; i < students.length; i += 3) {
-      studentGroups.push(students.slice(i, i + 3));
-    }
+      const students = examStudents.students;
 
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>প্রবেশপত্র</title>
-        <meta charset="UTF-8">
-        <style>
-          @page { 
-            size: A4 portrait; 
-            margin: 5mm; 
-          }
-          body {
-            font-family: 'Noto Sans Bengali', Arial, sans-serif;
-            font-size: 10pt;
-            margin: 0;
-            padding: 5mm;
-            color: #441a05;
-          }
-          .page-container {
-            width: 200mm;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            gap: 2mm;
-            box-sizing: border-box;
-          }
-          .admit-card {
-            width: 190mm;
-            height: 90mm;
-            background: white;
-            border: 1px solid #DB9E30;
-            margin:0 auto 5px;
-            border-radius: 4mm;
-            overflow: hidden;
-            position: relative;
-            page-break-inside: avoid;
-          }
-          .page-break {
-            page-break-after: always;
-          }
-          .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #DB9E30;
-            border-top-left-radius: 4mm;
-            border-top-right-radius: 4mm;
-            padding: 1mm 4mm;
-          }
-          .header img {
-            width: 8mm;
-            height: 8mm;
-            object-fit: contain;
-          }
-          .header-text {
-            text-align: center;
-            color: white;
-          }
-          .header-text h1 {
-            font-size: 12pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin: 0;
-          }
-          .header-text p {
-            font-size: 9pt;
-            margin: 0.5mm 0;
-          }
-          .title {
-            text-align: center;
-            font-size: 14pt;
-            font-weight: bold;
-            color: #DB9E30;
-            margin: 2mm 0;
-            text-decoration: underline;
-          }
-          .student-info {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            margin-top: 2mm;
-            padding: 3mm;
-            font-size: 10pt;
-          }
-          .student-info p {
-            font-size: 11pt;
-            margin: 1mm 0;
-          }
-          .roll-reg {
-            border: 1px solid #DB9E30;
-            padding: 2mm 4mm;
-            border-radius: 2mm;
-            background: #DB9E30;
-            color: white;
-            transform: translateX(1mm);
-          }
-          .roll-reg p {
-            margin: 1mm 0;
-            font-size: 11pt;
-          }
-          .instructions {
-            margin-top: 1mm;
-            padding: 0 3mm;
-            width: 70%;
-            font-size: 9pt;
-          }
-          .signature {
-            position: absolute;
-            bottom: 2mm;
-            right: 4mm;
-            text-align: center;
-          }
-          .signature-line {
-            border-top: 1px solid #441a05;
-            width: 20mm;
-            margin: 0 auto;
-          }
-          .signature p {
-            font-size: 9pt;
-            margin-top: 1mm;
-            font-weight: 600;
-          }
-          .background-image {
-            position: absolute;
-            width: 80mm;
-            height: 50mm;
-            left: 28%;
-            top: 30%;
-            background: url('https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg');
-            background-size: contain;
-            background-position: center;
-            background-repeat: no-repeat;
-            opacity: 0.1;
-            z-index: 0;
-          }
-        </style>
-      </head>
-      <body>
-        ${studentGroups
-          .map(
-            (group, pageIndex) => `
-          <div class="page-container">
-            ${group
-              .map(
-                (student) => `
-              <div class="admit-card">
-                <div class="background-image"></div>
-                <div class="header">
-                  <img src="${
-                    institute.institute_logo ||
-                    "https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg"
-                  }" alt="Institute Logo" />
-                  <div class="header-text">
-                    <h1>${institute.institute_name || "Institute Name"}</h1>
-                    <p>${institute.institute_address || "Address"}</p>
-                    <p><strong>পরীক্ষা:</strong> ${
-                      examInfo.name || "Exam Name"
-                    } | <strong>তারিখ:</strong> ${
-                  examInfo.start_date || "Date"
-                }</p>
-                  </div>
-                  <img src="${
-                    institute.institute_logo ||
-                    "https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg"
-                  }" alt="Institute Logo" />
-                </div>
-                <div class="title">প্রবেশপত্র</div>
-                <div class="student-info">
-                  <div class="space-y-1">
-                    <p><strong>নাম:</strong> ${student.student_name}</p>
-                    <p><strong>শ্রেণি:</strong> ${student.class_name}</p>
-                    <p><strong>সেকশন:</strong> ${student.section_name}</p>
-                    <p><strong>সেশন:</strong> ${
-                      selectedAcademicYear?.label || "N/A"
-                    }</p>
-                  </div>
-                  <div class="roll-reg">
-                    <p><strong>রোল:</strong> ${
-                      student.roll_no || student.user_id
-                    }</p>
-                    <p><strong>রেজি:</strong> ${student.user_id}</p>
-                  </div>
-                </div>
-                <div class="instructions">
-                  <p><strong>নির্দেশ:</strong> পরীক্ষার হলে এই প্রবেশপত্র অবশ্যই সঙ্গে আনতে হবে।</p>
-                  <p><strong>নির্দেশ:</strong> পরীক্ষা শুরুর ১৫ মিনিট পূর্বে উপস্থিত থাকতে হবে।</p>
-                  <p><strong>নির্দেশ:</strong> প্রয়োজনীয় সামগ্রী: বোর্ড, শার্পনার, রুলার, পেন্সিল, কলম, ইরেজার।</p>
-                </div>
-                <div class="signature">
-                  <div class="signature-line"></div>
-                  <p>পরীক্ষা নিয়ন্ত্রকের স্বাক্ষর</p>
-                </div>
-              </div>
-            `
-              )
-              .join("")}
-            ${
-              pageIndex < studentGroups.length - 1
-                ? '<div class="page-break"></div>'
-                : ""
+      // Group students into sets of 3 for each page
+      const studentGroups = [];
+      for (let i = 0; i < students.length; i += 3) {
+        studentGroups.push(students.slice(i, i + 3));
+      }
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>প্রবেশপত্র</title>
+          <meta charset="UTF-8">
+          <style>
+            @page { 
+              size: A4 portrait; 
+              margin: 5mm; 
             }
-          </div>
-        `
-          )
-          .join("")}
-        <script>
-          let printAttempted = false;
-          window.onbeforeprint = () => { printAttempted = true; };
-          window.onafterprint = () => { window.close(); };
-          window.addEventListener('beforeunload', (event) => {
-            if (!printAttempted) { window.close(); }
-          });
-          window.print();
-        </script>
-      </body>
-      </html>
-    `;
+            body {
+              font-family: 'Noto Sans Bengali', Arial, sans-serif;
+              margin: 0;
+              padding: 5mm;
+              color: #441a05;
+              -webkit-print-color-adjust: exact !important;
+              color-adjust: exact !important;
+            }
+            * {
+              -webkit-print-color-adjust: exact !important;
+              color-adjust: exact !important;
+            }
+            .page-container {
+              width: 200mm;
+              margin: 0 auto;
+              display: flex;
+              flex-direction: column;
+              gap: 2mm;
+              box-sizing: border-box;
+            }
+            .admit-card {
+              width: 190mm;
+              height: 90mm;
+              background: white;
+              border: 1px solid #DB9E30;
+              margin: 0 auto 5px;
+              border-radius: 4mm;
+              overflow: hidden;
+              position: relative;
+              page-break-inside: avoid;
+              background-image: url('${base64Background}');
+              background-size: 105% 109%;
+              background-position: center;
+              background-repeat: no-repeat;
+            }
+            .page-break {
+              page-break-after: always;
+            }
+            
+            /* Institute Logo Watermark - Matching your UI */
+            .logo-watermark {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              opacity: 0.2;
+              z-index: 10;
+              max-width: 100px;
+              max-height: 100px;
+              object-fit: contain;
+            }
+            
+            /* Content Overlay - Matching your UI */
+            .card-overlay {
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              z-index: 20;
+            }
+            
+            /* Institute Name - Matching your UI exactly */
+            .institute-name {
+              position: absolute;
+              top: 12mm;
+              left: 0;
+              right: 0;
+              text-align: center;
+              font-size: 14pt;
+              font-weight: bold;
+              color: black;
+              text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
+            }
+            
+            /* Student Information - Matching your UI positioning */
+            .student-name {
+              position: absolute;
+              top: 38mm;
+              left: 15mm;
+              font-size: 12pt;
+              color: black;
+              text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
+            }
+            .father-name {
+              position: absolute;
+              top: 45mm;
+              left: 15mm;
+              font-size: 12pt;
+              color: black;
+              text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
+            }
+            .birth-date {
+              position: absolute;
+              top: 52mm;
+              left: 15mm;
+              font-size: 12pt;
+              color: black;
+              text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
+            }
+            .class-info {
+              position: absolute;
+              top: 59mm;
+              left: 15mm;
+              font-size: 12pt;
+              color: black;
+              text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
+            }
+            
+            /* Admission Number Box - Horizontal flex layout */
+            .admission-box {
+              position: absolute;
+              top: 38mm;
+              right: 15mm;
+              border: 2px solid black;
+              background: rgba(255,255,255,0.95);
+              display: flex;
+              flex-direction: row;
+            }
+            
+            /* Roll Number Box - Horizontal flex layout */
+            .roll-box {
+              position: absolute;
+              top: 51mm;
+              right: 15mm;
+              border: 2px solid black;
+              background: rgba(255,255,255,0.95);
+              display: flex;
+              flex-direction: row;
+            }
+            
+            .box-header {
+              background: #f0e68c; /* yellow-200 equivalent */
+              padding: 4px 16px;
+              text-align: center;
+              border-right: 1px solid black;
+              font-size: 11pt;
+              font-weight: 600;
+              color: black;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .box-content {
+              background: white;
+              padding: 8px 16px;
+              text-align: center;
+              font-size: 12pt;
+              font-weight: bold;
+              color: black;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            
+            /* Signature sections - Exact match to your UI */
+            .signature-left {
+              position: absolute;
+              bottom: 5mm;
+              left: 15mm;
+              text-align: center;
+            }
+            .signature-right {
+              position: absolute;
+              bottom: 5mm;
+              right: 25mm;
+              text-align: center;
+            }
+            .signature-line {
+              border-top: 2px solid black;
+              width: 60mm;
+              margin-bottom: 4px;
+            }
+            .signature-text {
+              font-size: 10pt;
+              color: black;
+              font-weight: 600;
+              text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
+            }
+            
+            /* Font weights to match your UI */
+            .font-semibold {
+              font-weight: 600;
+            }
+            .font-bold {
+              font-weight: bold;
+            }
+          </style>
+        </head>
+        <body>
+          ${studentGroups
+            .map(
+              (group, pageIndex) => `
+            <div class="page-container">
+              ${group
+                .map(
+                  (student) => `
+                <div class="admit-card">
+                  ${instituteLogoBase64 ? `<img src="${instituteLogoBase64}" alt="Institute Logo" class="logo-watermark" />` : ''}
+                  
+                  <div class="card-overlay">
+                    <!-- Institute Name -->
+                    <div class="institute-name">
+                      ${institute.institute_name || "Institute Name"}
+                    </div>
+                    
+                    <!-- Student Information -->
+                    <div class="student-name">
+                      পরীক্ষার্থীর নাম : <span class="font-semibold">${student.student_name}</span>
+                    </div>
+                    
+                    <div class="father-name">
+                      পিতার নাম : <span class="font-semibold">${student.father_name || "N/A"}</span>
+                    </div>
+                    
+                    <div class="birth-date">
+                      জন্য তারিখ : <span class="font-semibold">${student.date_of_birth || "N/A"}</span>
+                    </div>
+                    
+                    <div class="class-info">
+                      জামাত : <span class="font-semibold">${student.class_name} - ${student.section_name}</span>
+                    </div>
+                    
+                    <!-- Admission Number Box -->
+                    <div class="admission-box">
+                      <div class="box-header">দাখেলা নং</div>
+                      <div class="box-content">${student.user_id}</div>
+                    </div>
+                    
+                    <!-- Roll Number Box -->
+                    <div class="roll-box">
+                      <div class="box-header">রোল নং</div>
+                      <div class="box-content">${student.roll_no || student.user_id}</div>
+                    </div>
+                    
+                    <!-- Signature Lines -->
+                    <div class="signature-left">
+                      <div class="signature-line"></div>
+                      <div class="signature-text">মুহতামিমের সিল ও স্বাক্ষর</div>
+                    </div>
+                    
+                    <div class="signature-right">
+                      <div class="signature-line"></div>
+                      <div class="signature-text">নায়িমে ইহতামামের স্বাক্ষর</div>
+                    </div>
+                  </div>
+                </div>
+              `
+                )
+                .join("")}
+              ${
+                pageIndex < studentGroups.length - 1
+                  ? '<div class="page-break"></div>'
+                  : ""
+              }
+            </div>
+          `
+            )
+            .join("")}
+          <script>
+            let printAttempted = false;
+            window.onbeforeprint = () => { printAttempted = true; };
+            window.onafterprint = () => { window.close(); };
+            window.addEventListener('beforeunload', (event) => {
+              if (!printAttempted) { window.close(); }
+            });
+            setTimeout(() => {
+              window.print();
+            }, 500);
+          </script>
+        </body>
+        </html>
+      `;
 
-    const printWindow = window.open("", "_blank");
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    toast.success("প্রবেশপত্র তৈরি হয়েছে! প্রিন্ট বা সেভ করুন।");
-    setIsGeneratingPDF(false);
+      const printWindow = window.open("", "_blank");
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      toast.success("প্রবেশপত্র তৈরি হয়েছে! প্রিন্ট বা সেভ করুন।");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("প্রবেশপত্র তৈরি করতে সমস্যা হয়েছে!");
+    } finally {
+      setIsGeneratingPDF(false);
+    }
   };
 
   // Format select options
@@ -410,106 +626,125 @@ const AdmitCard = () => {
     );
   }
 
-  // Render single admit card
+  // Render back side preview
+  const renderBackCard = () => {
+    return (
+      <div
+        className="admit-card relative border border-[#DB9E30] rounded-lg w-[190mm] h-[90mm] overflow-hidden"
+        style={{
+          backgroundImage: `url(${backgroundImage})`,
+          backgroundSize: '105% 105%',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {/* Just the background image, no content */}
+      </div>
+    );
+  };
+
+  // Render single admit card for screen preview
   const renderSingleCard = (student, index) => {
     const instituteInfo = institute || {};
-    const examInfo =
-      exams?.find((exam) => exam.id === selectedExam?.value) || {};
 
     return (
       <div
         key={student.user_id}
-        className="admit-card relative border border-[#DB9E30] rounded-lg w-[190mm] h-[90mm] overflow-hidden"
+        className="admit-card relative border border-[#DB9E30] rounded-none w-[190mm] h-[90mm] overflow-hidden"
+        style={{
+          backgroundImage: `url(${backgroundImage})`,
+          backgroundSize: '105% 109%',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
       >
-        {/* Background Image Layer */}
-        <div className="absolute inset-0 w-[80mm] h-[50mm] left-[28%] top-[30%] bg-[url('https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg')] bg-contain bg-center bg-no-repeat opacity-10 z-0"></div>
-
-        {/* Header */}
-        <div className="text-center flex justify-between items-center bg-[#DB9E30] rounded-t-lg py-1 px-4">
-          <img
-            src={
-              instituteInfo.institute_logo ||
-              "https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg"
-            }
+        {/* Institute Logo Watermark */}
+        {instituteInfo.institute_logo && (
+          <img 
+            src={instituteInfo.institute_logo} 
             alt="Institute Logo"
-            className="w-8 h-8 object-contain"
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-20 max-w-[100px] max-h-[100px] object-contain z-10"
           />
-          <div>
-            <h1 className="text-xs font-bold text-white uppercase">
-              {instituteInfo.institute_name || "Institute Name"}
-            </h1>
-            <p className="text-[9px] text-white">
-              {instituteInfo.institute_address || "Address"}
-            </p>
-            <p className="text-[9px] mt-0.5 text-white">
-              <strong>পরীক্ষা:</strong> {examInfo.name || "Exam Name"} |{" "}
-              <strong>তারিখ:</strong> {examInfo.start_date || "Date"}
-            </p>
+        )}
+
+        {/* Content Overlay */}
+        <div className="absolute inset-0 z-20">
+          {/* Institute Name */}
+          <div 
+            className="absolute top-[12mm] left-0 right-0 text-center text-[14pt] font-bold text-black"
+            style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.9)' }}
+          >
+            {instituteInfo.institute_name || "Institute Name"}
           </div>
-          <img
-            src={
-              instituteInfo.institute_logo ||
-              "https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg"
-            }
-            alt="Institute Logo"
-            className="w-8 h-8 object-contain"
-          />
-        </div>
 
-        {/* Title */}
-        <h2 className="text-sm text-center font-extrabold text-[#DB9E30] mt-2 underline">
-          প্রবেশপত্র
-        </h2>
-
-        {/* Student Info */}
-        <div className="text-[10px] mt-2 text-[#441a05] p-3 flex justify-around items-center">
-          <div className="w-fit space-y-1">
-            <p className="text-[11px]">
-              <strong>নাম:</strong> {student.student_name}
-            </p>
-            <p className="text-[11px]">
-              <strong>শ্রেণি:</strong> {student.class_name}
-            </p>
-            <p className="text-[11px]">
-              <strong>সেকশন:</strong> {student.section_name}
-            </p>
-            <p className="text-[11px]">
-              <strong>সেশন:</strong> {selectedAcademicYear?.label || "N/A"}
-            </p>
+          {/* Student Information */}
+          <div 
+            className="absolute top-[38mm] left-[15mm] text-[12pt] text-black"
+            style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.9)' }}
+          >
+            পরীক্ষার্থীর নাম : <span className="font-semibold">{student.student_name}</span>
           </div>
-          <div className="border p-2 px-4 rounded-lg bg-[#DB9E30] translate-x-1">
-            <p className="mb-1 text-[11px] text-white">
-              <strong>রোল:</strong> {student.roll_no || student.user_id}
-            </p>
-            <p className="text-[11px] text-white">
-              <strong>রেজি:</strong> {student.user_id}
-            </p>
+
+          <div 
+            className="absolute top-[45mm] left-[15mm] text-[12pt] text-black"
+            style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.9)' }}
+          >
+            পিতার নাম : <span className="font-semibold">{student.father_name || "N/A"}</span>
           </div>
-        </div>
 
-        {/* Instructions */}
-        <div className="mt-1 text-[9px] text-[#440d05] w-[70%] p-3">
-          <p>
-            <strong>নির্দেশ:</strong> পরীক্ষার হলে এই প্রবেশপত্র অবশ্যই সঙ্গে
-            আনতে হবে।
-          </p>
-          <p>
-            <strong>নির্দেশ:</strong> পরীক্ষা শুরুর ১৫ মিনিট পূর্বে উপস্থিত
-            থাকতে হবে।
-          </p>
-          <p>
-            <strong>নির্দেশ:</strong> প্রয়োজনীয় সামগ্রী: বোর্ড, শার্পনার,
-            রুলার, পেন্সিল, কলম, ইরেজার।
-          </p>
-        </div>
+          <div 
+            className="absolute top-[52mm] left-[15mm] text-[12pt] text-black"
+            style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.9)' }}
+          >
+            জন্য তারিখ : <span className="font-semibold">{student.date_of_birth || "N/A"}</span>
+          </div>
 
-        {/* Signature */}
-        <div className="flex justify-end mt-[-55px] mb-2 mr-4">
-          <div className="text-center">
-            <div className="border-t border-[#441a05] w-20 mx-auto"></div>
-            <p className="text-[9px] text-[#441a05] mt-1 font-semibold">
-              পরীক্ষা নিয়ন্ত্রকের স্বাক্ষর
-            </p>
+          <div 
+            className="absolute top-[59mm] left-[15mm] text-[12pt] text-black"
+            style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.9)' }}
+          >
+            জামাত : <span className="font-semibold">{student.class_name} - {student.section_name}</span>
+          </div>
+
+          {/* Admission Number Box - Horizontal Layout */}
+          <div className="absolute top-[38mm] right-[15mm] border-2 border-black bg-white/95 flex flex-row">
+            <div className="bg-yellow-200 px-4 py-2 text-center border-r border-black flex items-center justify-center">
+              <span className="text-[11pt] font-semibold text-black">দাখেলা নং</span>
+            </div>
+            <div className="bg-white px-4 py-2 text-center flex items-center justify-center">
+              <span className="text-[12pt] font-bold text-black">{student.user_id}</span>
+            </div>
+          </div>
+
+          {/* Roll Number Box - Horizontal Layout */}
+          <div className="absolute top-[51mm] right-[15mm] border-2 border-black bg-white/95 flex flex-row">
+            <div className="bg-yellow-200 px-4 py-2 text-center border-r border-black flex items-center justify-center">
+              <span className="text-[11pt] font-semibold text-black">রোল নং</span>
+            </div>
+            <div className="bg-white px-4 py-2 text-center flex items-center justify-center">
+              <span className="text-[12pt] font-bold text-black">{student.roll_no || student.user_id}</span>
+            </div>
+          </div>
+
+          {/* Signature Lines */}
+          <div className="absolute bottom-[5mm] left-[15mm] text-center">
+            <div className="border-t-2 border-black w-[60mm] mb-1"></div>
+            <span 
+              className="text-[10pt] text-black font-semibold"
+              style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.9)' }}
+            >
+              মুহতামিমের সিল ও স্বাক্ষর
+            </span>
+          </div>
+
+          <div className="absolute bottom-[5mm] right-[15mm] text-center">
+            <div className="border-t-2 border-black w-[60mm] mb-1"></div>
+            <span 
+              className="text-[10pt] text-black font-semibold"
+              style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.9)' }}
+            >
+              নায়িমে ইহতামামের স্বাক্ষর
+            </span>
           </div>
         </div>
       </div>
@@ -565,112 +800,203 @@ const AdmitCard = () => {
 
       {/* Filter Controls */}
       <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-        <div className="flex items-center space-x-4 mb-6 animate-fadeIn">
-          <IoPrint className="text-4xl text-[#441a05]" />
-          <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
-            প্রবেশপত্র
-          </h3>
+        <div className="flex items-center justify-between mb-6 animate-fadeIn">
+          <div className="flex items-center space-x-4">
+            <IoPrint className="text-4xl text-[#441a05]" />
+            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
+              প্রবেশপত্র {isBackPrint ? "- পেছনের অংশ" : ""}
+            </h3>
+          </div>
+          
+          {/* Back Print Toggle Button */}
+          <button
+            onClick={toggleBackPrint}
+            className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+              isBackPrint 
+                ? 'bg-red-500 text-white hover:bg-red-600' 
+                : 'bg-blue-500 text-white hover:bg-blue-600'
+            }`}
+          >
+            {isBackPrint ? 'ফ্রন্ট প্রিন্ট' : 'ব্যাক প্রিন্ট'}
+          </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 no-print">
-          <div>
-            <label className="block text-sm font-medium text-[#441a05] mb-1">
-              ক্লাস কনফিগারেশন
-            </label>
-            <Select
-              options={classConfigOptions}
-              value={selectedClassConfig}
-              onChange={setSelectedClassConfig}
-              placeholder="ক্লাস নির্বাচন করুন..."
-              isClearable
-              styles={selectStyles}
-              menuPortalTarget={document.body}
-              menuPosition="fixed"
-              className="animate-scaleIn"
-              aria-label="ক্লাস কনফিগারেশন"
-              title="ক্লাস নির্বাচন করুন / Select class configuration"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[#441a05] mb-1">
-              শিক্ষাবর্ষ
-            </label>
-            <Select
-              options={academicYearOptions}
-              value={selectedAcademicYear}
-              onChange={setSelectedAcademicYear}
-              placeholder="বছর নির্বাচন করুন..."
-              isClearable
-              styles={selectStyles}
-              menuPortalTarget={document.body}
-              menuPosition="fixed"
-              className="animate-scaleIn"
-              aria-label="শিক্ষাবর্ষ"
-              title="শিক্ষাবর্ষ নির্বাচন করুন / Select academic year"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[#441a05] mb-1">
-              পরীক্ষা
-            </label>
-            <Select
-              options={examOptions}
-              value={selectedExam}
-              onChange={setSelectedExam}
-              placeholder="পরীক্ষা নির্বাচন করুন..."
-              isClearable
-              styles={selectStyles}
-              menuPortalTarget={document.body}
-              menuPosition="fixed"
-              className="animate-scaleIn"
-              aria-label="পরীক্ষা"
-              title="পরীক্ষা নির্বাচন করুন / Select exam"
-            />
-          </div>
-        </div>
-
-        {/* Print and PDF Buttons */}
-        {selectedClassConfig && selectedAcademicYear && selectedExam && (
-          <div className="mt-6 flex space-x-4 no-print">
-            <button
-              onClick={handleDownloadPDF}
-              className="px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn hover:text-white btn-glow"
-              aria-label="প্রবেশপত্র প্রিন্ট করুন"
-              title="প্রবেশপত্র প্রিন্ট করুন / Print admit cards"
+        {/* Background Image Upload */}
+        <div className="mb-6 no-print">
+          <label className="block text-sm font-medium text-[#441a05] mb-2">
+            {isBackPrint ? 'পেছনের' : 'সামনের'} ব্যাকগ্রাউন্ড ইমেজ আপলোড করুন (ঐচ্ছিক)
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleBackgroundUpload}
+            className="block w-full text-sm text-[#441a05] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#DB9E30] file:text-[#441a05] hover:file:bg-[#c8922a]"
+          />
+          <div className="mt-2 flex items-center space-x-4">
+            {backgroundImage && (
+              <img 
+                src={backgroundImage} 
+                alt="Background Preview" 
+                className="h-20 w-auto border rounded"
+              />
+            )}
+            <button 
+              onClick={resetToDefaultBackground}
+              className="text-blue-600 text-sm hover:text-blue-800 underline"
             >
-              <span className="flex items-center space-x-2">
-                <IoPrint className="w-5 h-5" />
-                <span>প্রবেশপত্র প্রিন্ট করুন</span>
-              </span>
+              ডিফল্ট ব্যাকগ্রাউন্ড ব্যবহার করুন
             </button>
           </div>
+        </div>
+
+        {!isBackPrint && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 no-print">
+            <div>
+              <label className="block text-sm font-medium text-[#441a05] mb-1">
+                ক্লাস কনফিগারেশন
+              </label>
+              <Select
+                options={classConfigOptions}
+                value={selectedClassConfig}
+                onChange={setSelectedClassConfig}
+                placeholder="ক্লাস নির্বাচন করুন..."
+                isClearable
+                styles={selectStyles}
+                menuPortalTarget={document.body}
+                menuPosition="fixed"
+                className="animate-scaleIn"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#441a05] mb-1">
+                শিক্ষাবর্ষ
+              </label>
+              <Select
+                options={academicYearOptions}
+                value={selectedAcademicYear}
+                onChange={setSelectedAcademicYear}
+                placeholder="বছর নির্বাচন করুন..."
+                isClearable
+                styles={selectStyles}
+                menuPortalTarget={document.body}
+                menuPosition="fixed"
+                className="animate-scaleIn"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#441a05] mb-1">
+                পরীক্ষা
+              </label>
+              <Select
+                options={examOptions}
+                value={selectedExam}
+                onChange={setSelectedExam}
+                placeholder="পরীক্ষা নির্বাচন করুন..."
+                isClearable
+                styles={selectStyles}
+                menuPortalTarget={document.body}
+                menuPosition="fixed"
+                className="animate-scaleIn"
+              />
+            </div>
+          </div>
         )}
+
+        {/* Print Buttons */}
+        <div className="mt-6 flex space-x-4 no-print">
+          {isBackPrint ? (
+            <button
+              onClick={handleBackPrintPDF}
+              disabled={isGeneratingPDF || !examStudents?.students?.length}
+              className="px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn hover:text-white btn-glow disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span className="flex items-center space-x-2">
+                {isGeneratingPDF ? (
+                  <FaSpinner className="w-5 h-5 spinner" />
+                ) : (
+                  <IoPrint className="w-5 h-5" />
+                )}
+                <span>
+                  {isGeneratingPDF ? "তৈরি হচ্ছে..." : "পেছনের অংশ প্রিন্ট করুন"}
+                </span>
+              </span>
+            </button>
+          ) : (
+            selectedClassConfig && selectedAcademicYear && selectedExam && (
+              <button
+                onClick={handleDownloadPDF}
+                disabled={isGeneratingPDF}
+                className="px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn hover:text-white btn-glow disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="flex items-center space-x-2">
+                  {isGeneratingPDF ? (
+                    <FaSpinner className="w-5 h-5 spinner" />
+                  ) : (
+                    <IoPrint className="w-5 h-5" />
+                  )}
+                  <span>
+                    {isGeneratingPDF ? "তৈরি হচ্ছে..." : "প্রবেশপত্র প্রিন্ট করুন"}
+                  </span>
+                </span>
+              </button>
+            )
+          )}
+        </div>
       </div>
 
       {/* Printable/PDF Area */}
       <div ref={printRef} className="admit-card-container w-[210mm] mx-auto">
-        {selectedClassConfig && selectedAcademicYear && selectedExam ? (
+        {isBackPrint ? (
+          // Back print preview
           examStudents?.students?.length > 0 ? (
             <div className="flex flex-col items-center gap-[2mm]">
-              {examStudents.students.map((student, index) => (
-                <React.Fragment key={student.user_id}>
-                  {renderSingleCard(student, index)}
-                  {index % 3 === 2 &&
-                    index < examStudents.students.length - 1 && (
+              {Array(Math.ceil(examStudents.students.length / 3))
+                .fill(0)
+                .map((_, pageIndex) => (
+                  <React.Fragment key={pageIndex}>
+                    {Array(3)
+                      .fill(0)
+                      .map((_, cardIndex) => (
+                        <div key={cardIndex}>
+                          {renderBackCard()}
+                        </div>
+                      ))}
+                    {pageIndex < Math.ceil(examStudents.students.length / 3) - 1 && (
                       <div className="page-break"></div>
                     )}
-                </React.Fragment>
-              ))}
+                  </React.Fragment>
+                ))}
             </div>
           ) : (
             <div className="text-center text-[#441a05] p-8">
-              কোনো শিক্ষার্থী পাওয়া যায়নি। ফিল্টার পরীক্ষা করুন।
+              প্রথমে ফ্রন্ট প্রিন্ট মোডে শিক্ষার্থী নির্বাচন করুন।
             </div>
           )
         ) : (
-          <div className="text-center text-[#441a05] p-8">
-            দয়া করে সকল ফিল্টার নির্বাচন করুন।
-          </div>
+          // Front print preview (your existing logic)
+          selectedClassConfig && selectedAcademicYear && selectedExam ? (
+            examStudents?.students?.length > 0 ? (
+              <div className="flex flex-col items-center gap-[2mm]">
+                {examStudents.students.map((student, index) => (
+                  <React.Fragment key={student.user_id}>
+                    {renderSingleCard(student, index)}
+                    {index % 3 === 2 &&
+                      index < examStudents.students.length - 1 && (
+                        <div className="page-break"></div>
+                      )}
+                  </React.Fragment>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-[#441a05] p-8">
+                কোনো শিক্ষার্থী পাওয়া যায়নি। ফিল্টার পরীক্ষা করুন।
+              </div>
+            )
+          ) : (
+            <div className="text-center text-[#441a05] p-8">
+              দয়া করে সকল ফিল্টার নির্বাচন করুন।
+            </div>
+          )
         )}
       </div>
     </div>
