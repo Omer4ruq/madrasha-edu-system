@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaSpinner } from 'react-icons/fa';
+import { FaSpinner, FaCheckCircle } from 'react-icons/fa';
 import { IoAddCircle } from 'react-icons/io5';
 import { Toaster, toast } from 'react-hot-toast';
 import { useGetExamApiQuery } from '../../redux/features/api/exam/examApi';
@@ -25,7 +25,10 @@ const SubjectMarks = () => {
   const [subjectConfId, setSubjectConfId] = useState('');
   const [marks, setMarks] = useState({});
   const [absentStudents, setAbsentStudents] = useState({});
-  
+  const [savingInputs, setSavingInputs] = useState({});
+  const [successInputs, setSuccessInputs] = useState({}); // Track successful saves
+  const [isEnterPressed, setIsEnterPressed] = useState(false);
+
   const { data: exams, isLoading: examsLoading } = useGetExamApiQuery();
   const { data: academicYears, isLoading: yearsLoading } = useGetAcademicYearApiQuery();
   const { data: classes, isLoading: classesLoading } = useGetclassConfigApiQuery();
@@ -72,6 +75,9 @@ const SubjectMarks = () => {
       setSubjectConfId('');
       setMarks({});
       setAbsentStudents({});
+      setSavingInputs({});
+      setSuccessInputs({});
+      setIsEnterPressed(false);
     }
   }, [classId]);
 
@@ -79,6 +85,9 @@ const SubjectMarks = () => {
   useEffect(() => {
     setMarks({});
     setAbsentStudents({});
+    setSavingInputs({});
+    setSuccessInputs({});
+    setIsEnterPressed(false);
     if (existingMarks && existingMarks.length > 0) {
       const marksMap = {};
       const absentMap = {};
@@ -121,8 +130,12 @@ const SubjectMarks = () => {
       return;
     }
 
+    const key = `${studentId}_${markConfigId}`;
+    setSavingInputs((prev) => ({ ...prev, [key]: true }));
+    setSuccessInputs((prev) => ({ ...prev, [key]: false }));
+
     try {
-      const isAbsent = absentStudents[`${studentId}_${markConfigId}`] || false;
+      const isAbsent = absentStudents[key] || false;
       const obtained = isAbsent ? 0 : Number(value || 0);
 
       const existingMark = existingMarks?.find(
@@ -146,9 +159,18 @@ const SubjectMarks = () => {
         await createSubjectMark(markData).unwrap();
       }
       refetchMarks();
+      // toast.success('মার্ক সফলভাবে সংরক্ষিত!');
+      setSuccessInputs((prev) => ({ ...prev, [key]: true }));
+      // Hide success icon after 2 seconds
+      setTimeout(() => {
+        setSuccessInputs((prev) => ({ ...prev, [key]: false }));
+      }, 2000);
     } catch (error) {
       console.error(error);
       toast.error(`ত্রুটি: ${error?.data?.message || 'মার্ক সংরক্ষণ ব্যর্থ।'}`);
+    } finally {
+      setSavingInputs((prev) => ({ ...prev, [key]: false }));
+      setIsEnterPressed(false);
     }
   };
 
@@ -215,7 +237,7 @@ const SubjectMarks = () => {
     }
   };
 
-  // Loading state
+  // Loading state for initial data fetch
   if (subjectConfigsLoading || subjectConfigsFetching || studentsLoading || studentsFetching || examsLoading || yearsLoading || classesLoading || permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -334,7 +356,9 @@ const SubjectMarks = () => {
                 setClassId(selectedClass ? selectedClass.class_id.toString() : '');
                 setSubjectConfId('');
               }}
-              className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
+              className="w-full p-3
+
+ border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
               aria-label="ক্লাস নির্বাচন করুন"
               title="ক্লাস নির্বাচন করুন / Select class"
             >
@@ -430,7 +454,7 @@ const SubjectMarks = () => {
                     </th>
                   ))}
                   {hasChangePermission && (
-                    <th className="px-6 py-4 text-center text-sm font-bold text-[#441a05] uppercase tracking-wider">
+                    <th className="px-6 py4 text-center text-sm font-bold text-[#441a05] uppercase tracking-wider">
                       উপস্থিতি
                     </th>
                   )}
@@ -450,33 +474,55 @@ const SubjectMarks = () => {
                         </div>
                       </div>
                     </td>
-                    {markConfigs.map((config) => {
+                    {markConfigs.map((config, configIndex) => {
                       const key = `${student.id}_${config.id}`;
                       return (
-                        <td key={config.id} className="px-6 py-4 text-center">
-                          <input
-                            type="number"
-                            value={marks[key] || ''}
-                            onChange={(e) => handleMarkChange(student.id, config.id, e.target.value)}
-                            onBlur={(e) => saveIndividualMark(student.id, config.id, e.target.value)}
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                saveIndividualMark(student.id, config.id, e.target.value);
-                              }
-                            }}
-                            className={`w-20 h-12 text-center border-2 rounded-lg font-semibold transition-all duration-200 tick-glow ${
-                              absentStudents[key]
-                                ? 'bg-gray-100 border-[#9d9087] text-[#441a05]/50 cursor-not-allowed'
-                                : 'bg-white/10 border-[#9d9087] text-[#441a05] hover:border-[#DB9E30] focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30]'
-                            }`}
-                            disabled={absentStudents[key] || !hasChangePermission}
-                            min="0"
-                            max={config.max_mark}
-                            placeholder="0"
-                            aria-label={`মার্ক প্রবেশ করান ${student.name} ${config.mark_type_name}`}
-                            title={`মার্ক প্রবেশ করান / Enter marks for ${student.name} in ${config.mark_type_name}`}
-                          />
+                        <td key={config.id} className="px-6 py-4 text-center relative">
+                          <div className="relative w-fit mx-auto">
+                            <input
+                              type="number"
+                              value={marks[key] || ''}
+                              onChange={(e) => handleMarkChange(student.id, config.id, e.target.value)}
+                              onBlur={(e) => {
+                                if (!isEnterPressed) {
+                                  saveIndividualMark(student.id, config.id, e.target.value);
+                                }
+                              }}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  setIsEnterPressed(true);
+                                  saveIndividualMark(student.id, config.id, e.target.value);
+                                  if (index < students.length - 1) {
+                                    const nextStudent = students[index + 1];
+                                    const nextInput = document.querySelector(
+                                      `input[aria-label="মার্ক প্রবেশ করান ${nextStudent.name} ${config.mark_type_name}"]`
+                                    );
+                                    if (nextInput && !absentStudents[`${nextStudent.id}_${config.id}`]) {
+                                      nextInput.focus();
+                                    }
+                                  }
+                                }
+                              }}
+                              className={`w-20 h-12 text-center focus:outline-none border-2 rounded-lg font-semibold transition-all duration-200 tick-glow ${
+                                absentStudents[key]
+                                  ? 'bg-gray-100 border-[#9d9087] text-[#441a05]/50 cursor-not-allowed'
+                                  : 'bg-white/10 border-[#9d9087] text-[#441a05] hover:border-[#DB9E30] focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30]'
+                              }`}
+                              disabled={absentStudents[key] || !hasChangePermission || savingInputs[key]}
+                              min="0"
+                              max={config.max_mark}
+                              placeholder="0"
+                              aria-label={`মার্ক প্রবেশ করান ${student.name} ${config.mark_type_name}`}
+                              title={`মার্ক প্রবেশ করান / Enter marks for ${student.name} in ${config.mark_type_name}`}
+                            />
+                            {savingInputs[key] && (
+                              <FaSpinner className="absolute top-0 right-0 animate-spin text-sm text-[#DB9E30]" />
+                            )}
+                            {successInputs[key] && !savingInputs[key] && (
+                              <FaCheckCircle className="absolute top-0 right-0 text-sm text-green-500" />
+                            )}
+                          </div>
                         </td>
                       );
                     })}
@@ -549,7 +595,7 @@ const SubjectMarks = () => {
         <div className="text-center py-12 animate-fadeIn">
           <div className="text-6xl mb-4">📝</div>
           <h3 className="text-xl font-semibold text-[#441a05] mb-2">মার্ক এন্ট্রি শুরু করতে প্রস্তুত?</h3>
-          <p className="text-[#441a05]/70">উপরের ফিল্টারগুলি ব্যবহার করে পরীক্ষা, শিক্ষাবর্ষ, ক্লাস এবং বিষয় নির্বাচন করুন</p>
+          <p className="text-[#441a05]/70">উপরের ফিল filteredগুলি ব্যবহার করে পরীক্ষা, শিক্ষাবর্ষ, ক্লাস এবং বিষয় নির্বাচন করুন</p>
         </div>
       )}
     </div>

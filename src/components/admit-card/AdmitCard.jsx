@@ -191,6 +191,7 @@ const AdmitCard = () => {
             @page { 
               size: A4 portrait; 
               margin: 0mm; 
+                padding: 0;
             }
             body {
               font-family: 'Noto Sans Bengali', Arial, sans-serif;
@@ -210,19 +211,19 @@ const AdmitCard = () => {
               display: flex;
               align-items: center;
               justify-content: center;
-              padding: 5mm;
+              // padding: 5mm;
               box-sizing: border-box;
             }
             .admit-card {
               width: 200mm;
               height: 140mm;
               background: white;
-              border: 2px solid #DB9E30;
-              border-radius: 6mm;
+              // border: 2px solid #DB9E30;
+              // border-radius: 6mm;
               overflow: hidden;
               position: relative;
               background-image: url('${base64Background}');
-              background-size: 100% 100%;
+              background-size: 115% 115%;
               background-position: center;
               background-repeat: no-repeat;
             }
@@ -549,35 +550,34 @@ const AdmitCard = () => {
             @page { 
               size: A4 portrait; 
               margin: 0mm; 
+              padding: 0mm;
             }
+
             body {
               font-family: 'Noto Sans Bengali', Arial, sans-serif;
               margin: 0;
               padding: 0;
               color: #441a05;
-              -webkit-print-color-adjust: exact !important;
-              color-adjust: exact !important;
+              
             }
-            * {
-              -webkit-print-color-adjust: exact !important;
-              color-adjust: exact !important;
-            }
+        
             .page-container {
               width: 100%;
               height: 100vh;
               display: flex;
               flex-direction: column;
               justify-content: center;
-              padding: 7mm;
+              align-item:center;
+              // padding: 7mm;
               box-sizing: border-box;
-              gap: 8mm;
+              // gap: 8mm;
             }
             .admit-card {
               width: 200mm;
               height: 140mm;
               background: white;
-              border: 2px solid #DB9E30;
-              border-radius: 4mm;
+              // border: 2px solid #DB9E30;
+              // border-radius: 4mm;
               overflow: hidden;
               position: relative;
               background-image: url('${base64Background}');
@@ -629,7 +629,7 @@ const AdmitCard = () => {
             /* Student Information */
             .student-name {
               position: absolute;
-              top: 45mm;
+              top: 60mm;
               left: 15mm;
               font-size: 14pt;
               color: black;
@@ -637,7 +637,7 @@ const AdmitCard = () => {
             }
             .father-name {
               position: absolute;
-              top: 55mm;
+              top: 70mm;
               left: 15mm;
               font-size: 14pt;
               color: black;
@@ -645,7 +645,7 @@ const AdmitCard = () => {
             }
             .birth-date {
               position: absolute;
-              top: 65mm;
+              top: 80mm;
               left: 15mm;
               font-size: 14pt;
               color: black;
@@ -653,7 +653,7 @@ const AdmitCard = () => {
             }
             .class-info {
               position: absolute;
-              top: 75mm;
+              top: 90mm;
               left: 15mm;
               font-size: 14pt;
               color: black;
@@ -663,7 +663,7 @@ const AdmitCard = () => {
             /* Admission Number Box */
             .admission-box {
               position: absolute;
-              top: 45mm;
+              top: 60mm;
               right: 15mm;
               border: 2px solid black;
               background: rgba(255,255,255,0.95);
@@ -674,7 +674,7 @@ const AdmitCard = () => {
             /* Roll Number Box */
             .roll-box {
               position: absolute;
-              top: 60mm;
+              top: 75mm;
               right: 15mm;
               border: 2px solid black;
               background: rgba(255,255,255,0.95);
@@ -709,13 +709,15 @@ const AdmitCard = () => {
             /* Signature sections */
             .signature-left {
               position: absolute;
-              bottom: 8mm;
+              bottom: 15mm;
               left: 15mm;
+              font-size:12px;
               text-align: center;
             }
             .signature-right {
               position: absolute;
-              bottom: 8mm;
+              bottom: 15mm;
+              font-size:12px;
               right: 15mm;
               text-align: center;
             }
@@ -791,6 +793,7 @@ const AdmitCard = () => {
             @page { 
               size: A4 portrait; 
               margin: 0mm; 
+                padding: 0;
             }
             body {
               font-family: 'Noto Sans Bengali', Arial, sans-serif;
@@ -809,17 +812,17 @@ const AdmitCard = () => {
               display: flex;
               flex-direction: column;
               justify-content: center;
-              padding: 7mm;
+              // padding: 7mm;
               box-sizing: border-box;
-              gap: 8mm;
+              // gap: 8mm;
             }
             .admit-card-back {
               width: 200mm;
               height: 140mm;
               background: white;
-              border: 2px solid #DB9E30;
+              // border: 2px solid #DB9E30;
               margin: 0 auto;
-              border-radius: 4mm;
+              // border-radius: 4mm;
               overflow: hidden;
               position: relative;
               background-image: url('${base64Background}');
