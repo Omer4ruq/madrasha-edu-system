@@ -22,7 +22,7 @@ const customStyles = `
     to { transform: scale(1); opacity: 1; }
   }
   @keyframes ripple {
-    0% { transform: scale(0); opacity: 0.5; }
+   0% { transform: scale(0); opacity: 0.5; }
     100% { transform: scale(4); opacity: 0; }
   }
   @keyframes iconHover {
@@ -181,15 +181,46 @@ const customStyles = `
   }
   .a4-landscape {
     max-width: 1123px;
-    height: 794px;
     margin: 0 auto 20px;
     background: white;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    padding: 20px;
+    padding: 0 20px 20px;
     box-sizing: border-box;
     font-family: 'Noto Sans Bengali', sans-serif;
     position: relative;
     overflow: hidden;
+  }
+  .page-break {
+    page-break-before: always;
+  }
+  .report-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+  }
+  .institute-logo {
+    width: 80px;
+    height: 80px;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .exam-info-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 10px 0;
+  }
+  .exam-info-box {
+    border: 1px solid #DB9E30;
+    padding: 8px 12px;
+    border-radius: 5px;
+    background-color: #FFF9E6;
+    font-size: 14px;
+    font-weight: bold;
   }
 `;
 
@@ -198,6 +229,8 @@ const ResultSheet = () => {
   const [selectedExam, setSelectedExam] = useState('');
   const [selectedClassConfig, setSelectedClassConfig] = useState('');
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
+  const [gradeFormat, setGradeFormat] = useState('grade_name'); // 'grade_name' or 'grade_name_op'
+  const [sortBy, setSortBy] = useState('roll'); // 'roll' or 'ranking'
   
   // State for processed data
   const [studentResults, setStudentResults] = useState([]);
@@ -236,13 +269,14 @@ const ResultSheet = () => {
     { skip: !currentClassConfig }
   );
 
-  // Load grades from gradeRuleApi
+  // Load grades from gradeRules
   useEffect(() => {
     if (gradeRules) {
       setGrades(
         gradeRules.map((g) => ({
           id: g.id,
           grade: g.grade_name,
+          gradeOp: g.grade_name_op,
           min: g.min_mark,
           max: g.max_mark,
           remarks: g.remarks,
@@ -253,12 +287,45 @@ const ResultSheet = () => {
     }
   }, [gradeRules, gradesError]);
 
+  // Helper function to get fail grade based on format
+  const getFailGrade = () => {
+    const failRule = gradeRules.find(rule => rule.min_mark === 0);
+    if (failRule) {
+      return gradeFormat === 'grade_name' ? failRule.grade_name : failRule.grade_name_op;
+    }
+    return gradeFormat === 'grade_name' ? 'রাসেব' : 'F';
+  };
+
+  // Helper function to get grade based on marks and format
+  const getGradeForMarks = (averageMark, hasFailed) => {
+    if (hasFailed) return getFailGrade();
+    
+    const gradeRule = gradeRules.find(rule => 
+      averageMark >= rule.min_mark && averageMark <= rule.max_mark
+    );
+    
+    if (gradeRule) {
+      return gradeFormat === 'grade_name' ? gradeRule.grade_name : gradeRule.grade_name_op;
+    }
+    
+    return getFailGrade();
+  };
+
+  // Helper function to get display rank
+  const getDisplayRank = (student, rank) => {
+    if (student.hasFailed) {
+      const failGrade = getFailGrade();
+      return `${failGrade}(${rank})`;
+    }
+    return rank.toString();
+  };
+
   // Process data when all requirements are met
   useEffect(() => {
     if (subjectMarks.length > 0 && markConfigs.length > 0 && !isLoadingMarks && !isLoadingConfigs) {
       processResultData();
     }
-  }, [subjectMarks, markConfigs, isLoadingMarks, isLoadingConfigs]);
+  }, [subjectMarks, markConfigs, isLoadingMarks, isLoadingConfigs, gradeFormat, sortBy]);
 
   const processResultData = () => {
     setIsLoading(true);
@@ -271,7 +338,7 @@ const ResultSheet = () => {
       }
     });
 
-    // 1. Group mark configs by subject_serial to get sum of max_mark and pass_mark
+    // Group mark configs by subject_serial to get sum of max_mark and pass_mark
     const subjectConfigGroups = {};
     markConfigs.forEach(config => {
       if (!subjectConfigGroups[config.subject_serial]) {
@@ -291,7 +358,7 @@ const ResultSheet = () => {
       .sort((a, b) => a.serial - b.serial);
     setSubjectGroups(sortedSubjectGroups);
 
-    // 2. Process student data with summed marks
+    // Process student data with summed marks
     const studentsMap = new Map();
     
     subjectMarks.forEach(mark => {
@@ -352,58 +419,59 @@ const ResultSheet = () => {
       });
 
       const averageMark = totalMaxMark > 0 ? (totalObtained / totalMaxMark) * 100 : 0;
-      const grade = hasFailed ? 'রাসেব' : 
-        gradeRules.find(rule => 
-          averageMark >= rule.min_mark && averageMark <= rule.max_mark
-        )?.grade_name || 'রাসেব';
+      const roundedAverage = Math.ceil(averageMark);
+      
+      const grade = getGradeForMarks(roundedAverage, hasFailed);
 
       return {
         ...student,
         subjects: studentSubjects,
         totalObtained,
         totalMaxMark,
-        averageMark,
+        averageMark: roundedAverage,
         grade,
         hasFailed
       };
     });
 
-    // Separate passed and failed students
-    const passedStudents = processedStudents.filter(s => !s.hasFailed);
-    const failedStudents = processedStudents.filter(s => s.hasFailed);
+    // Sort students by totalObtained (descending) for ranking
+    const sortedByTotal = [...processedStudents].sort((a, b) => b.totalObtained - a.totalObtained);
 
-    // First sort passed students by average to calculate rankings
-    const passedByAverage = [...passedStudents].sort((a, b) => b.averageMark - a.averageMark);
-    
-    // Add rankings based on average
-    const rankedPassedStudents = passedByAverage.map((student, index) => ({
-      ...student,
-      ranking: index + 1,
-      displayRank: (index + 1).toString()
-    }));
+    // Assign rankings based on totalObtained, equal totals get same rank
+    const rankedStudents = [];
+    let currentRank = 1;
+    let previousTotal = null;
 
-    // Now sort passed students by roll number while keeping their rankings
-    const finalPassedStudents = [...rankedPassedStudents].sort((a, b) => a.roll - b.roll);
-
-    // Sort failed students by average (descending)
-    const rankedFailedStudents = failedStudents
-      .sort((a, b) => b.averageMark - a.averageMark)
-      .map(student => ({
+    sortedByTotal.forEach((student, index) => {
+      if (index > 0 && student.totalObtained !== previousTotal) {
+        // Different total from previous student, increment rank by 1 only
+        currentRank++;
+      }
+      
+      rankedStudents.push({
         ...student,
-        ranking: Infinity,
-        displayRank: 'রাসেব'
-      }));
+        ranking: currentRank,
+        displayRank: getDisplayRank(student, currentRank)
+      });
+      
+      previousTotal = student.totalObtained;
+    });
 
-    // Combine results
-    const allStudents = [...finalPassedStudents, ...rankedFailedStudents];
+    // Sort by selected option for final display
+    let finalStudents;
+    if (sortBy === 'ranking') {
+      finalStudents = [...rankedStudents].sort((a, b) => a.ranking - b.ranking);
+    } else {
+      finalStudents = [...rankedStudents].sort((a, b) => a.roll - b.roll);
+    }
 
     // Calculate statistics
-    const totalStudents = allStudents.length;
-    const gradeDistribution = allStudents.reduce((acc, res) => {
+    const totalStudents = finalStudents.length;
+    const gradeDistribution = finalStudents.reduce((acc, res) => {
       acc[res.grade] = (acc[res.grade] || 0) + 1;
       return acc;
     }, {});
-    const failedSubjects = allStudents.reduce((acc, res) => {
+    const failedSubjects = finalStudents.reduce((acc, res) => {
       res.subjects.forEach((sub) => {
         if (sub.isFailed) {
           acc[sub.subjectName] = (acc[sub.subjectName] || 0) + 1;
@@ -413,7 +481,7 @@ const ResultSheet = () => {
     }, {});
 
     setStatistics({ totalStudents, gradeDistribution, failedSubjects });
-    setStudentResults(allStudents);
+    setStudentResults(finalStudents);
     setIsLoading(false);
   };
 
@@ -424,318 +492,450 @@ const ResultSheet = () => {
     if (instituteError) toast.error("ইনস্টিটিউট তথ্য লোড করতে ব্যর্থ হয়েছে!");
   }, [subjectMarksError, subjectConfigsError, instituteError]);
 
-  const getCellStyle = (subject) => {
-    if (!subject) return {};
-    if (subject.isAbsent) {
-      return { backgroundColor: '#FFF7E6', color: '#000' };
-    }
-    if (subject.isFailed) {
-      return { backgroundColor: '#FFE6E6', color: '#9B1C1C' };
-    }
-    return {};
+  // Generate PDF Report - Now receives all data as parameters
+ const generatePDFReport = (
+  studentResults, 
+  subjectGroups, 
+  grades, 
+  statistics, 
+  selectedExam, 
+  selectedClassConfig, 
+  selectedAcademicYear, 
+  exams, 
+  classConfigs, 
+  academicYears, 
+  instituteData,
+  gradeFormat,
+  sortBy
+) => {
+  if (!selectedExam || !selectedClassConfig || !selectedAcademicYear) {
+    toast.error("অনুগ্রহ করে সমস্ত প্রয়োজনীয় ফিল্ড পূরণ করুন!");
+    return;
+  }
+
+  if (!studentResults.length) {
+    toast.error("কোনো ফলাফল তথ্য পাওয়া যায়নি!");
+    return;
+  }
+
+  if (!instituteData) {
+    toast.error("ইনস্টিটিউট তথ্য পাওয়া যায়নি!");
+    return;
+  }
+
+  const institute = instituteData;
+  const printWindow = window.open("", "_blank");
+  
+  // Show loading message while image is loading
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>লোড হচ্ছে...</title>
+      <meta charset="UTF-8">
+      <style>
+        body { 
+          font-family: 'Noto Sans Bengali', Arial, sans-serif;  
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          margin: 0;
+          background-color: #f5f5f5;
+        }
+        .loading {
+          text-align: center;
+          font-size: 18px;
+          color: #333;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="loading">রিপোর্ট প্রস্তুত করা হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</div>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+
+  // Preload the image
+  const img = new Image();
+  img.src = instituteData.institute_logo ? instituteData.institute_logo : 'https://demoschool.eduworlderp.com/img/site/1730259402.png';
+  
+  img.onload = function() {
+    // Image is loaded, now generate the report
+    generateReportContent(printWindow, img.src);
+  };
+  
+  img.onerror = function() {
+    // If image fails to load, use fallback
+    generateReportContent(printWindow, 'https://demoschool.eduworlderp.com/img/site/1730259402.png');
   };
 
-  // Generate PDF Report
-  const generatePDFReport = () => {
-    if (!selectedExam || !selectedClassConfig || !selectedAcademicYear) {
-      toast.error("অনুগ্রহ করে সমস্ত প্রয়োজনীয় ফিল্ড পূরণ করুন!");
-      return;
-    }
-
-    if (!studentResults.length) {
-      toast.error("কোনো ফলাফল তথ্য পাওয়া যায়নি!");
-      return;
-    }
-
-    if (isInstituteLoading) {
-      toast.error("ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!");
-      return;
-    }
-
-    if (!instituteData) {
-      toast.error("ইনস্টিটিউট তথ্য পাওয়া যায়নি!");
-      return;
-    }
-
-    const institute = instituteData;
-    const printWindow = window.open("", "_blank");
-
+  function generateReportContent(printWindow, logoUrl) {
+    // Calculate how many students per page (20 rows per page)
+    const studentsPerPage = 20;
+    const totalPages = Math.ceil(studentResults.length / studentsPerPage);
+    
     let htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>ফলাফল শীট</title>
-        <meta charset="UTF-8">
-        <style>
-          @page { size: A4 landscape; }
-          body { 
-            font-family: 'Noto Sans Bengali', Arial, sans-serif;  
-            font-size: 12px; 
-            margin: 0;
-            padding: 0;
-            background-color: #ffffff;
-          }
-          table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            font-size: 10px; 
-          }
-          th, td { 
-            border: 1px solid #000; 
-            padding: 8px; 
-            text-align: center; 
-          }
-          th { 
-            background-color: #f5f5f5; 
-            font-weight: bold; 
-            color: #000;
-            text-transform: uppercase;
-          }
-          td { 
-            color: #000; 
-          }
-          .fail-cell {
-            background-color: #FFE6E6;
-            color: #9B1C1C;
-          }
-          .absent-cell {
-            background-color: #FFF7E6;
-            color: #000;
-          }
-          .header { 
-            text-align: center; 
-            margin-bottom: 15px; 
-            padding-bottom: 10px;
-          }
-          .institute-info {
-            margin-bottom: 10px;
-          }
-          .institute-info h1 {
-            font-size: 22px;
-            margin: 0;
-            color: #000;
-          }
-          .institute-info p {
-            font-size: 14px;
-            margin: 5px 0;
-            color: #000;
-          }
-          .title {
-            font-size: 18px;
-            color: #DB9E30;
-            margin: 10px 0;
-          }
-          .grade-table {
-            position: absolute;
-            top: 0px;
-            right: 0px;
-            width: 150px;
-            border-collapse: collapse;
-            font-size: 10px;
-          }
-          .grade-table th, .grade-table td {
-            border: 1px solid #000;
-            padding: 5px;
-            text-align: center;
-            text-wrap: nowrap;
-          }
-          .grade-table th {
-            background-color: #f5f5f5;
-            font-weight: bold;
-            color: #000;
-          }
-          .stats-container {
-            text-align: center;
-            margin-top: 20px;
-            display: flex;
-            gap:20px;
-            justify-content: space-between;
-            font-size: 10px;
-          }
-          .stats-box {
-            border: 1px solid #000;
-            padding: 5px 10px;
-            width: 48%;
-            background-color: #f5f5f5;
-          }
-          .stats-title {
-            text-align: center;
-            font-size: 11px;
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #000;
-          }
-          .stats-text {
-            display: inline;
-            text-align: center;
-            padding-right: 5px;
-            font-size: 10px;
-            color: #000;
-          }
-          .date { 
-            margin-top: 20px; 
-            text-align: right; 
-            font-size: 10px; 
-            color: #000;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="institute-info">
-            <h1>${institute.institute_name || "অজানা ইনস্টিটিউট"}</h1>
-            <p>${institute.institute_address || "ঠিকানা উপলব্ধ নয়"}</p>
-          </div>
-          <h2 class="title">ফলাফল শীট</h2>
-          <h3>পরীক্ষা: ${
-            exams?.find((e) => e.id === Number(selectedExam))?.name ||
-            "পরীক্ষা নির্বাচিত হয়নি"
-          }</h3>
-          <h3>ক্লাস: ${
-            classConfigs?.find((c) => c.id === Number(selectedClassConfig))
-              ?.class_name || "ক্লাস নির্বাচিত হয়নি"
-          } | শাখা: ${
-      classConfigs?.find((c) => c.id === Number(selectedClassConfig))
-        ?.section_name || "শাখা নির্বাচিত হয়নি"
-    } | শিফট: ${
-      classConfigs?.find((c) => c.id === Number(selectedClassConfig))
-        ?.shift_name || "শিফট নির্বাচিত হয়নি"
-    }</h3>
-          <h3>শিক্ষাবর্ষ: ${
-            academicYears?.find((y) => y.id === Number(selectedAcademicYear))
-              ?.name || "শিক্ষাবর্ষ নির্বাচিত হয়নি"
-          }</h3>
+    <!DOCTYPE html>
+  <html>
+  <head>
+    <title>ফলাফল শীট</title>
+    <meta charset="UTF-8">
+  <style>
+      @page { 
+        size: A4 landscape; 
+        margin: 0;
+        padding: 15px;
+      }
+      body { 
+        font-family: 'Noto Sans Bengali', Arial, sans-serif;  
+        font-size: 12px; 
+        margin: 0;
+        padding: 0;
+        background-color: #ffffff;
+      }
+      table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        font-size: 10px; 
+      }
+      th, td { 
+        border: 1px solid #000; 
+        padding: 5px; 
+        font-weight: bold;
+        text-align: center; 
+      }
+      th { 
+        background-color: #f5f5f5; 
+        font-weight: bold;
+        color: #000;
+        text-transform: uppercase;
+      }
+      td { 
+        color: #000; 
+        font-weight: bold;
+      }
+      .fail-cell {
+        background-color: #FFE6E6;
+        color: #9B1C1C;
+      }
+      .absent-cell {
+        background-color: #FFF7E6;
+        color: #000;
+      }
+      .header { 
+        display: flex;
+      }
+      .institute-logo {
+        width: 80px;
+        height: 80px;
+        margin-right: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .institute-info {
+        flex-grow: 1;
+        margin: 15px 0 0;
+      }
+      .institute-info h1 {
+        font-size: 18px;
+        margin: 0;
+        color: #000;
+      }
+      .institute-info p {
+        font-size: 12px;
+        margin: 5px 0;
+        color: #000;
+      }
+      .exam-info-container {
+        display: flex;
+        justify-content: center; 
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 10px 0;
+      }
+      .exam-info-box {
+        border: 1px solid #DB9E30;
+        padding: 8px 12px;
+        background-color: #FFF9E6;
+        font-size: 12px;
+        font-weight: bold;
+      }
+      .title {
+        font-size: 18px;
+        color: #DB9E30;
+        margin: -30px 0 10px;
+        text-align: center;
+      }
+      .grade-table {
+        top: 0px;
+        right: 0px;
+        width: 150px;
+        border-collapse: collapse;
+        font-size: 10px;
+        z-index: 10;
+      }
+      .grade-table th, .grade-table td {
+        border: 1px solid #000;
+        padding: 3px;
+        font-weight: bold;
+        text-align: center;
+        text-wrap: nowrap;
+      }
+      .grade-table th {
+        background-color: #f5f5f5;
+        font-weight: bold;
+        color: #000;
+      }
+      .stats-container {
+        text-align: center;
+        font-weight: bold;
+        margin-top: 20px;
+        display: flex;
+        gap:20px;
+        justify-content: space-between;
+        font-size: 10px;
+        page-break-inside: avoid;
+      }
+      .stats-box {
+        border: 1px solid #000;
+        padding: 5px 10px;
+        width: 48%;
+        background-color: #f5f5f5;
+        page-break-inside: avoid;
+      }
+      .stats-title {
+        text-align: center;
+        font-size: 11px;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #000;
+      }
+      .stats-text {
+        display: inline;
+        text-align: center;
+        padding-right: 5px;
+        font-size: 10px;
+        color: #000;
+      }
+      .date { 
+        margin-top: 20px; 
+        text-align: right; 
+        font-size: 10px; 
+        color: #000;
+        page-break-inside: avoid;
+      }
+      .institute-logo img {
+        width: 80px !important;
+        height: 80px !important;
+        max-width: 80px !important;
+        max-height: 80px !important;
+        object-fit: contain !important;
+        display: block !important;
+      }
+      .page-break {
+        page-break-before: always;
+      }
+      .footer {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        text-align: center;
+        font-size: 10px;
+      }
+    </style>
+  </head>
+  <body>
+  `;
+
+    // Create each page
+    for (let page = 0; page < totalPages; page++) {
+      const startIndex = page * studentsPerPage;
+      const endIndex = Math.min(startIndex + studentsPerPage, studentResults.length);
+      const pageStudents = studentResults.slice(startIndex, endIndex);
+      
+      htmlContent += `
+    <div class="${page > 0 ? 'page-break' : ''}">
+      <div class="header">
+        <div class="institute-logo">
+          <img src="${logoUrl}" alt="Institute Logo" />
+        </div>
+        <div class="institute-info">
+          <h1>${instituteData.institute_name || "অজানা ইনস্টিটিউট"}</h1>
+          <p>${instituteData.institute_address || "ঠিকানা উপলব্ধ নয়"}</p>
         </div>
         <table class="grade-table">
-          <thead>
+        <thead>
+          <tr>
+            <th>গ্রেড নাম</th>
+            <th>সর্বনিম্ন</th>
+            <th>সর্বোচ্চ</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${grades
+            .map(
+              (grade) => `
             <tr>
-              <th>গ্রেড নাম</th>
-              <th>সর্বনিম্ন</th>
-              <th>সর্বোচ্চ</th>
+              <td>${gradeFormat === 'grade_name' ? grade.grade : grade.gradeOp}</td>
+              <td>${grade.min}</td>
+              <td>${grade.max}</td>
             </tr>
-          </thead>
-          <tbody>
-            ${grades
+          `
+            )
+            .join("")}
+        </tbody>
+      </table>
+      </div>
+      
+      <h2 class="title">ফলাফল শীট</h2>
+      
+      <div class="exam-info-container">
+        <div class="exam-info-box">
+          পরীক্ষা: ${exams?.find((e) => e.id === Number(selectedExam))?.name || "পরীক্ষা নির্বাচিত হয়নি"}
+        </div>
+        <div class="exam-info-box">
+          ক্লাস: ${classConfigs?.find((c) => c.id === Number(selectedClassConfig))?.class_name || "ক্লাস নির্বাচিত হয়নি"}
+        </div>
+        <div class="exam-info-box">
+          শাখা: ${classConfigs?.find((c) => c.id === Number(selectedClassConfig))?.section_name || "শাখা নির্বাচিত হয়নি"}
+        </div>
+        <div class="exam-info-box">
+          শিফট: ${classConfigs?.find((c) => c.id === Number(selectedClassConfig))?.shift_name || "শিফট নির্বাচিত হয়নি"}
+        </div>
+        <div class="exam-info-box">
+          শিক্ষাবর্ষ: ${academicYears?.find((y) => y.id === Number(selectedAcademicYear))?.name || "শিক্ষাবর্ষ নির্বাচিত হয়নি"}
+        </div>
+      </div>
+
+      
+      
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 40px;">মেধা স্থান</th>
+            <th style="width: 40px;">রোল</th>
+            <th style="width: 100px;">নাম</th>
+            ${subjectGroups
               .map(
-                (grade) => `
-              <tr>
-                <td>${grade.grade}</td>
-                <td>${grade.min}</td>
-                <td>${grade.max}</td>
-              </tr>
-            `
+                (subject) =>
+                  `<th style="width: 50px;">${subject.subjectName || "N/A"}</th>`
               )
               .join("")}
-          </tbody>
-        </table>
-        <table>
-          <thead>
+            <th style="width: 40px;">মোট</th>
+            <th style="width: 40px;">গড়</th>
+            <th style="width: 40px;">গ্রেড</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${pageStudents
+            .map(
+              (student) => `
             <tr>
-              <th style="width: 40px;">মেধা স্থান</th>
-              <th style="width: 40px;">রোল</th>
-              <th style="width: 100px;">নাম</th>
-              ${subjectGroups
+              <td>${student.displayRank}</td>
+              <td>${student.roll || "N/A"}</td>
+              <td>${student.name || "N/A"}</td>
+              ${student.subjects
                 .map(
-                  (subject) =>
-                    `<th style="width: 50px;">${
-                      subject.subjectName || "N/A"
-                    }</th>`
+                  (sub) => `
+                <td class="${
+                  sub.isFailed
+                    ? "fail-cell"
+                    : sub.isAbsent
+                    ? "absent-cell"
+                    : ""
+                }">
+                  ${sub.isAbsent ? "অনুপস্থিত" : sub.obtained}
+                </td>
+              `
                 )
                 .join("")}
-              <th style="width: 40px;">মোট</th>
-              <th style="width: 40px;">গড়</th>
-              <th style="width: 40px;">গ্রেড</th>
+              <td>${student.totalObtained}</td>
+              <td>${student.averageMark.toFixed(0)}</td>
+              <td style="${
+                student.hasFailed
+                  ? "color: #9B1C1C; background-color: #FFE6E6;"
+                  : ""
+              }">${student.grade}</td>
             </tr>
-          </thead>
-          <tbody>
-            ${studentResults
-              .map(
-                (student) => `
-              <tr>
-                <td>${student.displayRank}</td>
-                <td>${student.roll || "N/A"}</td>
-                <td>${student.name || "N/A"}</td>
-                ${student.subjects
+          `
+            )
+            .join("")}
+        </tbody>
+      </table>
+      
+      ${page === totalPages - 1 ? `
+      <div class="stats-container">
+        <div class="stats-box">
+          <div class="stats-title">পরিসংখ্যান</div>
+          <div class="stats-text">
+            মোট শিক্ষার্থী: ${statistics.totalStudents},
+          </div>
+          <div class="stats-text">গ্রেড বিতরণ:</div>
+          ${Object.entries(statistics.gradeDistribution)
+            .map(
+              ([grade, count]) => `
+            <div class="stats-text">${grade}: ${count} জন,</div>
+          `
+            )
+            .join("")}
+        </div>
+        <div class="stats-box">
+          <div class="stats-title">ফেল করা বিষয়</div>
+          ${
+            Object.entries(statistics.failedSubjects).length > 0
+              ? Object.entries(statistics.failedSubjects)
                   .map(
-                    (sub) => `
-                  <td class="${
-                    sub.isFailed
-                      ? "fail-cell"
-                      : sub.isAbsent
-                      ? "absent-cell"
-                      : ""
-                  }">
-                    ${sub.isAbsent ? "অনুপস্থিত" : sub.obtained}
-                  </td>
-                `
+                    ([subject, count]) => `
+                <div class="stats-text">${subject}: ${count} জন,</div>
+              `
                   )
-                  .join("")}
-                <td>${student.totalObtained}</td>
-                <td>${student.averageMark.toFixed(2)}</td>
-                <td>${student.grade}</td>
-              </tr>
-            `
-              )
-              .join("")}
-          </tbody>
-        </table>
-        <div class="stats-container">
-          <div class="stats-box">
-            <div class="stats-title">পরিসংখ্যান</div>
-            <div class="stats-text">
-              মোট শিক্ষার্থী: ${statistics.totalStudents},
-            </div>
-            <div class="stats-text">গ্রেড বিতরণ:</div>
-            ${Object.entries(statistics.gradeDistribution)
-              .map(
-                ([grade, count]) => `
-              <div class="stats-text">${grade}: ${count} জন,</div>
-            `
-              )
-              .join("")}
-          </div>
-          <div class="stats-box">
-            <div class="stats-title">ফেল করা বিষয়</div>
-            ${
-              Object.entries(statistics.failedSubjects).length > 0
-                ? Object.entries(statistics.failedSubjects)
-                    .map(
-                      ([subject, count]) => `
-                  <div class="stats-text">${subject}: ${count} জন,</div>
-                `
-                    )
-                    .join("")
-                : `<div class="stats-text">কোনো বিষয়ে ফেল নেই</div>`
-            }
-          </div>
+                  .join("")
+              : `<div class="stats-text">কোনো বিষয়ে ফেল নেই</div>`
+          }
         </div>
-        <div class="date">
-          রিপোর্ট তৈরির তারিখ: ${new Date().toLocaleDateString("bn-BD")}
-        </div>
-        <script>
-          let printAttempted = false;
-          window.onbeforeprint = () => {
-            printAttempted = true;
-          };
-          window.onafterprint = () => {
-            window.close();
-          };
-          window.addEventListener('beforeunload', (event) => {
-            if (!printAttempted) {
-              window.close();
-            }
-          });
-          window.print();
-        </script>
-      </body>
-      </html>
-    `;
+      </div>
+      
+      <div class="date">
+        রিপোর্ট তৈরির তারিখ: ${new Date().toLocaleDateString("bn-BD")}
+      </div>
+      ` : ''}
+      
+    </div>
+  `;
+    }
+
+    htmlContent += `
+    <script>
+      let printAttempted = false;
+      window.onbeforeprint = () => {
+        printAttempted = true;
+      };
+      window.onafterprint = () => {
+        window.close();
+      };
+      window.addEventListener('beforeunload', (event) => {
+        if (!printAttempted) {
+          window.close();
+        }
+      });
+      
+      // Small delay to ensure all content is rendered before printing
+      setTimeout(() => {
+        window.print();
+      }, 100);
+    </script>
+  </body>
+  </html>
+      `;
 
     printWindow.document.write(htmlContent);
     printWindow.document.close();
-    printWindow.print();
     toast.success("PDF রিপোর্ট তৈরি হয়েছে!");
-  };
+  }
+};
 
   // Prepare options for react-select
   const examOptions =
@@ -756,6 +956,16 @@ const ResultSheet = () => {
       label: year.name,
     })) || [];
 
+  const gradeFormatOptions = [
+    { value: 'grade_name', label: 'গ্রেড নাম (মুমতায)' },
+    { value: 'grade_name_op', label: 'গ্রেড কোড (A+)' }
+  ];
+
+  const sortOptions = [
+    { value: 'roll', label: 'রোল অনুসারে' },
+    { value: 'ranking', label: 'মেধা স্থান অনুসারে' }
+  ];
+
   // Update loading condition to include API loading states
   const isDataLoading =
     isLoading || isLoadingMarks || isLoadingConfigs || gradesLoading || isInstituteLoading;
@@ -769,7 +979,7 @@ const ResultSheet = () => {
           <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight mb-6">
             ফলাফল শীট তৈরি করুন
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div className="relative">
               <label
                 htmlFor="examSelect"
@@ -848,9 +1058,66 @@ const ResultSheet = () => {
               />
             </div>
           </div>
-          <div className="flex justify-end mt-6">
+
+          {/* Additional Options Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="relative">
+              <label
+                htmlFor="gradeFormatSelect"
+                className="block font-medium text-[#441a05]"
+              >
+                গ্রেড ফরম্যাট
+              </label>
+              <Select
+                id="gradeFormatSelect"
+                options={gradeFormatOptions}
+                value={gradeFormatOptions.find(option => option.value === gradeFormat)}
+                onChange={(option) => setGradeFormat(option.value)}
+                isDisabled={isDataLoading}
+                styles={selectStyles}
+                menuPortalTarget={document.body}
+                menuPosition="fixed"
+                aria-label="গ্রেড ফরম্যাট নির্বাচন"
+              />
+            </div>
+            <div className="relative">
+              <label
+                htmlFor="sortSelect"
+                className="block font-medium text-[#441a05]"
+              >
+                সাজানোর পদ্ধতি
+              </label>
+              <Select
+                id="sortSelect"
+                options={sortOptions}
+                value={sortOptions.find(option => option.value === sortBy)}
+                onChange={(option) => setSortBy(option.value)}
+                isDisabled={isDataLoading}
+                styles={selectStyles}
+                menuPortalTarget={document.body}
+                menuPosition="fixed"
+                aria-label="সাজানোর পদ্ধতি নির্বাচন"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end">
             <button
-              onClick={generatePDFReport}
+              onClick={() => generatePDFReport(
+                studentResults, 
+                subjectGroups, 
+                grades, 
+                statistics, 
+                selectedExam, 
+                selectedClassConfig, 
+                selectedAcademicYear, 
+                exams, 
+                classConfigs, 
+                academicYears, 
+                instituteData,
+                gradeFormat,
+                sortBy
+              )}
               disabled={isDataLoading || !studentResults.length}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 btn-ripple ${
                 isDataLoading || !studentResults.length
@@ -885,6 +1152,7 @@ const ResultSheet = () => {
             <div className="a4-landscape">
               <div className="head">
                 <div className="institute-info">
+                      <img className='w-20 h-20 mb-3 mx-auto object-contain' src={instituteData.institute_logo ? instituteData.institute_logo : 'https://demoschool.eduworlderp.com/img/site/1730259402.png'} />
                   <h1>{instituteData?.institute_name || "অজানা ইনস্টিটিউট"}</h1>
                   <p>
                     {instituteData?.institute_address || "ঠিকানা উপলব্ধ নয়"}
@@ -928,7 +1196,7 @@ const ResultSheet = () => {
                 <tbody>
                   {grades.map((grade) => (
                     <tr key={grade.id}>
-                      <td>{grade.grade}</td>
+                      <td>{gradeFormat === 'grade_name' ? grade.grade : grade.gradeOp}</td>
                       <td>{grade.min}</td>
                       <td>{grade.max}</td>
                     </tr>
@@ -973,8 +1241,8 @@ const ResultSheet = () => {
                           </td>
                         ))}
                         <td>{student.totalObtained}</td>
-                        <td>{student.averageMark.toFixed(2)}</td>
-                        <td>{student.grade}</td>
+                        <td>{student.averageMark.toFixed(0)}</td>
+                        <td className={`${student.hasFailed ? "text-red-700 bg-red-100":""}`}>{student.grade}</td>
                       </tr>
                     ))}
                   </tbody>

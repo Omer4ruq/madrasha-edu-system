@@ -211,7 +211,9 @@ const AdmitCard = () => {
               display: flex;
               align-items: center;
               justify-content: center;
-              // padding: 5mm;
+              padding: 5mm 0;
+              box-sizing: border-box;
+              gap: 6mm;
               box-sizing: border-box;
             }
             .admit-card {
@@ -562,15 +564,15 @@ const AdmitCard = () => {
             }
         
             .page-container {
-              width: 100%;
-              height: 100vh;
+              // width: 100%;
+              // height: 100vh;
               display: flex;
               flex-direction: column;
               justify-content: center;
               align-item:center;
-              // padding: 7mm;
+              padding: 5mm 0;
               box-sizing: border-box;
-              // gap: 8mm;
+              gap: 6mm;
             }
             .admit-card {
               width: 200mm;
@@ -812,9 +814,11 @@ const AdmitCard = () => {
               display: flex;
               flex-direction: column;
               justify-content: center;
-              // padding: 7mm;
+             padding: 5mm 0;
               box-sizing: border-box;
-              // gap: 8mm;
+              gap: 6mm;
+              box-sizing: border-box;
+              
             }
             .admit-card-back {
               width: 200mm;

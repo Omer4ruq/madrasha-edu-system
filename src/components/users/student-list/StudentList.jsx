@@ -293,6 +293,7 @@ const StudentList = () => {
     .school-logo {
       height: 20mm;
       margin-bottom: 1mm;
+      border:1px solid #000;
     }
     .school-name {
       font-size: 16pt;
