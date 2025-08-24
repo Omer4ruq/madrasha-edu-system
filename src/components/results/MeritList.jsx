@@ -132,7 +132,7 @@ const customStyles = `
   }
   .a4-portrait {
     max-width: 595.28px;
-    height: 841.89px;
+    // height: 841.89px;
     margin: 0 auto 20px;
     background: white;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -739,9 +739,9 @@ const MeritList = () => {
                 </tbody>
               </table>
             </div>
-            <div className="date">
+            {/* <div className="date">
               রিপোর্ট তৈরির তারিখ: {new Date().toLocaleDateString("bn-BD")}
-            </div>
+            </div> */}
           </div>
         )}
       </div>

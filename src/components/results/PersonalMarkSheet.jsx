@@ -620,7 +620,7 @@ const PersonalMarkSheet = () => {
           <tfoot>
             <tr>
               <td></td>
-              <td class="footer-label">মোট প্রাপ্ত নম্বর :</td>
+              <td class="footer-label">গড় নম্বর :</td>
               <td class="footer-value">${marksData.averageMarks}</td>
             </tr>
             <tr>
@@ -1019,7 +1019,7 @@ const PersonalMarkSheet = () => {
                   <tr className="border border-black">
                     <td className="border-none"></td>
                     <td className="text-right border-none text-xs font-semibold">
-                      মোট প্রাপ্ত নম্বর :
+                      গড় নম্বর :
                     </td>
                     <td className="border-none text-xs font-semibold">
                       {marksData.averageMarks}

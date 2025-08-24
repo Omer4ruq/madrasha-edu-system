@@ -28,6 +28,7 @@ const SubjectMarks = () => {
   const [savingInputs, setSavingInputs] = useState({});
   const [successInputs, setSuccessInputs] = useState({}); // Track successful saves
   const [isEnterPressed, setIsEnterPressed] = useState(false);
+  const [sortedStudents, setSortedStudents] = useState([]);
 
   const { data: exams, isLoading: examsLoading } = useGetExamApiQuery();
   const { data: academicYears, isLoading: yearsLoading } = useGetAcademicYearApiQuery();
@@ -68,6 +69,21 @@ const SubjectMarks = () => {
   } = useGetGroupPermissionsQuery(group_id, { skip: !group_id });
   const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_subjectmark') || false;
   const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_subjectmark') || false;
+
+  // Sort students by roll number
+  useEffect(() => {
+    if (students && students.length > 0) {
+      const sorted = [...students].sort((a, b) => {
+        // Convert roll numbers to numbers for proper numerical sorting
+        const rollA = parseInt(a.roll_no, 10);
+        const rollB = parseInt(b.roll_no, 10);
+        return rollA - rollB;
+      });
+      setSortedStudents(sorted);
+    } else {
+      setSortedStudents([]);
+    }
+  }, [students]);
 
   // Reset when class changes
   useEffect(() => {
@@ -159,12 +175,11 @@ const SubjectMarks = () => {
         await createSubjectMark(markData).unwrap();
       }
       refetchMarks();
-      // toast.success('মার্ক সফলভাবে সংরক্ষিত!');
       setSuccessInputs((prev) => ({ ...prev, [key]: true }));
       // Hide success icon after 2 seconds
       setTimeout(() => {
         setSuccessInputs((prev) => ({ ...prev, [key]: false }));
-      }, 2000);
+      }, 1000);
     } catch (error) {
       console.error(error);
       toast.error(`ত্রুটি: ${error?.data?.message || 'মার্ক সংরক্ষণ ব্যর্থ।'}`);
@@ -254,7 +269,6 @@ const SubjectMarks = () => {
 
   return (
     <div className="py-8">
-      <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
           @keyframes fadeIn {
@@ -356,9 +370,7 @@ const SubjectMarks = () => {
                 setClassId(selectedClass ? selectedClass.class_id.toString() : '');
                 setSubjectConfId('');
               }}
-              className="w-full p-3
-
- border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
+              className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
               aria-label="ক্লাস নির্বাচন করুন"
               title="ক্লাস নির্বাচন করুন / Select class"
             >
@@ -391,14 +403,6 @@ const SubjectMarks = () => {
         </div>
       </div>
 
-      {/* Debug Information */}
-      {subjectConfId && (
-        <div className="bg-blue-50/10 backdrop-blur-sm border border-blue-200/20 rounded-lg p-4 mb-4 animate-fadeIn">
-          <p className="text-sm text-[#441a05]">
-            <strong>Debug Info:</strong> Subject Config ID: {subjectConfId}, Class ID: {classId}, Mark Configs Found: {markConfigs?.length || 0}, Students: {students?.length || 0}
-          </p>
-        </div>
-      )}
 
       {/* No Data Messages */}
       {selectedClassConfigId && !subjectConfigs?.length && (
@@ -417,7 +421,7 @@ const SubjectMarks = () => {
         </div>
       )}
 
-      {selectedClassConfigId && !students?.length && (
+      {selectedClassConfigId && !sortedStudents?.length && (
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 mb-8 animate-fadeIn">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-[#DB9E30]/20 rounded-full flex items-center justify-center">
@@ -434,7 +438,7 @@ const SubjectMarks = () => {
       )}
 
       {/* Marks Table */}
-      {students?.length > 0 && markConfigs?.length > 0 && (
+      {sortedStudents?.length > 0 && markConfigs?.length > 0 && (
         <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden animate-fadeIn">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -454,14 +458,14 @@ const SubjectMarks = () => {
                     </th>
                   ))}
                   {hasChangePermission && (
-                    <th className="px-6 py4 text-center text-sm font-bold text-[#441a05] uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-sm font-bold text-[#441a05] uppercase tracking-wider">
                       উপস্থিতি
                     </th>
                   )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/20">
-                {students.map((student, index) => (
+                {sortedStudents.map((student, index) => (
                   <tr key={student.id} className="hover:bg-white/10 transition-colors duration-200 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-4">
@@ -484,22 +488,28 @@ const SubjectMarks = () => {
                               value={marks[key] || ''}
                               onChange={(e) => handleMarkChange(student.id, config.id, e.target.value)}
                               onBlur={(e) => {
-                                if (!isEnterPressed) {
-                                  saveIndividualMark(student.id, config.id, e.target.value);
-                                }
+                                // Only save on blur if Enter was not pressed
+                                setTimeout(() => {
+                                  if (!isEnterPressed) {
+                                    saveIndividualMark(student.id, config.id, e.target.value);
+                                  }
+                                  setIsEnterPressed(false);
+                                }, 100);
                               }}
-                              onKeyPress={(e) => {
+                              onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                   e.preventDefault();
                                   setIsEnterPressed(true);
                                   saveIndividualMark(student.id, config.id, e.target.value);
-                                  if (index < students.length - 1) {
-                                    const nextStudent = students[index + 1];
+                                  
+                                  // Focus logic for next input
+                                  if (index < sortedStudents.length - 1) {
+                                    const nextStudent = sortedStudents[index + 1];
                                     const nextInput = document.querySelector(
                                       `input[aria-label="মার্ক প্রবেশ করান ${nextStudent.name} ${config.mark_type_name}"]`
                                     );
                                     if (nextInput && !absentStudents[`${nextStudent.id}_${config.id}`]) {
-                                      nextInput.focus();
+                                      setTimeout(() => nextInput.focus(), 100);
                                     }
                                   }
                                 }
@@ -554,15 +564,15 @@ const SubjectMarks = () => {
               <div className="flex items-center space-x-6">
                 <span className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span>মোট ছাত্র: {students.length}</span>
+                  <span>মোট ছাত্র: {sortedStudents.length}</span>
                 </span>
                 <span className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span>অনুপস্থিত: {markConfigs ? students.filter(student => markConfigs.some(c => absentStudents[`${student.id}_${c.id}`])).length : 0}</span>
+                  <span>অনুপস্থিত: {markConfigs ? sortedStudents.filter(student => markConfigs.some(c => absentStudents[`${student.id}_${c.id}`])).length : 0}</span>
                 </span>
                 <span className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-[#DB9E30] rounded-full"></div>
-                  <span>উপস্থিত: {markConfigs ? students.length - students.filter(student => markConfigs.some(c => absentStudents[`${student.id}_${c.id}`])).length : 0}</span>
+                  <span>উপস্থিত: {markConfigs ? sortedStudents.length - sortedStudents.filter(student => markConfigs.some(c => absentStudents[`${student.id}_${c.id}`])).length : 0}</span>
                 </span>
               </div>
               <div className="text-xs text-[#441a05]/70">
@@ -595,7 +605,7 @@ const SubjectMarks = () => {
         <div className="text-center py-12 animate-fadeIn">
           <div className="text-6xl mb-4">📝</div>
           <h3 className="text-xl font-semibold text-[#441a05] mb-2">মার্ক এন্ট্রি শুরু করতে প্রস্তুত?</h3>
-          <p className="text-[#441a05]/70">উপরের ফিল filteredগুলি ব্যবহার করে পরীক্ষা, শিক্ষাবর্ষ, ক্লাস এবং বিষয় নির্বাচন করুন</p>
+          <p className="text-[#441a05]/70">উপরের ফিল্টারগুলি ব্যবহার করে পরীক্ষা, শিক্ষাবর্ষ, ক্লাস এবং বিষয় নির্বাচন করুন</p>
         </div>
       )}
     </div>
