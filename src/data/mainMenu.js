@@ -248,11 +248,11 @@ const mainMenu = [
             title: "নম্বরপত্র",
             link: "/talimat/result/mark-sheet",
           },
-          {
-            id: "05/16/03",
-            title: "ব্যক্তিগত নম্বরপত্র",
-            link: "/talimat/result/personal-mark-sheet",
-          },
+          // {
+          //   id: "05/16/03",
+          //   title: "ব্যক্তিগত নম্বরপত্র",
+          //   link: "/talimat/result/personal-mark-sheet",
+          // },
           {
             id: "05/16/04",
             title: "মেধা স্থান",
