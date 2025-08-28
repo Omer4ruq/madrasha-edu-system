@@ -109,7 +109,7 @@ const customStyles = `
   }
   .head {
     text-align: center;
-    margin-top: 30px;
+    // margin-top: 30px;
     margin-bottom: 15px;
     padding-bottom: 10px;
   }
@@ -428,6 +428,12 @@ const MeritList = () => {
     const institute = instituteData;
 
     const printWindow = window.open("", "_blank");
+
+      // সরাসরি রিপোর্ট তৈরি করুন (ইমেজ প্রিলোডিং ছাড়া)
+  const logoUrl = instituteData.institute_logo 
+    ? instituteData.institute_logo 
+    : "https://demoschool.eduworlderp.com/img/site/1730259402.png";
+
     let htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -438,7 +444,7 @@ const MeritList = () => {
           @page { size: A4 portrait; border-width: 18px;
   border-color: rgba(219, 158, 48, 0.9); /* #DB9E30 with 70% opacity */
   border-style: double;  
-  padding: 50px 20px 20px;}
+  padding: 20px;}
           body {
             font-family: 'Noto Sans Bengali', Arial, sans-serif;
             font-size: 12px;
@@ -503,12 +509,21 @@ const MeritList = () => {
             font-size: 10px;
             color: #000;
           }
+              .institute-logo {
+          width: 80px;
+          height: 80px;
+          margin: 0 auto 10px;
+          display: block;
+          object-fit: contain;
+        }
         </style>
       </head>
       <body>
         <div class="head">
 
           <div class="institute-info">
+                        <img class="institute-logo" src="${logoUrl}" alt="Institute Logo" onerror="this.src='https://demoschool.eduworlderp.com/img/site/1730259402.png'" />
+
             <h1>${institute.institute_name || "অজানা ইনস্টিটিউট"}</h1>
             <p>${institute.institute_address || "ঠিকানা উপলব্ধ নয়"}</p>
           </div>
@@ -584,7 +599,11 @@ const MeritList = () => {
           window.addEventListener('beforeunload', (event) => {
             if (!printAttempted) { window.close(); }
           });
+            
+        // ছবি লোড হতে সময় দিন তারপর প্রিন্ট করুন
+        setTimeout(() => {
           window.print();
+        }, 100);
         </script>
       </body>
       </html>
@@ -800,7 +819,7 @@ const MeritList = () => {
           <div className="a4-portrait border-[14px] border-[#DB9E30]/70 border-double">
             <div className="head">
               <img
-                className="w-20 h-20 mb-3 mx-auto object-contain"
+                className="w-20 mb-5 mx-auto object-contain"
                 src={
                   instituteData?.institute_logo ||
                   "https://demoschool.eduworlderp.com/img/site/1730259402.png"

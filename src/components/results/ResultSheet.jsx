@@ -666,7 +666,7 @@ const ResultSheet = () => {
       .title {
         font-size: 18px;
         color: #DB9E30;
-        margin: -30px 0 10px;
+        margin: -50px 0 10px;
         text-align: center;
       }
       .grade-table {
@@ -815,7 +815,7 @@ const ResultSheet = () => {
       <table>
         <thead>
           <tr>
-            <th style="width: 40px;">মেধা স্থান</th>
+            
             <th style="width: 40px;">রোল</th>
             <th style="width: 100px;">নাম</th>
             ${subjectGroups
@@ -827,6 +827,7 @@ const ResultSheet = () => {
             <th style="width: 40px;">মোট</th>
             <th style="width: 40px;">গড়</th>
             <th style="width: 40px;">গ্রেড</th>
+            <th style="width: 40px;">মেধা স্থান</th>
           </tr>
         </thead>
         <tbody>
@@ -834,7 +835,7 @@ const ResultSheet = () => {
             .map(
               (student) => `
             <tr>
-              <td>${student.displayRank}</td>
+              
               <td>${student.roll || "N/A"}</td>
               <td>${student.name || "N/A"}</td>
               ${student.subjects
@@ -859,6 +860,7 @@ const ResultSheet = () => {
                   ? "color: #9B1C1C; background-color: #FFE6E6;"
                   : ""
               }">${student.grade}</td>
+              <td>${student.displayRank}</td>
             </tr>
           `
             )
@@ -1207,7 +1209,6 @@ const ResultSheet = () => {
                 <table>
                   <thead>
                     <tr>
-                      <th style={{ width: "40px" }}>মেধা স্থান</th>
                       <th style={{ width: "40px" }}>রোল</th>
                       <th style={{ width: "100px" }}>নাম</th>
                       {subjectGroups?.map((subject) => (
@@ -1218,12 +1219,13 @@ const ResultSheet = () => {
                       <th style={{ width: "40px" }}>মোট</th>
                       <th style={{ width: "40px" }}>গড়</th>
                       <th style={{ width: "40px" }}>গ্রেড</th>
+                                            <th style={{ width: "40px" }}>মেধা স্থান</th>
+
                     </tr>
                   </thead>
                   <tbody>
                     {studentResults.map((student) => (
                       <tr key={student.id}>
-                        <td>{student.displayRank}</td>
                         <td>{student.roll || "N/A"}</td>
                         <td>{student.name || "N/A"}</td>
                         {student.subjects.map((sub) => (
@@ -1243,6 +1245,8 @@ const ResultSheet = () => {
                         <td>{student.totalObtained}</td>
                         <td>{student.averageMark.toFixed(0)}</td>
                         <td className={`${student.hasFailed ? "text-red-700 bg-red-100":""}`}>{student.grade}</td>
+                                                <td>{student.displayRank}</td>
+
                       </tr>
                     ))}
                   </tbody>

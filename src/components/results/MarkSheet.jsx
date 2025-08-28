@@ -108,7 +108,7 @@ const customStyles = `
   }
   .head {
     text-align: center;
-    margin-top: 30px;
+    margin-top: 0px;
     margin-bottom: 15px;
     padding-bottom: 10px;
   }
@@ -494,269 +494,286 @@ const MarkSheet = () => {
   };
 
   // Generate bulk PDF report
-  const generateBulkPDF = () => {
-    if (!selectedExam || !selectedClassConfig || !selectedAcademicYear) {
-      toast.error("অনুগ্রহ করে সমস্ত প্রয়োজনীয় ফিল্ড পূরণ করুন!");
-      return;
-    }
+ const generateBulkPDF = () => {
+  if (!selectedExam || !selectedClassConfig || !selectedAcademicYear) {
+    toast.error("অনুগ্রহ করে সমস্ত প্রয়োজনীয় ফিল্ড পূরণ করুন!");
+    return;
+  }
 
-    if (filteredResultData.length === 0) {
-      toast.error("কোনো ফলাফল তথ্য পাওয়া যায়নি!");
-      return;
-    }
+  if (filteredResultData.length === 0) {
+    toast.error("কোনো ফলাফল তথ্য পাওয়া যায়নি!");
+    return;
+  }
 
-    if (isInstituteLoading) {
-      toast.error("ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!");
-      return;
-    }
+  if (!instituteData) {
+    toast.error("ইনস্টিটিউট তথ্য পাওয়া যায়নি!");
+    return;
+  }
 
-    if (!instituteData) {
-      toast.error("ইনস্টিটিউট তথ্য পাওয়া যায়নি!");
-      return;
-    }
+  const institute = instituteData;
+  const printWindow = window.open("", "_blank");
+  
+  // সরাসরি রিপোর্ট তৈরি করুন (ইমেজ প্রিলোডিং ছাড়া)
+  const logoUrl = instituteData.institute_logo 
+    ? instituteData.institute_logo 
+    : "https://demoschool.eduworlderp.com/img/site/1730259402.png";
 
-    const institute = instituteData;
-
-    const printWindow = window.open("", "_blank");
-    let htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>শ্রেণির ফলাফল শীট</title>
-        <meta charset="UTF-8">
-        <style>
-          @page { size: A4 portrait; 
-          border-width: 18px;
+  let htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>শ্রেণির ফলাফল শীট</title>
+      <meta charset="UTF-8">
+      <style>
+        @page { 
+          size: A4 portrait; 
+           border-width: 18px;
   border-color: rgba(219, 158, 48, 0.9); /* #DB9E30 with 70% opacity */
   border-style: double;  
-  padding: 50px 20px 20px; }
-          body {
-            font-family: 'Noto Sans Bengali', Arial, sans-serif;
-            font-size: 12px;
-            margin: 0;
-           
-            background-color: #ffffff;
-            
-          }
-          .head {
-            text-align: center;
-     
-            padding-bottom: 10px;
-          }
-          .institute-info {
-            margin-bottom: 10px;
-          }
-          .institute-info h1 {
-            font-size: 22px;
-            margin: 0;
-            color: #000;
-          }
-          .institute-info p {
-            font-size: 14px;
-            margin: 5px 0;
-            color: #000;
-          }
-          .title {
-            font-size: 18px;
-            color: #DB9E30;
-            margin: 10px 0;
-            font-weight: 600;
-          }
-          .student-info {
-            font-size: 14px;
-            margin: 5px 0;
-            font-weight: 600;
-            color: #000;
-          }
-          .table-container {
-            overflow-x: auto;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10px;
-          }
-          th, td {
-            border: 1px solid #000;
-            padding: 8px;
-            text-align: center;
-          }
-          th {
-            background-color: #f5f5f5;
-            font-weight: bold;
-            font-size:14px;
-            color: #000;
-            text-transform: uppercase;
-          }
-          td {
-            color: #000;
-              font-size:14px;
-          }
-          .fail-cell {
-            background-color: #FFE6E6;
-            color: #9B1C1C;
-          }
-          .absent-cell {
-            background-color: #FFF7E6;
-            color: #000;
-          }
-          .footer-label {
-            text-align: right;
-              font-size:14px;
-            font-weight: 600;
-          }
-          .footer-value {
-              font-size:14px;
-            font-weight: 600;
-          }
-          .signature {
-            margin-top: 80px;
-            font-size: 12px;
-            color: #000;
-          }
-          .date {
-            margin-top: 20px;
-            text-align: right;
-            font-size: 10px;
-            color: #000;
-          }
-          .page-break { page-break-before: always; }
-        </style>
-      </head>
-      <body>
-        ${filteredResultData
-          .map(
-            (student, index) => `
-          <div class="${index > 0 ? "page-break" : ""}">
-            <div class="head">
-              <div class="institute-info">
-                <h1>${institute.institute_name || "অজানা ইনস্টিটিউট"}</h1>
-                <p>${institute.institute_address || "ঠিকানা উপলব্ধ নয়"}</p>
-              </div>
-              <h2 class="title">
-                ব্যক্তিগত ফলাফল শীট - ${
-                  exams?.find((e) => e.id === Number(selectedExam.value))
-                    ?.name || "পরীক্ষা নির্বাচিত হয়নি"
-                }
-              </h2>
-              <h3 class="student-info">
-                নাম: ${student.name} | রোল: ${student.roll}
-              </h3>
-              <h3 class="student-info">
-                ক্লাস: ${
-                  classConfigs?.find(
-                    (c) => c.id === Number(selectedClassConfig.value)
-                  )?.class_name || "ক্লাস নির্বাচিত হয়নি"
-                } | 
-                শাখা: ${
-                  classConfigs?.find(
-                    (c) => c.id === Number(selectedClassConfig.value)
-                  )?.section_name || "শাখা নির্বাচিত হয়নি"
-                } | 
-                শিফট: ${
-                  classConfigs?.find(
-                    (c) => c.id === Number(selectedClassConfig.value)
-                  )?.shift_name || "শিফট নির্বাচিত হয়নি"
-                }
-              </h3>
-              <h3 class="student-info">
-                শিক্ষাবর্ষ: ${
-                  academicYears?.find(
-                    (y) => y.id === Number(selectedAcademicYear.value)
-                  )?.name || "শিক্ষাবর্ষ নির্বাচিত হয়নি"
-                }
-              </h3>
-            </div>
+  padding: 20px}
 
-            <div class="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th style="width: 50px;">ক্রমিক নং</th>
-                    <th style="width: 200px;">বিষয়</th>
-                    <th style="width: 100px;">প্রাপ্ত নম্বর</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${student.subjects
-                    .map(
-                      (sub, idx) => `
-                      <tr>
-                        <td>${idx + 1}</td>
-                        <td>${sub.subjectName}</td>
-                        <td class="${
-                          sub.isAbsent
-                            ? "absent-cell"
-                            : sub.isFailed
-                            ? "fail-cell"
-                            : ""
-                        }">
-                          ${sub.isAbsent ? "অনুপস্থিত" : sub.obtained}
-                        </td>
-                      </tr>
-                    `
-                    )
-                    .join("")}
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <td></td>
-                    <td class="footer-label">মোট নম্বর :</td>
-                    <td class="footer-value">${student.totalObtained} / ${
-              student.totalMaxMark
-            }</td>
-                  </tr>
-                  <tr>
-                    <td></td>
-                    <td class="footer-label">গড় নম্বর :</td>
-                    <td class="footer-value">${student.averageMark.toFixed(
-                      0
-                    )}</td>
-                  </tr>
-                  <tr>
-                    <td></td>
-                    <td class="footer-label">প্রাপ্ত বিভাগ :</td>
-                    <td class="footer-value">${student.grade}</td>
-                  </tr>
-                  <tr>
-                    <td></td>
-                    <td class="footer-label">মেধা স্থান :</td>
-                    <td class="footer-value ${
-                      student.hasFailed ? "fail-cell" : ""
-                    }">${student.rankDisplay}</td>
-                  </tr>
-                </tfoot>
-              </table>
+        }
+        body {
+          font-family: 'Noto Sans Bengali', Arial, sans-serif;
+          font-size: 12px;
+          margin: 0;
+          padding: 0;
+          background-color: #ffffff;
+        }
+        .head {
+          text-align: center;
+          margin-top: 0px;
+          margin-bottom: 15px;
+          padding-bottom: 10px;
+        }
+        .institute-info {
+          margin-bottom: 10px;
+        }
+        .institute-info h1 {
+          font-size: 22px;
+          margin: 0;
+          color: #000;
+        }
+        .institute-info p {
+          font-size: 14px;
+          margin: 5px 0;
+          color: #000;
+        }
+        .title {
+          font-size: 18px;
+          color: #DB9E30;
+          margin: 10px 0;
+          font-weight: 600;
+        }
+        .student-info {
+          font-size: 14px;
+          margin: 5px 0;
+          font-weight: 600;
+          color: #000;
+        }
+        .table-container {
+          overflow-x: auto;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 10px;
+        }
+        th, td {
+          border: 1px solid #000;
+          padding: 8px;
+          text-align: center;
+        }
+        th {
+          background-color: #f5f5f5;
+          font-weight: bold;
+          font-size:14px;
+          color: #000;
+          text-transform: uppercase;
+        }
+        td {
+          color: #000;
+          font-size:14px;
+        }
+        .fail-cell {
+          background-color: #FFE6E6;
+          color: #9B1C1C;
+        }
+        .absent-cell {
+          background-color: #FFF7E6;
+          color: #000;
+        }
+        .footer-label {
+          text-align: right;
+          font-size:14px;
+          font-weight: 600;
+        }
+        .footer-value {
+          font-size:14px;
+          font-weight: 600;
+        }
+        .signature {
+          margin-top: 80px;
+          font-size: 12px;
+          color: #000;
+        }
+        .date {
+          margin-top: 20px;
+          text-align: right;
+          font-size: 10px;
+          color: #000;
+        }
+        .page-break { 
+          page-break-before: always; 
+        }
+        .institute-logo {
+          width: 80px;
+          height: 80px;
+          margin: 0 auto 10px;
+          display: block;
+          object-fit: contain;
+        }
+      </style>
+    </head>
+    <body>
+      ${filteredResultData
+        .map(
+          (student, index) => `
+        <div class="${index > 0 ? "page-break" : ""}">
+          <div class="head">
+            <div class="institute-info">
+              <img class="institute-logo" src="${logoUrl}" alt="Institute Logo" onerror="this.src='https://demoschool.eduworlderp.com/img/site/1730259402.png'" />
+              <h1>${institute.institute_name || "অজানা ইনস্টিটিউট"}</h1>
+              <p>${institute.institute_address || "ঠিকানা উপলব্ধ নয়"}</p>
             </div>
-
-            <div class="signature">
-              পরীক্ষা নিয়ন্ত্রকের স্বাক্ষর: ____________________
-            </div>
-
-            <div class="date">
-              রিপোর্ট তৈরির তারিখ: ${new Date().toLocaleDateString("bn-BD")}
-            </div>
+            <h2 class="title">
+              ব্যক্তিগত ফলাফল শীট - ${
+                exams?.find((e) => e.id === Number(selectedExam.value))
+                  ?.name || "পরীক্ষা নির্বাচিত হয়নি"
+              }
+            </h2>
+            <h3 class="student-info">
+              নাম: ${student.name} | রোল: ${student.roll}
+            </h3>
+            <h3 class="student-info">
+              ক্লাস: ${
+                classConfigs?.find(
+                  (c) => c.id === Number(selectedClassConfig.value)
+                )?.class_name || "ক্লাস নির্বাচিত হয়নি"
+              } | 
+              শাখা: ${
+                classConfigs?.find(
+                  (c) => c.id === Number(selectedClassConfig.value)
+                )?.section_name || "শাখা নির্বাচিত হয়নি"
+              } | 
+              শিফট: ${
+                classConfigs?.find(
+                  (c) => c.id === Number(selectedClassConfig.value)
+                )?.shift_name || "শিফট নির্বাচিত হয়নি"
+              }
+            </h3>
+            <h3 class="student-info">
+              শিক্ষাবর্ষ: ${
+                academicYears?.find(
+                  (y) => y.id === Number(selectedAcademicYear.value)
+                )?.name || "শিক্ষাবর্ষ নির্বাচিত হয়নি"
+              }
+            </h3>
           </div>
-        `
-          )
-          .join("")}
-        <script>
-          let printAttempted = false;
-          window.onbeforeprint = () => { printAttempted = true; };
-          window.onafterprint = () => { window.close(); };
-          window.addEventListener('beforeunload', (event) => {
-            if (!printAttempted) { window.close(); }
-          });
-          window.print();
-        </script>
-      </body>
-      </html>
-    `;
 
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    toast.success("বাল্ক PDF রিপোর্ট তৈরি হয়েছে!");
-  };
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 50px;">ক্রমিক নং</th>
+                  <th style="width: 200px;">বিষয়</th>
+                  <th style="width: 100px;">প্রাপ্ত নম্বর</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${student.subjects
+                  .map(
+                    (sub, idx) => `
+                    <tr>
+                      <td>${idx + 1}</td>
+                      <td>${sub.subjectName}</td>
+                      <td class="${
+                        sub.isAbsent
+                          ? "absent-cell"
+                          : sub.isFailed
+                          ? "fail-cell"
+                          : ""
+                      }">
+                        ${sub.isAbsent ? "অনুপস্থিত" : sub.obtained}
+                      </td>
+                    </tr>
+                  `
+                  )
+                  .join("")}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td></td>
+                  <td class="footer-label">মোট নম্বর :</td>
+                  <td class="footer-value">${student.totalObtained} / ${
+            student.totalMaxMark
+          }</td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td class="footer-label">গড় নম্বর :</td>
+                  <td class="footer-value">${student.averageMark.toFixed(
+                    0
+                  )}</td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td class="footer-label">প্রাপ্ত বিভাগ :</td>
+                  <td class="footer-value">${student.grade}</td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td class="footer-label">মেধা স্থান :</td>
+                  <td class="footer-value ${
+                    student.hasFailed ? "fail-cell" : ""
+                  }">${student.rankDisplay}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="signature">
+            পরীক্ষা নিয়ন্ত্রকের স্বাক্ষর: ____________________
+          </div>
+
+          <div class="date">
+            রিপোর্ট তৈরির তারিখ: ${new Date().toLocaleDateString("bn-BD")}
+          </div>
+        </div>
+      `
+        )
+        .join("")}
+      <script>
+        let printAttempted = false;
+        window.onbeforeprint = () => { printAttempted = true; };
+        window.onafterprint = () => { window.close(); };
+        window.addEventListener('beforeunload', (event) => {
+          if (!printAttempted) { window.close(); }
+        });
+        
+        // ছবি লোড হতে সময় দিন তারপর প্রিন্ট করুন
+        setTimeout(() => {
+          window.print();
+        }, 100);
+      </script>
+    </body>
+    </html>
+  `;
+
+  printWindow.document.write(htmlContent);
+  printWindow.document.close();
+  toast.success("বাল্ক PDF রিপোর্ট তৈরি হয়েছে!");
+};
 
   // Prepare options for react-select
   const examOptions =
@@ -997,6 +1014,14 @@ const MarkSheet = () => {
             >
               <div className="head">
                 <div className="institute-info">
+                  <img
+                    className="w-20 mx-auto mb-5"
+                    src={
+                      instituteData?.institute_logo ||
+                      "https://demoschool.eduworlderp.com/img/site/1730259402.png"
+                    }
+                    alt=""
+                  />
                   <h1>{instituteData?.institute_name || "অজানা ইনস্টিটিউট"}</h1>
                   <p>
                     {instituteData?.institute_address || "ঠিকানা উপলব্ধ নয়"}
@@ -1110,12 +1135,12 @@ const MarkSheet = () => {
                   </tfoot>
                 </table>
               </div>
-              <div className="signature">
+              {/* <div className="signature">
                 পরীক্ষা নিয়ন্ত্রকের স্বাক্ষর: ____________________
               </div>
               <div className="date">
                 রিপোর্ট তৈরির তারিখ: {new Date().toLocaleDateString("bn-BD")}
-              </div>
+              </div> */}
             </div>
           ))
         )}
