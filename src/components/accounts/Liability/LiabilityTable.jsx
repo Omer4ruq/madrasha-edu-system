@@ -438,7 +438,7 @@ const LiabilityTable = ({
                 onChange={handleFilterChange}
                 className="bg-transparent min-w-[150px] text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30]"
               >
-                <option value="">হেড নির্বাচন করুন</option>
+                <option value="" hidden>হেড নির্বাচন করুন</option>
                 {liabilityHeads.map((head) => (
                   <option key={head.id} value={head.id}>
                     {head.name}
@@ -470,7 +470,7 @@ const LiabilityTable = ({
                 onChange={handleFilterChange}
                 className="bg-transparent min-w-[150px] text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30]"
               >
-                <option value="">পার্টি নির্বাচন করুন</option>
+                <option value="" hidden>পার্টি নির্বাচন করুন</option>
                 {parties.map((party) => (
                   <option key={party.id} value={party.id}>
                     {party.name}
@@ -486,7 +486,7 @@ const LiabilityTable = ({
                 onChange={handleFilterChange}
                 className="bg-transparent min-w-[150px] text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB9E30]"
               >
-                <option value="">মুভমেন্ট নির্বাচন করুন</option>
+                <option value="" hidden>মুভমেন্ট নির্বাচন করুন</option>
                 {movementTypes.map((type) => (
                   <option key={type.value} value={type.value}>
                     {type.label}
@@ -518,7 +518,7 @@ const LiabilityTable = ({
           </div>
 
           {/* ভিউ মোড টগল */}
-          <div className="flex border border-[#9d9087] rounded-lg overflow-hidden">
+          {/* <div className="flex border border-[#9d9087] rounded-lg overflow-hidden">
             <button
               onClick={() => setViewMode('table')}
               className={`px-3 py-2 text-sm font-medium transition-colors ${
@@ -545,7 +545,7 @@ const LiabilityTable = ({
               </svg>
               কার্ড
             </button>
-          </div>
+          </div> */}
 
           {/* রিপোর্ট বাটন */}
           <button

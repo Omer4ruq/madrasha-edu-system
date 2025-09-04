@@ -253,7 +253,7 @@ const LiabilityEntries = () => {
                 required
                 aria-describedby={createError || updateError ? 'liability-error' : undefined}
               >
-                <option value="">দায়বদ্ধতা হেড নির্বাচন করুন</option>
+                <option value="" hidden>দায়বদ্ধতা হেড নির্বাচন করুন</option>
                 {liabilityHeads.map((head) => (
                   <option key={head.id} value={head.id}>
                     {head.name || `হেড ${head.id}`}
@@ -282,7 +282,7 @@ const LiabilityEntries = () => {
                 required
                 aria-describedby={createError || updateError ? 'liability-error' : undefined}
               >
-                <option value="">ফান্ড নির্বাচন করুন</option>
+                <option value="" hidden>ফান্ড নির্বাচন করুন</option>
                 {funds.map((fund) => (
                   <option key={fund.id} value={fund.id}>
                     {fund.name || `ফান্ড ${fund.id}`}
@@ -311,7 +311,7 @@ const LiabilityEntries = () => {
                 required
                 aria-describedby={createError || updateError ? 'liability-error' : undefined}
               >
-                <option value="">পার্টি নির্বাচন করুন</option>
+                <option value="" hidden>পার্টি নির্বাচন করুন</option>
                 {parties.map((party) => (
                   <option key={party.id} value={party.id}>
                     {party.name || `পার্টি ${party.id}`}

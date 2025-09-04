@@ -18,165 +18,7 @@ import { useSelector } from "react-redux";
 import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
 import ExpenseItemsList from "./ExpenseItemsList";
 
-// Register Noto Sans Bengali font
-try {
-  Font.register({
-    family: 'NotoSansBengali',
-    src: 'https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf',
-  });
-} catch (error) {
-  console.error('Font registration failed:', error);
-  Font.register({
-    family: 'Helvetica',
-    src: 'https://fonts.gstatic.com/s/helvetica/v13/Helvetica.ttf',
-  });
-}
 
-// PDF styles
-const styles = StyleSheet.create({
-  page: {
-    padding: 40,
-    fontFamily: 'NotoSansBengali',
-    fontSize: 10,
-    color: '#222',
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: 15,
-  },
-  schoolName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#441a05',
-  },
-  headerText: {
-    fontSize: 10,
-    marginTop: 4,
-  },
-  title: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    marginTop: 6,
-    marginBottom: 10,
-    color: '#441a05',
-    textDecoration: 'underline',
-  },
-  metaContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontSize: 9,
-    marginBottom: 8,
-  },
-  divider: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#441a05',
-    marginVertical: 6,
-  },
-  table: {
-    display: 'table',
-    width: 'auto',
-    borderStyle: 'solid',
-    borderWidth: 1,
-    borderColor: '#441a05',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#441a05',
-  },
-  tableHeader: {
-    backgroundColor: '#441a05',
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 10,
-    paddingVertical: 6,
-    paddingHorizontal: 4,
-    textAlign: 'center',
-    borderRightWidth: 1,
-    borderRightColor: '#fff',
-  },
-  tableCell: {
-    paddingVertical: 5,
-    paddingHorizontal: 4,
-    fontSize: 9,
-    borderRightWidth: 1,
-    borderRightColor: '#ddd',
-    flex: 1,
-    textAlign: 'left',
-  },
-  tableCellCenter: {
-    textAlign: 'center',
-  },
-  tableRowAlternate: {
-    backgroundColor: '#f2f2f2',
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 40,
-    right: 40,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontSize: 8,
-    color: '#555',
-  },
-});
-
-// PDF Document Component
-const PDFDocument = ({ expenseItems, expenseTypes, fundTypes, academicYears, startDate, endDate }) => (
-  <Document>
-    <Page size="A4" orientation="landscape" style={styles.page}>
-      <View style={styles.header}>
-        <Text style={styles.schoolName}>আদর্শ বিদ্যালয়</Text>
-        <Text style={styles.headerText}>ঢাকা, বাংলাদেশ</Text>
-        <Text style={styles.title}>ব্যয় আইটেম প্রতিবেদন</Text>
-        <View style={styles.metaContainer}>
-          <Text style={styles.metaText}>
-            তারিখ পরিসীমা: {startDate ? new Date(startDate).toLocaleDateString('bn-BD') : 'শুরু'} থেকে {endDate ? new Date(endDate).toLocaleDateString('bn-BD') : 'শেষ'}
-          </Text>
-          <Text style={styles.metaText}>
-            তৈরির তারিখ: {new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
-          </Text>
-        </View>
-        <View style={styles.divider} />
-      </View>
-      <View style={styles.table}>
-        <View style={styles.tableRow}>
-          <Text style={[styles.tableHeader, { flex: 1 }]}>ব্যয়ের ধরন</Text>
-          <Text style={[styles.tableHeader, { flex: 1 }]}>নাম</Text>
-          <Text style={[styles.tableHeader, { flex: 1 }]}>ফান্ড</Text>
-          <Text style={[styles.tableHeader, { flex: 1 }]}>লেনদেন নম্বর</Text>
-          <Text style={[styles.tableHeader, { flex: 1 }]}>কর্মচারী আইডি</Text>
-          <Text style={[styles.tableHeader, { flex: 1 }]}>তারিখ</Text>
-          <Text style={[styles.tableHeader, { flex: 1 }]}>পরিমাণ</Text>
-          <Text style={[styles.tableHeader, { flex: 1 }]}>শিক্ষাবর্ষ</Text>
-        </View>
-        {expenseItems.map((item, index) => (
-          <View key={item.id} style={[styles.tableRow, index % 2 === 1 && styles.tableRowAlternate]}>
-            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
-              {expenseTypes.find((type) => type.id === item.expensetype_id)?.expensetype || 'অজানা'}
-            </Text>
-            <Text style={[styles.tableCell, { flex: 1 }]}>{item.name || 'N/A'}</Text>
-            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
-              {fundTypes.find((fund) => fund.id === item.fund_id)?.name || 'অজানা'}
-            </Text>
-            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{item.transaction_number || '-'}</Text>
-            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{item.employee_id || '-'}</Text>
-            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{item.expense_date || 'N/A'}</Text>
-            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>{item.amount || '0'}</Text>
-            <Text style={[styles.tableCell, styles.tableCellCenter, { flex: 1 }]}>
-              {academicYears.find((year) => year.id === item.academic_year)?.name || 'অজানা'}
-            </Text>
-          </View>
-        ))}
-      </View>
-      <View style={styles.footer} fixed>
-        <Text>প্রতিবেদনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে।</Text>
-        <Text render={({ pageNumber, totalPages }) => `পৃষ্ঠা ${pageNumber} এর ${totalPages}`} />
-      </View>
-    </Page>
-  </Document>
-);
 
 const ExpenseItems = () => {
   const { group_id } = useSelector((state) => state.auth);
@@ -711,7 +553,7 @@ const ExpenseItems = () => {
                 required
                 aria-describedby={errors.expensetype_id ? "expensetype_id-error" : undefined}
               >
-                <option value="" disabled>
+                <option value="" disabled hidden>
                   ব্যয়ের ধরন নির্বাচন করুন
                 </option>
                 {expenseTypes.map((type) => (
@@ -729,9 +571,9 @@ const ExpenseItems = () => {
                 value={formData.name}
                 onChange={handleChange}
                 className="w-full bg-transparent text-[#441a05] placeholder-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg placeholder-black/70 transition-all duration-300 animate-scaleIn"
-                placeholder="নাম লিখুন"
+                placeholder="ব্যয়ের আইটেমের নাম লিখুন"
                 disabled={isCreating || isUpdating}
-                required
+                
                 aria-describedby={errors.name ? "name-error" : undefined}
               />
               {errors.name && <p id="name-error" className="text-red-400 text-sm mt-1">{errors.name}</p>}
@@ -746,7 +588,7 @@ const ExpenseItems = () => {
                 required
                 aria-describedby={errors.fund_id ? "fund_id-error" : undefined}
               >
-                <option value="" disabled>
+                <option value="" disabled hidden>
                   ফান্ড নির্বাচন করুন
                 </option>
                 {fundTypes.map((fund) => (
@@ -841,7 +683,7 @@ const ExpenseItems = () => {
                 required
                 aria-describedby={errors.academic_year ? "academic_year-error" : undefined}
               >
-                <option value="" disabled>
+                <option value="" disabled hidden>
                   শিক্ষাবর্ষ নির্বাচন করুন
                 </option>
                 {academicYears.map((year) => (

@@ -430,7 +430,7 @@ const AddWaivers = () => {
         <style>
           @page { 
             size: A4 landscape; 
-            margin: 20mm;
+            padding: 5mm;
           }
           body { 
             font-family: 'Noto Sans Bengali', Arial, sans-serif;  

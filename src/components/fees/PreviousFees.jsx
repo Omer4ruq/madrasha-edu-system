@@ -430,7 +430,7 @@ const PreviousFees = () => {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-400">{Math.max(0, dueAmount).toFixed(2)}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
                                                 <span className={`px-2 py-1 text-xs font-semibold rounded-full ${status === 'PAID' ? 'text-[#441a05] bg-[#DB9E30]' : status === 'PARTIAL' ? 'text-yellow-800 bg-yellow-100/50' : 'text-red-800 bg-red-100/50'}`}>
-                                                    {status === 'PAID' ? 'প্রদান' : status === 'PARTIAL' ? 'আংশিক' : 'অপ্রদান'}
+                                                    {status === 'PAID' ? 'প্রদান' : status === 'PARTIAL' ? 'আংশিক' : 'বকেয়া'}
                                                 </span>
                                             </td>
                                         </tr>
