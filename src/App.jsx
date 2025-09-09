@@ -109,7 +109,7 @@ export default function App() {
 
   return (
     <SelectedMenuProvider>
-      <div className="font-roboto text-base font-normal text-gray-600 dark:text-gray-400 dark:bg-gray-800 relative">
+      <div className=" text-base font-normal text-gray-600 dark:text-gray-400 dark:bg-gray-800 relative">
         <Sidebar showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
         <div className={`relative text-textBlack flex flex-col justify-between min-h-screen transition-all duration-500 ease-in-out p-3 ml-0 xl:ml-72 ${showSidebar && "max-xl:opacity-65"}`}>
           <div className="fixed inset-0 bg-cover bg-center z-0" style={{
