@@ -1,18 +1,55 @@
 import React, { useState, useMemo } from 'react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import { Toaster, toast } from 'react-hot-toast';
+import { useGetWithdrawsQuery } from '../../redux/features/api/withdraw/withdrawsApi';
+import { useGetFundsQuery } from '../../redux/features/api/funds/fundsApi';
 
 const WithdrawTable = ({ 
-  withdraws = [], 
-  funds = [], 
-  isLoading = false, 
-  error = null, 
+  // Data props (optional - if not provided, component will fetch its own data)
+  withdraws: propWithdraws, 
+  funds: propFunds, 
+  isLoading: propIsLoading, 
+  error: propError,
+  
+  // Event handlers (optional)
   onEdit, 
   onDelete,
+  
+  // Permission props
   hasEditPermission = true,
   hasDeletePermission = true,
-  hasViewPermission = true
+  hasViewPermission = true,
+  
+  // Mode props
+  standalone = false, // Set to true when using as independent component
+  showHeader = true, // Whether to show the table header
+  className = "", // Additional CSS classes
 }) => {
+  // Internal data fetching (only when not receiving props)
+  const shouldFetchData = standalone || (!propWithdraws && !propFunds);
+  
+  const { 
+    data: fetchedWithdraws = [], 
+    isLoading: fetchIsLoading, 
+    error: fetchError,
+    refetch
+  } = useGetWithdrawsQuery(undefined, {
+    skip: !shouldFetchData
+  });
+  
+  const { 
+    data: fetchedFunds = [], 
+    isLoading: fundsIsLoading 
+  } = useGetFundsQuery(undefined, {
+    skip: !shouldFetchData
+  });
+
+  // Use either props data or fetched data
+  const withdraws = propWithdraws || fetchedWithdraws;
+  const funds = propFunds || fetchedFunds;
+  const isLoading = propIsLoading !== undefined ? propIsLoading : (fetchIsLoading || fundsIsLoading);
+  const error = propError || fetchError;
+
   const [activeTab, setActiveTab] = useState('all');
   const [dateFilter, setDateFilter] = useState({
     start_date: '',
@@ -77,6 +114,23 @@ const WithdrawTable = ({
   const getFundName = (fundId) => {
     const fund = funds.find(f => f.id === fundId);
     return fund ? fund.name : `ফান্ড ${fundId}`;
+  };
+
+  // Default handlers for standalone mode
+  const handleEdit = (withdraw) => {
+    if (onEdit) {
+      onEdit(withdraw);
+    } else {
+      toast.error('Edit functionality not implemented');
+    }
+  };
+
+  const handleDelete = (withdraw) => {
+    if (onDelete) {
+      onDelete(withdraw);
+    } else {
+      toast.error('Delete functionality not implemented');
+    }
   };
 
   // রিপোর্ট জেনারেট করা
@@ -291,8 +345,8 @@ const WithdrawTable = ({
   }
 
   return (
-    <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
-      <Toaster position="top-right" reverseOrder={false} />
+    <div className={`bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6 ${className}`}>
+      {standalone && <Toaster position="top-right" reverseOrder={false} />}
       <style>
         {`
           .tab {
@@ -333,9 +387,11 @@ const WithdrawTable = ({
 
       {/* হেডার এবং ফিল্টার */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">
-          উত্তোলন তালিকা
-        </h3>
+        {showHeader && (
+          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">
+            উত্তোলন তালিকা
+          </h3>
+        )}
         
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           {/* ট্যাব */}
@@ -486,6 +542,14 @@ const WithdrawTable = ({
       {error && (
         <div className="p-4 text-red-400 bg-red-500/10 rounded-lg animate-fadeIn">
           <p>উত্তোলন লোড করতে ত্রুটি: {error?.data?.message || error?.message || 'অজানা ত্রুটি'}</p>
+          {standalone && refetch && (
+            <button 
+              onClick={() => refetch()} 
+              className="mt-2 text-sm underline hover:no-underline"
+            >
+              পুনরায় চেষ্টা করুন
+            </button>
+          )}
         </div>
       )}
 
@@ -493,7 +557,9 @@ const WithdrawTable = ({
       {!isLoading && !error && filteredWithdraws.length === 0 && withdraws.length === 0 && (
         <div className="text-center py-8 text-[#441a05]/70">
           <p className="text-lg">কোনো উত্তোলন পাওয়া যায়নি</p>
-          <p className="text-sm">উপরের ফর্ম ব্যবহার করে আপনার প্রথম উত্তোলন তৈরি করুন</p>
+          {!standalone && (
+            <p className="text-sm">উপরের ফর্ম ব্যবহার করে আপনার প্রথম উত্তোলন তৈরি করুন</p>
+          )}
         </div>
       )}
 
@@ -566,7 +632,7 @@ const WithdrawTable = ({
                       <div className="flex space-x-2 justify-center">
                         {hasEditPermission && (
                           <button
-                            onClick={() => onEdit(withdraw)}
+                            onClick={() => handleEdit(withdraw)}
                             className="text-[#441a05] hover:text-blue-500 transition-colors duration-300"
                             title="উত্তোলন সম্পাদনা করুন"
                           >
@@ -575,7 +641,7 @@ const WithdrawTable = ({
                         )}
                         {hasDeletePermission && (
                           <button
-                            onClick={() => onDelete(withdraw)}
+                            onClick={() => handleDelete(withdraw)}
                             className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
                             title="উত্তোলন মুছে ফেলুন"
                           >
@@ -638,7 +704,7 @@ const WithdrawTable = ({
                   <div className="flex space-x-2 mt-4 pt-4 border-t border-white/20">
                     {hasEditPermission && (
                       <button
-                        onClick={() => onEdit(withdraw)}
+                        onClick={() => handleEdit(withdraw)}
                         className="flex-1 px-3 py-2 text-sm text-[#441a05] hover:text-blue-500 rounded-lg transition-colors duration-300"
                         title="উত্তোলন সম্পাদনা করুন"
                       >
@@ -647,7 +713,7 @@ const WithdrawTable = ({
                     )}
                     {hasDeletePermission && (
                       <button
-                        onClick={() => onDelete(withdraw)}
+                        onClick={() => handleDelete(withdraw)}
                         className="flex-1 px-3 py-2 text-sm text-[#441a05] hover:text-red-500 rounded-lg transition-colors duration-300"
                         title="উত্তোলন মুছে ফেলুন"
                       >

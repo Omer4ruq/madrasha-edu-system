@@ -1,20 +1,75 @@
 import React, { useState, useMemo } from 'react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import { Toaster, toast } from 'react-hot-toast';
+import { useGetLiabilityEntriesQuery } from '../../../redux/features/api/liability/liabilityEntriesApi';
+import { useGetLiabilityHeadsQuery } from '../../../redux/features/api/liability/liabilityHeadsApi';
+import { useGetFundsQuery } from '../../../redux/features/api/funds/fundsApi';
+import { useGetPartiesQuery } from '../../../redux/features/api/parties/partiesApi';
 
 const LiabilityTable = ({ 
-  liabilityEntries = [], 
-  liabilityHeads = [],
-  funds = [], 
-  parties = [],
-  isLoading = false, 
-  error = null, 
+  // Data props (optional - if not provided, component will fetch its own data)
+  liabilityEntries: propLiabilityEntries, 
+  liabilityHeads: propLiabilityHeads,
+  funds: propFunds, 
+  parties: propParties,
+  isLoading: propIsLoading, 
+  error: propError, 
+  
+  // Event handlers (optional)
   onEdit, 
   onDelete,
+  
+  // Permission props
   hasEditPermission = true,
   hasDeletePermission = true,
-  hasViewPermission = true
+  hasViewPermission = true,
+  
+  // Mode props
+  standalone = false, // Set to true when using as independent component
+  showHeader = true, // Whether to show the table header
+  className = "", // Additional CSS classes
 }) => {
+  // Internal data fetching (only when not receiving props)
+  const shouldFetchData = standalone || (!propLiabilityEntries && !propLiabilityHeads && !propFunds && !propParties);
+  
+  const { 
+    data: fetchedLiabilityEntries = [], 
+    isLoading: fetchEntriesLoading, 
+    error: fetchEntriesError,
+    refetch: refetchEntries
+  } = useGetLiabilityEntriesQuery(undefined, {
+    skip: !shouldFetchData
+  });
+  
+  const { 
+    data: fetchedLiabilityHeads = [], 
+    isLoading: fetchHeadsLoading 
+  } = useGetLiabilityHeadsQuery(undefined, {
+    skip: !shouldFetchData
+  });
+  
+  const { 
+    data: fetchedFunds = [], 
+    isLoading: fetchFundsLoading 
+  } = useGetFundsQuery(undefined, {
+    skip: !shouldFetchData
+  });
+  
+  const { 
+    data: fetchedParties = [], 
+    isLoading: fetchPartiesLoading 
+  } = useGetPartiesQuery(undefined, {
+    skip: !shouldFetchData
+  });
+
+  // Use either props data or fetched data
+  const liabilityEntries = propLiabilityEntries || fetchedLiabilityEntries;
+  const liabilityHeads = propLiabilityHeads || fetchedLiabilityHeads;
+  const funds = propFunds || fetchedFunds;
+  const parties = propParties || fetchedParties;
+  const isLoading = propIsLoading !== undefined ? propIsLoading : (fetchEntriesLoading || fetchHeadsLoading || fetchFundsLoading || fetchPartiesLoading);
+  const error = propError || fetchEntriesError;
+
   const [activeTab, setActiveTab] = useState('all');
   const [dateFilter, setDateFilter] = useState({
     start_date: '',
@@ -95,6 +150,23 @@ const LiabilityTable = ({
   const getPartyName = (partyId) => {
     const party = parties.find(p => p.id === partyId);
     return party ? party.name : `পার্টি ${partyId}`;
+  };
+
+  // Default handlers for standalone mode
+  const handleEdit = (entry) => {
+    if (onEdit) {
+      onEdit(entry);
+    } else {
+      toast.error('Edit functionality not implemented');
+    }
+  };
+
+  const handleDelete = (entry) => {
+    if (onDelete) {
+      onDelete(entry);
+    } else {
+      toast.error('Delete functionality not implemented');
+    }
   };
 
   // রিপোর্ট জেনারেট করা
@@ -342,8 +414,8 @@ const LiabilityTable = ({
   }
 
   return (
-    <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
-      <Toaster position="top-right" reverseOrder={false} />
+    <div className={`bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6 ${className}`}>
+      {standalone && <Toaster position="top-right" reverseOrder={false} />}
       <style>
         {`
           .tab {
@@ -384,9 +456,11 @@ const LiabilityTable = ({
 
       {/* হেডার এবং ফিল্টার */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">
-          দায়বদ্ধতা তালিকা
-        </h3>
+        {showHeader && (
+          <h3 className="text-lg font-semibold text-[#441a05] p-4 border-b border-white/20">
+            দায়বদ্ধতা তালিকা
+          </h3>
+        )}
         
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           {/* ট্যাব */}
@@ -518,7 +592,7 @@ const LiabilityTable = ({
           </div>
 
           {/* ভিউ মোড টগল */}
-          {/* <div className="flex border border-[#9d9087] rounded-lg overflow-hidden">
+          <div className="flex border border-[#9d9087] rounded-lg overflow-hidden">
             <button
               onClick={() => setViewMode('table')}
               className={`px-3 py-2 text-sm font-medium transition-colors ${
@@ -545,7 +619,7 @@ const LiabilityTable = ({
               </svg>
               কার্ড
             </button>
-          </div> */}
+          </div>
 
           {/* রিপোর্ট বাটন */}
           <button
@@ -581,6 +655,14 @@ const LiabilityTable = ({
       {error && (
         <div className="p-4 text-red-400 bg-red-500/10 rounded-lg animate-fadeIn">
           <p>দায়বদ্ধতা লোড করতে ত্রুটি: {error?.data?.message || error?.message || 'অজানা ত্রুটি'}</p>
+          {standalone && refetchEntries && (
+            <button 
+              onClick={() => refetchEntries()} 
+              className="mt-2 text-sm underline hover:no-underline"
+            >
+              পুনরায় চেষ্টা করুন
+            </button>
+          )}
         </div>
       )}
 
@@ -588,7 +670,9 @@ const LiabilityTable = ({
       {!isLoading && !error && filteredEntries.length === 0 && liabilityEntries.length === 0 && (
         <div className="text-center py-8 text-[#441a05]/70">
           <p className="text-lg">কোনো দায়বদ্ধতা এন্ট্রি পাওয়া যায়নি</p>
-          <p className="text-sm">উপরের ফর্ম ব্যবহার করে আপনার প্রথম এন্ট্রি তৈরি করুন</p>
+          {!standalone && (
+            <p className="text-sm">উপরের ফর্ম ব্যবহার করে আপনার প্রথম এন্ট্রি তৈরি করুন</p>
+          )}
         </div>
       )}
 
@@ -679,7 +763,7 @@ const LiabilityTable = ({
                       <div className="flex space-x-2 justify-center">
                         {hasEditPermission && (
                           <button
-                            onClick={() => onEdit(entry)}
+                            onClick={() => handleEdit(entry)}
                             className="text-[#441a05] hover:text-blue-500 transition-colors duration-300"
                             title="এন্ট্রি সম্পাদনা করুন"
                           >
@@ -688,7 +772,7 @@ const LiabilityTable = ({
                         )}
                         {hasDeletePermission && (
                           <button
-                            onClick={() => onDelete(entry)}
+                            onClick={() => handleDelete(entry)}
                             className="text-[#441a05] hover:text-red-500 transition-colors duration-300"
                             title="এন্ট্রি মুছে ফেলুন"
                           >
@@ -765,7 +849,7 @@ const LiabilityTable = ({
                   <div className="flex space-x-2 mt-4 pt-4 border-t border-white/20">
                     {hasEditPermission && (
                       <button
-                        onClick={() => onEdit(entry)}
+                        onClick={() => handleEdit(entry)}
                         className="flex-1 px-3 py-2 text-sm text-[#441a05] hover:text-blue-500 rounded-lg transition-colors duration-300"
                         title="এন্ট্রি সম্পাদনা করুন"
                       >
@@ -774,7 +858,7 @@ const LiabilityTable = ({
                     )}
                     {hasDeletePermission && (
                       <button
-                        onClick={() => onDelete(entry)}
+                        onClick={() => handleDelete(entry)}
                         className="flex-1 px-3 py-2 text-sm text-[#441a05] hover:text-red-500 rounded-lg transition-colors duration-300"
                         title="এন্ট্রি মুছে ফেলুন"
                       >
