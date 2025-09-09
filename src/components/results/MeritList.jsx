@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import { FaSpinner, FaDownload } from "react-icons/fa";
@@ -108,7 +109,7 @@ const customStyles = `
   }
   .head {
     text-align: center;
-    margin-top: 30px;
+    // margin-top: 30px;
     margin-bottom: 15px;
     padding-bottom: 10px;
   }
@@ -132,7 +133,6 @@ const customStyles = `
   }
   .a4-portrait {
     max-width: 595.28px;
-    height: 841.89px;
     margin: 0 auto 20px;
     background: white;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -142,14 +142,21 @@ const customStyles = `
     position: relative;
     overflow: hidden;
   }
+  .date {
+    margin-top: 20px;
+    text-align: right;
+    font-size: 10px;
+    color: #000;
+  }
 `;
 
 const MeritList = () => {
   const [selectedExam, setSelectedExam] = useState(null);
   const [selectedClassConfig, setSelectedClassConfig] = useState(null);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState(null);
+  const [gradeFormat, setGradeFormat] = useState("grade_name"); // 'grade_name' or 'grade_name_op'
+  const [sortBy, setSortBy] = useState("ranking"); // 'roll' or 'ranking'
   const [meritData, setMeritData] = useState([]);
-  const [grades, setGrades] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Fetch data from APIs
@@ -180,7 +187,11 @@ const MeritList = () => {
     );
   const { data: markConfigs = [], isLoading: markConfigsLoading } =
     useGetFilteredMarkConfigsQuery(
-      { class_id: classConfigs?.find((c) => c.id === Number(selectedClassConfig?.value))?.class_id },
+      {
+        class_id: classConfigs?.find(
+          (c) => c.id === Number(selectedClassConfig?.value)
+        )?.class_id,
+      },
       { skip: !selectedClassConfig }
     );
   const {
@@ -189,29 +200,39 @@ const MeritList = () => {
     error: gradesError,
   } = useGetGradeRulesQuery();
 
-  // Load grades from gradeRuleApi
-  useEffect(() => {
-    if (gradesData) {
-      setGrades(
-        gradesData.map((g) => ({
-          id: g.id,
-          grade: g.grade_name,
-          min: g.min_mark,
-          max: g.max_mark,
-          remarks: g.remarks,
-        }))
-      );
-    }
-    if (gradesError) {
-      toast.error(`গ্রেড লোড করতে ত্রুটি: ${gradesError.status || "অজানা"}`);
-    }
-  }, [gradesData, gradesError]);
-
   // Handle API errors
   useEffect(() => {
     if (instituteError) toast.error("ইনস্টিটিউট তথ্য লোড করতে ব্যর্থ হয়েছে!");
     if (gradesError) toast.error("গ্রেড তালিকা লোড করতে ব্যর্থ হয়েছে!");
   }, [instituteError, gradesError]);
+
+  // Helper function to get fail grade based on format
+  const getFailGrade = () => {
+    const failRule = gradesData?.find((rule) => rule.min_mark === 0);
+    if (failRule) {
+      return gradeFormat === "grade_name"
+        ? failRule.grade_name
+        : failRule.grade_name_op;
+    }
+    return gradeFormat === "grade_name" ? "রাসেব" : "F";
+  };
+
+  // Helper function to get grade based on marks and format
+  const getGradeForMarks = (averageMark, hasFailed) => {
+    if (hasFailed) return getFailGrade();
+
+    const gradeRule = gradesData?.find(
+      (rule) => averageMark >= rule.min_mark && averageMark <= rule.max_mark
+    );
+
+    if (gradeRule) {
+      return gradeFormat === "grade_name"
+        ? gradeRule.grade_name
+        : gradeRule.grade_name_op;
+    }
+
+    return getFailGrade();
+  };
 
   // Process data when all requirements are met
   useEffect(() => {
@@ -222,7 +243,7 @@ const MeritList = () => {
       !subjectMarksLoading &&
       !markConfigsLoading &&
       !studentsLoading &&
-      grades.length > 0
+      gradesData?.length > 0
     ) {
       processMeritData();
     }
@@ -233,7 +254,9 @@ const MeritList = () => {
     subjectMarksLoading,
     markConfigsLoading,
     studentsLoading,
-    grades,
+    gradesData,
+    gradeFormat,
+    sortBy,
   ]);
 
   const processMeritData = () => {
@@ -271,12 +294,12 @@ const MeritList = () => {
     const studentsMap = new Map();
     students.forEach((student) => {
       studentsMap.set(student.id, {
-        studentId: student.id,
-        studentName: student.name,
-        rollNo: student.roll_no,
+        id: student.id,
+        name: student.name,
+        roll: student.roll_no,
         subjects: {},
         totalObtained: 0,
-        totalMaxMarks: 0,
+        totalMaxMark: 0,
         hasFailed: false,
       });
     });
@@ -300,60 +323,81 @@ const MeritList = () => {
     // Calculate totals and determine pass/fail
     const processedStudents = Array.from(studentsMap.values()).map((student) => {
       let totalObtained = 0;
-      let totalMaxMarks = 0;
+      let totalMaxMark = 0;
       let hasFailed = false;
 
       sortedSubjectGroups.forEach((group) => {
         const studentSubject = student.subjects[group.serial] || {
           obtained: 0,
           isAbsent: true,
+          subjectName: group.subjectName,
         };
 
         const isFailed = studentSubject.isAbsent || studentSubject.obtained < group.passMark;
 
         totalObtained += studentSubject.isAbsent ? 0 : studentSubject.obtained;
-        totalMaxMarks += group.maxMark;
+        totalMaxMark += group.maxMark;
 
         if (isFailed) hasFailed = true;
       });
 
-      const averageMarks = totalMaxMarks > 0 ? (totalObtained / totalMaxMarks) * 100 : 0;
-      const grade = hasFailed ? 'রাসেব' : 
-        grades.find(rule => averageMarks >= rule.min && averageMarks <= rule.max)?.grade || 'রাসেব';
+      const averageMark = totalMaxMark > 0 ? (totalObtained / totalMaxMark) * 100 : 0;
+      const roundedAverage = Math.ceil(averageMark); // Use Math.ceil as in ResultSheet and MarkSheet
+      const grade = getGradeForMarks(roundedAverage, hasFailed);
 
       return {
         ...student,
         totalObtained,
-        averageMarks: averageMarks.toFixed(2),
+        totalMaxMark,
+        averageMark: roundedAverage,
         grade,
-        hasFailed
+        hasFailed,
       };
     });
 
     // Separate passed and failed students
-    const passedStudents = processedStudents.filter(s => !s.hasFailed);
-    const failedStudents = processedStudents.filter(s => s.hasFailed);
+    const passedStudents = processedStudents.filter((s) => !s.hasFailed);
+    const failedStudents = processedStudents.filter((s) => s.hasFailed);
 
-    // Sort passed students by averageMarks for ranking
-    const passedByAverage = [...passedStudents].sort((a, b) => b.averageMarks - a.averageMarks);
+    // Sort passed students by totalObtained for ranking
+    const sortedPassed = [...passedStudents].sort((a, b) => b.totalObtained - a.totalObtained);
 
     // Assign ranks
-    const rankedPassed = passedByAverage.map((student, index) => ({
+    const rankedPassed = [];
+    let currentRank = 1;
+    let previousTotal = null;
+
+    sortedPassed.forEach((student, index) => {
+      if (index > 0 && student.totalObtained !== previousTotal) {
+        currentRank++;
+      }
+
+      rankedPassed.push({
+        ...student,
+        ranking: currentRank,
+        rankDisplay: currentRank.toString(),
+      });
+
+      previousTotal = student.totalObtained;
+    });
+
+    // Failed students get fail grade as rankDisplay
+    const rankedFailed = failedStudents.map((student) => ({
       ...student,
-      rankDisplay: (index + 1).toString()
+      ranking: null,
+      rankDisplay: getFailGrade(),
     }));
 
-    // Failed students get "রাসেব"
-    const rankedFailed = failedStudents.map(student => ({
-      ...student,
-      rankDisplay: 'রাসেব'
-    }));
-
-    // Combine and sort the merit list by merit position (passed first sorted by rank, then failed sorted by averageMarks)
-    const finalMeritData = [
-      ...rankedPassed,
-      ...rankedFailed.sort((a, b) => b.averageMarks - a.averageMarks)
-    ];
+    // Combine and sort based on sortBy
+    let finalMeritData;
+    if (sortBy === "ranking") {
+      finalMeritData = [
+        ...rankedPassed,
+        ...rankedFailed.sort((a, b) => b.totalObtained - a.totalObtained),
+      ];
+    } else {
+      finalMeritData = [...rankedPassed, ...rankedFailed].sort((a, b) => a.roll - b.roll);
+    }
 
     setMeritData(finalMeritData);
     setIsLoading(false);
@@ -384,6 +428,12 @@ const MeritList = () => {
     const institute = instituteData;
 
     const printWindow = window.open("", "_blank");
+
+      // সরাসরি রিপোর্ট তৈরি করুন (ইমেজ প্রিলোডিং ছাড়া)
+  const logoUrl = instituteData.institute_logo 
+    ? instituteData.institute_logo 
+    : "https://demoschool.eduworlderp.com/img/site/1730259402.png";
+
     let htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -391,7 +441,10 @@ const MeritList = () => {
         <title>মেধা তালিকা</title>
         <meta charset="UTF-8">
         <style>
-          @page { size: A4 portrait; }
+          @page { size: A4 portrait; border-width: 18px;
+  border-color: rgba(219, 158, 48, 0.9); /* #DB9E30 with 70% opacity */
+  border-style: double;  
+  padding: 20px;}
           body {
             font-family: 'Noto Sans Bengali', Arial, sans-serif;
             font-size: 12px;
@@ -434,7 +487,7 @@ const MeritList = () => {
           th, td {
             border: 1px solid #000;
             padding: 8px;
-              font-size:14px;
+            font-size: 14px;
             text-align: center;
           }
           th {
@@ -446,17 +499,31 @@ const MeritList = () => {
           td {
             color: #000;
           }
+          .fail-cell {
+            background-color: #FFE6E6;
+            color: #9B1C1C;
+          }
           .date {
             margin-top: 20px;
             text-align: right;
             font-size: 10px;
             color: #000;
           }
+              .institute-logo {
+          width: 80px;
+          height: 80px;
+          margin: 0 auto 10px;
+          display: block;
+          object-fit: contain;
+        }
         </style>
       </head>
       <body>
         <div class="head">
+
           <div class="institute-info">
+                        <img class="institute-logo" src="${logoUrl}" alt="Institute Logo" onerror="this.src='https://demoschool.eduworlderp.com/img/site/1730259402.png'" />
+
             <h1>${institute.institute_name || "অজানা ইনস্টিটিউট"}</h1>
             <p>${institute.institute_address || "ঠিকানা উপলব্ধ নয়"}</p>
           </div>
@@ -468,20 +535,20 @@ const MeritList = () => {
           </h2>
           <h3>
             ক্লাস: ${
-              classConfigs?.find((c) => c.id === Number(selectedClassConfig.value))?.class_name ||
-              "ক্লাস নির্বাচিত হয়নি"
+              classConfigs?.find((c) => c.id === Number(selectedClassConfig.value))
+                ?.class_name || "ক্লাস নির্বাচিত হয়নি"
             } | শাখা: ${
-              classConfigs?.find((c) => c.id === Number(selectedClassConfig.value))?.section_name ||
-              "শাখা নির্বাচিত হয়নি"
+              classConfigs?.find((c) => c.id === Number(selectedClassConfig.value))
+                ?.section_name || "শাখা নির্বাচিত হয়নি"
             } | শিফট: ${
-              classConfigs?.find((c) => c.id === Number(selectedClassConfig.value))?.shift_name ||
-              "শিফট নির্বাচিত হয়নি"
+              classConfigs?.find((c) => c.id === Number(selectedClassConfig.value))
+                ?.shift_name || "শিফট নির্বাচিত হয়নি"
             }
           </h3>
           <h3>
             শিক্ষাবর্ষ: ${
-              academicYears?.find((y) => y.id === Number(selectedAcademicYear.value))?.name ||
-              "শিক্ষাবর্ষ নির্বাচিত হয়নি"
+              academicYears?.find((y) => y.id === Number(selectedAcademicYear.value))
+                ?.name || "শিক্ষাবর্ষ নির্বাচিত হয়নি"
             }
           </h3>
         </div>
@@ -503,12 +570,16 @@ const MeritList = () => {
                 .map(
                   (student) => `
                 <tr>
-                  <td>${student.rankDisplay}</td>
-                  <td>${student.studentName || "N/A"}</td>
-                  <td>${student.rollNo || "N/A"}</td>
+                  <td class="${student.hasFailed ? "fail-cell" : ""}">${
+                    student.rankDisplay
+                  }</td>
+                  <td>${student.name || "N/A"}</td>
+                  <td>${student.roll || "N/A"}</td>
                   <td>${student.totalObtained}</td>
-                  <td>${student.averageMarks}</td>
-                  <td>${student.grade}</td>
+                  <td>${student.averageMark}</td>
+                  <td class="${student.hasFailed ? "fail-cell" : ""}">${
+                    student.grade
+                  }</td>
                 </tr>
               `
                 )
@@ -528,7 +599,11 @@ const MeritList = () => {
           window.addEventListener('beforeunload', (event) => {
             if (!printAttempted) { window.close(); }
           });
+            
+        // ছবি লোড হতে সময় দিন তারপর প্রিন্ট করুন
+        setTimeout(() => {
           window.print();
+        }, 100);
         </script>
       </body>
       </html>
@@ -559,6 +634,16 @@ const MeritList = () => {
       label: year.name,
     })) || [];
 
+  const gradeFormatOptions = [
+    { value: "grade_name", label: "গ্রেড নাম (মমতায)" },
+    { value: "grade_name_op", label: "গ্রেড কোড (A+)" },
+  ];
+
+  const sortOptions = [
+    { value: "roll", label: "রোল অনুসারে" },
+    { value: "ranking", label: "মেধা স্থান অনুসারে" },
+  ];
+
   const isDataLoading =
     isLoading ||
     examsLoading ||
@@ -580,7 +665,7 @@ const MeritList = () => {
           <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight mb-6">
             মেধা তালিকা
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div className="relative">
               <label
                 htmlFor="examSelect"
@@ -592,7 +677,8 @@ const MeritList = () => {
                 id="examSelect"
                 options={examOptions}
                 value={
-                  examOptions.find((option) => option.value === selectedExam?.value) || null
+                  examOptions.find((option) => option.value === selectedExam?.value) ||
+                  null
                 }
                 onChange={(option) => setSelectedExam(option)}
                 placeholder="পরীক্ষা নির্বাচন করুন"
@@ -652,7 +738,52 @@ const MeritList = () => {
               />
             </div>
           </div>
-          <div className="flex justify-end mt-6">
+
+          {/* Additional Options Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="relative">
+              <label
+                htmlFor="gradeFormatSelect"
+                className="block font-medium text-[#441a05]"
+              >
+                গ্রেড ফরম্যাট
+              </label>
+              <Select
+                id="gradeFormatSelect"
+                options={gradeFormatOptions}
+                value={gradeFormatOptions.find(
+                  (option) => option.value === gradeFormat
+                )}
+                onChange={(option) => setGradeFormat(option.value)}
+                isDisabled={isDataLoading}
+                styles={selectStyles}
+                menuPortalTarget={document.body}
+                menuPosition="fixed"
+                aria-label="গ্রেড ফরম্যাট নির্বাচন"
+              />
+            </div>
+            <div className="relative">
+              <label
+                htmlFor="sortSelect"
+                className="block font-medium text-[#441a05]"
+              >
+                সাজানোর পদ্ধতি
+              </label>
+              <Select
+                id="sortSelect"
+                options={sortOptions}
+                value={sortOptions.find((option) => option.value === sortBy)}
+                onChange={(option) => setSortBy(option.value)}
+                isDisabled={isDataLoading}
+                styles={selectStyles}
+                menuPortalTarget={document.body}
+                menuPosition="fixed"
+                aria-label="সাজানোর পদ্ধতি নির্বাচন"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end">
             <button
               onClick={generatePDFReport}
               disabled={isDataLoading || meritData.length === 0}
@@ -685,8 +816,15 @@ const MeritList = () => {
             কোনো মেধা তালিকা পাওয়া যায়নি।
           </p>
         ) : (
-          <div className="a4-portrait">
+          <div className="a4-portrait border-[14px] border-[#DB9E30]/70 border-double">
             <div className="head">
+              <img
+                className="w-20 mb-5 mx-auto object-contain"
+                src={
+                  instituteData?.institute_logo ||
+                  "https://demoschool.eduworlderp.com/img/site/1730259402.png"
+                }
+              />
               <div className="institute-info">
                 <h1>{instituteData?.institute_name || "অজানা ইনস্টিটিউট"}</h1>
                 <p>{instituteData?.institute_address || "ঠিকানা উপলব্ধ নয়"}</p>
@@ -698,19 +836,19 @@ const MeritList = () => {
               </h2>
               <h3 className="text-[14px] mb-0 text-black font-semibold">
                 ক্লাস:{" "}
-                {classConfigs?.find((c) => c.id === Number(selectedClassConfig?.value))?.class_name ||
-                  "ক্লাস নির্বাচিত হয়নি"}{" "}
+                {classConfigs?.find((c) => c.id === Number(selectedClassConfig?.value))
+                  ?.class_name || "ক্লাস নির্বাচিত হয়নি"}{" "}
                 | শাখা:{" "}
-                {classConfigs?.find((c) => c.id === Number(selectedClassConfig?.value))?.section_name ||
-                  "শাখা নির্বাচিত হয়নি"}{" "}
+                {classConfigs?.find((c) => c.id === Number(selectedClassConfig?.value))
+                  ?.section_name || "শাখা নির্বাচিত হয়নি"}{" "}
                 | শিফট:{" "}
-                {classConfigs?.find((c) => c.id === Number(selectedClassConfig?.value))?.shift_name ||
-                  "শিফট নির্বাচিত হয়নি"}
+                {classConfigs?.find((c) => c.id === Number(selectedClassConfig?.value))
+                  ?.shift_name || "শিফট নির্বাচিত হয়নি"}
               </h3>
               <h3 className="text-[14px] mb-0 text-black font-semibold">
                 শিক্ষাবর্ষ:{" "}
-                {academicYears?.find((y) => y.id === Number(selectedAcademicYear?.value))?.name ||
-                  "শিক্ষাবর্ষ নির্বাচিত হয়নি"}
+                {academicYears?.find((y) => y.id === Number(selectedAcademicYear?.value))
+                  ?.name || "শিক্ষাবর্ষ নির্বাচিত হয়নি"}
               </h3>
             </div>
             <div className="table-container">
@@ -727,13 +865,17 @@ const MeritList = () => {
                 </thead>
                 <tbody>
                   {meritData.map((student) => (
-                    <tr key={student.studentId}>
-                      <td>{student.rankDisplay}</td>
-                      <td>{student.studentName || "N/A"}</td>
-                      <td>{student.rollNo || "N/A"}</td>
+                    <tr key={student.id}>
+                      <td className={student.hasFailed ? "fail-cell" : ""}>
+                        {student.rankDisplay}
+                      </td>
+                      <td>{student.name || "N/A"}</td>
+                      <td>{student.roll || "N/A"}</td>
                       <td>{student.totalObtained}</td>
-                      <td>{student.averageMarks}</td>
-                      <td>{student.grade}</td>
+                      <td>{student.averageMark}</td>
+                      <td className={student.hasFailed ? "fail-cell" : ""}>
+                        {student.grade}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

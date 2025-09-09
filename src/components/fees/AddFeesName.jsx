@@ -877,7 +877,7 @@ const AddFeesName = () => {
                   <thead className="bg-white/10">
                     <tr>
                       <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ফি টাইটেল</th>
-                      <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শ্রেণি</th>
+                      {/* <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শ্রেণি</th> */}
                       <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শিক্ষাবর্ষ</th>
                       <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">ফি সাবহেড</th>
                       <th className="border border-white/20 p-3 text-left text-sm font-medium text-[#441a05]/70">শুরুর তারিখ</th>
@@ -897,7 +897,7 @@ const AddFeesName = () => {
                       return (
                         <tr key={index} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
                           <td className="border border-white/20 p-3 text-sm text-[#441a05]">{fee.fees_title}</td>
-                          <td className="border border-white/20 p-3 text-sm text-[#441a05]">{className}</td>
+                          {/* <td className="border border-white/20 p-3 text-sm text-[#441a05]">{className}</td> */}
                           <td className="border border-white/20 p-3 text-sm text-[#441a05]">{academicYearName}</td>
                           <td className="border border-white/20 p-3 text-sm text-[#441a05]">{subheadName}</td>
                           <td className="border border-white/20 p-3 text-sm text-[#441a05]">{format(new Date(fee.startdate), 'dd-MM-yyyy')}</td>

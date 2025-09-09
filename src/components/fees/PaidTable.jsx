@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FaSearch, FaFilter, FaTimes, FaFileDownload, FaSpinner } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 import { useGetStudentActiveApiQuery } from '../../redux/features/api/student/studentActiveApi';
 import { useGetFeesQuery } from '../../redux/features/api/fees/feesApi';
-// import { useGetFeesNameQuery } from '../../redux/features/api/feesName/feesNameApi';
 import { useGetWaiversQuery } from '../../redux/features/api/waivers/waiversApi';
 import { useGetInstituteLatestQuery } from '../../redux/features/api/institute/instituteLatestApi';
 import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi';
@@ -12,7 +11,9 @@ import { useGetFeesNamesQuery } from '../../redux/features/api/fees-name/feesNam
 
 const PaidTable = ({
   className = "",
-  title = "পেইড ফি রিপোর্ট"
+  title = "পেইড ফি রিপোর্ট",
+  standalone = false,
+  showHeader = true
 }) => {
   const { group_id } = useSelector((state) => state.auth);
 
@@ -30,45 +31,12 @@ const PaidTable = ({
   const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_fees') || false;
 
   // Filter only paid/partial records
-  const paidFeeRecords = allFeeRecords?.filter(record => 
-    record.status === 'PAID' || record.status === 'PARTIAL'
-  ) || [];
+  const paidFeeRecords = useMemo(() => {
+    return allFeeRecords?.filter(record => 
+      record.status === 'PAID' || record.status === 'PARTIAL'
+    ) || [];
+  }, [allFeeRecords]);
 
-  // Calculate payable amount with waiver
-  const calculatePayableAmount = (fee, waivers, studentId, academicYear) => {
-    if (!fee || !waivers || !studentId || !academicYear) {
-      return {
-        waiverAmount: '0.00',
-        payableAfterWaiver: parseFloat(fee?.amount || 0).toFixed(2)
-      };
-    }
-
-    const feeHeadId = parseInt(fee.fee_head_id || fee.id);
-    
-    // Find waiver for this student and academic year
-    const waiver = waivers?.find((w) => {
-      const studentMatches = w.student_id === studentId;
-      const academicYearMatches = String(w.academic_year) === String(academicYear);
-      let feeTypeMatches = false;
-      
-      if (Array.isArray(w.fee_types)) {
-        const feeTypesAsNumbers = w.fee_types.map(ft => parseInt(ft));
-        feeTypeMatches = feeTypesAsNumbers.includes(feeHeadId);
-      }
-      
-      return studentMatches && academicYearMatches && feeTypeMatches;
-    });
-    
-    const waiverPercentage = waiver ? parseFloat(waiver.waiver_amount) / 100 : 0;
-    const feeAmount = parseFloat(fee.amount) || 0;
-    const waiverAmount = feeAmount * waiverPercentage;
-    const payableAfterWaiver = feeAmount - waiverAmount;
-    
-    return {
-      waiverAmount: waiverAmount.toFixed(2),
-      payableAfterWaiver: payableAfterWaiver.toFixed(2)
-    };
-  };
   const [filters, setFilters] = useState({
     status: 'all', // 'all', 'paid', 'partial'
     feeType: 'all',
@@ -79,8 +47,6 @@ const PaidTable = ({
     searchTerm: ''
   });
 
-  const [filteredRecords, setFilteredRecords] = useState([]);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [recordsPerPage] = useState(20);
 
@@ -88,15 +54,19 @@ const PaidTable = ({
   const isLoading = studentsLoading || feesLoading || feesNameLoading || waiversLoading || instituteLoading || permissionsLoading;
 
   // Get unique fee types for filter
-  const feeTypes = [...new Set(allFeesNameRecords?.map(fee => fee.fees_title))].sort() || [];
+  const feeTypes = useMemo(() => {
+    return [...new Set(allFeesNameRecords?.map(fee => fee.fees_title))].sort() || [];
+  }, [allFeesNameRecords]);
   
   // Get students who have paid fees for filter
-  const studentsWithPaidFees = (allStudents?.filter(student => 
-    paidFeeRecords.some(record => record.student_id === student.id)
-  ).sort((a, b) => a.name.localeCompare(b.name))) || [];
+  const studentsWithPaidFees = useMemo(() => {
+    return (allStudents?.filter(student => 
+      paidFeeRecords.some(record => record.student_id === student.id)
+    ).sort((a, b) => a.name.localeCompare(b.name))) || [];
+  }, [allStudents, paidFeeRecords]);
 
-  // Filter records based on current filters
-  useEffect(() => {
+  // Filter records based on current filters - moved to useMemo to prevent infinite re-renders
+  const filteredRecords = useMemo(() => {
     let filtered = [...paidFeeRecords];
 
     // Status filter
@@ -165,9 +135,13 @@ const PaidTable = ({
     // Sort by latest first
     filtered.sort((a, b) => new Date(b.created_at || b.updated_at) - new Date(a.created_at || a.updated_at));
 
-    setFilteredRecords(filtered);
-    setCurrentPage(1);
+    return filtered;
   }, [filters, paidFeeRecords, allStudents, allFeesNameRecords]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredRecords.length]);
 
   // Handle filter changes
   const handleFilterChange = (key, value) => {
@@ -510,17 +484,13 @@ const PaidTable = ({
 
       {/* Header */}
       <div className="flex flex-col gap-4 p-6 border-b border-white/20">
+        {/* Title and Action Buttons */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold text-[#441a05]">{title}</h2>
+          {showHeader && (
+            <h2 className="text-xl font-semibold text-[#441a05]">{title}</h2>
+          )}
           
           <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={`filter-button flex items-center gap-2 ${isFilterOpen ? 'filter-button-active' : 'filter-button-inactive'}`}
-            >
-              <FaFilter className="w-4 h-4" />
-              ফিল্টার
-            </button>
             <button
               onClick={generateReport}
               className="filter-button filter-button-inactive hover:filter-button-active flex items-center gap-2"
@@ -532,119 +502,107 @@ const PaidTable = ({
           </div>
         </div>
 
-        {/* Search */}
-        <div className="relative">
-          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#441a05]/50 w-4 h-4" />
-          <input
-            type="text"
-            value={filters.searchTerm}
-            onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
-            placeholder="নাম, রোল নং, ফি প্রকার অনুসন্ধান করুন..."
-            className="w-full bg-transparent text-[#441a05] pl-10 pr-4 py-2 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#DB9E30] transition-all duration-300"
-          />
+        {/* Search and Filters in one row */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          {/* Search */}
+          <div className="relative">
+            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#441a05]/50 w-4 h-4" />
+            <input
+              type="text"
+              value={filters.searchTerm}
+              onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
+              placeholder="নাম, রোল নং অনুসন্ধান..."
+              className="w-full bg-transparent text-[#441a05] pl-10 pr-4 py-2 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#DB9E30] transition-all duration-300"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <select
+            value={filters.status}
+            onChange={(e) => handleFilterChange('status', e.target.value)}
+            className="w-full bg-transparent text-[#441a05] p-2 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#DB9E30]"
+          >
+            <option value="all">সমস্ত স্থিতি</option>
+            <option value="paid">প্রদান</option>
+            <option value="partial">আংশিক</option>
+          </select>
+
+          {/* Fee Type Filter */}
+          <select
+            value={filters.feeType}
+            onChange={(e) => handleFilterChange('feeType', e.target.value)}
+            className="w-full bg-transparent text-[#441a05] p-2 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#DB9E30]"
+          >
+            <option value="all">সমস্ত ফি প্রকার</option>
+            {feeTypes.map(feeType => (
+              <option key={feeType} value={feeType}>{feeType}</option>
+            ))}
+          </select>
+
+          {/* Student Filter */}
+          <select
+            value={filters.student}
+            onChange={(e) => handleFilterChange('student', e.target.value)}
+            className="w-full bg-transparent text-[#441a05] p-2 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#DB9E30]"
+          >
+            <option value="all">সমস্ত ছাত্র</option>
+            {studentsWithPaidFees.map(student => (
+              <option key={student.id} value={student.id}>
+                {student.name} {student.roll_no ? `(${student.roll_no})` : ''}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* Filters */}
-        {isFilterOpen && (
-          <div className="bg-white/5 rounded-lg p-4 space-y-4 animate-fadeIn">
-            {/* Status Filter */}
-            <div>
-              <label className="block text-sm font-medium text-[#441a05] mb-2">স্থিতি</label>
-              <div className="flex flex-wrap gap-2">
-                {['all', 'paid', 'partial'].map(status => (
-                  <button
-                    key={status}
-                    onClick={() => handleFilterChange('status', status)}
-                    className={`filter-button ${filters.status === status ? 'filter-button-active' : 'filter-button-inactive'}`}
-                  >
-                    {status === 'all' ? 'সমস্ত' : status === 'paid' ? 'প্রদান' : 'আংশিক'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Fee Type Filter */}
-            <div>
-              <label className="block text-sm font-medium text-[#441a05] mb-2">ফি প্রকার</label>
-              <select
-                value={filters.feeType}
-                onChange={(e) => handleFilterChange('feeType', e.target.value)}
-                className="w-full bg-transparent text-[#441a05] p-2 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#DB9E30]"
-              >
-                <option value="all">সমস্ত ফি প্রকার</option>
-                {feeTypes.map(feeType => (
-                  <option key={feeType} value={feeType}>{feeType}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Student Filter */}
-            <div>
-              <label className="block text-sm font-medium text-[#441a05] mb-2">ছাত্র</label>
-              <select
-                value={filters.student}
-                onChange={(e) => handleFilterChange('student', e.target.value)}
-                className="w-full bg-transparent text-[#441a05] p-2 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#DB9E30]"
-              >
-                <option value="all">সমস্ত ছাত্র</option>
-                {studentsWithPaidFees.map(student => (
-                  <option key={student.id} value={student.id}>
-                    {student.name} {student.roll_no ? `(${student.roll_no})` : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Date Filter */}
-            <div>
-              <label className="block text-sm font-medium text-[#441a05] mb-2">তারিখ ফিল্টার</label>
-              <div className="flex flex-wrap gap-2 mb-3">
-                <button
-                  onClick={() => handleFilterChange('dateType', filters.dateType === 'date' ? '' : 'date')}
-                  className={`filter-button ${filters.dateType === 'date' ? 'filter-button-active' : 'filter-button-inactive'}`}
-                >
-                  তারিখ অনুযায়ী
-                </button>
-                <button
-                  onClick={() => handleFilterChange('dateType', filters.dateType === 'month' ? '' : 'month')}
-                  className={`filter-button ${filters.dateType === 'month' ? 'filter-button-active' : 'filter-button-inactive'}`}
-                >
-                  মাস অনুযায়ী
-                </button>
-              </div>
-              
-              {filters.dateType && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <input
-                    type={filters.dateType === 'month' ? 'month' : 'date'}
-                    value={filters.startDate}
-                    onChange={(e) => handleFilterChange('startDate', e.target.value)}
-                    className="bg-transparent text-[#441a05] p-2 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#DB9E30]"
-                    placeholder="শুরু"
-                  />
-                  <input
-                    type={filters.dateType === 'month' ? 'month' : 'date'}
-                    value={filters.endDate}
-                    onChange={(e) => handleFilterChange('endDate', e.target.value)}
-                    className="bg-transparent text-[#441a05] p-2 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#DB9E30]"
-                    placeholder="শেষ"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Clear Filters */}
-            <div className="flex justify-end">
-              <button
-                onClick={clearFilters}
-                className="filter-button filter-button-inactive hover:filter-button-active flex items-center gap-2"
-              >
-                <FaTimes className="w-4 h-4" />
-                ফিল্টার পরিষ্কার করুন
-              </button>
-            </div>
+        {/* Date Filter Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          {/* Date Type */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleFilterChange('dateType', filters.dateType === 'date' ? '' : 'date')}
+              className={`filter-button flex-1 ${filters.dateType === 'date' ? 'filter-button-active' : 'filter-button-inactive'}`}
+            >
+              তারিখ অনুযায়ী
+            </button>
+            <button
+              onClick={() => handleFilterChange('dateType', filters.dateType === 'month' ? '' : 'month')}
+              className={`filter-button flex-1 ${filters.dateType === 'month' ? 'filter-button-active' : 'filter-button-inactive'}`}
+            >
+              মাস অনুযায়ী
+            </button>
           </div>
-        )}
+          
+          {/* Date inputs */}
+          {filters.dateType && (
+            <>
+              <input
+                type={filters.dateType === 'month' ? 'month' : 'date'}
+                value={filters.startDate}
+                onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                className="bg-transparent text-[#441a05] p-2 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#DB9E30]"
+                placeholder="শুরু"
+              />
+              <input
+                type={filters.dateType === 'month' ? 'month' : 'date'}
+                value={filters.endDate}
+                onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                className="bg-transparent text-[#441a05] p-2 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#DB9E30]"
+                placeholder="শেষ"
+              />
+            </>
+          )}
+          
+          {/* Clear Filters */}
+          <div className="flex justify-end">
+            <button
+              onClick={clearFilters}
+              className="filter-button filter-button-inactive hover:filter-button-active flex items-center gap-2"
+            >
+              <FaTimes className="w-4 h-4" />
+              ফিল্টার পরিষ্কার
+            </button>
+          </div>
+        </div>
 
         {/* Results Count */}
         <div className="text-sm text-[#441a05]/70">

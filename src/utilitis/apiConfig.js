@@ -103,13 +103,13 @@
 
 
 
-///////// local
+// ///////// local
 const BASE_URL = 'https://demo.madrasahhub.online/api'
 export default BASE_URL
 
 
 
-// ///// live code
+///// live code
 // const getSubdomain = () => {
 //   const host = window.location.hostname;
 //   const parts = host.split(".");

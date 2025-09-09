@@ -248,11 +248,11 @@ const mainMenu = [
             title: "নম্বরপত্র",
             link: "/talimat/result/mark-sheet",
           },
-          {
-            id: "05/16/03",
-            title: "ব্যক্তিগত নম্বরপত্র",
-            link: "/talimat/result/personal-mark-sheet",
-          },
+          // {
+          //   id: "05/16/03",
+          //   title: "ব্যক্তিগত নম্বরপত্র",
+          //   link: "/talimat/result/personal-mark-sheet",
+          // },
           {
             id: "05/16/04",
             title: "মেধা স্থান",
@@ -300,7 +300,7 @@ const mainMenu = [
           },
             {
             id: "07/01/05",
-            title: "দায় ধরন",
+            title: "দায়ের ধরন",
             link: "/accounts/settings/liability-heads",
           },
         ],
@@ -322,17 +322,17 @@ const mainMenu = [
       },
       {
         id: "07/05",
-        title: "ফি প্যাকেজ",
+        title: "ফিস প্যাকেজ",
         link: "/accounts/fee-packages",
       },
       {
         id: "07/06",
-        title: "ফি নাম",
+        title: "ফিসের নাম",
         link: "/accounts/fee-name",
       },
       {
         id: "07/07",
-        title: "সম্মিলিত ফি",
+        title: "ফিস গ্রহণ",
         link: "/accounts/fee-summary",
       },
       // {
@@ -344,43 +344,6 @@ const mainMenu = [
         id: "07/09",
         title: "ডিলিট - ফি",
         link: "/accounts/delete-fee",
-      },
-      {
-        id: "07/14",
-        title: "রিপোর্ট",
-        link: "/accounts/expense-items-list",
-        children: [
-          {
-            id: "07/10/01",
-            title: "ব্যয়ের লিস্ট",
-            link: "/accounts/expense-items-list",
-          },
-          {
-            id: "07/10/02",
-            title: "আয়ের লিস্ট",
-            link: "/accounts/income-items-list",
-          },
-             {
-            id: "07/10/03",
-            title: "উত্তলন লিস্ট",
-            link: "/accounts/withdraws-list",
-          },
-             {
-            id: "07/10/04",
-            title: "দায় লিস্ট",
-            link: "/accounts/liability-list",
-          },
-           {
-            id: "07/10/05",
-            title: "পেইড লিস্ট",
-            link: "/accounts/paid-list",
-          },
-             {
-            id: "07/10/06",
-            title: "বকেয়া লিস্ট",
-            link: "/accounts/due-fees-list",
-          },
-        ],
       },
        {
         id: "07/11",
