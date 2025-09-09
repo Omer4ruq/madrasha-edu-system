@@ -111,30 +111,31 @@ const SeatPlan = () => {
         <style>
           @page { 
             size: A4 portrait; 
-            margin: 10mm; 
+            margin: 0; 
           }
+            
           body {
             font-family: 'Noto Sans Bengali', Arial, sans-serif;
             font-size: 8pt;
             margin: 0;
-            padding: 5mm;
+            padding-top: 3px;
             color: #441a05;
           }
           .page-container {
-            width: 190mm;
-            margin: 0 auto;
+            width: 205mm;
+            margin: 0 auto 0;
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 5mm;
-            box-sizing: border-box;
+            gap: 6px;
+            
           }
           .seat-card {
-            width: 90mm;
-            height: 50mm;
+            width: 100%;
+            height: 57mm;
             background: white;
             
             border: 1px solid #DB9E30;
-            border-radius: 4mm;
+            // border-radius: 4mm;
             overflow: hidden;
             position: relative;
             page-break-inside: avoid;
@@ -144,10 +145,12 @@ const SeatPlan = () => {
           }
           .header {
             display: flex;
-            justify-content: space-between;
+            justify-content: start;
             align-items: center;
             background: #DB9E30;
             padding: 1mm 2mm;
+            gap:10px;
+            text-align:left;
           }
           .header img {
             width: 6mm;
@@ -155,7 +158,7 @@ const SeatPlan = () => {
             object-fit: contain;
           }
           .header-text {
-            text-align: center;
+            // text-align: center;
             color: white;
           }
           .header-text h1 {
@@ -180,7 +183,7 @@ const SeatPlan = () => {
             display: flex;
             justify-content: space-between;
             padding: 1mm 2mm;
-            font-size: 8pt;
+            font-size: 10pt;
           }
           .student-info div {
             display: flex;
@@ -189,7 +192,7 @@ const SeatPlan = () => {
           }
           .exam-date {
             text-align: center;
-            font-size: 7pt;
+            font-size: 10pt;
             margin-top: -2.5mm;
           }
           .background-image {
@@ -198,7 +201,7 @@ const SeatPlan = () => {
             height: 40mm;
             left: 27%;
             top: 25%;
-            background: url('https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg');
+            background: url('${institute.institute_logo}'));
             background-size: contain;
             background-position: center;
             background-repeat: no-repeat;
@@ -219,7 +222,6 @@ const SeatPlan = () => {
                     <h1>${institute.institute_name || 'Rajuk Uttara Model College'}</h1>
                     <p>${institute.institute_address || 'Sector#6, Uttara Model Town, Dhaka'}</p>
                   </div>
-                  <img src="${institute.institute_logo || 'https://static.vecteezy.com/system/resources/previews/046/006/104/non_2x/education-logo-design-template-vector.jpg'}" alt="Institute Logo" />
                 </div>
                 <div class="title">আসন বিন্যাস</div>
                 <div class="student-info">
@@ -247,7 +249,10 @@ const SeatPlan = () => {
           window.addEventListener('beforeunload', (event) => {
             if (!printAttempted) { window.close(); }
           });
+           // ছবি লোড হতে সময় দিন তারপর প্রিন্ট করুন
+        setTimeout(() => {
           window.print();
+        }, 100);
         </script>
       </body>
       </html>
@@ -373,7 +378,7 @@ const SeatPlan = () => {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 5mm;
-            box-sizing: border-box;
+            // box-sizing: border-box;
             font-family: 'Noto Sans Bengali', sans-serif;
           }
           .seat-card {
@@ -382,7 +387,7 @@ const SeatPlan = () => {
             page-break-inside: avoid;
             background: white;
             border: 1px solid #DB9E30;
-            border-radius: 4mm;
+            // border-radius: 4mm;
             overflow: hidden;
             font-size: 8pt;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
