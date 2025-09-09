@@ -1,8 +1,7 @@
 import React, { useRef, useState, useMemo } from "react";
-import html2pdf from "html2pdf.js";
 import { useReactToPrint } from "react-to-print";
 import Select from "react-select";
-import { FaSpinner } from "react-icons/fa";
+import { FaSpinner, FaPrint } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import { useGetStudentActiveApiQuery } from "../../redux/features/api/student/studentActiveApi";
 import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
@@ -14,6 +13,11 @@ const Testimonial = () => {
   const printRef = useRef();
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedYear, setSelectedYear] = useState(null);
+  const [customValues, setCustomValues] = useState({
+    serial: "১",
+    marks: "৭৬৫",
+    division: "বিভাগ"
+  });
 
   // Fetch institute data
   const {
@@ -53,37 +57,6 @@ const Testimonial = () => {
     [yearsData]
   );
 
-  // Handle PDF download
-  const handleDownloadPDF = () => {
-    const toastId = toast.loading("প্রত্যয়ন পত্র ডাউনলোড হচ্ছে...");
-    try {
-      html2pdf()
-        .from(printRef.current)
-        .set({
-          margin: 0,
-          filename: selectedStudent
-            ? `${selectedStudent.name}_certificate.pdf`
-            : "certificate.pdf",
-          image: { type: "jpeg", quality: 1 },
-          html2canvas: {
-            scale: 3,
-            useCORS: true,
-            scrollY: 0,
-            backgroundColor: null,
-          },
-          jsPDF: {
-            unit: "mm",
-            format: "a4",
-            orientation: "landscape",
-          },
-        })
-        .save();
-      toast.success("প্রত্যয়ন পত্র সফলভাবে ডাউনলোড হয়েছে!", { id: toastId });
-    } catch (err) {
-      toast.error(`ত্রুটি: ${err.message || "অজানা"}`, { id: toastId });
-    }
-  };
-
   // Handle print
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
@@ -94,6 +67,211 @@ const Testimonial = () => {
     onAfterPrint: () => toast.success("প্রত্যয়ন পত্র প্রিন্ট করা হয়েছে!"),
     onPrintError: () => toast.error("প্রিন্ট করতে ত্রুটি ঘটেছে!"),
   });
+
+  // Handle custom value changes
+  const handleCustomValueChange = (field, value) => {
+    setCustomValues(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Generate PDF report in new tab
+  const generatePDFReport = () => {
+    if (!selectedStudent || !selectedYear) {
+      toast.error("ছাত্র এবং শিক্ষাবর্ষ নির্বাচন করুন।");
+      return;
+    }
+    if (isInstituteLoading) {
+      toast.error("ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!");
+      return;
+    }
+    if (!instituteData) {
+      toast.error("ইনস্টিটিউট তথ্য পাওয়া যায়নি!");
+      return;
+    }
+    if (studentsError) {
+      toast.error("ছাত্র তথ্য লোড করতে ত্রুটি ঘটেছে!");
+      return;
+    }
+    if (yearsError) {
+      toast.error("শিক্ষাবর্ষ তথ্য লোড করতে ত্রুটি ঘটেছে!");
+      return;
+    }
+
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString("bn-BD", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>প্রত্যয়ন পত্র</title>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap" rel="stylesheet">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+          @page { 
+            size: A4 landscape; 
+            margin: 0; 
+          }
+          body {
+            font-family: 'Noto Sans Bengali', sans-serif;
+            margin: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .certificate-container {
+            width: 297mm;
+            height: 210mm;
+            
+            margin: 0 auto;
+            padding: 20mm 30mm;
+            box-sizing: border-box;
+            position: relative;
+            background-image: url('${frame}');
+            background-size: cover;
+            background-repeat: no-repeat;
+            overflow: hidden;
+          }
+          .certificate-content {
+            position: relative;
+            z-index: 2;
+          }
+          .watermark-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250mm;
+            height: 180mm;
+            object-fit: contain;
+            opacity: 0.2;
+            z-index: 1;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="certificate-container">
+          <img
+            src="${instituteData?.institute_logo || "/logo.png"}"
+            alt="Logo"
+            class="watermark-logo"
+          />
+          <div class="certificate-content">
+            <div class="text-center mt-5">
+              <h1 class="font-bold text-black ${
+                (instituteData?.institute_name || "আল ফারুক মাদ্রাসা").length > 30
+                  ? "text-[8mm]"
+                  : "text-[10mm]"
+              }">
+                ${instituteData?.institute_name || "আল ফারুক মাদ্রাসা"}
+              </h1>
+              <p class="text-[6mm]">
+                ${instituteData?.institute_address || "কালিগঞ্জ, গাজীপুর"}
+              </p>
+              <p class="text-[5mm] mt-2">
+                ${instituteData?.headmaster_mobile || "০১৭১২৩৪৫৬৭৮"}
+              </p>
+              <h1 class="bg-black text-white px-[10mm] mt-[3mm] w-fit mx-auto text-[6mm] py-[2mm] rounded-[10mm]">
+                <span class="relative -top-[2px]">প্রত্যয়ন পত্র</span>
+              </h1>
+            </div>
+            <div class="flex justify-between mt-[-8mm] text-[5mm] text-black w-[100%] absolute">
+              <div>
+                ক্রমিকঃ
+                <span class="border-b border-black w-[20mm] text-center inline-block">${customValues.serial}</span>
+              </div>
+              <div>
+                তারিখঃ
+                <span class="w-[30mm] text-center inline-block border-b border-black">${formattedDate}</span>
+              </div>
+            </div>
+            <div class="mt-[5mm] space-y-[4mm] text-[5mm] text-black leading-relaxed absolute">
+              <p class="flex gap-[2mm] flex-wrap">
+                এই মর্মে প্রত্যয়ন করা যাচ্ছে যে,
+                <span class="border-b border-dotted border-black text-center w-[150mm] inline-block">${selectedStudent?.name || "মোঃ আব্দুল করিম"}</span>
+              </p>
+              <p class="flex gap-[2mm] flex-wrap">
+                পিতা:
+                <span class="w-[100mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.father_name || "মোঃ রফিকুল ইসলাম"}</span>
+                মাতা:
+                <span class="w-[100mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.mother_name || "মোছাঃ রাবেয়া খাতুন"}</span>
+                ।
+              </p>
+              <p class="flex gap-[2mm] flex-wrap">
+                গ্রাম:
+                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.village || "আউটপাড়া"}</span>
+                ডাক:
+                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.post_office || "মাওনা"}</span>
+                উপজেলা:
+                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.ps_or_upazilla || "সদর"}</span>
+                থানা:
+                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.ps_or_upazilla || "সদর"}</span>
+                ।
+              </p>
+              <p class="flex gap-[2mm] flex-wrap">
+                জেলা:
+                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.district || "গাজীপুর"}</span>
+                ভর্তি রেজিস্ট্রি নম্বর:
+                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.username || "১১১"}</span>
+                এবং জন্ম তারিখ:
+                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.dob || "১৫/০৫/১৯৮৮"}</span>
+                ।
+              </p>
+              <p class="flex gap-[2mm] flex-wrap">
+                সে অত্র মাদরাসায়
+                <span class="w-[30mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.class_name || "দ্বিতীয়"}</span>
+                হতে
+                <span class="w-[30mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.class_name || "পঞ্চম"}</span>
+                পর্যন্ত অধ্যয়ন করতঃ বিগত
+                <span class="w-[20mm] border-b border-dotted border-black text-center inline-block">${selectedYear?.label || "২০২৪"}</span>
+                শিক্ষাবর্ষে
+                <span class="w-[20mm] border-b border-dotted border-black text-center inline-block">${selectedYear?.label || "২০২৪"}</span>
+                বোর্ড পরীক্ষায় অংশগ্রহণ করে মোট নাম্বার
+                <span class="w-[20mm] border-b border-dotted border-black text-center inline-block">${customValues.marks}</span>
+                এবং
+                <span class="w-[60mm] border-b border-dotted border-black text-center inline-block">${customValues.division}</span>
+                বিভাগে উত্তীর্ণ হয়েছে।
+              </p>
+            </div>
+            <div class="absolute bottom-[-113mm] left-[30mm] text-center">
+              <div class="border-t border-dotted border-black w-[30mm] mx-auto"></div>
+              <div class="text-black mt-[1mm] text-[5mm]">সীল</div>
+            </div>
+            <div class="absolute bottom-[-113mm]  left-1/2 -translate-x-1/2 text-center">
+              <div class="border-t border-dotted border-black w-[30mm] mx-auto"></div>
+              <div class="text-black mt-[1mm] text-[5mm]">নাজেম</div>
+            </div>
+            <div class="absolute bottom-[-113mm]  right-[30mm] text-center">
+              <div class="border-t border-dotted border-black w-[30mm] mx-auto"></div>
+              <div class="text-black mt-[1mm] text-[5mm]">মুহতামিম</div>
+            </div>
+          </div>
+        </div>
+        <script>
+          window.onload = function() {
+            setTimeout(() => {
+              window.print();
+              setTimeout(() => {
+                window.close();
+              }, 100);
+            }, 100);
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    toast.success('প্রত্যয়ন পত্র রিপোর্ট তৈরি হয়েছে!');
+  };
 
   // Auto-grow textarea
   const autoGrow = (e) => {
@@ -162,221 +340,202 @@ const Testimonial = () => {
     return (
       <div
         ref={printRef}
-        className="relative mx-auto print:bg-[url('/images/frame.jpg')]"
-        style={{
-          backgroundImage: `url(${frame})`,
-          backgroundSize: "100% 100%",
-          backgroundRepeat: "no-repeat",
-          width: "297mm", // A4 landscape width
-          height: "210mm", // A4 landscape height
-          boxSizing: "border-box",
-          padding: "20mm 30mm", // Adjusted margins for A4
-          fontFamily: "'Noto Sans Bengali', sans-serif",
-        }}
+        className="relative mx-auto print:bg-[url('/images/frame.jpg')] font-medium text-black w-[297mm] h-[210mm] bg-[url('/images/frame.jpg')] bg-cover bg-no-repeat box-border p-[20mm_30mm] print:overflow-hidden"
       >
-        {/* Logo */}
         <img
           src={instituteData?.institute_logo || "/logo.png"}
           alt="Logo"
-          className="absolute top-[20mm] left-[25mm] w-[30mm] h-[30mm] object-contain"
+          className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-[250mm] h-[180mm] object-contain opacity-20"
         />
-
-        {/* Header */}
-        <div className="text-center mt-[3mm]">
+        <div className="text-center mt-10">
           <h1
-            className={`font-bold text-[#441a05] ${
-              (instituteData?.institute_name || "আল ফারুক মাদ্রাসা").length > 30
+            className={`font-bold text-black ${
+              (instituteData?.institute_name || "আল ফارুক মাদ্রাসা").length > 30
                 ? "text-[8mm]"
                 : "text-[10mm]"
             }`}
           >
             {instituteData?.institute_name || "আল ফারুক মাদ্রাসা"}
           </h1>
-          <p className="text-[6mm] mt-[3mm]">
+          <p className="text-[6mm] mt-[5mm]">
             {instituteData?.institute_address || "কালিগঞ্জ, গাজীপুর"}
           </p>
-          <p className="text-[5mm] my-[2mm]">
+          <p className="text-[5mm] my-[3mm]">
             {instituteData?.headmaster_mobile || "০১৭১২৩৪৫৬৭৮"}
           </p>
-          <h1 className="bg-[#441a05] text-white px-[10mm] mt-[3mm] w-fit mx-auto text-[6mm] py-[2mm] rounded-[10mm]">
-            <span className="translate-y-[-12px]">প্রত্যয়ন পত্র</span>
+          <h1 className="bg-black text-white px-[10mm] mt-[3mm] w-fit mx-auto text-[6mm] py-[2mm] rounded-[10mm]">
+            <span className="relative -top-[2px]">প্রত্যয়ন পত্র</span>
           </h1>
         </div>
-
-        {/* Serial and Date */}
-        <div className="flex justify-between mt-[0mm] text-[5mm] text-[#441a05]">
+        <div className="flex justify-between mt-[-8mm] text-[5mm] text-black w-[80%] absolute">
           <div>
-            ক্রমিকঃ{" "}
+            ক্রমিকঃ
             <input
-              className="border-b border-[#441a05] w-[20mm] text-center bg-transparent"
-              defaultValue="১"
+              className="border-b border-black w-[20mm] text-center bg-transparent outline-none"
+              defaultValue={customValues.serial}
+              onChange={(e) => handleCustomValueChange("serial", e.target.value)}
             />
           </div>
           <div>
-            তারিখঃ{" "}
+            তারিখঃ
             <input
-              className="w-[30mm] text-center bg-transparent border-b border-[#441a05]"
+              className="w-[30mm] text-center bg-transparent border-b border-black outline-none"
               defaultValue={formattedDate}
+              
             />
           </div>
         </div>
-
-        {/* Certificate Body */}
-        <div className="mt-[8mm] space-y-[4mm] text-[5mm] text-[#441a05] leading-relaxed">
+        <div className="mt-[8mm] space-y-[4mm] text-[5mm] text-black leading-relaxed absolute">
           <p className="flex gap-[2mm] flex-wrap">
             এই মর্মে প্রত্যয়ন করা যাচ্ছে যে,
             <textarea
-              onInput={autoGrow}
-              value={selectedStudent?.name || "মোঃ আব্দুল করিম"}
-              className="w-[80mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              
+              defaultValue={selectedStudent?.name || "মোঃ আব্দুল করিম"}
+              className="w-[150mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
-              readOnly
+              
             />
           </p>
           <p className="flex gap-[2mm] flex-wrap">
             পিতা:
             <textarea
-              onInput={autoGrow}
-              value={selectedStudent?.father_name || "মোঃ রফিকুল ইসলাম"}
-              className="w-[60mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              
+              defaultValue={selectedStudent?.father_name || "মোঃ রফিকুল ইসলাম"}
+              className="w-[100mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
-              readOnly
+              
             />
             মাতা:
             <textarea
-              onInput={autoGrow}
-              value={selectedStudent?.mother_name || "মোছাঃ রাবেয়া খাতুন"}
-              className="w-[60mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              
+              defaultValue={selectedStudent?.mother_name || "মোছাঃ রাবেয়া খাতুন"}
+              className="w-[100mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
-              readOnly
+              
             />
             ।
           </p>
           <p className="flex gap-[2mm] flex-wrap">
             গ্রাম:
             <textarea
-              onInput={autoGrow}
-              value={selectedStudent?.village || "আউটপাড়া"}
-              className="w-[30mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              
+              defaultValue={selectedStudent?.village || "আউটপাড়া"}
+              className="w-[40mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
-              readOnly
+              
             />
             ডাক:
             <textarea
-              onInput={autoGrow}
-              value={selectedStudent?.post_office || "মাওনা"}
-              className="w-[30mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              
+              defaultValue={selectedStudent?.post_office || "মাওনা"}
+              className="w-[40mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
-              readOnly
+              
             />
             উপজেলা:
             <textarea
-              onInput={autoGrow}
-              value={selectedStudent?.ps_or_upazilla || "সদর"}
-              className="w-[30mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              
+              defaultValue={selectedStudent?.ps_or_upazilla || "সদর"}
+              className="w-[40mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
-              readOnly
+              
             />
             থানা:
             <textarea
-              onInput={autoGrow}
-              value={selectedStudent?.ps_or_upazilla || "সদর"}
-              className="w-[30mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              
+              defaultValue={selectedStudent?.ps_or_upazilla || "সদর"}
+              className="w-[40mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
-              readOnly
+              
             />
             ।
           </p>
           <p className="flex gap-[2mm] flex-wrap">
             জেলা:
             <textarea
-              onInput={autoGrow}
-              value={selectedStudent?.district || "গাজীপুর"}
-              className="w-[30mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              
+              defaultValue={selectedStudent?.district || "গাজীপুর"}
+              className="w-[40mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
-              readOnly
+              
             />
             ভর্তি রেজিস্ট্রি নম্বর:
             <textarea
-              onInput={autoGrow}
-              // value={selectedStudent?.username || "১১১"}
-              className="w-[30mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              
+              defaultValue={selectedStudent?.username || "১১১"}
+              className="w-[40mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
-              // readOnly
+              
             />
             এবং জন্ম তারিখ:
             <textarea
-              onInput={autoGrow}
-              value={selectedStudent?.dob || "১৫/০৫/১৯৮৮"}
-              className="w-[25mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              
+              defaultValue={selectedStudent?.dob || "১৫/০৫/১৯৮৮"}
+              className="w-[40mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
-              readOnly
+              
             />
             ।
           </p>
           <p className="flex gap-[2mm] flex-wrap">
             সে অত্র মাদরাসায়
             <textarea
-              onInput={autoGrow}
-              // value={selectedStudent?.class_name || "দ্বিতীয়"}
-              className="w-[30mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              
+              defaultValue={selectedStudent?.class_name || "দ্বিতীয়"}
+              className="w-[30mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
-              // readOnly
+              
             />
             হতে
             <textarea
-              onInput={autoGrow}
-              // value={selectedStudent?.class_name || "পঞ্চম"}
-              className="w-[30mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              
+              defaultValue={selectedStudent?.class_name || "পঞ্চম"}
+              className="w-[30mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
-              // readOnly
+              
             />
             পর্যন্ত অধ্যয়ন করতঃ বিগত
             <textarea
-              onInput={autoGrow}
-              // value={selectedYear?.label || "২০২৪"}
-              className="w-[20mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              
+              defaultValue={selectedYear?.label || "২০২৪"}
+              className="w-[20mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
-              // readOnly
+              
             />
             শিক্ষাবর্ষে
             <textarea
-              onInput={autoGrow}
-              // value={selectedYear?.label || "২০২৪"}
-              className="w-[20mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
+              
+              defaultValue={selectedYear?.label || "২০২৪"}
+              className="w-[20mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
-              // readOnly
+              
             />
             বোর্ড পরীক্ষায় অংশগ্রহণ করে মোট নাম্বার
-            <textarea
-              onInput={autoGrow}
-              defaultValue="৭৬৫"
-              className="w-[20mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
-              rows={1}
+            <input
+              defaultValue={customValues.marks}
+              onChange={(e) => handleCustomValueChange("marks", e.target.value)}
+              className="w-[20mm] border-b border-dotted border-black text-center bg-transparent outline-none"
             />
             এবং
-            <textarea
-              onInput={autoGrow}
-              placeholder="বিভাগ"
-              className="w-[40mm] border-b border-dotted border-[#441a05] text-center bg-transparent resize-none overflow-hidden"
-              rows={1}
+            <input
+              defaultValue={customValues.division}
+              onChange={(e) => handleCustomValueChange("division", e.target.value)}
+              className="w-[60mm] border-b border-dotted border-black text-center bg-transparent outline-none"
             />
             বিভাগে উত্তীর্ণ হয়েছে।
           </p>
         </div>
-
-        {/* Signatures */}
         <div className="absolute bottom-[25mm] left-[30mm] text-center">
-          <div className="border-t border-dotted border-[#441a05] w-[25mm] mx-auto"></div>
-          <div className="text-[#441a05] mt-[1mm] text-[5mm]">সীল</div>
+          <div className="border-t border-dotted border-black w-[25mm] mx-auto"></div>
+          <div className="text-black mt-[1mm] text-[5mm]">সীল</div>
         </div>
         <div className="absolute bottom-[25mm] left-1/2 -translate-x-1/2 text-center">
-          <div className="border-t border-dotted border-[#441a05] w-[25mm] mx-auto"></div>
-          <div className="text-[#441a05] mt-[1mm] text-[5mm]">নাজেম</div>
+          <div className="border-t border-dotted border-black w-[25mm] mx-auto"></div>
+          <div className="text-black mt-[1mm] text-[5mm]">নাজেম</div>
         </div>
         <div className="absolute bottom-[25mm] right-[30mm] text-center">
-          <div className="border-t border-dotted border-[#441a05] w-[25mm] mx-auto"></div>
-          <div className="text-[#441a05] mt-[1mm] text-[5mm]">মুহতামিম</div>
+          <div className="border-t border-dotted border-black w-[25mm] mx-auto"></div>
+          <div className="text-black mt-[1mm] text-[5mm]">মুহতামিম</div>
         </div>
       </div>
     );
@@ -393,10 +552,6 @@ const Testimonial = () => {
           @keyframes scaleIn {
             from { transform: scale(0.95); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
-          }
-          @keyframes slideUp {
-            from { opacity: 0; transform: translateY(100%); }
-            to { opacity: 1; transform: translateY(0); }
           }
           .animate-fadeIn {
             animation: fadeIn 0.6s ease-out forwards;
@@ -427,6 +582,27 @@ const Testimonial = () => {
             }
             body {
               margin: 0;
+              width: 297mm;
+              height: 210mm;
+            }
+            .certificate-container {
+              width: 297mm;
+              height: 210mm;
+              margin: 0;
+              padding: 20mm 30mm;
+              box-sizing: border-box;
+              position: relative;
+              background-image: url('/images/frame.jpg');
+              background-size: cover;
+              background-repeat: no-repeat;
+              overflow: hidden;
+            }
+            img {
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            * {
+              overflow: hidden !important;
             }
           }
         `}
@@ -521,17 +697,17 @@ const Testimonial = () => {
       {selectedStudent && selectedYear && (
         <div className="flex justify-center gap-4 mt-6 print:hidden">
           <button
-            onClick={handleDownloadPDF}
-            className="bg-[#DB9E30] hover:bg-[#c68e27] text-[#441a05] font-bold py-2 px-4 rounded border-none transition-all btn-glow"
+            onClick={generatePDFReport}
+            className="bg-[#DB9E30] hover:bg-[#c68e27] text-[#441a05] font-bold py-2 px-4 rounded border-none transition-all btn-glow flex items-center"
           >
-            PDF ডাউনলোড
+            <FaPrint className="mr-2" /> প্রিন্ট রিপোর্ট
           </button>
-          <button
+          {/* <button
             onClick={handlePrint}
-            className="bg-[#441a05] hover:bg-[#2f1203] text-white font-bold py-2 px-4 rounded transition-all btn-glow"
+            className="bg-[#441a05] hover:bg-[#2f1203] text-white font-bold py-2 px-4 rounded transition-all btn-glow flex items-center"
           >
-            প্রিন্ট
-          </button>
+            <FaPrint className="mr-2" /> প্রিন্ট
+          </button> */}
         </div>
       )}
     </div>

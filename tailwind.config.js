@@ -20,7 +20,7 @@ export default {
         // bgGray: "#00000010",
       },
       fontFamily: {
-        roboto: ["Roboto", "Helvetica", "Arial", "sans-serif", "Cinzel Decorative"],
+        roboto: ["Roboto", "Helvetica", "Arial", "sans-serif", "Cinzel Decorative", "Noto Sans Bengali"],
       },
     },
   },
