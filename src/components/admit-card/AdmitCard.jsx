@@ -238,8 +238,8 @@ const AdmitCard = () => {
               transform: translate(-50%, -50%);
               opacity: 0.15;
               z-index: 10;
-              max-width: 120px;
-              max-height: 120px;
+              width: 220px;
+                height: 220px;
               object-fit: contain;
             }
             
@@ -293,7 +293,7 @@ const AdmitCard = () => {
             }
             .class-info {
               position: absolute;
-              top: 85mm;
+              top: 65mm;
               left: 20mm;
               font-size: 16pt;
               color: black;
@@ -498,19 +498,16 @@ const AdmitCard = () => {
             <div class="institute-name">
               ${institute.institute_name || "Institute Name"}
             </div>
+            <div class="institute-address">
+              ${institute.institute_address || "Institute Name"}
+            </div>
             
             <!-- Student Information -->
             <div class="student-name">
               পরীক্ষার্থীর নাম : <span style="font-weight: 600;">${student.student_name}</span>
             </div>
             
-            <div class="father-name">
-              পিতার নাম : <span style="font-weight: 600;">${student.father_name || "N/A"}</span>
-            </div>
-            
-            <div class="birth-date">
-              জন্য তারিখ : <span style="font-weight: 600;">${student.date_of_birth || "N/A"}</span>
-            </div>
+       
             
             <div class="class-info">
               জামাত : <span style="font-weight: 600;">${student.class_name} - ${student.section_name}</span>
@@ -600,8 +597,8 @@ const AdmitCard = () => {
               transform: translate(-50%, -50%);
               opacity: 0.15;
               z-index: 10;
-              max-width: 100px;
-              max-height: 100px;
+              max-width: 220px;
+              max-height: 220px;
               object-fit: contain;
             }
             
@@ -618,7 +615,7 @@ const AdmitCard = () => {
             /* Institute Name */
             .institute-name {
               position: absolute;
-              top: 15mm;
+              top: 20mm;
               left: 0;
               right: 0;
               text-align: center;
@@ -627,11 +624,22 @@ const AdmitCard = () => {
               color: black;
               text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
             }
+            .institute-address {
+              position: absolute;
+              top: 30mm;
+              left: 0;
+              right: 0;
+              text-align: center;
+              font-size: 10pt;
+              font-weight: bold;
+              color: black;
+              text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
+            }
             
             /* Student Information */
             .student-name {
               position: absolute;
-              top: 60mm;
+              top: 65mm;
               left: 15mm;
               font-size: 14pt;
               color: black;
@@ -655,7 +663,7 @@ const AdmitCard = () => {
             }
             .class-info {
               position: absolute;
-              top: 90mm;
+              top: 80mm;
               left: 15mm;
               font-size: 14pt;
               color: black;
@@ -665,7 +673,7 @@ const AdmitCard = () => {
             /* Admission Number Box */
             .admission-box {
               position: absolute;
-              top: 60mm;
+              top: 65mm;
               right: 15mm;
               border: 2px solid black;
               background: rgba(255,255,255,0.95);
@@ -676,7 +684,7 @@ const AdmitCard = () => {
             /* Roll Number Box */
             .roll-box {
               position: absolute;
-              top: 75mm;
+              top: 80mm;
               right: 15mm;
               border: 2px solid black;
               background: rgba(255,255,255,0.95);
