@@ -1,18 +1,17 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useLoginUserMutation } from '../../redux/features/api/auth/loginApi';
-import { setCredentials } from '../../redux/features/slice/authSlice';
-import { useSelector, useDispatch } from 'react-redux';
-import { toast } from 'react-hot-toast';
-import bgImg from '../../../public/images/bg.png';
-import { FaSignInAlt, FaSpinner } from 'react-icons/fa';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useLoginUserMutation } from "../../redux/features/api/auth/loginApi";
+import { setCredentials } from "../../redux/features/slice/authSlice";
+import { useSelector, useDispatch } from "react-redux";
+import { toast } from "react-hot-toast";
+import bgImg from "../../../public/images/bg.png";
+import { FaSignInAlt, FaSpinner } from "react-icons/fa";
 import { useLocation } from "react-router-dom";
-
 
 const Login = () => {
   const { user } = useSelector((state) => state.auth);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loginUser] = useLoginUserMutation();
@@ -21,13 +20,11 @@ const Login = () => {
   const location = useLocation();
   const from = location.state?.from?.pathname || "/dashboard";
 
-
   // useEffect(() => {
   //   if (user) {
   //     navigate("/dashboard");
   //   }
   // }, [user, navigate]);
-
 
   useEffect(() => {
     const fromStorage = localStorage.getItem("redirect_after_login");
@@ -47,36 +44,38 @@ const Login = () => {
     try {
       const result = await loginUser({ username, password }).unwrap();
 
-      dispatch(setCredentials({
-        user: result.user_data,
-        profile: result.profile_data,
-        role: result.role,
-        role_id: result.role_id,
-        token: result.access_token,
-        refresh_token: result.refresh_token,
-        username: result.username,
-        group_name: result.group_name,
-        group_id: result.group_id,
+      dispatch(
+        setCredentials({
+          user: result.user_data,
+          profile: result.profile_data,
+          role: result.role,
+          role_id: result.role_id,
+          token: result.access_token,
+          refresh_token: result.refresh_token,
+          username: result.username,
+          group_name: result.group_name,
+          group_id: result.group_id,
+        })
+      );
 
-      }));
-
-      toast.success('সফলভাবে লগইন হয়েছে!');
+      toast.success("সফলভাবে লগইন হয়েছে!");
       // navigate('/dashboard');
       navigate(from, { replace: true });
     } catch (err) {
-      setError('লগইন ব্যর্থ! ব্যবহারকারীর নাম বা পাসওয়ার্ড ভুল হতে পারে।');
-      toast.error('লগইন ব্যর্থ! ব্যবহারকারীর নাম বা পাসওয়ার্ড ভুল হতে পারে।');
+      setError("লগইন ব্যর্থ! ব্যবহারকারীর নাম বা পাসওয়ার্ড ভুল হতে পারে।");
+      toast.error("লগইন ব্যর্থ! ব্যবহারকারীর নাম বা পাসওয়ার্ড ভুল হতে পারে।");
     } finally {
       setLoading(false);
     }
   };
 
-
-
   return (
     <div
       className="relative min-h-screen w-screen flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat"
-      style={{ backgroundImage: `url(${bgImg})` }}
+      style={{
+        //  backgroundImage: `url(${bgImg})`
+        backgroundImage: `url("https://shaha.ancorathemes.com/wp-content/uploads/2017/06/bg-16.jpg?id=371")`,
+      }}
     >
       {/* Overlay */}
       {/* <div className="absolute inset-0 bg-black/40 z-0" /> */}
@@ -117,14 +116,17 @@ const Login = () => {
       </style>
 
       {/* Form Container */}
-      <div className='w-full  max-w-md'>
+      <div className="w-full  max-w-md">
         <div className="relative z-10 bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl shadow-xl w-full max-w-md animate-fadeIn">
           <h2 className="text-3xl font-bold text-center text-[#441a05] mb-6 tracking-tight">
             কওমী তালীম
           </h2>
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-[#441a05]">
+              <label
+                htmlFor="username"
+                className="block text-sm font-medium text-[#441a05]"
+              >
                 ব্যবহারকারীর নাম
               </label>
               <input
@@ -141,7 +143,10 @@ const Login = () => {
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-[#441a05]">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-[#441a05]"
+              >
                 পাসওয়ার্ড
               </label>
               <input
@@ -169,8 +174,11 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className={`relative inline-flex items-center justify-center w-full px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${loading ? "cursor-not-allowed" : "hover:text-white hover:shadow-md btn-glow"
-                }`}
+              className={`relative inline-flex items-center justify-center w-full px-8 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn ${
+                loading
+                  ? "cursor-not-allowed"
+                  : "hover:text-white hover:shadow-md btn-glow"
+              }`}
             >
               {loading ? (
                 <span className="flex items-center space-x-3">
