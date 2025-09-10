@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { FaBuilding, FaGlobe, FaUser, FaInfoCircle, FaChevronDown, FaChevronUp, FaSpinner } from 'react-icons/fa';
+import { FaBuilding, FaGlobe, FaUser, FaInfoCircle, FaChevronDown, FaChevronUp, FaSpinner, FaImage } from 'react-icons/fa';
 import { IoAddCircleOutline } from 'react-icons/io5';
 import toast, { Toaster } from 'react-hot-toast';
 import { useCreateInstituteMutation, useUpdateInstituteMutation } from '../../redux/features/api/institute/instituteApi';
 import { useGetInstituteTypesQuery } from '../../redux/features/api/institute/instituteTypeApi';
-import { useSelector } from 'react-redux'; // Import useSelector
-import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi'; // Import permission hook
-
+import { useSelector } from 'react-redux';
+import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi';
 
 // Custom CSS for animations and styling
 const customStyles = `
@@ -79,21 +78,24 @@ const customStyles = `
   ::-webkit-scrollbar-thumb:hover {
     background: #441a05;
   }
+  .logo-preview {
+    max-width: 100px;
+    max-height: 100px;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 2px solid #DB9E30;
+  }
 `;
 
 const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
-  const { user, group_id } = useSelector((state) => state.auth); // Get user and group_id
+  const { user, group_id } = useSelector((state) => state.auth);
   const { data: instituteTypes, isLoading: isTypesLoading, error: typesError } = useGetInstituteTypesQuery();
-
-  // Permissions hook
   const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
     skip: !group_id,
   });
 
-  // Permission checks
   const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_institute') || false;
   const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_institute') || false;
-
 
   const [formData, setFormData] = useState({
     institute_id: institute?.institute_id || '',
@@ -121,6 +123,9 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
     education_thana_id: institute?.education_thana_id || '',
   });
 
+  const [logo, setLogo] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(institute?.institute_logo || null);
+
   const [openSections, setOpenSections] = useState({
     basic: true,
     details: true,
@@ -137,6 +142,14 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setLogo(file);
+      setLogoPreview(URL.createObjectURL(file));
+    }
+  };
+
   const toggleSection = (section) => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
@@ -144,7 +157,6 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Determine required permission based on whether we are creating or updating
     const requiredPermission = institute ? hasChangePermission : hasAddPermission;
     const actionType = institute ? 'হালনাগাদ' : 'তৈরি';
 
@@ -153,33 +165,40 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
       return;
     }
 
-    const payload = {
-      ...formData,
-      institute_type_id: parseInt(formData.institute_type_id) || null,
-      education_board_id: formData.education_board_id ? parseInt(formData.education_board_id) : null,
-      education_district_id: formData.education_district_id ? parseInt(formData.education_district_id) : null,
-      education_division_id: formData.education_division_id ? parseInt(formData.education_division_id) : null,
-      education_thana_id: formData.education_thana_id ? parseInt(formData.education_thana_id) : null,
-      institute_address: formData.institute_address || null,
-      institute_email_address: formData.institute_email_address || null,
-      institute_eiin_no: formData.institute_eiin_no || null,
-      institute_web: formData.institute_web || null,
-      institute_management_web: formData.institute_management_web || null,
-      institute_fb: formData.institute_fb || null,
-      institute_youtube: formData.institute_youtube || null,
-      incharge_manager: formData.incharge_manager || null,
-      incharge_manager_email: formData.incharge_manager_email || null,
-      incharge_manager_mobile: formData.incharge_manager_mobile || null,
-      institute_v_heading: formData.institute_v_heading || null,
-      signature: formData.signature || null,
-    };
+    const formDataToSend = new FormData();
+    formDataToSend.append('institute_id', formData.institute_id);
+    formDataToSend.append('institute_name', formData.institute_name);
+    formDataToSend.append('headmaster_name', formData.headmaster_name);
+    formDataToSend.append('headmaster_mobile', formData.headmaster_mobile);
+    formDataToSend.append('institute_gender_type', formData.institute_gender_type);
+    formDataToSend.append('institute_type_id', parseInt(formData.institute_type_id) || '');
+    formDataToSend.append('status', formData.status);
+    formDataToSend.append('institute_address', formData.institute_address || '');
+    formDataToSend.append('institute_email_address', formData.institute_email_address || '');
+    formDataToSend.append('institute_eiin_no', formData.institute_eiin_no || '');
+    formDataToSend.append('institute_web', formData.institute_web || '');
+    formDataToSend.append('institute_management_web', formData.institute_management_web || '');
+    formDataToSend.append('institute_fb', formData.institute_fb || '');
+    formDataToSend.append('institute_youtube', formData.institute_youtube || '');
+    formDataToSend.append('incharge_manager', formData.incharge_manager || '');
+    formDataToSend.append('incharge_manager_email', formData.incharge_manager_email || '');
+    formDataToSend.append('incharge_manager_mobile', formData.incharge_manager_mobile || '');
+    formDataToSend.append('institute_v_heading', formData.institute_v_heading || '');
+    formDataToSend.append('signature', formData.signature || '');
+    formDataToSend.append('education_board_id', formData.education_board_id || '');
+    formDataToSend.append('education_district_id', formData.education_district_id || '');
+    formDataToSend.append('education_division_id', formData.education_division_id || '');
+    formDataToSend.append('education_thana_id', formData.education_thana_id || '');
+    if (logo) {
+      formDataToSend.append('institute_logo', logo);
+    }
 
     try {
       if (institute) {
-        await updateInstitute({ id: institute.id, ...payload }).unwrap();
+        await updateInstitute({ id: institute.id, data: formDataToSend }).unwrap();
         toast.success('প্রতিষ্ঠান সফলভাবে হালনাগাদ করা হয়েছে!');
       } else {
-        await createInstitute(payload).unwrap();
+        await createInstitute(formDataToSend).unwrap();
         toast.success('প্রতিষ্ঠান সফলভাবে তৈরি করা হয়েছে!');
       }
       onSubmit();
@@ -316,6 +335,27 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     disabled={isFormDisabled}
                   />
                 </div>
+                <div className="relative input-icon">
+                  <label htmlFor="institute_logo" className="block text-lg font-medium text-[#441a05]">
+                    প্রতিষ্ঠানের লোগো
+                  </label>
+                  <FaImage className="absolute left-3 top-[50px] text-[#DB9E30]" />
+                  <input
+                    type="file"
+                    id="institute_logo"
+                    name="institute_logo"
+                    accept="image/*"
+                    onChange={handleLogoChange}
+                    className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-1 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
+                    aria-label="প্রতিষ্ঠানের লোগো"
+                    disabled={isFormDisabled}
+                  />
+                  {logoPreview && (
+                    <div className="mt-4">
+                      <img src={logoPreview} alt="Logo Preview" className="logo-preview" />
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -380,7 +420,7 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
                     disabled={isFormDisabled}
                   >
                     <option value="Combined">মিশ্র</option>
-                    <option value="Boys">ছেলে </option>
+                    <option value="Boys">ছেলে</option>
                     <option value="Girls">মেয়ে</option>
                   </select>
                 </div>
@@ -572,23 +612,6 @@ const InstituteProfileForm = ({ institute, onSubmit, onCancel }) => {
             </div>
             {openSections.additional && (
               <div className="border-t border-[#9d9087]/50 mt-4 pt-6 grid grid-cols-1 md:grid-cols-3 gap-3 animate-scaleIn">
-                {/* <div className="relative input-icon">
-                  <label htmlFor="institute_v_heading" className="block text-lg font-medium text-[#441a05]">
-                    দৃষ্টিভঙ্গি শিরোনাম
-                  </label>
-                  <FaInfoCircle className="absolute left-3 top-[50px] text-[#DB9E30]" />
-                  <input
-                    type="text"
-                    id="institute_v_heading"
-                    name="institute_v_heading"
-                    value={formData.institute_v_heading}
-                    onChange={handleChange}
-                    className="mt-1 block w-full bg-white/10 text-[#441a05] placeholder-[#441a05]/70 pl-10 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#DB9E30] border border-[#9d9087] rounded-lg transition-all duration-300"
-                    placeholder="দৃষ্টিভঙ্গি শিরোনাম লিখুন"
-                    aria-label="দৃষ্টিভঙ্গি শিরোনাম"
-                    disabled={isFormDisabled}
-                  />
-                </div> */}
                 <div className="relative input-icon">
                   <label htmlFor="signature" className="block text-lg font-medium text-[#441a05]">
                     স্বাক্ষর

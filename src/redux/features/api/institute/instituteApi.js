@@ -2,19 +2,22 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import BASE_URL from '../../../../utilitis/apiConfig';
 
 const getToken = () => {
-  return localStorage.getItem('token'); 
+  return localStorage.getItem('token');
 };
 
 export const instituteApi = createApi({
   reducerPath: 'instituteApi',
   baseQuery: fetchBaseQuery({
     baseUrl: BASE_URL,
-    prepareHeaders: (headers) => {
+    prepareHeaders: (headers, { getState, endpoint }) => {
       const token = getToken();
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
-      headers.set('Content-Type', 'application/json');
+      // Only set Content-Type to application/json if not uploading FormData
+      if (endpoint !== 'createInstitute' && endpoint !== 'updateInstitute') {
+        headers.set('Content-Type', 'application/json');
+      }
       return headers;
     },
   }),
@@ -42,12 +45,12 @@ export const instituteApi = createApi({
       invalidatesTags: ['Institute'],
     }),
 
-    // PUT: Update an existing institute
+    // PATCH: Update an existing institute
     updateInstitute: builder.mutation({
-      query: ({ id, ...instituteData }) => ({
+      query: ({ id, data }) => ({
         url: `/institute/${id}/`,
-        method: 'PUT',
-        body: instituteData,
+        method: 'PATCH',
+        body: data,
       }),
       invalidatesTags: ['Institute'],
     }),

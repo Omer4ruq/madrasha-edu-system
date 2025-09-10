@@ -1,17 +1,19 @@
 import { CgCommunity } from "react-icons/cg";
 import { CiDollar } from "react-icons/ci";
-import { FaCloudDownloadAlt, FaFileInvoiceDollar, FaMoneyCheckAlt, FaRegCheckSquare } from "react-icons/fa";
-import { FaPeopleGroup } from "react-icons/fa6";
-import { GiPayMoney, GiReceiveMoney, GiTakeMyMoney } from "react-icons/gi";
+import { FaCloudDownloadAlt, FaFileInvoiceDollar, FaMoneyCheckAlt, FaPlaceOfWorship, FaRegCheckSquare, FaUsers } from "react-icons/fa";
+import { FaHotel, FaPeopleGroup } from "react-icons/fa6";
+import { GiNetworkBars, GiPayMoney, GiReceiveMoney, GiTakeMyMoney } from "react-icons/gi";
 import { GrTableAdd } from "react-icons/gr";
-import { HiOutlineBuildingStorefront, HiOutlineTableCells } from "react-icons/hi2";
+import { HiAcademicCap, HiOutlineBuildingStorefront, HiOutlineTableCells } from "react-icons/hi2";
 import { IoMdSettings } from "react-icons/io";
 import { LiaSmsSolid } from "react-icons/lia";
 import { LuFileText } from "react-icons/lu";
 import { MdAccountBalance, MdAccountBalanceWallet, MdOutlineEventAvailable, MdOutlineTextsms, MdVideoSettings } from "react-icons/md";
 import { PiChalkboardTeacherFill, PiExamBold, PiPresentationChartBold, PiShapesFill, PiStudentBold } from "react-icons/pi";
 import { RiDashboardHorizontalFill, RiParentFill, RiServiceLine } from "react-icons/ri";
-import { TbReportMoney } from "react-icons/tb";
+import { TbReportAnalytics, TbReportMoney } from "react-icons/tb";
+import { BsBank2 } from "react-icons/bs";
+
 
 
 export default function Icons({ name }) {
@@ -19,8 +21,29 @@ export default function Icons({ name }) {
     case "RiDashboardHorizontalFill":
       return <RiDashboardHorizontalFill />;
 
+    case "FaPlaceOfWorship":
+      return <FaPlaceOfWorship />;
+
+    case "FaHotel":
+      return <FaHotel />;
+
+    case "TbReportAnalytics":
+      return <TbReportAnalytics  />;
+
+    case "GiNetworkBars":
+      return <GiNetworkBars  />;
+
     case "HiOutlineBuildingStorefront":
       return <HiOutlineBuildingStorefront />;
+
+    case "HiAcademicCap":
+      return <HiAcademicCap />;
+      
+    case "BsBank":
+      return <BsBank2 />;
+      
+    case "FaUsers ":
+      return <FaUsers />;
 
     case "MdOutlineEventAvailable":
       return <MdOutlineEventAvailable />;
