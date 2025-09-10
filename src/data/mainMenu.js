@@ -20,7 +20,7 @@ const mainMenu = [
   {
     id: "04",
     title: "দারুল ইকামা",
-    icon: "HiOutlineHomeModern",
+    icon: "FaPlaceOfWorship",
     link: "/darul-iqam",
     children: [
       {
@@ -76,7 +76,7 @@ const mainMenu = [
   {
     id: "05",
     title: "তালিমাত",
-    icon: "HiOutlineBuildingStorefront",
+    icon: "HiAcademicCap",
     link: "/talimat",
     children: [
       {
@@ -270,7 +270,7 @@ const mainMenu = [
   {
     id: "07",
     title: "হিসাব বিভাগ",
-    icon: "HiOutlineCalculator",
+    icon: "BsBank",
     link: "/accounts",
     children: [
       {
@@ -402,7 +402,7 @@ const mainMenu = [
   {
     id: "08",
     title: "ইউজারস",
-    icon: "HiOutlineCalculator",
+    icon: "FaUsers ",
     link: "/users",
     children: [
       {
@@ -454,7 +454,7 @@ const mainMenu = [
   {
     id: "09",
     title: "বোর্ডিং",
-    icon: "HiOutlineCalculator",
+    icon: "FaHotel",
     link: "/boarding",
     children: [
       {
@@ -495,7 +495,7 @@ const mainMenu = [
   {
     id: "10",
     title: "কমিউনিকেশন",
-    icon: "HiOutlineCalculator",
+    icon: "GiNetworkBars",
     link: "/communication",
     children: [
       {
@@ -537,7 +537,7 @@ const mainMenu = [
   {
     id: "11",
     title: "লেআউট",
-    icon: "HiOutlineCalculator",
+    icon: "TbReportAnalytics",
     link: "/layout",
     children: [
       {
