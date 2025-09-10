@@ -288,12 +288,10 @@ const StudentList = () => {
       margin-bottom: 3mm;
       padding-bottom: 2mm;
       border-bottom: 2px solid #1a5276;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
     .school-logo {
       height: 20mm;
-      margin-bottom: 1mm;
-      border:1px solid #000;
+      width: 20mm;
     }
     .school-name {
       font-size: 16pt;
@@ -318,7 +316,7 @@ const StudentList = () => {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 3mm;
+      margin: 3mm 0;
     }
     .student-info {
       width: 68%;
@@ -333,10 +331,10 @@ const StudentList = () => {
       // box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
     .student-photo {
-      width: 30mm;
+      width: 40mm;
       height: 40mm;
       object-fit: cover;
-      border: 1px solid #ccc;
+      // border: 1px solid #ccc;
       border-radius: 3px;
       margin-bottom: 1mm;
       background-color: #f5f5f5;
@@ -355,13 +353,13 @@ const StudentList = () => {
     .student-id {
       font-weight: bold;
       color: #1a5276;
-      margin-bottom: 1mm;
+      
       font-size: 10pt;
     }
     .student-name {
       font-size: 14pt;
       font-weight: bold;
-      margin-bottom: 1mm;
+      margin-bottom: 3mm;
       color: #1a5276;
       border-bottom: 1px solid #1a5276;
       padding-bottom: 1mm;
@@ -369,7 +367,7 @@ const StudentList = () => {
     .basic-info {
       display: flex;
       flex-wrap: wrap;
-      gap: 3mm;
+      // gap: 3mm;
       margin-top: 2mm;
     }
     .info-item {
@@ -425,7 +423,7 @@ const StudentList = () => {
     .signature-section {
       display: flex;
       justify-content: space-between;
-      margin-top: 5mm;
+      // margin-top: 3mm;
       padding-top: 2mm;
     }
     .signature-box {
@@ -489,7 +487,7 @@ const StudentList = () => {
   
   <div class="container">
     <div class="header">
-      ${institute.logo ? `<img src="${institute.logo}" class="school-logo" alt="School Logo" />` : ''}
+      ${institute.institute_logo ? `<img src="${institute.institute_logo}" class="school-logo" alt="School Logo" />` : ''}
       <div class="school-name">${institute.institute_name || 'আদর্শ বিদ্যালয়'}</div>
       <div class="school-address">${institute.institute_address || '১২৩ মেইন রোড, ঢাকা, বাংলাদেশ'}</div>
       <div class="report-title">ছাত্র তথ্য প্রতিবেদন</div>
@@ -513,7 +511,7 @@ const StudentList = () => {
           </div>
         </div>
         
-        <div class="academic-badges" style="margin-top: 1mm;">
+        <div class="academic-badges" style="margin-top: 2mm;">
           <span class="academic-badge">${student.class_name || "N/A"} ${student.section_name ? '('+student.section_name+')' : ''}</span>
           <span class="academic-badge">${student.shift_name || "N/A"}</span>
           <span class="academic-badge">ভর্তি: ${student.admission_year || "N/A"}</span>
@@ -524,10 +522,6 @@ const StudentList = () => {
         ${student.avatar ? 
           `<img src="${student.avatar}" class="student-photo" alt="Student Photo" />` : 
           `<div class="photo-placeholder">ছবি নেই</div>`
-        }
-        ${student.qr_code ? 
-          `<img src="${student.qr_code}" class="qr-code" alt="QR Code" />` : 
-          ''
         }
       </div>
     </div>
@@ -545,14 +539,7 @@ const StudentList = () => {
               <td>জাতীয়তা</td>
               <td>${student.nationality || "বাংলাদেশী"}</td>
             </tr>
-            <tr>
-              <td>ধর্ম</td>
-              <td>${student.religion || "N/A"}</td>
-            </tr>
-            <tr>
-              <td>প্রতিবন্ধকতা</td>
-              <td>${student.disability_info || "N/A"}</td>
-            </tr>
+            
           </table>
         </div>
 
@@ -600,10 +587,6 @@ const StudentList = () => {
               <td>${student.father_mobile_no || "N/A"}</td>
             </tr>
             <tr>
-              <td>পিতার পেশা</td>
-              <td>${student.f_occupation || "N/A"}</td>
-            </tr>
-            <tr>
               <td>মাতার নাম</td>
               <td>${student.mother_name || "N/A"}</td>
             </tr>
@@ -612,23 +595,12 @@ const StudentList = () => {
               <td>${student.mother_mobile_no || "N/A"}</td>
             </tr>
             <tr>
-              <td>মাতার পেশা</td>
-              <td>${student.m_occupation || "N/A"}</td>
-            </tr>
-            <tr>
               <td>অভিভাবকের নাম</td>
-              <td>${student.g_name || student.name || "N/A"}</td>
+              <td>${student.guardian || "N/A"}</td>
             </tr>
             <tr>
               <td>অভিভাবকের মোবাইল</td>
               <td>${student.phoneno || "N/A"}</td>
-            </tr>
-            <tr>
-              <td>সম্পর্ক</td>
-              <td>${student.relation === 'Father' ? 'পিতা' : 
-                   student.relation === 'Mother' ? 'মাতা' : 
-                   student.relation === 'Guardian' ? 'অভিভাবক' : 
-                   student.relation || "N/A"}</td>
             </tr>
           </table>
         </div>
@@ -669,31 +641,27 @@ const StudentList = () => {
     </div>
   </div>
 
-  <div class="footer">
-    প্রতিবেদন তৈরি: ${new Date().toLocaleString('bn-BD', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'Asia/Dhaka' 
-    })} | ${institute.institute_name || 'আদর্শ বিদ্যালয়'} - ছাত্র ব্যবস্থাপনা সিস্টেম
-  </div>
+
 
   <script>
-    // Auto-print and close functionality
-    window.onload = function() {
-      setTimeout(function() {
-        window.print();
-      }, 200);
-      
-      window.onafterprint = function() {
-        setTimeout(function() {
-          window.close();
-        }, 100);
+      let printAttempted = false;
+      window.onbeforeprint = () => {
+        printAttempted = true;
       };
-    };
-  </script>
+      window.onafterprint = () => {
+        window.close();
+      };
+      window.addEventListener('beforeunload', (event) => {
+        if (!printAttempted) {
+          window.close();
+        }
+      });
+      
+      // Small delay to ensure all content is rendered before printing
+      setTimeout(() => {
+        window.print();
+      }, 100);
+    </script>
 </body>
 </html>
     `;

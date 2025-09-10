@@ -116,8 +116,10 @@ export default function InstituteDetails({ institutes, handleEditInstitute }) {
             {/* Profile Header */}
             <div className="relative sm:flex items-center justify-between p-6 bg-[#441a05]/10">
               <div className="flex items-center space-x-4">
-                <div className="bg-white/20 border-4 border-white rounded-full sm:p-4 p-2 shadow-md animate-scaleIn">
-                  <FaBuilding className="text-[#DB9E30] sm:text-4xl text-xl" />
+                <div className="bg-white/20 border-2 border-white rounded-full shadow-md animate-scaleIn">
+                  {
+                    institute?.institute_logo ? <img className='w-20 rounded-full' src={institute?.institute_logo} alt="" /> : <FaBuilding className="text-[#DB9E30] sm:text-4xl text-xl" />
+                  }
                 </div>
                 <div>
                   <h2 className="md:text-3xl font-bold text-[#441a05]">{institute.institute_name}</h2>
