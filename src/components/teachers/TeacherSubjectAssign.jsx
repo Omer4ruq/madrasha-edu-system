@@ -279,6 +279,44 @@ const TeacherSubjectAssign = () => {
     return list;
   }, [teacherAssignments, tableTeacherFilter, tableClassFilter]);
 
+  // ---- helper: map subjects per class for a single assignment ----
+  const subjectsByClassForAssignment = useCallback((assignment) => {
+    const map = [];
+    const classIds = assignment.class_assigns || [];
+    const subIds = new Set(assignment.subject_assigns || []);
+
+    classIds.forEach((cid) => {
+      const cls = classes?.find(c => c.id === cid);
+      if (!cls) return;
+      const gClassId = cls.g_class_id;
+      const subs = (allClassSubjects || [])
+        .filter(s => s?.class_info?.id === gClassId && subIds.has(s.id));
+      map.push({ cls, subjects: subs });
+    });
+
+    // edge case: subjects whose class not found in class_assigns
+    const orphanSubs = (assignment.subject_assigns || []).filter(sid => {
+      const sub = (allClassSubjects || []).find(x => x.id === sid);
+      if (!sub?.class_info?.id) return false;
+      const owner = classes?.find(c => c.g_class_id === sub.class_info.id);
+      return owner && !classIds.includes(owner.id);
+    });
+    if (orphanSubs.length) {
+      // group by their owner class anyway
+      const byOwner = {};
+      orphanSubs.forEach(sid => {
+        const sub = (allClassSubjects || []).find(x => x.id === sid);
+        const owner = classes?.find(c => c.g_class_id === sub.class_info.id);
+        if (!owner) return;
+        if (!byOwner[owner.id]) byOwner[owner.id] = { cls: owner, subjects: [] };
+        byOwner[owner.id].subjects.push(sub);
+      });
+      map.push(...Object.values(byOwner));
+    }
+
+    return map;
+  }, [classes, allClassSubjects]);
+
   const isLoading = teachersLoading || classesLoading || subjectsLoading || yearsLoading || permissionsLoading;
   const isSubmitDisabled = createLoading || updateLoading || assignmentsLoading || (!hasAddPermission && !hasChangePermission);
 
@@ -302,6 +340,8 @@ const TeacherSubjectAssign = () => {
       <style>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fadeIn { animation: fadeIn .35s ease-out both; }
+        .chip { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:00px; font-size:12px; border:1px solid #DB9E30; background: rgba(219,158,48,.14); color:#441a05;}
+        .klass { border:1px solid rgba(157,144,135,.6); background: rgba(219,158,48,.14); background: rgba(255,255,255,.75); border-radius:00px; padding:12px;}
       `}</style>
 
       {/* Form */}
@@ -487,7 +527,7 @@ const TeacherSubjectAssign = () => {
                   <span>প্রক্রিয়াকরণ...</span>
                 </span>
               ) : (
-                <span>সংরক্ষণ / আপডেট (Merge)</span>
+                <span>সংরক্ষণ</span>
               )}
             </button>
           </form>
@@ -495,7 +535,7 @@ const TeacherSubjectAssign = () => {
       )}
 
       {/* Assignment Table + Filters */}
-      <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
+      <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[65vh] py-2 px-6">
         <div className="flex flex-wrap items-end justify-between gap-3 p-4 border-b border-[#441a05]/20">
           <h3 className="text-lg font-semibold text-[#441a05]">বর্তমান অ্যাসাইনমেন্ট</h3>
 
@@ -544,7 +584,7 @@ const TeacherSubjectAssign = () => {
 
         {assignmentsLoading ? (
           <p className="text-[#441a05]/70 p-4 animate-fadeIn">অ্যাসাইনমেন্ট লোড হচ্ছে...</p>
-        ) : (teacherAssignments || []).length === 0 ? (
+        ) : (tableFilteredAssignments || []).length === 0 ? (
           <p className="text-[#441a05]/70 p-4 animate-fadeIn">কোনো অ্যাসাইনমেন্ট পাওয়া যায়নি।</p>
         ) : (
           <div className="overflow-x-auto">
@@ -552,36 +592,48 @@ const TeacherSubjectAssign = () => {
               <thead className="bg-[#441a05]/5">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">শিক্ষক</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ক্লাস</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">বিষয়</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">ক্লাস ও বিষয়সমূহ</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#441a05]/70 uppercase tracking-wider">একাডেমিক বছর</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#441a05]/20">
-                {tableFilteredAssignments.map((assignment, idx) => (
-                  <tr key={assignment.id} className="bg-[#441a05]/5 animate-fadeIn" style={{ animationDelay: `${idx * 0.02}s` }}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                      {teachers?.find(t => t.id === assignment.teacher_id)?.name || 'অজানা'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-normal text-sm font-medium text-[#441a05]">
-                      {assignment.class_assigns
-                        ?.map(id => classes?.find(c => c.id === id))
-                        .filter(Boolean)
-                        .map(c => classLabel(c))
-                        .join(', ') || 'কোনো ক্লাস নেই'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-normal text-sm font-medium text-[#441a05]">
-                      {assignment.subject_assigns
-                        ?.map(id => allClassSubjects?.find(s => s.id === id))
-                        .filter(Boolean)
-                        .map(s => s.name)
-                        .join(', ') || 'কোনো বিষয় নেই'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                      {academicYears?.find(y => y.id === assignment.academic_year)?.name || 'অজানা'}
-                    </td>
-                  </tr>
-                ))}
+                {tableFilteredAssignments.map((assignment, idx) => {
+                  const tName = teachers?.find(t => t.id === assignment.teacher_id)?.name || 'অজানা';
+                  const year = academicYears?.find(y => y.id === assignment.academic_year)?.name || 'অজানা';
+                  const perClass = subjectsByClassForAssignment(assignment); // [{cls, subjects:[]}, ...]
+                  return (
+                    <tr key={assignment.id} className="bg-[#441a05]/5 animate-fadeIn" style={{ animationDelay: `${idx * 0.02}s` }}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                        {tName}
+                      </td>
+                      <td className="px-6 py-4 whitespace-normal text-sm text-[#441a05]">
+                        {perClass.length === 0 ? (
+                          <span className="text-[#441a05]/70">ডেটা পাওয়া যায়নি</span>
+                        ) : (
+                          <div className="grid gap-3 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                            {perClass.map(({ cls, subjects }) => (
+                              <div key={`${assignment.id}-${cls.id}`} className="klass">
+                                <div className="font-semibold text-[#441a05] mb-2">{classLabel(cls)}</div>
+                                {subjects.length === 0 ? (
+                                  <div className="text-xs text-[#441a05]/60">কোনো বিষয় নেই</div>
+                                ) : (
+                                  <div className="flex flex-wrap gap-2">
+                                    {subjects.map(s => (
+                                      <span key={s.id} className="chip">{s.name}</span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                        {year}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

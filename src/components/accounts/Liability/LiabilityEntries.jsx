@@ -253,7 +253,7 @@ const LiabilityEntries = () => {
                 required
                 aria-describedby={createError || updateError ? 'liability-error' : undefined}
               >
-                <option value="" hidden>দায়বদ্ধতা হেড নির্বাচন করুন</option>
+                <option value=""  hidden disabled>দায়বদ্ধতা হেড নির্বাচন করুন</option>
                 {liabilityHeads.map((head) => (
                   <option key={head.id} value={head.id}>
                     {head.name || `হেড ${head.id}`}

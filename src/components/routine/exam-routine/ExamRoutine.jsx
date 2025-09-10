@@ -9,12 +9,14 @@ import {
   useCreateExamSchedulesMutation,
   useGetExamSchedulesQuery,
 } from "../../../redux/features/api/routines/examRoutineApi";
-import { useGetClassSubjectsByClassIdQuery } from "../../../redux/features/api/class-subjects/classSubjectsApi";
+// Server-side class wise filter alternative (kept for future):
+// import { useGetClassSubjectsByClassIdQuery } from "../../../redux/features/api/class-subjects/classSubjectsApi";
 import selectStyles from "../../../utilitis/selectStyles";
 import { useGetStudentClassApIQuery } from "../../../redux/features/api/student/studentClassApi";
-import ExamRoutineTable from "./ExamRoutineTable"; // Import the new table component
+import ExamRoutineTable from "./ExamRoutineTable";
+import { useGetSubjectConfigsQuery } from "../../../redux/features/api/subject-assign/subjectConfigsApi";
 
-// Academic time slots for better user experience
+// Academic time slots
 const timeSlots = [
   { value: "08:00", label: "সকাল ৮:০০ (8:00 AM)" },
   { value: "08:30", label: "সকাল ৮:৩০ (8:30 AM)" },
@@ -48,7 +50,7 @@ const durationOptions = [
   { value: 240, label: "৪ ঘন্টা (4 Hours)" },
 ];
 
-// Custom CSS for animations and styling
+// Custom CSS
 const customStyles = `
   @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -81,27 +83,43 @@ const ExamRoutine = () => {
     isLoading: isExamLoading,
     error: examError,
   } = useGetExamApiQuery();
-  
+
   const {
     data: academicYears = [],
     isLoading: isYearLoading,
     error: yearError,
   } = useGetAcademicYearApiQuery();
-  
+
   const {
     data: classes = [],
     isLoading: isClassLoading,
     error: classError,
   } = useGetStudentClassApIQuery();
-  console.log("classes", classes)
+console.log("classes",classes)
+  // Option A (current): get all configs by class id (API already class-based)
   const {
     data: subjects = [],
     isLoading: isSubjectsLoading,
     error: subjectsError,
-  } = useGetClassSubjectsByClassIdQuery(activeTab || "", {
+  } = useGetSubjectConfigsQuery(activeTab || "", {
     skip: !activeTab,
   });
-  
+
+  // Option B (alternative): server-side class-wise subjects
+  // const { data: subjects = [], isLoading: isSubjectsLoading, error: subjectsError } =
+  //   useGetClassSubjectsByClassIdQuery(activeTab || "", { skip: !activeTab });
+
+  // ---- NEW: Client-side safeguard filter (shows only subjects for the selected class) ----
+  const filteredSubjects = useMemo(() => {
+    if (!Array.isArray(subjects)) return [];
+    return subjects.filter((s) => {
+      // handle different structures gracefully
+      const clsId = s.class_id ?? s.class?.id ?? s.student_class_id;
+      return clsId === activeTab;
+    });
+  }, [subjects, activeTab]);
+console.log("activeTab",activeTab)
+console.log("subjects",subjects)
   const {
     data: existingSchedulesData = [],
     isLoading: isScheduleLoading,
@@ -118,7 +136,7 @@ const ExamRoutine = () => {
     }
   );
 
-  // Fetch all exam schedules for the table component
+  // For table component (all classes for the selected exam+year)
   const {
     data: allExamSchedules = [],
     isLoading: isAllSchedulesLoading,
@@ -132,7 +150,7 @@ const ExamRoutine = () => {
       skip: !selectedExam || !selectedYear,
     }
   );
-  
+
   const [
     createExamSchedules,
     { isLoading: isCreateLoading, error: createError },
@@ -146,71 +164,71 @@ const ExamRoutine = () => {
     [existingSchedulesData]
   );
 
-  // Options for react-select
+  // react-select options
   const examOptions = useMemo(
     () => exams.map((exam) => ({ value: exam.id, label: exam.name })),
     [exams]
   );
-  
+
   const yearOptions = useMemo(
     () => academicYears.map((year) => ({ value: year.id, label: year.name })),
     [academicYears]
   );
 
-  // Function to calculate end time based on start time and duration
+  // Helpers
   const calculateEndTime = (startTime, duration) => {
     if (!startTime || !duration) return "";
     const [hours, minutes] = startTime.split(":").map(Number);
     const totalMinutes = hours * 60 + minutes + duration;
     const endHours = Math.floor(totalMinutes / 60) % 24;
     const endMinutes = totalMinutes % 60;
-    return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+    return `${endHours.toString().padStart(2, "0")}:${endMinutes
+      .toString()
+      .padStart(2, "0")}`;
   };
 
-  // Function to format time for display
   const formatTimeForDisplay = (time) => {
     if (!time) return "";
     const [hours, minutes] = time.split(":").map(Number);
     const period = hours >= 12 ? "PM" : "AM";
     const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
-    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+    return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
   };
 
-  // Refresh callback for the table component
   const handleTableRefresh = () => {
-    setRefreshTrigger(prev => prev + 1);
+    setRefreshTrigger((prev) => prev + 1);
     refetchSchedules();
     refetchAllSchedules();
   };
 
-  // Initialize activeTab
+  // Initialize activeTab to first class
   useEffect(() => {
     if (classes.length > 0 && !activeTab) {
-      setActiveTab(classes[0].student_class.id);
+      setActiveTab(classes[0].id);
     }
   }, [classes, activeTab]);
 
-  // Initialize schedules and submittedRoutines
+  // Initialize schedules for filtered subjects + merge existing schedules
   useEffect(() => {
-    if (activeTab && subjects.length > 0) {
+    if (activeTab && filteredSubjects.length > 0) {
       setSchedules((prev) => {
-        const currentSchedules = prev[activeTab] || {};
-        const newSchedules = subjects.reduce(
-          (acc, subject) => ({
+        const current = prev[activeTab] || {};
+        const next = filteredSubjects.reduce(
+          (acc, s) => ({
             ...acc,
-            [subject.id]: currentSchedules[subject.id] || {},
+            [s.id]: current[s.id] || {},
           }),
           {}
         );
-        if (JSON.stringify(currentSchedules) !== JSON.stringify(newSchedules)) {
-          return { ...prev, [activeTab]: newSchedules };
+        if (JSON.stringify(current) !== JSON.stringify(next)) {
+          return { ...prev, [activeTab]: next };
         }
         return prev;
       });
     }
 
     if (existingSchedules.length > 0) {
-      const newSchedules = existingSchedules.reduce(
+      const mapped = existingSchedules.reduce(
         (acc, schedule) => ({
           ...acc,
           [schedule.subject_id]: {
@@ -218,35 +236,32 @@ const ExamRoutine = () => {
             exam_date: schedule.exam_date,
             start_time: schedule.start_time,
             end_time: schedule.end_time,
+            duration: schedule.duration ?? undefined, // if backend provides
           },
         }),
         {}
       );
 
       setSchedules((prev) => {
-        const currentSchedules = prev[activeTab] || {};
-        if (JSON.stringify(currentSchedules) !== JSON.stringify(newSchedules)) {
-          return {
-            ...prev,
-            [activeTab]: { ...currentSchedules, ...newSchedules },
-          };
+        const current = prev[activeTab] || {};
+        const merged = { ...current, ...mapped };
+        if (JSON.stringify(current) !== JSON.stringify(merged)) {
+          return { ...prev, [activeTab]: merged };
         }
         return prev;
       });
 
       setSubmittedRoutines((prev) => {
-        const currentRoutines = prev[activeTab] || [];
-        if (
-          JSON.stringify(currentRoutines) !== JSON.stringify(existingSchedules)
-        ) {
+        const current = prev[activeTab] || [];
+        if (JSON.stringify(current) !== JSON.stringify(existingSchedules)) {
           return { ...prev, [activeTab]: existingSchedules };
         }
         return prev;
       });
     }
-  }, [activeTab, subjects, existingSchedules]);
+  }, [activeTab, filteredSubjects, existingSchedules]);
 
-  // Handle errors
+  // Error toasts
   useEffect(() => {
     if (examError) toast.error("পরীক্ষার তালিকা লোড করতে ব্যর্থ হয়েছে!");
     if (yearError) toast.error("শিক্ষাবর্ষের তালিকা লোড করতে ব্যর্থ হয়েছে!");
@@ -255,16 +270,9 @@ const ExamRoutine = () => {
     if (scheduleError) toast.error("পরীক্ষার রুটিন লোড করতে ব্যর্থ হয়েছে!");
     if (createError)
       toast.error(`রুটিন তৈরিতে ত্রুটি: ${createError.status || "অজানা"}`);
-  }, [
-    examError,
-    yearError,
-    classError,
-    subjectsError,
-    scheduleError,
-    createError,
-  ]);
+  }, [examError, yearError, classError, subjectsError, scheduleError, createError]);
 
-  // Handle schedule input changes
+  // Schedule state change handlers
   const handleScheduleChange = (classId, subjectId, field, value) => {
     setSchedules((prev) => ({
       ...prev,
@@ -278,7 +286,6 @@ const ExamRoutine = () => {
     }));
   };
 
-  // Handle start time and duration change
   const handleTimeChange = (classId, subjectId, startTime, duration) => {
     const endTime = calculateEndTime(startTime, duration);
     setSchedules((prev) => ({
@@ -289,19 +296,19 @@ const ExamRoutine = () => {
           ...(prev[classId]?.[subjectId] || {}),
           start_time: startTime,
           end_time: endTime,
+          duration,
         },
       },
     }));
   };
 
-  // Handle date picker click
   const handleDateClick = (e) => {
     if (e.target.type === "date") {
       e.target.showPicker();
     }
   };
 
-  // Handle submit routine
+  // Submit
   const handleSubmit = async () => {
     if (!selectedExam) {
       toast.error("অনুগ্রহ করে একটি পরীক্ষা নির্বাচন করুন!");
@@ -315,7 +322,7 @@ const ExamRoutine = () => {
     const activeClassSchedules = schedules[activeTab] || {};
     const validSchedules = Object.entries(activeClassSchedules)
       .filter(
-        ([_, schedule]) =>
+        ([, schedule]) =>
           schedule.exam_date && schedule.start_time && schedule.end_time
       )
       .map(([subjectId, schedule]) => ({
@@ -323,6 +330,7 @@ const ExamRoutine = () => {
         exam_date: schedule.exam_date,
         start_time: schedule.start_time,
         end_time: schedule.end_time,
+        duration: schedule.duration ?? 120,
         academic_year: selectedYear.value,
         exam_id: selectedExam.value,
       }));
@@ -340,7 +348,6 @@ const ExamRoutine = () => {
     setIsModalOpen(true);
   };
 
-  // Confirm submit routine
   const confirmSubmitRoutine = async () => {
     try {
       await createExamSchedules(modalData).unwrap();
@@ -349,8 +356,6 @@ const ExamRoutine = () => {
         [activeTab]: [...(prev[activeTab] || []), ...modalData.schedules],
       }));
       toast.success("পরীক্ষার রুটিন সফলভাবে সাবমিট হয়েছে!");
-      
-      // Refresh data after successful submission
       handleTableRefresh();
     } catch (error) {
       toast.error("পরীক্ষার রুটিন সাবমিট করতে ব্যর্থ হয়েছে।");
@@ -360,7 +365,6 @@ const ExamRoutine = () => {
     }
   };
 
-  // Loading state
   const isLoading =
     isExamLoading ||
     isYearLoading ||
@@ -372,6 +376,7 @@ const ExamRoutine = () => {
   return (
     <div className="py-8 w-full relative">
       <style>{customStyles}</style>
+      <Toaster />
       <div className="">
         {/* Header */}
         <div className="flex items-center space-x-4 mb-6 animate-fadeIn ml-2">
@@ -446,9 +451,9 @@ const ExamRoutine = () => {
               {classes.map((cls, index) => (
                 <button
                   key={cls.student_class.id}
-                  onClick={() => setActiveTab(cls.student_class.id)}
+                  onClick={() => setActiveTab(cls.id)}
                   className={`px-6 py-3 rounded-lg font-semibold text-[#441a05] transition-all duration-300 animate-scaleIn ${
-                    activeTab === cls.student_class.id
+                    activeTab === cls.id
                       ? "bg-[#DB9E30] text-white"
                       : "bg-white/10 hover:bg-[#441a05]/10"
                   }`}
@@ -463,16 +468,24 @@ const ExamRoutine = () => {
 
             {/* Schedule Section */}
             {activeTab &&
-              classes.find((cls) => cls.student_class.id === activeTab) && (
+              classes.find((cls) => cls.id === activeTab) && (
                 <div className="grid grid-cols-1 gap-8">
                   {/* Add/Edit Schedule */}
                   <div>
                     <h3 className="text-xl font-semibold text-[#441a05] mb-6 animate-fadeIn">
                       পরীক্ষার সময়সূচি যোগ/সম্পাদনা করুন
                     </h3>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {subjects.map((subject, index) => {
-                        const schedule = schedules[activeTab]?.[subject.id] || {};
+                      {filteredSubjects.map((subject, index) => {
+                        const schedule =
+                          schedules[activeTab]?.[subject.id] || {};
+                        const subjectTitle =
+                          subject?.combined_subject_name ||
+                          subject?.subject_name ||
+                          subject?.name ||
+                          `Subject ${subject.id}`;
+
                         return (
                           <div
                             key={subject.id}
@@ -480,13 +493,15 @@ const ExamRoutine = () => {
                             style={{ animationDelay: `${index * 0.1}s` }}
                           >
                             <h4 className="font-semibold text-lg text-[#441a05] mb-4">
-                              {subject.name}
+                              {subjectTitle}
                             </h4>
+
                             <div className="space-y-4">
-                              {/* Date Selection */}
+                              {/* Date */}
                               <div className="relative">
                                 <label className="text-sm font-medium text-[#441a05] mb-1 block">
-                                  পরীক্ষার তারিখ <span className="text-red-500">*</span>
+                                  পরীক্ষার তারিখ{" "}
+                                  <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                   type="date"
@@ -502,23 +517,37 @@ const ExamRoutine = () => {
                                   onClick={handleDateClick}
                                   className="w-full p-3 bg-transparent text-[#441a05] border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#441a05] focus:ring-2 focus:ring-[#441a05] transition-all duration-300"
                                   disabled={isLoading}
-                                  aria-label={`তারিখ নির্বাচন: ${subject.name}`}
-                                  title={`তারিখ নির্বাচন করুন: ${subject.name} / Select date for ${subject.name}`}
+                                  aria-label={`তারিখ নির্বাচন: ${subjectTitle}`}
+                                  title={`তারিখ নির্বাচন করুন: ${subjectTitle}`}
                                 />
                               </div>
 
-                              {/* Start Time Selection */}
+                              {/* Start Time */}
                               <div>
                                 <label className="text-sm font-medium text-[#441a05] mb-1 block">
-                                  শুরুর সময় <span className="text-red-500">*</span>
+                                  শুরুর সময়{" "}
+                                  <span className="text-red-500">*</span>
                                 </label>
                                 <Select
                                   options={timeSlots}
-                                  value={timeSlots.find(slot => slot.value === schedule.start_time) || null}
+                                  value={
+                                    timeSlots.find(
+                                      (slot) =>
+                                        slot.value === schedule.start_time
+                                    ) || null
+                                  }
                                   onChange={(selected) => {
-                                    const startTime = selected ? selected.value : "";
-                                    const currentDuration = schedule.duration || 120; // Default 2 hours
-                                    handleTimeChange(activeTab, subject.id, startTime, currentDuration);
+                                    const startTime = selected
+                                      ? selected.value
+                                      : "";
+                                    const currentDuration =
+                                      schedule.duration || 120; // default 2h
+                                    handleTimeChange(
+                                      activeTab,
+                                      subject.id,
+                                      startTime,
+                                      currentDuration
+                                    );
                                   }}
                                   placeholder="শুরুর সময় নির্বাচন করুন"
                                   className="react-select-container"
@@ -531,20 +560,41 @@ const ExamRoutine = () => {
                                 />
                               </div>
 
-                              {/* Duration Selection */}
+                              {/* Duration */}
                               <div>
                                 <label className="text-sm font-medium text-[#441a05] mb-1 block">
-                                  পরীক্ষার সময়কাল <span className="text-red-500">*</span>
+                                  পরীক্ষার সময়কাল{" "}
+                                  <span className="text-red-500">*</span>
                                 </label>
                                 <Select
                                   options={durationOptions}
-                                  value={durationOptions.find(opt => opt.value === schedule.duration) || durationOptions[1]} // Default 2 hours
+                                  value={
+                                    durationOptions.find(
+                                      (opt) => opt.value === schedule.duration
+                                    ) ||
+                                    durationOptions.find(
+                                      (opt) => opt.value === 120
+                                    )
+                                  } // default 120
                                   onChange={(selected) => {
-                                    const duration = selected ? selected.value : 120;
-                                    const currentStartTime = schedule.start_time || "";
-                                    handleScheduleChange(activeTab, subject.id, "duration", duration);
+                                    const duration = selected
+                                      ? selected.value
+                                      : 120;
+                                    const currentStartTime =
+                                      schedule.start_time || "";
+                                    handleScheduleChange(
+                                      activeTab,
+                                      subject.id,
+                                      "duration",
+                                      duration
+                                    );
                                     if (currentStartTime) {
-                                      handleTimeChange(activeTab, subject.id, currentStartTime, duration);
+                                      handleTimeChange(
+                                        activeTab,
+                                        subject.id,
+                                        currentStartTime,
+                                        duration
+                                      );
                                     }
                                   }}
                                   placeholder="সময়কাল নির্বাচন করুন"
@@ -557,7 +607,7 @@ const ExamRoutine = () => {
                                 />
                               </div>
 
-                              {/* End Time Display */}
+                              {/* End Time (readonly display) */}
                               {schedule.end_time && (
                                 <div>
                                   <label className="text-sm font-medium text-[#441a05] mb-1 block">
@@ -573,6 +623,7 @@ const ExamRoutine = () => {
                         );
                       })}
                     </div>
+
                     <div className="flex items-end">
                       <button
                         onClick={handleSubmit}
@@ -600,7 +651,7 @@ const ExamRoutine = () => {
                     </div>
                   </div>
 
-                  {/* Exam Routine Table Component */}
+                  {/* Exam Routine Table */}
                   <ExamRoutineTable
                     allExamSchedules={allExamSchedules}
                     classes={classes}
@@ -640,20 +691,32 @@ const ExamRoutine = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {modalData?.schedules?.map((schedule, index) => (
-                      <tr key={index} className="border-b border-white/20">
-                        <td className="p-2 text-[#441a05]">
-                          {subjects.find((s) => s.id === schedule.subject_id)
-                            ?.name || schedule.subject_id}
-                        </td>
-                        <td className="p-2 text-[#441a05]">
-                          {schedule.exam_date}
-                        </td>
-                        <td className="p-2 text-[#441a05]">
-                          {`${formatTimeForDisplay(schedule.start_time)} - ${formatTimeForDisplay(schedule.end_time)}`}
-                        </td>
-                      </tr>
-                    ))}
+                    {modalData?.schedules?.map((schedule, index) => {
+                      const s =
+                        filteredSubjects.find(
+                          (x) => x.id === schedule.subject_id
+                        ) ||
+                        subjects.find((x) => x.id === schedule.subject_id);
+                      const sTitle =
+                        s?.combined_subject_name ||
+                        s?.subject_name ||
+                        s?.name ||
+                        schedule.subject_id;
+
+                      return (
+                        <tr key={index} className="border-b border-white/20">
+                          <td className="p-2 text-[#441a05]">{sTitle}</td>
+                          <td className="p-2 text-[#441a05]">
+                            {schedule.exam_date}
+                          </td>
+                          <td className="p-2 text-[#441a05]">
+                            {`${formatTimeForDisplay(
+                              schedule.start_time
+                            )} - ${formatTimeForDisplay(schedule.end_time)}`}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

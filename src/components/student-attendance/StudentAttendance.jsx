@@ -138,7 +138,7 @@ const StudentAttendance = () => {
     data: subjectsData,
     isLoading: isSubjectsLoading,
     error: subjectsError,
-  } = useGetClassSubjectsByClassIdQuery(getClassId?.class_id, {
+  } = useGetClassSubjectsByClassIdQuery(getClassId?.g_class_id, {
     skip: !selectedClass,
   });
   const {
