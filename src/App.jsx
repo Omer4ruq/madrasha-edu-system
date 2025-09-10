@@ -114,8 +114,8 @@ export default function App() {
         <div className={`relative text-textBlack flex flex-col justify-between min-h-screen transition-all duration-500 ease-in-out p-3 ml-0 xl:ml-72 ${showSidebar && "max-xl:opacity-65"}`}>
           <div className="fixed inset-0 bg-cover bg-center z-0" style={{
 
-            //  backgroundImage: `url("https://shaha.ancorathemes.com/wp-content/uploads/2017/06/bg-16.jpg?id=371")` 
-             backgroundImage: `url(${bgImg})` 
+             backgroundImage: `url("https://shaha.ancorathemes.com/wp-content/uploads/2017/06/bg-16.jpg?id=371")` 
+            //  backgroundImage: `url(${bgImg})` 
              
              }}></div>
           <div className="relative z-10 w-full">

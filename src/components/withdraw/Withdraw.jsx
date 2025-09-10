@@ -234,7 +234,7 @@ const Withdraw = () => {
                 required
                 aria-describedby={createError || updateError ? 'withdraw-error' : undefined}
               >
-                <option value="">একটি ফান্ড নির্বাচন করুন</option>
+                <option value=""  hidden disabled>একটি ফান্ড নির্বাচন করুন</option>
                 {funds.map((fund) => (
                   <option key={fund.id} value={fund.id}>
                     {fund.name || `ফান্ড ${fund.id}`}
@@ -306,7 +306,7 @@ const Withdraw = () => {
                 required
                 aria-describedby={createError || updateError ? 'withdraw-error' : undefined}
               >
-                <option value="">পদ্ধতি নির্বাচন করুন</option>
+                <option value="" hidden disabled>পদ্ধতি নির্বাচন করুন</option>
                 <option value="cash">নগদ</option>
                 <option value="bank_transfer">ব্যাংক ট্রান্সফার</option>
                 <option value="check">চেক</option>

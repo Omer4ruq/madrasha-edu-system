@@ -334,7 +334,7 @@ const SubjectMarks = () => {
               aria-label="পরীক্ষা নির্বাচন করুন"
               title="পরীক্ষা নির্বাচন করুন / Select exam"
             >
-              <option value="">পরীক্ষা নির্বাচন করুন</option>
+              <option value="" hidden disabled>পরীক্ষা নির্বাচন করুন</option>
               {exams?.map((exam) => (
                 <option key={exam.id} value={exam.id}>
                   {exam.name}
@@ -351,7 +351,7 @@ const SubjectMarks = () => {
               aria-label="শিক্ষাবর্ষ নির্বাচন করুন"
               title="শিক্ষাবর্ষ নির্বাচন করুন / Select academic year"
             >
-              <option value="">শিক্ষাবর্ষ নির্বাচন করুন</option>
+              <option value="" hidden disabled>শিক্ষাবর্ষ নির্বাচন করুন</option>
               {academicYears?.map((year) => (
                 <option key={year.id} value={year.id}>
                   {year.name}
@@ -374,7 +374,7 @@ const SubjectMarks = () => {
               aria-label="ক্লাস নির্বাচন করুন"
               title="ক্লাস নির্বাচন করুন / Select class"
             >
-              <option value="">ক্লাস নির্বাচন করুন</option>
+              <option value="" hidden disabled>ক্লাস নির্বাচন করুন</option>
               {classes?.map((cls) => (
                 <option key={cls.id} value={cls.id}>
                   {cls.class_name} - {cls.section_name} ({cls.shift_name})
@@ -392,7 +392,7 @@ const SubjectMarks = () => {
               aria-label="বিষয় নির্বাচন করুন"
               title="বিষয় নির্বাচন করুন / Select subject"
             >
-              <option value="">বিষয় নির্বাচন করুন</option>
+              <option value="" hidden disabled>বিষয় নির্বাচন করুন</option>
               {subjectConfigs?.map((config) => (
                 <option key={config.id} value={config.id}>
                   {config.combined_subject_name}

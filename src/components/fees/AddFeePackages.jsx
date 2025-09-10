@@ -347,7 +347,7 @@ const AddFeePackages = () => {
                 required
                 aria-describedby={errors.fees_head_id ? "fees_head_id-error" : undefined}
               >
-                <option value="" disabled>ফি প্রকার নির্বাচন করুন</option>
+                <option value=""  hidden disabled>ফি প্রকার নির্বাচন করুন</option>
                 {feeHeads?.map((head) => (
                   <option key={head.id} value={head.id}>{head.name}</option>
                 ))}
@@ -366,7 +366,7 @@ const AddFeePackages = () => {
                 required
                 aria-describedby={errors.student_class ? "student_class-error" : undefined}
               >
-                <option value="" disabled>শ্রেণি নির্বাচন করুন</option>
+                <option value=""  hidden disabled>শ্রেণি নির্বাচন করুন</option>
                 {studentClasses?.map((cls) => (
                   <option key={cls.id} value={cls.id}>{cls.student_class.name}</option>
                 ))}
@@ -400,7 +400,7 @@ const AddFeePackages = () => {
                 required
                 aria-describedby={errors.academic_year ? "academic_year-error" : undefined}
               >
-                <option value="" disabled>শিক্ষাবর্ষ নির্বাচন করুন</option>
+                <option value=""  hidden disabled>শিক্ষাবর্ষ নির্বাচন করুন</option>
                 {academicYears.map((year) => (
                   <option key={year.id} value={year.id}>{year.name}</option>
                 ))}
