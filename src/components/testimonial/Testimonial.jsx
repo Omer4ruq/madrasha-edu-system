@@ -147,8 +147,8 @@ const Testimonial = () => {
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 250mm;
-            height: 180mm;
+            width: 150mm;
+            height: 150mm;
             object-fit: contain;
             opacity: 0.2;
             z-index: 1;
@@ -345,7 +345,7 @@ const Testimonial = () => {
         <img
           src={instituteData?.institute_logo || "/logo.png"}
           alt="Logo"
-          className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-[250mm] h-[180mm] object-contain opacity-20"
+          className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-[150mm] h-[150mm] object-contain opacity-20"
         />
         <div className="text-center mt-10">
           <h1
