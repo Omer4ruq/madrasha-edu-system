@@ -23,7 +23,7 @@ const AddNotice = () => {
     date: "",
     notice_description: "",
     expire_date: "",
-    file_attached: null,
+    file_attached: "",
     academic_year: "",
     existing_file: null,
   });

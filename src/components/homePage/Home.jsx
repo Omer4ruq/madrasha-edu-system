@@ -38,6 +38,7 @@ export default function Home() {
 
       {/* Leave Info and SMS Info */}
       <LeaveAndSmsInfo />
+      <Events/>
 
       {/* payslip and routine */}
       {/* <div className="grid gap-4 grid-cols-1 md:grid-cols-2">

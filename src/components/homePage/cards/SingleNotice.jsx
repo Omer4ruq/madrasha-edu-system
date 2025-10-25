@@ -23,6 +23,9 @@ export default function SingleNotice({ notice }) {
         {notice.date}
       </p>
       <p className="text-xs font-medium">{notice.content}</p>
+      {notice.description && (
+        <p className="text-xs text-gray-600 mt-1">{notice.description}</p>
+      )}
     </div>
   );
 }

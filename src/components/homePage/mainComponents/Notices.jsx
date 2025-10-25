@@ -2,14 +2,14 @@ import React from 'react';
 import SingleNotice from '../cards/SingleNotice';
 import dayjs from 'dayjs'; // install if not already: npm i dayjs
 import { useGetEventsQuery } from '../../../redux/features/api/event/eventApi';
+import { Link } from 'react-router-dom';
 
 export default function Notices() {
   const { data: events = [], isLoading, isError } = useGetEventsQuery();
 
-  // সর্বশেষ ৩টি ইভেন্ট সিলেক্ট করো (তারিখ অনুসারে descending)
   const sortedEvents = [...events]
     .sort((a, b) => new Date(b.start) - new Date(a.start))
-    .slice(0, 3);
+    .slice(0, 4);
 
   const convertToBanglaDate = (dateStr) => {
     return dayjs(dateStr).format('D MMMM, YYYY').replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[d]);
@@ -41,15 +41,14 @@ export default function Notices() {
 
       {/* Component heading */}
       <h3 className="bg-[#DB9E30] text-[#441a05] text-xl p-4 leading-[33px] rounded-t-2xl shadow-md font-bold">
-        নোটিশ ও ইভেন্ট
+        ইভেন্ট
       </h3>
 
       <div className="divide-y-1 divide-[#9d9087] p-4 flex gap-5">
         {isLoading && <p className="text-[#441a05]">লোড হচ্ছে...</p>}
         {isError && <p className="text-red-500">ডেটা আনতে সমস্যা হয়েছে।</p>}
 
-        <div className='w-[50%]'>
-          <h1 className='text-[#441a05]/60 pl-1.5 font-semibold'>নোটিশ</h1>
+        <div className=''>
           {!isLoading &&
           sortedEvents.map((event, index) => (
             <div
@@ -68,37 +67,17 @@ export default function Notices() {
             </div>
           ))}
         </div>
-        <div className='w-[50%]'>
-          <h1 className='text-[#441a05]/60 pl-1.5 font-semibold'>ইভেন্ট</h1>
-          {/* {!isLoading &&
-          sortedEvents.map((event, index) => (
-            <div
-              key={event.id}
-              className="animate-fadeIn"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <SingleNotice
-                notice={{
-                  id: event.id,
-                  date: convertToBanglaDate(event.start),
-                  type: 'info',
-                  content: event.title,
-                }}
-              />
-            </div>
-          ))} */}
-        </div>
       </div>
 
       {/* View more button */}
-      {/* <div className="flex justify-end p-4">
-        <button
+      <div className="flex justify-end p-4">
+        <Link to='/talimat/event'
           className="bg-[#DB9E30] text-[#441a05] text-sm font-medium shadow py-2 px-4 rounded-lg absolute bottom-3 right-3 transition-all duration-300 hover:text-white btn-glow animate-scaleIn"
           title="সব দেখুন / View All"
         >
           সব দেখুন
-        </button>
-      </div> */}
+        </Link>
+      </div>
     </div>
   );
 }
