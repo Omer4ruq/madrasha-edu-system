@@ -76,8 +76,7 @@ const AddNotice = () => {
       !newNotice.date ||
       !newNotice.notice_description.trim() ||
       !newNotice.expire_date ||
-      !newNotice.academic_year ||
-      !newNotice.file_attached
+      !newNotice.academic_year
     ) {
       toast.error("অনুগ্রহ করে সকল ক্ষেত্র পূরণ করুন");
       return;
@@ -124,7 +123,7 @@ const AddNotice = () => {
       date: notice.date,
       notice_description: notice.notice_description,
       expire_date: notice.expire_date,
-      file_attached: null,
+      file_attached: "",
       academic_year: notice.academic_year.toString(),
       existing_file: notice.file_attached,
     });
@@ -217,7 +216,7 @@ const AddNotice = () => {
           expire_date: "",
           file_attached: "",
           academic_year: "",
-          existing_file: null,
+          existing_file: "",
         });
       } else if (modalAction === "update") {
         if (!hasChangePermission) {
@@ -237,7 +236,7 @@ const AddNotice = () => {
           expire_date: "",
           file_attached: "",
           academic_year: "",
-          existing_file: null,
+          existing_file: "",
         });
       } else if (modalAction === "delete") {
         if (!hasDeletePermission) {

@@ -1,7 +1,6 @@
 import React, { useState, useRef } from "react";
 import Select from "react-select";
-import { useReactToPrint } from "react-to-print";
-import { IoPrint, IoDocumentText, IoCheckbox, IoSquareOutline, IoSearch } from "react-icons/io5";
+import { IoPrint, IoCheckbox, IoSquareOutline, IoSearch } from "react-icons/io5";
 import { FaSpinner, FaUser, FaDownload } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useGetclassConfigApiQuery } from "../../redux/features/api/class/classConfigApi";
@@ -9,11 +8,11 @@ import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-ye
 import { useGetExamApiQuery } from "../../redux/features/api/exam/examApi";
 import { useGetInstituteLatestQuery } from "../../redux/features/api/institute/instituteLatestApi";
 import selectStyles from "../../utilitis/selectStyles";
-import { useGetClassExamStudentsQuery } from "../../redux/features/api/class-exam-students/classExamStudentApi ";
 
 // Import default background images
 import defaultBgImage from '../../../public/images/admit-card-bg.jpg';
 import defaultBackImage from '../../../public/images/admit-card-back-bg.jpg';
+import { useGetClassExamStudentsQuery } from "../../redux/features/api/class-exam-students/classExamStudentApi ";
 
 const AdmitCard = () => {
   // State for filter selections and PDF generation
@@ -23,9 +22,20 @@ const AdmitCard = () => {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [backgroundImage, setBackgroundImage] = useState(defaultBgImage);
   const [isBackPrint, setIsBackPrint] = useState(false);
-  const [selectedStudents, setSelectedStudents] = useState(new Set()); // For individual selection
+  const [selectedStudents, setSelectedStudents] = useState(new Set());
   const [selectAll, setSelectAll] = useState(false);
-  const [searchTerm, setSearchTerm] = useState(""); // New search state
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const formatBanglaDate = (date) => {
+  const months = ['জানুয়ারী', 'ফেব্রুয়ারী', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 
+                  'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+  
+  const day = date.getDate().toLocaleString('bn-BD');
+  const month = months[date.getMonth()];
+  const year = date.getFullYear().toLocaleString('bn-BD');
+  
+  return `${day} ${month} ${year}`;
+};
 
   // Fetch data from APIs
   const {
@@ -191,7 +201,7 @@ const AdmitCard = () => {
             @page { 
               size: A4 portrait; 
               margin: 0mm; 
-                padding: 0;
+              padding: 0;
             }
             body {
               font-family: 'Noto Sans Bengali', Arial, sans-serif;
@@ -214,23 +224,18 @@ const AdmitCard = () => {
               padding: 5mm 0;
               box-sizing: border-box;
               gap: 6mm;
-              box-sizing: border-box;
             }
             .admit-card {
               width: 200mm;
               height: 140mm;
               background: white;
-              // border: 2px solid #DB9E30;
-              // border-radius: 6mm;
               overflow: hidden;
               position: relative;
               background-image: url('${base64Background}');
-              background-size: 115% 115%;
+              background-size: 100% 100%;
               background-position: center;
               background-repeat: no-repeat;
             }
-            
-            /* Institute Logo Watermark */
             .logo-watermark {
               position: absolute;
               top: 50%;
@@ -238,12 +243,10 @@ const AdmitCard = () => {
               transform: translate(-50%, -50%);
               opacity: 0.15;
               z-index: 10;
-              width: 220px;
-                height: 220px;
+              width: 320px;
+              height: 320px;
               object-fit: contain;
             }
-            
-            /* Content Overlay */
             .card-overlay {
               position: absolute;
               top: 0;
@@ -252,11 +255,9 @@ const AdmitCard = () => {
               bottom: 0;
               z-index: 20;
             }
-            
-            /* Institute Name */
             .institute-name {
               position: absolute;
-              top: 18mm;
+              top: 11mm;
               left: 0;
               right: 0;
               text-align: center;
@@ -265,69 +266,116 @@ const AdmitCard = () => {
               color: black;
               text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
             }
-            
-            /* Student Information */
+            .institute-address {
+              position: absolute;
+              top: 18mm;
+              left: 0;
+              right: 0;
+              text-align: center;
+              font-size: 12pt;
+              font-weight: 600;
+              color: black;
+              text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
+            }
+            .exam-name {
+              position: absolute;
+              top: 26mm;
+              left: 0;
+              right: 0;
+              text-align: center;
+              font-size: 14pt;
+              font-weight: 600;
+              color: black;
+              text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
+            }
+            .admit-title {
+              position: absolute;
+              top: 38mm;
+              left: 0;
+              right: 0;
+              text-align: center;
+              font-size: 28px;
+              font-weight: bold;
+              color: black;
+              border: 2px solid #f0e68c;
+              background: #f0e68c;
+              border-radius: 1.5rem;
+              padding: 8px 20px;
+              width: fit-content;
+              margin: 0 auto;
+            }
             .student-name {
               position: absolute;
-              top: 55mm;
+              top: 60mm;
               left: 20mm;
-              font-size: 16pt;
+              font-size: 18px;
               color: black;
               text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
             }
             .father-name {
               position: absolute;
-              top: 65mm;
+              top: 70mm;
               left: 20mm;
-              font-size: 16pt;
+              font-size: 18px;
               color: black;
               text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
             }
             .birth-date {
               position: absolute;
-              top: 75mm;
+              top: 80mm;
               left: 20mm;
-              font-size: 16pt;
+              font-size: 18px;
               color: black;
               text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
             }
             .class-info {
               position: absolute;
-              top: 65mm;
+              top: 90mm;
               left: 20mm;
-              font-size: 16pt;
+              font-size: 18px;
               color: black;
               text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
             }
-            
-            /* Admission Number Box */
             .admission-box {
               position: absolute;
-              top: 55mm;
+              top: 58mm;
               right: 20mm;
               border: 2px solid black;
               background: rgba(255,255,255,0.95);
               display: flex;
               flex-direction: row;
             }
-            
-            /* Roll Number Box */
             .roll-box {
               position: absolute;
-              top: 75mm;
+              top: 68mm;
               right: 20mm;
               border: 2px solid black;
               background: rgba(255,255,255,0.95);
               display: flex;
               flex-direction: row;
             }
-            
+            .seat-box {
+              position: absolute;
+              top: 78mm;
+              right: 20mm;
+              border: 2px solid black;
+              background: rgba(255,255,255,0.95);
+              display: flex;
+              flex-direction: row;
+            }
+            .issue-date {
+              position: absolute;
+              top: 90mm;
+              left: 20mm;
+              font-size: 18px;
+              color: black;
+              text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
+            }
             .box-header {
               background: #f0e68c;
-              padding: 8px 20px;
+              padding: 4px 20px;
               text-align: center;
-              border-right: 1px solid black;
-              font-size: 14pt;
+              font-size: 14px;
               font-weight: 600;
               color: black;
               display: flex;
@@ -336,26 +384,30 @@ const AdmitCard = () => {
             }
             .box-content {
               background: white;
-              padding: 8px 20px;
+              padding: 4px 20px;
               text-align: center;
-              font-size: 16pt;
+              font-size: 16px;
               font-weight: bold;
               color: black;
               display: flex;
               align-items: center;
               justify-content: center;
             }
-            
-            /* Signature sections */
+            .roll-box .box-content {
+              padding: 4px 20px;
+            }
+            .seat-box .box-content {
+              padding: 4px 20px;
+            }
             .signature-left {
               position: absolute;
-              bottom: 8mm;
+              bottom: 9mm;
               left: 20mm;
               text-align: center;
             }
             .signature-right {
               position: absolute;
-              bottom: 8mm;
+              bottom: 9mm;
               right: 20mm;
               text-align: center;
             }
@@ -365,7 +417,7 @@ const AdmitCard = () => {
               margin-bottom: 6px;
             }
             .signature-text {
-              font-size: 12pt;
+              font-size: 14px;
               color: black;
               font-weight: 600;
               text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
@@ -376,48 +428,47 @@ const AdmitCard = () => {
           <div class="page-container">
             <div class="admit-card">
               ${instituteLogoBase64 ? `<img src="${instituteLogoBase64}" alt="Institute Logo" class="logo-watermark" />` : ''}
-              
               <div class="card-overlay">
-                <!-- Institute Name -->
                 <div class="institute-name">
                   ${institute.institute_name || "Institute Name"}
                 </div>
-                
-                <!-- Student Information -->
+                <div class="institute-address">
+                  ঠিকানা: <span style="font-weight: 600;">${institute.institute_address || "N/A"}</span>
+                </div>
+                <div class="exam-name">
+                  পরীক্ষা: <span style="font-weight: 600;">${selectedExam?.label || "N/A"}</span>
+                </div>
+                <div class="admit-title">
+                  প্রবেশ পত্র
+                </div>
                 <div class="student-name">
                   পরীক্ষার্থীর নাম : <span style="font-weight: 600;">${student.student_name}</span>
                 </div>
-                
                 <div class="father-name">
-                  পিতার নাম : <span style="font-weight: 600;">${student.father_name || "N/A"}</span>
+                  অভিভাবকের নাম : <span style="font-weight: 600;">${student.parent_name || "N/A"}</span>
                 </div>
-                
-                <div class="birth-date">
-                  জন্য তারিখ : <span style="font-weight: 600;">${student.date_of_birth || "N/A"}</span>
-                </div>
-                
                 <div class="class-info">
                   জামাত : <span style="font-weight: 600;">${student.class_name} - ${student.section_name}</span>
                 </div>
-                
-                <!-- Admission Number Box -->
                 <div class="admission-box">
-                  <div class="box-header">দাখেলা নং</div>
+                  <div class="box-header">আইডি নং</div>
                   <div class="box-content">${student.user_id}</div>
                 </div>
-                
-                <!-- Roll Number Box -->
                 <div class="roll-box">
                   <div class="box-header">রোল নং</div>
                   <div class="box-content">${student.roll_no || student.user_id}</div>
                 </div>
-                
-                <!-- Signature Lines -->
+                <div class="seat-box">
+                  <div class="box-header">সিট নং</div>
+                  <div class="box-content"></div>
+                </div>
+                <div class="issue-date">
+                  ইস্যু তারিখ : <span style="font-weight: 600;">১ জানুয়ারী ২০২৫</span>
+                </div>
                 <div class="signature-left">
                   <div class="signature-line"></div>
                   <div class="signature-text">মুহতামিমের সিল ও স্বাক্ষর</div>
                 </div>
-                
                 <div class="signature-right">
                   <div class="signature-line"></div>
                   <div class="signature-text">নায়িমে ইহতামামের স্বাক্ষর</div>
@@ -478,12 +529,10 @@ const AdmitCard = () => {
         }
       }
 
-      // Filter selected students
       const selectedStudentsList = examStudents.students.filter(student => 
         selectedStudents.has(student.user_id)
       );
 
-      // Group students into pairs for 2 per page
       const studentPairs = [];
       for (let i = 0; i < selectedStudentsList.length; i += 2) {
         studentPairs.push(selectedStudentsList.slice(i, i + 2));
@@ -492,48 +541,50 @@ const AdmitCard = () => {
       const renderStudentCard = (student, isSecond = false) => `
         <div class="admit-card ${isSecond ? 'second-card' : 'first-card'}">
           ${instituteLogoBase64 ? `<img src="${instituteLogoBase64}" alt="Institute Logo" class="logo-watermark" />` : ''}
-          
           <div class="card-overlay">
-            <!-- Institute Name -->
             <div class="institute-name">
               ${institute.institute_name || "Institute Name"}
             </div>
             <div class="institute-address">
-              ${institute.institute_address || "Institute Name"}
+              <span style="font-weight: 600;">${institute.institute_address || ""}</span>
             </div>
-            
-            <!-- Student Information -->
+            <div class="exam-name">
+              <span style="font-weight: 600;">${selectedExam?.label || ""}</span>
+            </div>
+            <div class="admit-title">
+              প্রবেশ পত্র
+            </div>
             <div class="student-name">
               পরীক্ষার্থীর নাম : <span style="font-weight: 600;">${student.student_name}</span>
             </div>
-            
-       
-            
+            <div class="father-name">
+              অভিভাবকের নাম : <span style="font-weight: 600;">${student.parent_name || ""}</span>
+            </div>
             <div class="class-info">
               জামাত : <span style="font-weight: 600;">${student.class_name} - ${student.section_name}</span>
             </div>
-            
-            <!-- Admission Number Box -->
             <div class="admission-box">
-              <div class="box-header">দাখেলা নং</div>
+              <div class="box-header">আইডি নং</div>
               <div class="box-content">${student.user_id}</div>
             </div>
-            
-            <!-- Roll Number Box -->
             <div class="roll-box">
               <div class="box-header">রোল নং</div>
               <div class="box-content">${student.roll_no || student.user_id}</div>
             </div>
-            
-            <!-- Signature Lines -->
+            <div class="seat-box">
+              <div class="box-header">সিট নং</div>
+              <div class="box-content"></div>
+            </div>
+            <div class="issue-date">
+              ইস্যু তারিখ : <span style="font-weight: 600;">${formatBanglaDate(new Date())}</span>
+            </div>
             <div class="signature-left">
               <div class="signature-line"></div>
               <div class="signature-text">মুহতামিমের সিল ও স্বাক্ষর</div>
             </div>
-            
             <div class="signature-right">
               <div class="signature-line"></div>
-              <div class="signature-text">নায়িমে ইহতামামের স্বাক্ষর</div>
+              <div class="signature-text">নাযিমে ইহতামামের সাক্ষর</div>
             </div>
           </div>
         </div>
@@ -551,22 +602,16 @@ const AdmitCard = () => {
               margin: 0mm; 
               padding: 0mm;
             }
-
             body {
               font-family: 'Noto Sans Bengali', Arial, sans-serif;
               margin: 0;
               padding: 0;
               color: #441a05;
-              
             }
-        
             .page-container {
-              // width: 100%;
-              // height: 100vh;
               display: flex;
               flex-direction: column;
               justify-content: center;
-              align-item:center;
               padding: 5mm 0;
               box-sizing: border-box;
               gap: 6mm;
@@ -575,8 +620,6 @@ const AdmitCard = () => {
               width: 200mm;
               height: 140mm;
               background: white;
-              // border: 2px solid #DB9E30;
-              // border-radius: 4mm;
               overflow: hidden;
               position: relative;
               background-image: url('${base64Background}');
@@ -588,8 +631,6 @@ const AdmitCard = () => {
             .page-break {
               page-break-after: always;
             }
-            
-            /* Institute Logo Watermark */
             .logo-watermark {
               position: absolute;
               top: 50%;
@@ -597,12 +638,10 @@ const AdmitCard = () => {
               transform: translate(-50%, -50%);
               opacity: 0.15;
               z-index: 10;
-              max-width: 220px;
-              max-height: 220px;
+              width: 320px;
+              height: 320px;
               object-fit: contain;
             }
-            
-            /* Content Overlay */
             .card-overlay {
               position: absolute;
               top: 0;
@@ -611,93 +650,130 @@ const AdmitCard = () => {
               bottom: 0;
               z-index: 20;
             }
-            
-            /* Institute Name */
             .institute-name {
               position: absolute;
-              top: 20mm;
+              top: 11mm;
               left: 0;
               right: 0;
               text-align: center;
-              font-size: 16pt;
+              font-size: 18pt;
               font-weight: bold;
               color: black;
               text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
             }
             .institute-address {
               position: absolute;
-              top: 30mm;
+              top: 21mm;
               left: 0;
               right: 0;
               text-align: center;
-              font-size: 10pt;
-              font-weight: bold;
+              font-size: 12pt;
+              font-weight: 600;
               color: black;
               text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
             }
-            
-            /* Student Information */
+            .exam-name {
+              position: absolute;
+              top: 29mm;
+              left: 0;
+              right: 0;
+              text-align: center;
+              font-size: 14pt;
+              font-weight: 600;
+              color: black;
+              text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
+            }
+            .admit-title {
+              position: absolute;
+              top: 40mm;
+              left: 0;
+              right: 0;
+              text-align: center;
+              font-size: 25px;
+              font-weight: bold;
+              color: black;
+              border: 2px solid #f0e68c;
+              background: #f0e68c;
+              border-radius: 1.5rem;
+              padding: 8px 20px;
+              width: fit-content;
+              margin: 0 auto;
+            }
             .student-name {
               position: absolute;
-              top: 65mm;
-              left: 15mm;
-              font-size: 14pt;
+              top: 60mm;
+              left: 20mm;
+              font-size: 18px;
               color: black;
               text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
             }
             .father-name {
               position: absolute;
               top: 70mm;
-              left: 15mm;
-              font-size: 14pt;
+              left: 20mm;
+              font-size: 18px;
               color: black;
               text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
             }
             .birth-date {
               position: absolute;
               top: 80mm;
-              left: 15mm;
-              font-size: 14pt;
+              left: 20mm;
+              font-size: 18px;
               color: black;
               text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
             }
             .class-info {
               position: absolute;
               top: 80mm;
-              left: 15mm;
-              font-size: 14pt;
+              left: 20mm;
+              font-size: 18px;
               color: black;
               text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
             }
-            
-            /* Admission Number Box */
             .admission-box {
               position: absolute;
-              top: 65mm;
-              right: 15mm;
-              border: 2px solid black;
+              top: 60mm;
+              right: 20mm;
+              // border: 2px solid black;
               background: rgba(255,255,255,0.95);
               display: flex;
               flex-direction: row;
             }
-            
-            /* Roll Number Box */
             .roll-box {
               position: absolute;
-              top: 80mm;
-              right: 15mm;
-              border: 2px solid black;
+              top: 69mm;
+              right: 20mm;
+              
+              // border: 2px solid black;
               background: rgba(255,255,255,0.95);
               display: flex;
               flex-direction: row;
             }
-            
+            .seat-box {
+              position: absolute;
+              top: 78mm;
+              right: 20mm;
+              // border: 2px solid black;
+              background: rgba(255,255,255,0.95);
+              display: flex;
+              flex-direction: row;
+            }
+            .issue-date {
+              position: absolute;
+              top: 90mm;
+              left: 20mm;
+              font-size: 18px;
+              color: black;
+              text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
+            }
             .box-header {
               background: #f0e68c;
-              padding: 6px 16px;
+              padding: 4px 0px;
               text-align: center;
-              border-right: 1px solid black;
-              font-size: 12pt;
+               width: 100px;
+              // border-right: 1px solid black;
+              font-size: 14px;
               font-weight: 600;
               color: black;
               display: flex;
@@ -706,38 +782,41 @@ const AdmitCard = () => {
             }
             .box-content {
               background: white;
-              padding: 6px 16px;
+              padding: 4px 0px;
+              width: 100px;
               text-align: center;
-              font-size: 14pt;
+              font-size: 16px;
               font-weight: bold;
               color: black;
               display: flex;
               align-items: center;
               justify-content: center;
             }
-            
-            /* Signature sections */
+            .roll-box .box-content {
+              padding: 4px 0px;
+            }
+            .seat-box .box-content {
+              padding: 4px 0px;
+            }
             .signature-left {
               position: absolute;
-              bottom: 15mm;
-              left: 15mm;
-              font-size:12px;
+              bottom: 9mm;
+              left: 20mm;
               text-align: center;
             }
             .signature-right {
               position: absolute;
-              bottom: 15mm;
-              font-size:12px;
-              right: 15mm;
+              bottom: 9mm;
+              right: 20mm;
               text-align: center;
             }
             .signature-line {
               border-top: 2px solid black;
-              width: 60mm;
-              margin-bottom: 4px;
+              width: 70mm;
+              margin-bottom: 6px;
             }
             .signature-text {
-              font-size: 11pt;
+              font-size: 14px;
               color: black;
               font-weight: 600;
               text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
@@ -791,7 +870,7 @@ const AdmitCard = () => {
     try {
       const base64Background = await convertImageToBase64(backgroundImage);
       const students = examStudents.students;
-      const pageCount = Math.ceil(students.length / 2); // 2 cards per page
+      const pageCount = Math.ceil(students.length / 2);
 
       const htmlContent = `
         <!DOCTYPE html>
@@ -803,7 +882,7 @@ const AdmitCard = () => {
             @page { 
               size: A4 portrait; 
               margin: 0mm; 
-                padding: 0;
+              padding: 0;
             }
             body {
               font-family: 'Noto Sans Bengali', Arial, sans-serif;
@@ -822,19 +901,15 @@ const AdmitCard = () => {
               display: flex;
               flex-direction: column;
               justify-content: center;
-             padding: 5mm 0;
+              padding: 5mm 0;
               box-sizing: border-box;
               gap: 6mm;
-              box-sizing: border-box;
-              
             }
             .admit-card-back {
               width: 200mm;
               height: 140mm;
               background: white;
-              // border: 2px solid #DB9E30;
               margin: 0 auto;
-              // border-radius: 4mm;
               overflow: hidden;
               position: relative;
               background-image: url('${base64Background}');
@@ -938,7 +1013,7 @@ const AdmitCard = () => {
   const renderBackCard = () => {
     return (
       <div
-        className="admit-card relative border-2 border-[#DB9E30] rounded-lg w-[200mm] h-[140mm] overflow-hidden mx-auto mb-4"
+        className="admit-card relative rounded-lg w-[200mm] h-[140mm] overflow-hidden mx-auto mb-4"
         style={{
           backgroundImage: `url(${backgroundImage})`,
           backgroundSize: '100% 100%',
@@ -946,19 +1021,18 @@ const AdmitCard = () => {
           backgroundRepeat: 'no-repeat'
         }}
       >
-        {/* Just the background image, no content */}
       </div>
     );
   };
 
-  // Render single admit card for screen preview (updated larger size)
+  // Render single admit card for screen preview
   const renderSingleCard = (student, index) => {
     const instituteInfo = institute || {};
 
     return (
       <div
         key={student.user_id}
-        className="admit-card relative border-2 border-[#DB9E30] rounded-lg w-[200mm] h-[140mm] overflow-hidden mx-auto mb-4"
+        className="admit-card relative rounded-lg w-[200mm] h-[140mm] overflow-hidden mx-auto mb-4"
         style={{
           backgroundImage: `url(${backgroundImage})`,
           backgroundSize: '100% 100%',
@@ -966,92 +1040,96 @@ const AdmitCard = () => {
           backgroundRepeat: 'no-repeat'
         }}
       >
-        {/* Institute Logo Watermark */}
         {instituteInfo.institute_logo && (
           <img 
             src={instituteInfo.institute_logo} 
             alt="Institute Logo"
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-15 max-w-[120px] max-h-[120px] object-contain z-10"
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-15 w-[320px] h-[320px] object-contain z-10"
           />
         )}
-
-        {/* Content Overlay */}
         <div className="absolute inset-0 z-20">
-          {/* Institute Name */}
           <div 
-            className="absolute top-[18mm] left-0 right-0 text-center text-[18pt] font-bold text-black"
+            className="absolute top-[11mm] left-0 right-0 text-center text-[18pt] font-bold text-black"
             style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.9)' }}
           >
             {instituteInfo.institute_name || "Institute Name"}
           </div>
-
-          {/* Student Information */}
           <div 
-            className="absolute top-[55mm] left-[20mm] text-[16pt] text-black"
+            className="absolute top-[18mm] left-0 right-0 text-center text-[12pt] font-semibold text-black"
+            style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.9)' }}
+          >
+            <span className="font-semibold">{instituteInfo.institute_address || ""}</span>
+          </div>
+          <div 
+            className="absolute top-[26mm] left-0 right-0 text-center text-[14pt] font-semibold text-black"
+            style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.9)' }}
+          >
+            <span className="font-semibold">{selectedExam?.label || ""}</span>
+          </div>
+          <div className="absolute top-[38mm] left-0 right-0 text-center text-[28px] font-bold text-black border-2 border-yellow-200 rounded-3xl bg-yellow-200 py-2 w-fit mx-auto px-5">
+            <h1>প্রবেশ পত্র</h1>
+          </div>
+          <div 
+            className="absolute top-[60mm] left-[20mm] text-[18px] text-black"
             style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.9)' }}
           >
             পরীক্ষার্থীর নাম : <span className="font-semibold">{student.student_name}</span>
           </div>
-
           <div 
-            className="absolute top-[65mm] left-[20mm] text-[16pt] text-black"
+            className="absolute top-[70mm] left-[20mm] text-[18px] text-black"
             style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.9)' }}
           >
-            পিতার নাম : <span className="font-semibold">{student.father_name || "N/A"}</span>
+            অভিভাবকের নাম : <span className="font-semibold">{student.parent_name || ""}</span>
           </div>
-
           <div 
-            className="absolute top-[75mm] left-[20mm] text-[16pt] text-black"
-            style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.9)' }}
-          >
-            জন্য তারিখ : <span className="font-semibold">{student.date_of_birth || "N/A"}</span>
-          </div>
-
-          <div 
-            className="absolute top-[85mm] left-[20mm] text-[16pt] text-black"
+            className="absolute top-[80mm] left-[20mm] text-[18px] text-black"
             style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.9)' }}
           >
             জামাত : <span className="font-semibold">{student.class_name} - {student.section_name}</span>
           </div>
-
-          {/* Admission Number Box - Horizontal Layout */}
-          <div className="absolute top-[55mm] right-[20mm] border-2 border-black bg-white/95 flex flex-row">
-            <div className="bg-yellow-200 px-5 py-2 text-center border-r border-black flex items-center justify-center">
-              <span className="text-[14pt] font-semibold text-black">দাখেলা নং</span>
+          <div className="absolute top-[58mm] right-[20mm] bg-white/95 flex flex-row">
+            <div className="bg-yellow-200 w-[100px] py-1 text-center flex items-center justify-center">
+              <span className="text-[14px] font-semibold text-black">আইডি নং</span>
             </div>
-            <div className="bg-white px-5 py-2 text-center flex items-center justify-center">
-              <span className="text-[16pt] font-bold text-black">{student.user_id}</span>
+            <div className="bg-white w-[100px] text-center flex items-center justify-center">
+              <span className="text-[16px] font-bold text-black">{student.user_id}</span>
             </div>
           </div>
-
-          {/* Roll Number Box - Horizontal Layout */}
-          <div className="absolute top-[75mm] right-[20mm] border-2 border-black bg-white/95 flex flex-row">
-            <div className="bg-yellow-200 px-5 py-2 text-center border-r border-black flex items-center justify-center">
-              <span className="text-[14pt] font-semibold text-black">রোল নং</span>
+          <div className="absolute top-[68mm] right-[20mm] bg-white/95 flex flex-row">
+            <div className="bg-yellow-200 py-1 w-[100px] text-center flex items-center justify-center">
+              <span className="text-[14px] font-semibold text-black">রোল নং</span>
             </div>
-            <div className="bg-white px-5 py-2 text-center flex items-center justify-center">
-              <span className="text-[16pt] font-bold text-black">{student.roll_no || student.user_id}</span>
+            <div className="bg-white text-center flex items-center justify-center">
+              <span className="text-[16px] w-[100px] font-bold text-black">{student.roll_no || student.user_id}</span>
             </div>
           </div>
-
-          {/* Signature Lines */}
-          <div className="absolute bottom-[8mm] left-[20mm] text-center">
+          <div className="absolute top-[78mm] right-[20mm] bg-white/95 flex flex-row">
+            <div className="bg-yellow-200 w-[100px] py-1 text-center flex items-center justify-center">
+              <span className="text-[14px] font-semibold text-black">সিট নং</span>
+            </div>
+            <div className="bg-white w-[100px] text-center flex items-center justify-center">
+              <span className="text-[16px] font-bold text-black"></span>
+            </div>
+          </div>
+          <div className="absolute top-[90mm] left-[20mm] text-black text-[18px]">
+            <h3>ইস্যু তারিখ : <span className="font-semibold">{formatBanglaDate(new Date())}</span></h3>
+          </div>
+          <div className="absolute bottom-[9mm] left-[20mm] text-center">
             <div className="border-t-2 border-black w-[70mm] mb-1.5"></div>
             <span 
-              className="text-[12pt] text-black font-semibold"
+              className="text-[14px] text-black font-semibold"
               style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.9)' }}
             >
               মুহতামিমের সিল ও স্বাক্ষর
             </span>
           </div>
-
-          <div className="absolute bottom-[8mm] right-[20mm] text-center">
+          <div className="absolute bottom-[9mm] right-[20mm] text-center">
             <div className="border-t-2 border-black w-[70mm] mb-1.5"></div>
             <span 
-              className="text-[12pt] text-black font-semibold"
+              className="text-[14px] text-black font-semibold"
               style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.9)' }}
             >
-              নায়িমে ইহতামামের স্বাক্ষর
+              নাযিমে ইহতামামের সাক্ষর
             </span>
           </div>
         </div>
@@ -1102,7 +1180,6 @@ const AdmitCard = () => {
         `}
       </style>
 
-      {/* Filter Controls */}
       <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
         <div className="flex items-center justify-between mb-6 animate-fadeIn">
           <div className="flex items-center space-x-4">
@@ -1112,7 +1189,6 @@ const AdmitCard = () => {
             </h3>
           </div>
           
-          {/* Back Print Toggle Button */}
           <button
             onClick={toggleBackPrint}
             className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
@@ -1125,7 +1201,6 @@ const AdmitCard = () => {
           </button>
         </div>
 
-        {/* Background Image Upload */}
         <div className="mb-6 no-print">
           <label className="block text-sm font-medium text-[#441a05] mb-2">
             {isBackPrint ? 'পেছনের' : 'সামনের'} ব্যাকগ্রাউন্ড ইমেজ আপলোড করুন (ঐচ্ছিক)
@@ -1206,7 +1281,6 @@ const AdmitCard = () => {
           </div>
         )}
 
-        {/* Print Buttons */}
         <div className="mt-6 flex flex-wrap gap-4 no-print">
           {isBackPrint ? (
             <button
@@ -1250,7 +1324,6 @@ const AdmitCard = () => {
         </div>
       </div>
 
-      {/* Student List with Search and Individual Controls */}
       {!isBackPrint && selectedClassConfig && selectedAcademicYear && selectedExam && examStudents?.students?.length > 0 && (
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-2xl mb-8 animate-fadeIn shadow-xl">
           <div className="flex items-center justify-between mb-4">
@@ -1267,7 +1340,6 @@ const AdmitCard = () => {
             </button>
           </div>
 
-          {/* Search Box */}
           <div className="mb-4 relative">
             <div className="relative">
               <IoSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -1303,13 +1375,7 @@ const AdmitCard = () => {
                     )}
                     নির্বাচন
                   </button>
-                  <button
-                    onClick={() => handleSingleStudentPrint(student)}
-                    disabled={isGeneratingPDF}
-                    className="px-3 py-1 bg-orange-500 text-white text-xs rounded hover:bg-orange-600 transition-all duration-300 disabled:opacity-50"
-                  >
-                    <FaDownload className="w-3 h-3" />
-                  </button>
+
                 </div>
                 <div className="text-sm text-gray-700">
                   <p className="font-semibold">{student.student_name}</p>
@@ -1329,10 +1395,8 @@ const AdmitCard = () => {
         </div>
       )}
 
-      {/* Preview Area */}
       <div ref={printRef} className="admit-card-container w-full max-w-[210mm] mx-auto">
         {isBackPrint ? (
-          // Back print preview
           examStudents?.students?.length > 0 ? (
             <div className="flex flex-col items-center gap-8">
               <h4 className="text-lg font-bold text-[#441a05] mb-4">পেছনের অংশ প্রিভিউ</h4>
@@ -1345,7 +1409,6 @@ const AdmitCard = () => {
             </div>
           )
         ) : (
-          // Front print preview
           selectedClassConfig && selectedAcademicYear && selectedExam ? (
             examStudents?.students?.length > 0 ? (
               <div className="flex flex-col items-center gap-8">

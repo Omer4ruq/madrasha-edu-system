@@ -165,14 +165,14 @@ const Testimonial = () => {
           <div class="certificate-content">
             <div class="text-center mt-5">
               <h1 class="font-bold text-black ${
-                (instituteData?.institute_name || "আল ফারুক মাদ্রাসা").length > 30
+                (instituteData?.institute_name || "").length > 30
                   ? "text-[8mm]"
                   : "text-[10mm]"
               }">
-                ${instituteData?.institute_name || "আল ফারুক মাদ্রাসা"}
+                ${instituteData?.institute_name || ""}
               </h1>
               <p class="text-[6mm]">
-                ${instituteData?.institute_address || "কালিগঞ্জ, গাজীপুর"}
+                ${instituteData?.institute_address || ""}
               </p>
               <p class="text-[5mm] mt-2">
                 ${instituteData?.headmaster_mobile || "০১৭১২৩৪৫৬৭৮"}
@@ -194,44 +194,44 @@ const Testimonial = () => {
             <div class="mt-[5mm] space-y-[4mm] text-[5mm] text-black leading-relaxed absolute">
               <p class="flex gap-[2mm] flex-wrap">
                 এই মর্মে প্রত্যয়ন করা যাচ্ছে যে,
-                <span class="border-b border-dotted border-black text-center w-[150mm] inline-block">${selectedStudent?.name || "মোঃ আব্দুল করিম"}</span>
+                <span class="border-b border-dotted border-black text-center w-[150mm] inline-block">${selectedStudent?.name || ""}</span>
               </p>
               <p class="flex gap-[2mm] flex-wrap">
                 পিতা:
-                <span class="w-[100mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.father_name || "মোঃ রফিকুল ইসলাম"}</span>
+                <span class="w-[100mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.father_name || ""}</span>
                 মাতা:
-                <span class="w-[100mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.mother_name || "মোছাঃ রাবেয়া খাতুন"}</span>
+                <span class="w-[100mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.mother_name || ""}</span>
                 ।
               </p>
               <p class="flex gap-[2mm] flex-wrap">
                 গ্রাম:
-                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.village || "আউটপাড়া"}</span>
+                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.village || ""}</span>
                 ডাক:
-                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.post_office || "মাওনা"}</span>
+                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.post_office || ""}</span>
                 উপজেলা:
-                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.ps_or_upazilla || "সদর"}</span>
+                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.ps_or_upazilla || ""}</span>
                 থানা:
-                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.ps_or_upazilla || "সদর"}</span>
+                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.ps_or_upazilla || ""}</span>
                 ।
               </p>
               <p class="flex gap-[2mm] flex-wrap">
                 জেলা:
-                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.district || "গাজীপুর"}</span>
+                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.district || ""}</span>
                 ভর্তি রেজিস্ট্রি নম্বর:
-                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.username || "১১১"}</span>
+                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.username || ""}</span>
                 এবং জন্ম তারিখ:
-                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.dob || "১৫/০৫/১৯৮৮"}</span>
+                <span class="w-[40mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.dob || ""}</span>
                 ।
               </p>
               <p class="flex gap-[2mm] flex-wrap">
                 সে অত্র মাদরাসায়
-                <span class="w-[30mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.class_name || "দ্বিতীয়"}</span>
+                <span class="w-[30mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.class_name || ""}</span>
                 হতে
-                <span class="w-[30mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.class_name || "পঞ্চম"}</span>
+                <span class="w-[30mm] border-b border-dotted border-black text-center inline-block">${selectedStudent?.class_name || ""}</span>
                 পর্যন্ত অধ্যয়ন করতঃ বিগত
-                <span class="w-[20mm] border-b border-dotted border-black text-center inline-block">${selectedYear?.label || "২০২৪"}</span>
+                <span class="w-[20mm] border-b border-dotted border-black text-center inline-block">${selectedYear?.label || ""}</span>
                 শিক্ষাবর্ষে
-                <span class="w-[20mm] border-b border-dotted border-black text-center inline-block">${selectedYear?.label || "২০২৪"}</span>
+                <span class="w-[20mm] border-b border-dotted border-black text-center inline-block">${selectedYear?.label || ""}</span>
                 বোর্ড পরীক্ষায় অংশগ্রহণ করে মোট নাম্বার
                 <span class="w-[20mm] border-b border-dotted border-black text-center inline-block">${customValues.marks}</span>
                 এবং
@@ -343,25 +343,25 @@ const Testimonial = () => {
         className="relative mx-auto print:bg-[url('/images/frame.jpg')] font-medium text-black w-[297mm] h-[210mm] bg-[url('/images/frame.jpg')] bg-cover bg-no-repeat box-border p-[20mm_30mm] print:overflow-hidden"
       >
         <img
-          src={instituteData?.institute_logo || "/logo.png"}
+          src={instituteData?.institute_logo || ""}
           alt="Logo"
           className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-[150mm] h-[150mm] object-contain opacity-20"
         />
         <div className="text-center mt-10">
           <h1
             className={`font-bold text-black ${
-              (instituteData?.institute_name || "আল ফارুক মাদ্রাসা").length > 30
+              (instituteData?.institute_name || "").length > 30
                 ? "text-[8mm]"
                 : "text-[10mm]"
             }`}
           >
-            {instituteData?.institute_name || "আল ফারুক মাদ্রাসা"}
+            {instituteData?.institute_name || ""}
           </h1>
           <p className="text-[6mm] mt-[5mm]">
-            {instituteData?.institute_address || "কালিগঞ্জ, গাজীপুর"}
+            {instituteData?.institute_address || ""}
           </p>
           <p className="text-[5mm] my-[3mm]">
-            {instituteData?.headmaster_mobile || "০১৭১২৩৪৫৬৭৮"}
+            {instituteData?.headmaster_mobile || ""}
           </p>
           <h1 className="bg-black text-white px-[10mm] mt-[3mm] w-fit mx-auto text-[6mm] py-[2mm] rounded-[10mm]">
             <span className="relative -top-[2px]">প্রত্যয়ন পত্র</span>
@@ -390,7 +390,7 @@ const Testimonial = () => {
             এই মর্মে প্রত্যয়ন করা যাচ্ছে যে,
             <textarea
               
-              defaultValue={selectedStudent?.name || "মোঃ আব্দুল করিম"}
+              defaultValue={selectedStudent?.name || ""}
               className="w-[150mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               
@@ -400,7 +400,7 @@ const Testimonial = () => {
             পিতা:
             <textarea
               
-              defaultValue={selectedStudent?.father_name || "মোঃ রফিকুল ইসলাম"}
+              defaultValue={selectedStudent?.father_name || ""}
               className="w-[100mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               
@@ -408,7 +408,7 @@ const Testimonial = () => {
             মাতা:
             <textarea
               
-              defaultValue={selectedStudent?.mother_name || "মোছাঃ রাবেয়া খাতুন"}
+              defaultValue={selectedStudent?.mother_name || ""}
               className="w-[100mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               
@@ -419,7 +419,7 @@ const Testimonial = () => {
             গ্রাম:
             <textarea
               
-              defaultValue={selectedStudent?.village || "আউটপাড়া"}
+              defaultValue={selectedStudent?.village || ""}
               className="w-[40mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               
@@ -427,7 +427,7 @@ const Testimonial = () => {
             ডাক:
             <textarea
               
-              defaultValue={selectedStudent?.post_office || "মাওনা"}
+              defaultValue={selectedStudent?.post_office || ""}
               className="w-[40mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               
@@ -435,7 +435,7 @@ const Testimonial = () => {
             উপজেলা:
             <textarea
               
-              defaultValue={selectedStudent?.ps_or_upazilla || "সদর"}
+              defaultValue={selectedStudent?.ps_or_upazilla || ""}
               className="w-[40mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               
@@ -443,7 +443,7 @@ const Testimonial = () => {
             থানা:
             <textarea
               
-              defaultValue={selectedStudent?.ps_or_upazilla || "সদর"}
+              defaultValue={selectedStudent?.ps_or_upazilla || ""}
               className="w-[40mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               
@@ -454,7 +454,7 @@ const Testimonial = () => {
             জেলা:
             <textarea
               
-              defaultValue={selectedStudent?.district || "গাজীপুর"}
+              defaultValue={selectedStudent?.district || ""}
               className="w-[40mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               
@@ -462,7 +462,7 @@ const Testimonial = () => {
             ভর্তি রেজিস্ট্রি নম্বর:
             <textarea
               
-              defaultValue={selectedStudent?.username || "১১১"}
+              defaultValue={selectedStudent?.username || ""}
               className="w-[40mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               
@@ -470,7 +470,7 @@ const Testimonial = () => {
             এবং জন্ম তারিখ:
             <textarea
               
-              defaultValue={selectedStudent?.dob || "১৫/০৫/১৯৮৮"}
+              defaultValue={selectedStudent?.dob || ""}
               className="w-[40mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               
@@ -481,7 +481,7 @@ const Testimonial = () => {
             সে অত্র মাদরাসায়
             <textarea
               
-              defaultValue={selectedStudent?.class_name || "দ্বিতীয়"}
+              defaultValue={selectedStudent?.class_name || ""}
               className="w-[30mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               
@@ -489,7 +489,7 @@ const Testimonial = () => {
             হতে
             <textarea
               
-              defaultValue={selectedStudent?.class_name || "পঞ্চম"}
+              defaultValue={selectedStudent?.class_name || ""}
               className="w-[30mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               
@@ -497,7 +497,7 @@ const Testimonial = () => {
             পর্যন্ত অধ্যয়ন করতঃ বিগত
             <textarea
               
-              defaultValue={selectedYear?.label || "২০২৪"}
+              defaultValue={selectedYear?.label || ""}
               className="w-[20mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               
@@ -505,7 +505,7 @@ const Testimonial = () => {
             শিক্ষাবর্ষে
             <textarea
               
-              defaultValue={selectedYear?.label || "২০২৪"}
+              defaultValue={selectedYear?.label || ""}
               className="w-[20mm] border-b border-dotted border-black text-center bg-transparent resize-none overflow-hidden"
               rows={1}
               
