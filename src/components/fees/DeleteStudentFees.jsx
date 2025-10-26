@@ -193,11 +193,36 @@ const DeleteStudentFees = () => {
           body { 
             font-family: 'Noto Sans Bengali', Arial, sans-serif;  
             font-size: 12px; 
-            margin: 0;
+            margin: 20px;
             padding: 0;
             background-color: #ffffff;
             color: #000;
+                      position: relative;
+
           }
+            .watermark {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: -1;
+          opacity: 0.1;
+          width: 500px;
+          height: 500px;
+          pointer-events: none;
+          text-align: center;
+        }
+        .watermark img {
+          width: 500px;
+          height: 500px;
+          display: block;
+        }
+        .watermark.fallback::before {
+          content: 'লোগো লোড হয়নি';
+          color: #666;
+          font-size: 16px;
+          font-style: italic;
+        }
           .page-container {
             width: 100%;
             min-height: 257mm;
@@ -274,6 +299,17 @@ const DeleteStudentFees = () => {
         </style>
       </head>
       <body>
+      ${
+        institute.institute_logo
+          ? `
+            <div class="watermark">
+              <img id="watermark-logo" src="${institute.institute_logo}" alt="Institute Logo" />
+            </div>
+          `
+          : `
+            <div class="watermark fallback"></div>
+          `
+      }
         ${feePages.map((pageItems, pageIndex) => `
           <div class="page-container">
             <div class="header">
@@ -314,15 +350,30 @@ const DeleteStudentFees = () => {
             </div>
           </div>
         `).join('')}
-        <script>
-          let printAttempted = false;
-          window.onbeforeprint = () => { printAttempted = true; };
-          window.onafterprint = () => { window.close(); };
-          window.addEventListener('beforeunload', (event) => {
-            if (!printAttempted) { window.close(); }
-          });
+ <script>
+        let printAttempted = false;
+        window.onbeforeprint = () => { printAttempted = true; };
+        window.onafterprint = () => { window.close(); };
+        window.addEventListener('beforeunload', (event) => {
+          if (!printAttempted) { window.close(); }
+        });
+
+        // Wait for the logo to load before printing
+        const logo = document.getElementById('watermark-logo');
+        if (logo) {
+          logo.onload = () => {
+            console.log('Logo loaded successfully');
+            window.print();
+          };
+          logo.onerror = () => {
+            console.warn('Logo failed to load, proceeding with print.');
+            document.querySelector('.watermark').classList.add('fallback');
+            window.print();
+          };
+        } else {
           window.print();
-        </script>
+        }
+      </script>
       </body>
       </html>
     `;

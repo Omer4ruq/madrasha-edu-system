@@ -30,9 +30,9 @@ const AdmitCard = () => {
   const months = ['জানুয়ারী', 'ফেব্রুয়ারী', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 
                   'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
   
-  const day = date.getDate().toLocaleString('bn-BD');
+  const day = date.getDate().toLocaleString('bn-BD', { useGrouping: false });
   const month = months[date.getMonth()];
-  const year = date.getFullYear().toLocaleString('bn-BD');
+  const year = date.getFullYear().toLocaleString('bn-BD', { useGrouping: false });
   
   return `${day} ${month} ${year}`;
 };
@@ -471,7 +471,7 @@ const AdmitCard = () => {
                 </div>
                 <div class="signature-right">
                   <div class="signature-line"></div>
-                  <div class="signature-text">নায়িমে ইহতামামের স্বাক্ষর</div>
+                  <div class="signature-text">নায়িমে ইহতিমাম স্বাক্ষর</div>
                 </div>
               </div>
             </div>
@@ -584,7 +584,7 @@ const AdmitCard = () => {
             </div>
             <div class="signature-right">
               <div class="signature-line"></div>
-              <div class="signature-text">নাযিমে ইহতামামের সাক্ষর</div>
+              <div class="signature-text">নাযিমে ইহতিমাম সাক্ষর</div>
             </div>
           </div>
         </div>
@@ -1129,7 +1129,7 @@ const AdmitCard = () => {
               className="text-[14px] text-black font-semibold"
               style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.9)' }}
             >
-              নাযিমে ইহতামামের সাক্ষর
+              নাযিমে ইহতিমাম সাক্ষর
             </span>
           </div>
         </div>

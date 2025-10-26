@@ -5,6 +5,7 @@ import { useGetLiabilityEntriesQuery } from '../../../redux/features/api/liabili
 import { useGetLiabilityHeadsQuery } from '../../../redux/features/api/liability/liabilityHeadsApi';
 import { useGetFundsQuery } from '../../../redux/features/api/funds/fundsApi';
 import { useGetPartiesQuery } from '../../../redux/features/api/parties/partiesApi';
+import { useGetInstituteLatestQuery } from '../../../redux/features/api/institute/instituteLatestApi';
 
 const LiabilityTable = ({ 
   // Data props (optional - if not provided, component will fetch its own data)
@@ -40,6 +41,12 @@ const LiabilityTable = ({
   } = useGetLiabilityEntriesQuery(undefined, {
     skip: !shouldFetchData
   });
+
+    const {
+    data: institute,
+    isLoading: isInstituteLoading,
+    error: instituteError,
+  } = useGetInstituteLatestQuery();
   
   const { 
     data: fetchedLiabilityHeads = [], 
@@ -216,6 +223,15 @@ const LiabilityTable = ({
       return;
     }
 
+        if (isInstituteLoading) {
+          toast.error('ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!');
+          return;
+        }
+        if (!institute) {
+          toast.error('ইনস্টিটিউট তথ্য পাওয়া যায়নি!');
+          return;
+        }
+
     const printWindow = window.open('', '_blank');
     const rowsPerPage = 20;
     const entryPages = [];
@@ -238,11 +254,36 @@ const LiabilityTable = ({
           body { 
             font-family: Arial, sans-serif;  
             font-size: 12px; 
-            margin: 0;
+            margin: 20px;
             padding: 0;
             background-color: #ffffff;
             color: #000;
+                      position: relative;
+
           }
+                      .watermark {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: -1;
+          opacity: 0.1;
+          width: 500px;
+          height: 500px;
+          pointer-events: none;
+          text-align: center;
+        }
+        .watermark img {
+          width: 500px;
+          height: 500px;
+          display: block;
+        }
+        .watermark.fallback::before {
+          content: 'লোগো লোড হয়নি';
+          color: #666;
+          font-size: 16px;
+          font-style: italic;
+        }
           .page-container {
             width: 100%;
             min-height: 190mm;
@@ -305,7 +346,6 @@ const LiabilityTable = ({
           }
           tfoot td {
             font-weight: bold;
-            background-color: #f0f0f0;
           }
           .amount-cell {
             text-align: right;
@@ -324,16 +364,25 @@ const LiabilityTable = ({
             font-weight: bold;
           }
           .movement-increase {
-            background-color: #ffebee;
             color: #c62828;
           }
           .movement-decrease {
-            background-color: #e8f5e8;
             color: #2e7d32;
           }
         </style>
       </head>
       <body>
+      ${
+        institute.institute_logo
+          ? `
+            <div class="watermark">
+              <img id="watermark-logo" src="${institute.institute_logo}" alt="Institute Logo" />
+            </div>
+          `
+          : `
+            <div class="watermark fallback"></div>
+          `
+      }
         ${entryPages.map((pageItems, pageIndex) => `
           <div class="page-container">
             <div class="header">
@@ -358,7 +407,7 @@ const LiabilityTable = ({
               </thead>
               <tbody>
                 ${pageItems.map((entry, index) => `
-                  <tr style="${index % 2 === 1 ? 'background-color: #f9f9f9;' : ''}">
+                  <tr style="${index % 2 === 1 ? '' : ''}">
                     <td>${getHeadName(entry.head)}</td>
                     <td>${getFundName(entry.fund)}</td>
                     <td>${getPartyName(entry.party)}</td>
@@ -388,15 +437,30 @@ const LiabilityTable = ({
             </div>
           </div>
         `).join('')}
-        <script>
-          let printAttempted = false;
-          window.onbeforeprint = () => { printAttempted = true; };
-          window.onafterprint = () => { window.close(); };
-          window.addEventListener('beforeunload', (event) => {
-            if (!printAttempted) { window.close(); }
-          });
+ <script>
+        let printAttempted = false;
+        window.onbeforeprint = () => { printAttempted = true; };
+        window.onafterprint = () => { window.close(); };
+        window.addEventListener('beforeunload', (event) => {
+          if (!printAttempted) { window.close(); }
+        });
+
+        // Wait for the logo to load before printing
+        const logo = document.getElementById('watermark-logo');
+        if (logo) {
+          logo.onload = () => {
+            console.log('Logo loaded successfully');
+            window.print();
+          };
+          logo.onerror = () => {
+            console.warn('Logo failed to load, proceeding with print.');
+            document.querySelector('.watermark').classList.add('fallback');
+            window.print();
+          };
+        } else {
           window.print();
-        </script>
+        }
+      </script>
       </body>
       </html>
     `;

@@ -217,7 +217,32 @@ const classOptions = useMemo(
             margin: 30px;
             padding: 0;
             color: #000;
+                      position: relative;
+
           }
+            .watermark {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: -1;
+          opacity: 0.1;
+          width: 500px;
+          height: 500px;
+          pointer-events: none;
+          text-align: center;
+        }
+        .watermark img {
+          width: 500px;
+          height: 500px;
+          display: block;
+        }
+        .watermark.fallback::before {
+          content: 'লোগো লোড হয়নি';
+          color: #666;
+          font-size: 16px;
+          font-style: italic;
+        }
           .header {
             text-align: center;
           }
@@ -268,7 +293,6 @@ const classOptions = useMemo(
             margin-top: 20px;
             padding: 15px;
             border: 1px solid #000;
-            background-color: #F8F9FA;
           }
           .summary p {
             margin: 5px 0;
@@ -292,6 +316,17 @@ const classOptions = useMemo(
         </style>
       </head>
       <body>
+      ${
+        institute.institute_logo
+          ? `
+            <div class="watermark">
+              <img id="watermark-logo" src="${institute.institute_logo}" alt="Institute Logo" />
+            </div>
+          `
+          : `
+            <div class="watermark fallback"></div>
+          `
+      }
         <div class="header">
           <div class="logo-placeholder"></div>
           <h1>${institute.institute_name || 'আদর্শ মাদ্রাসা'}</h1>
@@ -339,15 +374,30 @@ const classOptions = useMemo(
           <p>তারিখ: ${new Date().toLocaleDateString('bn')}</p>
         </div>
 
-        <script>
-          let printAttempted = false;
-          window.onbeforeprint = () => { printAttempted = true; };
-          window.onafterprint = () => { window.close(); };
-          window.addEventListener('beforeunload', (event) => {
-            if (!printAttempted) { window.close(); }
-          });
+         <script>
+        let printAttempted = false;
+        window.onbeforeprint = () => { printAttempted = true; };
+        window.onafterprint = () => { window.close(); };
+        window.addEventListener('beforeunload', (event) => {
+          if (!printAttempted) { window.close(); }
+        });
+
+        // Wait for the logo to load before printing
+        const logo = document.getElementById('watermark-logo');
+        if (logo) {
+          logo.onload = () => {
+            console.log('Logo loaded successfully');
+            window.print();
+          };
+          logo.onerror = () => {
+            console.warn('Logo failed to load, proceeding with print.');
+            document.querySelector('.watermark').classList.add('fallback');
+            window.print();
+          };
+        } else {
           window.print();
-        </script>
+        }
+      </script>
       </body>
       </html>
     `;

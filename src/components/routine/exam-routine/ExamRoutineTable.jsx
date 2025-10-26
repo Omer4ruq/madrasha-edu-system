@@ -172,11 +172,36 @@ const ExamRoutineTable = ({
         <style>
           body { 
             font-family: Arial, sans-serif; 
-            margin: 0; 
+            margin: 20px; 
             padding: 20px; 
             background: white;
             font-size: 14px;
+                      position: relative;
+
           }
+                      .watermark {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: -1;
+          opacity: 0.1;
+          width: 500px;
+          height: 500px;
+          pointer-events: none;
+          text-align: center;
+        }
+        .watermark img {
+          width: 500px;
+          height: 500px;
+          display: block;
+        }
+        .watermark.fallback::before {
+          content: 'লোগো লোড হয়নি';
+          color: #666;
+          font-size: 16px;
+          font-style: italic;
+        }
           .header { 
             text-align: center; 
             margin-bottom: 30px; 
@@ -267,6 +292,17 @@ const ExamRoutineTable = ({
         </style>
       </head>
       <body>
+      ${
+        institute.institute_logo
+          ? `
+            <div class="watermark">
+              <img id="watermark-logo" src="${institute.institute_logo}" alt="Institute Logo" />
+            </div>
+          `
+          : `
+            <div class="watermark fallback"></div>
+          `
+      }
         <div class="header">
           <div class="institution">Your Institution Name</div>
           <div class="exam-info">${examName} - ${isSpecificClass ? 'পরীক্ষার রুটিন' : 'সামগ্রিক পরীক্ষার রুটিন'}</div>
@@ -378,6 +414,32 @@ const ExamRoutineTable = ({
             মুহতামিম বা পরিচালকের স্বাক্ষর
           </div>
         </div>
+
+
+         <script>
+        let printAttempted = false;
+        window.onbeforeprint = () => { printAttempted = true; };
+        window.onafterprint = () => { window.close(); };
+        window.addEventListener('beforeunload', (event) => {
+          if (!printAttempted) { window.close(); }
+        });
+
+        // Wait for the logo to load before printing
+        const logo = document.getElementById('watermark-logo');
+        if (logo) {
+          logo.onload = () => {
+            console.log('Logo loaded successfully');
+            window.print();
+          };
+          logo.onerror = () => {
+            console.warn('Logo failed to load, proceeding with print.');
+            document.querySelector('.watermark').classList.add('fallback');
+            window.print();
+          };
+        } else {
+          window.print();
+        }
+      </script>
       </body>
       </html>
     `;

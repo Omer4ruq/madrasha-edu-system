@@ -211,29 +211,63 @@ const PaidTable = ({
       <!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(title)}</title>
       <style>
         @page { size: A4 landscape; margin: 15mm; }
-        body { font-family: 'Noto Sans Bengali', Arial, sans-serif; font-size: 11px; margin:0; color:#000; }
+        body { font-family: 'Noto Sans Bengali', Arial, sans-serif; font-size: 11px; margin:20px; color:#000; position: relative;}
+        .watermark {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: -1;
+          opacity: 0.1;
+          width: 500px;
+          height: 500px;
+          pointer-events: none;
+          text-align: center;
+        }
+        .watermark img {
+          width: 500px;
+          height: 500px;
+          display: block;
+        }
+        .watermark.fallback::before {
+          content: 'লোগো লোড হয়নি';
+          color: #666;
+          font-size: 16px;
+          font-style: italic;
+        }
         .page-container { width:100%; min-height:200mm; page-break-after: always; }
         .page-container:last-child { page-break-after: auto; }
         table { width:100%; border-collapse:collapse; font-size:9px; margin-top:10px; }
         th, td { border:1px solid #000; padding:6px; text-align:center; }
-        th { background:#f5f5f5; font-weight:bold; }
-        .header { text-align:center; margin-bottom:15px; padding-bottom:10px; border-bottom:2px solid #441a05; }
-        .institute-info h1 { font-size:20px; margin:0; color:#441a05; }
+        th {font-weight:bold; }
+        .header { text-align:center; margin-bottom:15px; padding-bottom:10px; border-bottom:2px solid #000; }
+        .institute-info h1 { font-size:20px; margin:0; color:#000; }
         .institute-info p { font-size:12px; margin:3px 0; color:#666; }
         .title { font-size:16px; color:#DB9E30; margin:8px 0; font-weight:bold; }
         .filter-info { font-size:10px; margin:8px 0; color:#555; text-align:left; }
-        .summary-box { background:#f9f9f9; border:1px solid #ddd; padding:10px; margin:15px 0; border-radius:5px; }
-        .summary-title { font-weight:bold; color:#441a05; margin-bottom:8px; }
+        .summary-box { border:1px solid #ddd; padding:10px; margin:15px 0; border-radius:5px; }
+        .summary-title { font-weight:bold; color:#000; margin-bottom:8px; }
         .summary-row { display:flex; justify-content:space-between; margin:3px 0; }
         .footer { position:absolute; bottom:15px; left:40px; right:40px; display:flex; justify-content:space-between; font-size:8px; color:#555; border-top:1px solid #eee; padding-top:5px; }
       </style></head><body>
+      ${
+        institute.institute_logo
+          ? `
+            <div class="watermark">
+              <img id="watermark-logo" src="${institute.institute_logo}" alt="Institute Logo" />
+            </div>
+          `
+          : `
+            <div class="watermark fallback"></div>
+          `
+      }
       ${pages.map((pageRecords, pageIndex) => {
         const rowsHTML = pageRecords.map((record, i) => {
           const st = (allStudents || []).find(s => s.id === record.student_id);
           const fee = (allFeesNameRecords || []).find(f => f.id === record.feetype_id);
           const originalAmount = parseFloat(fee?.amount || 0).toFixed(2);
           return `
-            <tr style="${i % 2 === 1 ? 'background-color:#f8f8f8;' : ''}">
+            <tr style="${i % 2 === 1 ? '' : ''}">
               <td style="text-align:left;">${esc(st?.name || 'অজানা')}</td>
               <td>${esc(st?.roll_no ?? 'N/A')}</td>
               <td style="text-align:left;">${esc(fee?.fees_title || 'অজানা')}</td>
@@ -291,11 +325,28 @@ const PaidTable = ({
           </div>`;
       }).join('')}
       <script>
-        let printAttempted=false;
-        window.onbeforeprint=()=>{printAttempted=true;};
-        window.onafterprint=()=>{window.close();};
-        window.addEventListener('beforeunload',(e)=>{if(!printAttempted){window.close();}});
-        window.print();
+        let printAttempted = false;
+        window.onbeforeprint = () => { printAttempted = true; };
+        window.onafterprint = () => { window.close(); };
+        window.addEventListener('beforeunload', (event) => {
+          if (!printAttempted) { window.close(); }
+        });
+
+        // Wait for the logo to load before printing
+        const logo = document.getElementById('watermark-logo');
+        if (logo) {
+          logo.onload = () => {
+            console.log('Logo loaded successfully');
+            window.print();
+          };
+          logo.onerror = () => {
+            console.warn('Logo failed to load, proceeding with print.');
+            document.querySelector('.watermark').classList.add('fallback');
+            window.print();
+          };
+        } else {
+          window.print();
+        }
       </script>
       </body></html>
     `;

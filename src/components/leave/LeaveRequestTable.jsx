@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { FaSpinner, FaTrash, FaFilePdf, FaCheck, FaTimes } from "react-icons/fa";
+import {
+  FaSpinner,
+  FaTrash,
+  FaFilePdf,
+  FaCheck,
+  FaTimes,
+} from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import { useSearchJointUsersQuery } from "../../redux/features/api/jointUsers/jointUsersApi";
 import {
@@ -7,12 +13,12 @@ import {
   useApproveLeaveRequestApiMutation,
   useRejectLeaveRequestApiMutation,
 } from "../../redux/features/api/leave/leaveRequestApi";
+import { useGetInstituteLatestQuery } from "../../redux/features/api/institute/instituteLatestApi";
 
 // Component to fetch individual user data
 const UserInfoCell = ({ userId }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [userInfo, setUserInfo] = useState(null);
-
   const { data: users = [], isLoading } = useSearchJointUsersQuery(searchTerm, {
     skip: !searchTerm,
   });
@@ -23,7 +29,9 @@ const UserInfoCell = ({ userId }) => {
 
   useEffect(() => {
     if (users && users.length > 0) {
-      const foundUser = users.find((user) => user.id === userId || user.user_id === userId);
+      const foundUser = users.find(
+        (user) => user.id === userId || user.user_id === userId
+      );
       if (foundUser) {
         setUserInfo(foundUser);
       } else if (searchTerm === userId.toString()) {
@@ -55,7 +63,9 @@ const UserInfoCell = ({ userId }) => {
       return {
         name: userInfo.name,
         details: `${userInfo.student_profile.class_name || "অজানা"} ${
-          userInfo.student_profile.roll_no ? `(রোল: ${userInfo.student_profile.roll_no})` : ""
+          userInfo.student_profile.roll_no
+            ? `(রোল: ${userInfo.student_profile.roll_no})`
+            : ""
         }`,
         type: "student",
       };
@@ -99,7 +109,9 @@ const UserTypeBadge = ({ userId }) => {
 
   useEffect(() => {
     if (users && users.length > 0) {
-      const foundUser = users.find((user) => user.id === userId || user.user_id === userId);
+      const foundUser = users.find(
+        (user) => user.id === userId || user.user_id === userId
+      );
       if (foundUser) {
         if (foundUser.student_profile) {
           setUserType("student");
@@ -122,22 +134,40 @@ const UserTypeBadge = ({ userId }) => {
           : "bg-gray-100 text-gray-800"
       }`}
     >
-      {userType === "student" ? "শিক্ষার্থী" : userType === "staff" ? "কর্মী" : "অজানা"}
+      {userType === "student"
+        ? "শিক্ষার্থী"
+        : userType === "staff"
+        ? "কর্মী"
+        : "অজানা"}
     </span>
   );
 };
 
-const LeaveRequestTable = ({ leaveRequests, leaveRequestsLoading, leaveRequestsError, leaveTypes }) => {
+const LeaveRequestTable = ({
+  leaveRequests,
+  leaveRequestsLoading,
+  leaveRequestsError,
+  leaveTypes,
+}) => {
   const [showModal, setShowModal] = useState(false);
   const [actionType, setActionType] = useState(null); // "delete", "approve", or "reject"
   const [actionId, setActionId] = useState(null);
+  const {
+    data: institute,
+    isLoading: instituteLoading,
+    error: instituteError,
+  } = useGetInstituteLatestQuery();
 
   const [deleteLeaveRequestApi, { isLoading: isDeleting, error: deleteError }] =
     useDeleteLeaveRequestApiMutation();
-  const [approveLeaveRequestApi, { isLoading: isApproving, error: approveError }] =
-    useApproveLeaveRequestApiMutation();
-  const [rejectLeaveRequestApi, { isLoading: isRejecting, error: rejectError }] =
-    useRejectLeaveRequestApiMutation();
+  const [
+    approveLeaveRequestApi,
+    { isLoading: isApproving, error: approveError },
+  ] = useApproveLeaveRequestApiMutation();
+  const [
+    rejectLeaveRequestApi,
+    { isLoading: isRejecting, error: rejectError },
+  ] = useRejectLeaveRequestApiMutation();
 
   const handleAction = (id, type) => {
     if (!id) {
@@ -171,7 +201,13 @@ const LeaveRequestTable = ({ leaveRequests, leaveRequestsLoading, leaveRequestsE
       setActionType(null);
     } catch (err) {
       console.error(`${actionType} error:`, err);
-      let errorMessage = `ছুটির আবেদন ${actionType === "delete" ? "মুছতে" : actionType === "approve" ? "অনুমোদন করতে" : "প্রত্যাখ্যান করতে"} ব্যর্থ`;
+      let errorMessage = `ছুটির আবেদন ${
+        actionType === "delete"
+          ? "মুছতে"
+          : actionType === "approve"
+          ? "অনুমোদন করতে"
+          : "প্রত্যাখ্যান করতে"
+      } ব্যর্থ`;
       if (err?.status) {
         errorMessage += ` (স্ট্যাটাস: ${err.status})`;
       }
@@ -196,7 +232,16 @@ const LeaveRequestTable = ({ leaveRequests, leaveRequestsLoading, leaveRequestsE
   };
 
   const generatePDFReport = () => {
-    const printWindow = window.open("", "_blank");
+    if (instituteLoading) {
+      toast.error("ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!");
+      return;
+    }
+
+    if (!institute) {
+      toast.error("ইনস্টিটিউট তথ্য পাওয়া যায়নি!");
+      return;
+    }
+
     let htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -204,18 +249,66 @@ const LeaveRequestTable = ({ leaveRequests, leaveRequestsLoading, leaveRequestsE
         <title>ছুটির আবেদন রিপোর্ট</title>
         <meta charset="UTF-8">
         <style>
-          body { font-family: Arial, sans-serif; margin: 20px; }
+         @page { size: A4 portrait; margin: 20mm; }
+          body { font-family: Arial, sans-serif; margin: 20px; position: relative;}
           table { width: 100%; border-collapse: collapse; margin-top: 20px; }
           th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
           th { background-color: #f2f2f2; font-weight: bold; }
-          .header { text-align: center; margin-bottom: 20px; }
-          .date { margin-top: 20px; text-align: right; }
+          .header { text-align: center; margin-top:-10px }
+          .date { margin-top: 20px; text-align: right; font-size:10px; }
+          .institute-info h1{
+          font-size:20px;
+          }
+          .institute-info{
+          text-align:center;
+          }
+          .institute-info p{
+          margin-top:5px;
+          }
+.watermark {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: -1;
+          opacity: 0.1;
+          width: 500px;
+          height: 500px;
+          pointer-events: none;
+          text-align: center;
+        }
+        .watermark img {
+          width: 500px;
+          height: 500px;
+          display: block;
+        }
+        .watermark.fallback::before {
+          content: 'লোগো লোড হয়নি';
+          color: #666;
+          font-size: 16px;
+          font-style: italic;
+        }
+
         </style>
       </head>
       <body>
+       ${
+        institute.institute_logo
+          ? `
+            <div class="watermark">
+              <img id="watermark-logo" src="${institute.institute_logo}" alt="Institute Logo" />
+            </div>
+          `
+          : `
+            <div class="watermark fallback"></div>
+          `
+      }
+      <div class="institute-info">
+        <h1>${institute.institute_name || "আদর্শ মাদ্রাসা"}</h1>
+        <p>${institute.institute_address || "ঢাকা, বাংলাদেশ"}</p>
+      </div>
         <div class="header">
-          <h2>ছুটির আবেদন রিপোর্ট</h2>
-          <h3>Leave Requests Report</h3>
+          <h4>ছুটির আবেদন রিপোর্ট</h2>
         </div>
         <table>
           <thead>
@@ -231,7 +324,8 @@ const LeaveRequestTable = ({ leaveRequests, leaveRequestsLoading, leaveRequestsE
           <tbody>
     `;
     leaveRequests.forEach((request) => {
-      const leaveType = leaveTypes.find((lt) => lt.id === request.leave_type)?.name || "অজানা";
+      const leaveType =
+        leaveTypes.find((lt) => lt.id === request.leave_type)?.name || "অজানা";
       htmlContent += `
         <tr>
           <td>${request.user_id}</td>
@@ -249,12 +343,40 @@ const LeaveRequestTable = ({ leaveRequests, leaveRequestsLoading, leaveRequestsE
         <div class="date">
           রিপোর্ট তৈরির তারিখ: ${new Date().toLocaleDateString("bn-BD")}
         </div>
+
+
+
+         <script>
+        let printAttempted = false;
+        window.onbeforeprint = () => { printAttempted = true; };
+        window.onafterprint = () => { window.close(); };
+        window.addEventListener('beforeunload', (event) => {
+          if (!printAttempted) { window.close(); }
+        });
+
+        // Wait for the logo to load before printing
+        const logo = document.getElementById('watermark-logo');
+        if (logo) {
+          logo.onload = () => {
+            console.log('Logo loaded successfully');
+            window.print();
+          };
+          logo.onerror = () => {
+            console.warn('Logo failed to load, proceeding with print.');
+            document.querySelector('.watermark').classList.add('fallback');
+            window.print();
+          };
+        } else {
+          window.print();
+        }
+      </script>
       </body>
       </html>
     `;
+    const printWindow = window.open("", "_blank");
+
     printWindow.document.write(htmlContent);
     printWindow.document.close();
-    printWindow.print();
     toast.success("PDF রিপোর্ট তৈরি হয়েছে!");
   };
 
@@ -297,7 +419,7 @@ const LeaveRequestTable = ({ leaveRequests, leaveRequestsLoading, leaveRequestsE
                     ? "bg-green-500 text-white"
                     : "bg-red-500 text-white"
                 } ${
-                  (isDeleting || isApproving || isRejecting)
+                  isDeleting || isApproving || isRejecting
                     ? "cursor-not-allowed opacity-60"
                     : "hover:text-white"
                 }`}
@@ -354,7 +476,8 @@ const LeaveRequestTable = ({ leaveRequests, leaveRequestsLoading, leaveRequestsE
           </div>
         ) : leaveRequestsError ? (
           <p className="p-4 text-red-400">
-            ত্রুটি: {leaveRequestsError.status || "অজানা"} - {JSON.stringify(leaveRequestsError.data || {})}
+            ত্রুটি: {leaveRequestsError.status || "অজানা"} -{" "}
+            {JSON.stringify(leaveRequestsError.data || {})}
           </p>
         ) : !leaveRequests || leaveRequests.length === 0 ? (
           <p className="p-4 text-[#441a05]/70">কোনো ছুটির আবেদন উপলব্ধ নেই।</p>
@@ -391,7 +514,9 @@ const LeaveRequestTable = ({ leaveRequests, leaveRequestsLoading, leaveRequestsE
               </thead>
               <tbody className="divide-y divide-white/20">
                 {leaveRequests.map((request, index) => {
-                  const leaveTypeName = leaveTypes.find((lt) => lt.id === request.leave_type)?.name || "অজানা";
+                  const leaveTypeName =
+                    leaveTypes.find((lt) => lt.id === request.leave_type)
+                      ?.name || "অজানা";
                   const isPending = request.status === "Pending";
 
                   return (
@@ -416,7 +541,10 @@ const LeaveRequestTable = ({ leaveRequests, leaveRequestsLoading, leaveRequestsE
                         {request.end_date}
                       </td>
                       <td className="px-6 py-4 text-sm text-[#441a05] max-w-xs">
-                        <div className="truncate" title={request.leave_description}>
+                        <div
+                          className="truncate"
+                          title={request.leave_description}
+                        >
                           {request.leave_description || "কোনো বিবরণ নেই"}
                         </div>
                       </td>
@@ -445,16 +573,26 @@ const LeaveRequestTable = ({ leaveRequests, leaveRequestsLoading, leaveRequestsE
                         <div className="flex space-x-2">
                           <button
                             onClick={() => handleAction(request.id, "approve")}
-                            disabled={!isPending || isApproving || isRejecting || isDeleting}
+                            disabled={
+                              !isPending ||
+                              isApproving ||
+                              isRejecting ||
+                              isDeleting
+                            }
                             className={`transition-all duration-300 p-2 rounded-lg ${
-                              !isPending || isApproving || isRejecting || isDeleting
+                              !isPending ||
+                              isApproving ||
+                              isRejecting ||
+                              isDeleting
                                 ? "text-gray-400 cursor-not-allowed"
                                 : "text-[#441a05] hover:text-green-500 hover:bg-green-50"
                             }`}
                             aria-label={`ছুটির আবেদন অনুমোদন ${request.id}`}
                             title="ছুটির আবেদন অনুমোদন করুন / Approve leave request"
                           >
-                            {isApproving && actionId === request.id && actionType === "approve" ? (
+                            {isApproving &&
+                            actionId === request.id &&
+                            actionType === "approve" ? (
                               <FaSpinner className="w-4 h-4 animate-spin" />
                             ) : (
                               <FaCheck className="w-4 h-4" />
@@ -462,16 +600,26 @@ const LeaveRequestTable = ({ leaveRequests, leaveRequestsLoading, leaveRequestsE
                           </button>
                           <button
                             onClick={() => handleAction(request.id, "reject")}
-                            disabled={!isPending || isApproving || isRejecting || isDeleting}
+                            disabled={
+                              !isPending ||
+                              isApproving ||
+                              isRejecting ||
+                              isDeleting
+                            }
                             className={`transition-all duration-300 p-2 rounded-lg ${
-                              !isPending || isApproving || isRejecting || isDeleting
+                              !isPending ||
+                              isApproving ||
+                              isRejecting ||
+                              isDeleting
                                 ? "text-gray-400 cursor-not-allowed"
                                 : "text-[#441a05] hover:text-red-500 hover:bg-red-50"
                             }`}
                             aria-label={`ছুটির আবেদন প্রত্যাখ্যান ${request.id}`}
                             title="ছুটির আবেদন প্রত্যাখ্যান করুন / Reject leave request"
                           >
-                            {isRejecting && actionId === request.id && actionType === "reject" ? (
+                            {isRejecting &&
+                            actionId === request.id &&
+                            actionType === "reject" ? (
                               <FaSpinner className="w-4 h-4 animate-spin" />
                             ) : (
                               <FaTimes className="w-4 h-4" />
@@ -504,26 +652,31 @@ const LeaveRequestTable = ({ leaveRequests, leaveRequestsLoading, leaveRequestsE
           </div>
         )}
 
-        {(isDeleting || deleteError || isApproving || approveError || isRejecting || rejectError) && (
+        {(isDeleting ||
+          deleteError ||
+          isApproving ||
+          approveError ||
+          isRejecting ||
+          rejectError) && (
           <div className="mt-4 text-red-400 bg-red-500/10 p-3 rounded-lg animate-fadeIn">
             {isDeleting
               ? "মুছছে..."
               : deleteError
-              ? `মুছে ফেলার ত্রুটি: ${deleteError?.status || "অজানা"} - ${JSON.stringify(
-                  deleteError?.data || {}
-                )}`
+              ? `মুছে ফেলার ত্রুটি: ${
+                  deleteError?.status || "অজানা"
+                } - ${JSON.stringify(deleteError?.data || {})}`
               : isApproving
               ? "অনুমোদন হচ্ছে..."
               : approveError
-              ? `অনুমোদনের ত্রুটি: ${approveError?.status || "অজানা"} - ${JSON.stringify(
-                  approveError?.data || {}
-                )}`
+              ? `অনুমোদনের ত্রুটি: ${
+                  approveError?.status || "অজানা"
+                } - ${JSON.stringify(approveError?.data || {})}`
               : isRejecting
               ? "প্রত্যাখ্যান হচ্ছে..."
               : rejectError
-              ? `প্রত্যাখ্যানের ত্রুটি: ${rejectError?.status || "অজানা"} - ${JSON.stringify(
-                  rejectError?.data || {}
-                )}`
+              ? `প্রত্যাখ্যানের ত্রুটি: ${
+                  rejectError?.status || "অজানা"
+                } - ${JSON.stringify(rejectError?.data || {})}`
               : ""}
           </div>
         )}

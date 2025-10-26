@@ -177,11 +177,36 @@ const classConfigOptions = useMemo(
           body { 
             font-family: 'Noto Sans Bengali', Arial, sans-serif; 
             font-size: 8px; 
-            margin: 0;
+            margin: 20px;
             padding: 0;
             background-color: #ffffff;
             color: #000;
+                      position: relative;
+
           }
+                      .watermark {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: -1;
+          opacity: 0.1;
+          width: 500px;
+          height: 500px;
+          pointer-events: none;
+          text-align: center;
+        }
+        .watermark img {
+          width: 500px;
+          height: 500px;
+          display: block;
+        }
+        .watermark.fallback::before {
+          content: 'লোগো লোড হয়নি';
+          color: #666;
+          font-size: 16px;
+          font-style: italic;
+        }
           .page-container {
             width: 100%;
             min-height: 257mm;
@@ -273,6 +298,17 @@ const classConfigOptions = useMemo(
         </style>
       </head>
       <body>
+      ${
+        institute.institute_logo
+          ? `
+            <div class="watermark">
+              <img id="watermark-logo" src="${institute.institute_logo}" alt="Institute Logo" />
+            </div>
+          `
+          : `
+            <div class="watermark fallback"></div>
+          `
+      }
         ${pages
           .map(
             (pageGroups, pageIdx) => `
@@ -390,15 +426,31 @@ const classConfigOptions = useMemo(
         `
           )
           .join("")}
-        <script>
-          let printAttempted = false;
-          window.onbeforeprint = () => { printAttempted = true; };
-          window.onafterprint = () => { window.close(); };
-          window.addEventListener('beforeunload', (event) => {
-            if (!printAttempted) { window.close(); }
-          });
-          window.print();
-        </script>
+<script>
+        let printAttempted = false;
+        window.onbeforeprint = () => { printAttempted = true; };
+        window.onafterprint = () => { window.close(); };
+        window.addEventListener('beforeunload', (event) => {
+          if (!printAttempted) { window.close(); }
+        });
+
+        // Wait for the logo to load before printing
+        ${
+          institute.institute_logo
+            ? `
+              const img = new Image();
+              img.src = '${institute.institute_logo}';
+              img.onload = () => {
+                window.print();
+              };
+              img.onerror = () => {
+                console.warn('Logo failed to load, proceeding with print.');
+                window.print();
+              };
+            `
+            : 'window.print();'
+        }
+      </script>
       </body>
       </html>
     `;

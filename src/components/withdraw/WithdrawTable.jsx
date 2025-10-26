@@ -3,6 +3,7 @@ import { FaEdit, FaTrash } from 'react-icons/fa';
 import { Toaster, toast } from 'react-hot-toast';
 import { useGetWithdrawsQuery } from '../../redux/features/api/withdraw/withdrawsApi';
 import { useGetFundsQuery } from '../../redux/features/api/funds/fundsApi';
+import { useGetInstituteLatestQuery } from '../../redux/features/api/institute/instituteLatestApi';
 
 const WithdrawTable = ({ 
   // Data props (optional - if not provided, component will fetch its own data)
@@ -43,6 +44,12 @@ const WithdrawTable = ({
   } = useGetFundsQuery(undefined, {
     skip: !shouldFetchData
   });
+
+    const {
+      data: institute,
+      isLoading: isInstituteLoading,
+      error: instituteError,
+    } = useGetInstituteLatestQuery();
 
   // Use either props data or fetched data
   const withdraws = propWithdraws || fetchedWithdraws;
@@ -170,6 +177,15 @@ const WithdrawTable = ({
       return;
     }
 
+        if (isInstituteLoading) {
+          toast.error('ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!');
+          return;
+        }
+        if (!institute) {
+          toast.error('ইনস্টিটিউট তথ্য পাওয়া যায়নি!');
+          return;
+        }
+
     const printWindow = window.open('', '_blank');
     const rowsPerPage = 20;
     const withdrawPages = [];
@@ -192,11 +208,36 @@ const WithdrawTable = ({
           body { 
             font-family: Arial, sans-serif;  
             font-size: 12px; 
-            margin: 0;
+            margin: 20px;
             padding: 0;
             background-color: #ffffff;
             color: #000;
+                      position: relative;
+
           }
+          .watermark {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: -1;
+          opacity: 0.1;
+          width: 500px;
+          height: 500px;
+          pointer-events: none;
+          text-align: center;
+        }
+        .watermark img {
+          width: 500px;
+          height: 500px;
+          display: block;
+        }
+        .watermark.fallback::before {
+          content: 'লোগো লোড হয়নি';
+          color: #666;
+          font-size: 16px;
+          font-style: italic;
+        }  
           .page-container {
             width: 100%;
             min-height: 190mm;
@@ -217,7 +258,6 @@ const WithdrawTable = ({
             text-align: center; 
           }
           th { 
-            background-color: #f5f5f5; 
             font-weight: bold; 
             color: #000;
             text-transform: uppercase;
@@ -259,7 +299,6 @@ const WithdrawTable = ({
           }
           tfoot td {
             font-weight: bold;
-            background-color: #f0f0f0;
           }
           .amount-cell {
             text-align: right;
@@ -269,6 +308,17 @@ const WithdrawTable = ({
         </style>
       </head>
       <body>
+      ${
+        institute.institute_logo
+          ? `
+            <div class="watermark">
+              <img id="watermark-logo" src="${institute.institute_logo}" alt="Institute Logo" />
+            </div>
+          `
+          : `
+            <div class="watermark fallback"></div>
+          `
+      }
         ${withdrawPages.map((pageItems, pageIndex) => `
           <div class="page-container">
             <div class="header">
@@ -291,7 +341,7 @@ const WithdrawTable = ({
               </thead>
               <tbody>
                 ${pageItems.map((withdraw, index) => `
-                  <tr style="${index % 2 === 1 ? 'background-color: #f9f9f9;' : ''}">
+                  <tr style="${index % 2 === 1 ? '' : ''}">
                     <td>${getFundName(withdraw.fund)}</td>
                     <td>${withdraw.date || 'N/A'}</td>
                     <td class="amount-cell">-${Math.abs(withdraw.amount || 0).toLocaleString('bn-BD')}</td>
@@ -319,15 +369,30 @@ const WithdrawTable = ({
             </div>
           </div>
         `).join('')}
-        <script>
-          let printAttempted = false;
-          window.onbeforeprint = () => { printAttempted = true; };
-          window.onafterprint = () => { window.close(); };
-          window.addEventListener('beforeunload', (event) => {
-            if (!printAttempted) { window.close(); }
-          });
+ <script>
+        let printAttempted = false;
+        window.onbeforeprint = () => { printAttempted = true; };
+        window.onafterprint = () => { window.close(); };
+        window.addEventListener('beforeunload', (event) => {
+          if (!printAttempted) { window.close(); }
+        });
+
+        // Wait for the logo to load before printing
+        const logo = document.getElementById('watermark-logo');
+        if (logo) {
+          logo.onload = () => {
+            console.log('Logo loaded successfully');
+            window.print();
+          };
+          logo.onerror = () => {
+            console.warn('Logo failed to load, proceeding with print.');
+            document.querySelector('.watermark').classList.add('fallback');
+            window.print();
+          };
+        } else {
           window.print();
-        </script>
+        }
+      </script>
       </body>
       </html>
     `;
