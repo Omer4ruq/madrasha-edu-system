@@ -4,240 +4,38 @@ import { useGetClassSubjectsQuery } from "../../../redux/features/api/class-subj
 import { useGetTeacherStaffProfilesQuery } from "../../../redux/features/api/roleStaffProfile/roleStaffProfileApi";
 import { useGetclassConfigApiQuery } from "../../../redux/features/api/class/classConfigApi";
 import { useGetClassPeriodsByClassIdQuery } from "../../../redux/features/api/periods/classPeriodsApi";
-import { FaTrash, FaSearch, FaUser, FaGraduationCap } from 'react-icons/fa';
+import { useGetInstituteLatestQuery } from "../../../redux/features/api/institute/instituteLatestApi";
+import { FaTrash, FaUser, FaGraduationCap, FaSpinner } from 'react-icons/fa';
 import { Toaster, toast } from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 import { useGetGroupPermissionsQuery } from '../../../redux/features/api/permissionRole/groupsApi';
-import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer';
 import Select from 'react-select';
 
-// Register Noto Sans Bengali font
-try {
-  Font.register({
-    family: 'NotoSansBengali',
-    src: 'https://fonts.gstatic.com/ea/notosansbengali/v3/NotoSansBengali-Regular.ttf',
-  });
-} catch (error) {
-  console.error('Font registration failed:', error);
-  Font.register({
-    family: 'Helvetica',
-    src: 'https://fonts.gstatic.com/s/helvetica/v13/Helvetica.ttf',
-  });
-}
+// Function to convert numbers to Bangla numerals
+const toBanglaNumerals = (number) => {
+  const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+  return number.toString().replace(/\d/g, (digit) => banglaDigits[digit]);
+};
 
-// PDF styles for routine
-const routineStyles = StyleSheet.create({
-  page: {
-    padding: 30,
-    fontFamily: 'NotoSansBengali',
-    fontSize: 10,
-    color: '#222',
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: 20,
-    borderBottomWidth: 2,
-    borderBottomColor: '#441a05',
-    paddingBottom: 15,
-  },
-  schoolName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#441a05',
-    marginBottom: 5,
-  },
-  headerText: {
-    fontSize: 10,
-    marginBottom: 3,
-    color: '#666',
-  },
-  routineTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginTop: 10,
-    color: '#441a05',
-    textDecoration: 'underline',
-  },
-  infoSection: {
-    marginVertical: 15,
-    padding: 10,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-  },
-  infoText: {
-    fontSize: 11,
-    marginBottom: 5,
-    color: '#555',
-  },
-  table: {
-    marginVertical: 15,
-    borderWidth: 1,
-    borderColor: '#441a05',
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#441a05',
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 9,
-    padding: 5,
-  },
-  tableRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-    minHeight: 40,
-  },
-  tableRowAlternate: {
-    backgroundColor: '#f8f9fa',
-  },
-  tableCell: {
-    padding: 4,
-    fontSize: 8,
-    textAlign: 'center',
-    borderRightWidth: 1,
-    borderRightColor: '#ddd',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  dayCellHeader: {
-    width: 60,
-    backgroundColor: '#441a05',
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  dayCell: {
-    width: 60,
-    backgroundColor: '#f0f0f0',
-    fontWeight: 'bold',
-    color: '#441a05',
-  },
-  periodCell: {
-    flex: 1,
-    minWidth: 80,
-  },
-  subjectText: {
-    fontSize: 8,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 2,
-  },
-  teacherText: {
-    fontSize: 7,
-    color: '#666',
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 30,
-    right: 30,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: '#e9ecef',
-    paddingTop: 10,
-  },
-  footerText: {
-    fontSize: 8,
-    color: '#666',
-  },
-});
+// Function to format time (e.g., "07:00:00" to "০৭:০০")
+const formatTimeToBangla = (time) => {
+  if (!time) return '';
+  // Remove seconds and convert to Bangla numerals
+  const [hours, minutes] = time.split(':').slice(0, 2);
+  return `${toBanglaNumerals(hours)}:${toBanglaNumerals(minutes)}`;
+};
 
-// Routine PDF Component
-const RoutinePDF = ({ 
-  routineData, 
-  searchType, 
-  selectedItem, 
-  periods, 
-  days 
-}) => (
-  <Document>
-    <Page size="A4" orientation="landscape" style={routineStyles.page}>
-      {/* Header */}
-      <View style={routineStyles.header}>
-        <Text style={routineStyles.schoolName}>আদর্শ বিদ্যালয়</Text>
-        <Text style={routineStyles.headerText}>ঢাকা, বাংলাদেশ</Text>
-        <Text style={routineStyles.headerText}>ফোন: ০১৭xxxxxxxx | ইমেইল: info@school.edu.bd</Text>
-        <Text style={routineStyles.routineTitle}>
-          {searchType === 'class' ? 'শ্রেণী রুটিন' : 'শিক্ষক রুটিন'}
-        </Text>
-      </View>
+// Map English day names to Bangla for display
+const dayMap = {
+  Saturday: "শনিবার",
+  Sunday: "রবিবার",
+  Monday: "সোমবার",
+  Tuesday: "মঙ্গলবার",
+  Wednesday: "বুধবার",
+  Thursday: "বৃহস্পতিবার",
+};
 
-      {/* Info Section */}
-      <View style={routineStyles.infoSection}>
-        <Text style={routineStyles.infoText}>
-          {searchType === 'class' 
-            ? `শ্রেণী: ${selectedItem?.label || 'অনির্বাচিত'}`
-            : `শিক্ষক: ${selectedItem?.label || 'অনির্বাচিত'}`
-          }
-        </Text>
-        <Text style={routineStyles.infoText}>
-          প্রস্তুতির তারিখ: {new Date().toLocaleDateString('bn-BD', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })}
-        </Text>
-      </View>
-
-      {/* Routine Table */}
-      <View style={routineStyles.table}>
-        {/* Header Row */}
-        <View style={routineStyles.tableHeader}>
-          <Text style={[routineStyles.tableCell, routineStyles.dayCellHeader]}>দিন</Text>
-          {periods.map((period, index) => (
-            <Text key={period.id || index} style={[routineStyles.tableCell, routineStyles.periodCell]}>
-              {period.start_time && period.end_time 
-                ? `${period.start_time}-${period.end_time}` 
-                : `পিরিয়ড ${index + 1}`
-              }
-            </Text>
-          ))}
-        </View>
-
-        {/* Days and Periods */}
-        {days.map((day, dayIndex) => (
-          <View key={day} style={[routineStyles.tableRow, dayIndex % 2 === 1 && routineStyles.tableRowAlternate]}>
-            <Text style={[routineStyles.tableCell, routineStyles.dayCell]}>{day}</Text>
-            {periods.map((period) => {
-              const routine = routineData[day]?.[period.id] || {};
-              const isAssigned = routine.subject_name && routine.teacher_name;
-              
-              return (
-                <View key={period.id} style={[routineStyles.tableCell, routineStyles.periodCell]}>
-                  {isAssigned ? (
-                    <>
-                      <Text style={routineStyles.subjectText}>
-                        {searchType === 'teacher' ? routine.class_name : routine.subject_name}
-                      </Text>
-                      <Text style={routineStyles.teacherText}>
-                        {searchType === 'teacher' ? routine.subject_name : routine.teacher_name}
-                      </Text>
-                    </>
-                  ) : (
-                    <Text style={routineStyles.teacherText}>-</Text>
-                  )}
-                </View>
-              );
-            })}
-          </View>
-        ))}
-      </View>
-
-      {/* Footer */}
-      <View style={routineStyles.footer} fixed>
-        <Text style={routineStyles.footerText}>
-          এই রুটিনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে।
-        </Text>
-        <Text style={routineStyles.footerText}>
-          মুদ্রণ তারিখ: {new Date().toLocaleDateString('bn-BD')} {new Date().toLocaleTimeString('bn-BD')}
-        </Text>
-      </View>
-    </Page>
-  </Document>
-);
+const days = ["শনিবার", "রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার"];
 
 export default function ClassRoutineTable({ selectedClassId, periods }) {
   const { user, group_id } = useSelector((state) => state.auth);
@@ -251,30 +49,17 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
   console.log("selectedClassId from props:", selectedClassId);
   console.log("currentClassId state:", currentClassId);
 
-  // Map English day names to Bangla for display
-  const dayMap = {
-    Saturday: "শনিবার",
-    Sunday: "রবিবার", 
-    Monday: "সোমবার",
-    Tuesday: "মঙ্গলবার",
-    Wednesday: "বুধবার",
-    Thursday: "বৃহস্পতিবার",
-  };
-
-  const days = ["শনিবার", "রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার"];
-
   // API queries
   const { data: routines = [], isLoading: routinesLoading, refetch: refetchRoutines } = useGetRoutinesQuery();
   const { data: allClasses = [], isLoading: classesLoading } = useGetclassConfigApiQuery();
   const { data: allTeachers = [], isLoading: teachersLoading } = useGetTeacherStaffProfilesQuery();
+  const { data: institute, isLoading: instituteLoading, error: instituteError } = useGetInstituteLatestQuery();
   
-  // FIXED: Use the correct class ID for subjects query
   const { data: allSubjects = [], isLoading: subjectsLoading } = useGetClassSubjectsQuery(
     currentClassId ? currentClassId : undefined,
     { skip: !currentClassId }
   );
   
-  // Get periods for the selected class when searching by class
   const { data: classPeriods = [], isLoading: classPeriodsLoading } = useGetClassPeriodsByClassIdQuery(
     currentClassId ? currentClassId : undefined,
     { skip: !currentClassId }
@@ -282,7 +67,6 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
 
   const [deleteRoutine, { isLoading: isDeleting }] = useDeleteRoutineMutation();
 
-  // Permissions hook
   const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, {
     skip: !group_id,
   });
@@ -291,20 +75,19 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
   const hasDeletePermission = groupPermissions?.some(perm => perm.codename === 'delete_routine') || false;
   const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_routine') || false;
 
-  // FIXED: Update currentClassId when selectedClassId changes - using the correct ID mapping
+  // Update currentClassId when selectedClassId changes
   useEffect(() => {
     console.log("useEffect triggered - selectedClassId:", selectedClassId, "allClasses:", allClasses);
     
     if (selectedClassId && searchType === 'class' && allClasses.length > 0) {
       setCurrentClassId(selectedClassId);
       
-      // Find the correct class object - FIXED: Use selectedClassId directly
       const classOption = allClasses.find(cls => cls.id === selectedClassId);
       console.log("Found class option:", classOption);
       
       if (classOption) {
         setSelectedClass({
-          value: selectedClassId, // Use selectedClassId directly
+          value: selectedClassId,
           label: `${classOption.class_name} ${classOption.section_name}`,
           id: classOption.id,
           class_id: classOption.class_id,
@@ -314,28 +97,26 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
     }
   }, [selectedClassId, allClasses, searchType]);
 
-  // FIXED: Prepare options for selects using the correct ID mapping
+  // Prepare options for selects
   const classOptions = allClasses.map(cls => ({
-  value: cls.id, // Use cls.id as the value (this should match selectedClassId)
-  label: `${cls.class_name}${cls.section_name ? ` ${cls.section_name}` : ''}`,
-  id: cls.id,
-  class_id: cls.class_id,
-  g_class_id: cls.g_class_id
-}));
-
+    value: cls.id,
+    label: `${cls.class_name}${cls.section_name ? ` ${cls.section_name}` : ''}`,
+    id: cls.id,
+    class_id: cls.class_id,
+    g_class_id: cls.g_class_id
+  }));
 
   const teacherOptions = allTeachers.map(teacher => ({
     value: teacher.id,
     label: teacher.name
   }));
 
-  // FIXED: Filter routines based on search type - use the correct class ID for filtering
+  // Filter routines based on search type
   const getFilteredRoutines = () => {
     console.log("Filtering routines - searchType:", searchType, "currentClassId:", currentClassId, "selectedTeacher:", selectedTeacher);
     console.log("All routines:", routines);
     
     if (searchType === 'class' && currentClassId) {
-      // Filter routines by class_id that matches the currentClassId
       const filtered = routines.filter(routine => {
         console.log("Checking routine:", routine.class_id, "against currentClassId:", currentClassId);
         return routine.class_id === currentClassId;
@@ -343,7 +124,7 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
       console.log("Filtered routines for class:", filtered);
       return filtered;
     } else if (searchType === 'teacher' && selectedTeacher) {
-      const filtered = routines.filter(routine => routine.teacher_name === selectedTeacher.value);
+      const filtered = routines.filter(routine => routine.teacher_name === selectedTeacher.label);
       console.log("Filtered routines for teacher:", filtered);
       return filtered;
     }
@@ -353,7 +134,7 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
   const filteredRoutines = getFilteredRoutines();
   console.log("Final filtered routines:", filteredRoutines);
 
-  // FIXED: Get periods to display - Create a copy before sorting
+  // Get periods to display
   const getPeriodsToShow = () => {
     if (searchType === 'class' && classPeriods.length > 0) {
       return [...classPeriods].sort((a, b) => a.start_time.localeCompare(b.start_time));
@@ -381,7 +162,7 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
   }, {});
 
   const classMap = allClasses.reduce((acc, cls) => {
-    acc[cls.id] = `${cls.class_name} ${cls.section_name}`; // FIXED: Use cls.id as key
+    acc[cls.id] = `${cls.class_name} ${cls.section_name}`;
     return acc;
   }, {});
 
@@ -433,7 +214,6 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
     setSearchType(type);
     if (type === 'class') {
       setSelectedTeacher(null);
-      // Reset to the original selectedClassId if available
       if (selectedClassId) {
         setCurrentClassId(selectedClassId);
       }
@@ -443,8 +223,8 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
     }
   };
 
-  // Generate PDF
-  const generateRoutinePDF = async () => {
+  // Generate HTML content and open in new tab
+  const generateRoutineHTML = () => {
     if (!hasViewPermission) {
       toast.error('রুটিন প্রতিবেদন দেখার অনুমতি নেই।');
       return;
@@ -461,30 +241,246 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
       return;
     }
 
-    try {
-      const doc = <RoutinePDF
-        routineData={routineMap}
-        searchType={searchType}
-        selectedItem={selectedItem}
-        periods={periodsToShow}
-        days={days}
-      />;
+    if (instituteLoading) {
+      toast.error('ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!');
+      return;
+    }
 
-      const blob = await pdf(doc).toBlob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      
-      const fileName = searchType === 'class' 
-        ? `শ্রেণী_রুটিন_${selectedItem.label}_${new Date().toLocaleDateString('bn-BD')}.pdf`
-        : `শিক্ষক_রুটিন_${selectedItem.label}_${new Date().toLocaleDateString('bn-BD')}.pdf`;
-      
-      link.download = fileName;
-      link.click();
-      URL.revokeObjectURL(url);
-      toast.success('রুটিন প্রতিবেদন সফলভাবে ডাউনলোড হয়েছে!');
+    if (!institute) {
+      toast.error('ইনস্টিটিউট তথ্য পাওয়া যায়নি!');
+      return;
+    }
+
+    try {
+      const currentDate = new Date().toLocaleDateString('bn-BD', { dateStyle: 'long' });
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="bn">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${searchType === 'class' ? 'শ্রেণী রুটিন' : 'শিক্ষক রুটিন'}</title>
+          <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap" rel="stylesheet">
+          <style>
+            @page { size: A4 landscape; margin: 20mm; }
+            body {
+              font-family: 'Noto Sans Bengali', Arial, sans-serif;
+              font-size: 12px;
+              margin: 20px !important;
+              padding: 0;
+              color: #000;
+              position: relative;
+            }
+            .watermark {
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              z-index: -1;
+              opacity: 0.1;
+              width: 500px;
+              height: 500px;
+              pointer-events: none;
+              text-align: center;
+            }
+            .watermark img {
+              width: 500px;
+              height: 500px;
+              display: block;
+            }
+            .watermark.fallback::before {
+              content: 'লোগো লোড হয়নি';
+              color: #666;
+              font-size: 16px;
+              font-style: italic;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 10px;
+            }
+            .header h1 {
+              font-size: 24px;
+              margin: 0;
+              color: #000;
+            }
+            .header p {
+              font-size: 14px;
+              margin: 5px 0;
+              color: #000;
+            }
+            .title {
+              text-align: center;
+              font-size: 20px;
+              font-weight: 600;
+            }
+            .teacher-details {
+              margin: 15px 0;
+            }
+            .teacher-details p {
+              font-size: 14px;
+              margin: 5px 0;
+            }
+            .table-container {
+              width: 100%;
+              overflow-x: auto;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 12px;
+            }
+            th, td {
+              border: 1px solid #000;
+              padding: 8px;
+              text-align: center;
+            }
+            th {
+              font-weight: bold;
+              color: #000;
+            }
+            .day-cell {
+              width: 80px;
+              font-weight: bold;
+              color: #000;
+            }
+            .period-cell {
+              min-width: 100px;
+            }
+            .subject-text {
+              font-size: 12px;
+              font-weight: bold;
+              color: #333;
+              margin-bottom: 2px;
+            }
+            .teacher-text {
+              font-size: 10px;
+              color: #666;
+            }
+            .footer {
+              margin-top: 20px;
+              text-align: center;
+              font-size: 12px;
+              padding-top: 10px;
+            }
+            .footer p {
+              margin: 5px 0;
+            }
+            @media print {
+              body {
+                margin: 0;
+                font-size: 12px;
+              }
+              .table-container {
+                overflow-x: visible;
+              }
+              .table {
+                width: 100%;
+                margin: 0 auto;
+              }
+              .table th, .table td {
+                padding: 6px;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          ${
+            institute.institute_logo
+              ? `
+                <div class="watermark">
+                  <img id="watermark-logo" src="${institute.institute_logo}" alt="Institute Logo" />
+                </div>
+              `
+              : `
+                <div class="watermark fallback"></div>
+              `
+          }
+          <div class="header">
+            <h1>${institute.institute_name || 'আদর্শ বিদ্যালয়, ঢাকা'}</h1>
+            <p>${institute.institute_address || '১২৩ মেইন রোড, ঢাকা, বাংলাদেশ'}</p>
+          </div>
+          <h1 class="title">${searchType === 'class' ? 'শ্রেণী রুটিন' : 'শিক্ষক রুটিন'}</h1>
+          <div class="teacher-details">
+            <p><strong>${searchType === 'class' ? 'শ্রেণী' : 'শিক্ষক'}:</strong> ${selectedItem?.label || 'অনির্বাচিত'}</p>
+            <p><strong>তারিখ:</strong> ${currentDate}</p>
+          </div>
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th class="day-cell">দিন</th>
+                  ${periodsToShow.map((period, index) => `
+                    <th class="period-cell">
+                      ${period.start_time && period.end_time 
+                        ? `${formatTimeToBangla(period.start_time)} - ${formatTimeToBangla(period.end_time)}` 
+                        : `পিরিয়ড ${toBanglaNumerals(index + 1)}`}
+                    </th>
+                  `).join('')}
+                </tr>
+              </thead>
+              <tbody>
+                ${days.map((day) => `
+                  <tr>
+                    <td class="day-cell">${day}</td>
+                    ${periodsToShow.map(period => {
+                      const routine = routineMap[day]?.[period.id] || {};
+                      const isAssigned = routine.subject_name && routine.teacher_name;
+                      return `
+                        <td class="period-cell">
+                          ${isAssigned ? `
+                            <div class="subject-text">${searchType === 'teacher' ? routine.class_name : routine.subject_name}</div>
+                            <div class="teacher-text">${searchType === 'teacher' ? routine.subject_name : routine.teacher_name}</div>
+                          ` : `
+                            <div class="teacher-text">-</div>
+                          `}
+                        </td>
+                      `;
+                    }).join('')}
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="footer">
+            <p>এই রুটিনটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে।</p>
+            <p>তারিখ: ${currentDate}</p>
+          </div>
+          <script>
+            let printAttempted = false;
+            window.onbeforeprint = () => { printAttempted = true; };
+            window.onafterprint = () => { window.close(); };
+            window.addEventListener('beforeunload', (event) => {
+              if (!printAttempted) { window.close(); }
+            });
+            const logo = document.getElementById('watermark-logo');
+            if (logo) {
+              logo.onload = () => {
+                console.log('Logo loaded successfully');
+                window.print();
+              };
+              logo.onerror = () => {
+                console.warn('Logo failed to load, proceeding with print.');
+                document.querySelector('.watermark').classList.add('fallback');
+                window.print();
+              };
+            } else {
+              window.print();
+            }
+          </script>
+        </body>
+        </html>
+      `;
+
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        toast.success('রুটিন প্রতিবেদন নতুন ট্যাবে খোলা হয়েছে!');
+      } else {
+        toast.error('নতুন ট্যাব খুলতে ব্যর্থ। পপ-আপ ব্লকার চেক করুন।');
+      }
     } catch (error) {
-      console.error('PDF generation error:', error);
+      console.error('HTML generation error:', error);
       toast.error(`প্রতিবেদন তৈরিতে ত্রুটি: ${error.message || 'অজানা ত্রুটি'}`);
     }
   };
@@ -517,12 +513,24 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
     }
   };
 
-  if (routinesLoading || classesLoading || teachersLoading || permissionsLoading) {
-    return <p className="text-gray-500 animate-fadeIn">লোড হচ্ছে...</p>;
+  if (routinesLoading || classesLoading || teachersLoading || permissionsLoading || instituteLoading) {
+    return (
+      <p className="text-gray-500 animate-fadeIn flex items-center">
+        <FaSpinner className="animate-spin mr-2" /> লোড হচ্ছে...
+      </p>
+    );
   }
 
   if (!hasViewPermission) {
     return <div className="p-4 text-red-400 animate-fadeIn">এই পৃষ্ঠাটি দেখার অনুমতি নেই।</div>;
+  }
+
+  if (instituteError) {
+    return (
+      <div className="p-4 text-red-400 bg-red-500/10 rounded-lg animate-fadeIn">
+        ত্রুটি: {instituteError.status || 'অজানা'} - {JSON.stringify(instituteError.data || {})}
+      </div>
+    );
   }
 
   const selectStyles = {
@@ -550,7 +558,6 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
 
   return (
     <div className="p-6">
-      <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
           @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -575,11 +582,17 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
           ::-webkit-scrollbar-track { background: transparent; }
           ::-webkit-scrollbar-thumb { background: rgba(22, 31, 48, 0.26); border-radius: 10px; }
           ::-webkit-scrollbar-thumb:hover { background: rgba(10, 13, 21, 0.44); }
+          @media print {
+            .no-print { display: none !important; }
+            .print-table { width: 100%; border-collapse: collapse; }
+            .print-table th, .print-table td { border: 1px solid #441a05; padding: 6px; text-align: center; }
+            .print-table th { background-color: #f5f5f5; color: #441a05; }
+          }
         `}
       </style>
 
-      {/* Search Controls - Fixed positioning */}
-      <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-6 rounded-2xl mb-6 animate-fadeIn shadow-xl relative z-50">
+      {/* Search Controls */}
+      <div className="mb-6 animate-fadeIn relative z-50">
         <div className="flex flex-col gap-6">
           {/* Search Type Tabs */}
           <div className="flex items-center gap-4">
@@ -646,34 +659,20 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
             
             <div>
               <button
-                onClick={generateRoutinePDF}
-                className="report-button w-full"
-                disabled={
-                  (searchType === 'class' && !selectedClass) || 
-                  (searchType === 'teacher' && !selectedTeacher) ||
-                  filteredRoutines.length === 0
-                }
-                title="রুটিন প্রতিবেদন ডাউনলোড করুন"
+                onClick={generateRoutineHTML}
+                className={`report-button w-full ${!selectedClass && !selectedTeacher ? 'cursor-not-allowed opacity-50' : ''}`}
+                disabled={(searchType === 'class' && !selectedClass) || (searchType === 'teacher' && !selectedTeacher) || filteredRoutines.length === 0}
+                title="রুটিন প্রতিবেদন দেখুন"
               >
-                রুটিন প্রিন্ট করুন
+                রুটিন দেখুন
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Debug Information */}
-      {/* <div className="bg-yellow-100 border border-yellow-400 p-4 rounded mb-4 text-sm">
-        <p><strong>Debug Info:</strong></p>
-        <p>selectedClassId (prop): {selectedClassId}</p>
-        <p>currentClassId (state): {currentClassId}</p>
-        <p>searchType: {searchType}</p>
-        <p>filteredRoutines count: {filteredRoutines.length}</p>
-        <p>periodsToShow count: {periodsToShow.length}</p>
-      </div> */}
-
-      {/* Routine Display - Lower z-index */}
-      <div className="bg-white rounded-2xl shadow-xl p-6 animate-fadeIn relative z-10">
+      {/* Routine Display */}
+      <div className="p-6 animate-fadeIn relative">
         <h2 className="text-2xl font-bold text-[#441a05] mb-4">
           {searchType === 'class' && selectedClass && `${selectedClass.label} - রুটিন সূচি`}
           {searchType === 'teacher' && selectedTeacher && `${selectedTeacher.label} - রুটিন সূচি`}
@@ -692,7 +691,7 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
         ) : (
           <div className="overflow-x-auto">
             <div
-              className="grid gap-1"
+              className="grid gap-1 print-table"
               style={{ gridTemplateColumns: `150px repeat(${periodsToShow.length}, 1fr)` }}
             >
               {/* Header Row */}
@@ -700,8 +699,8 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
               {periodsToShow.map((period, i) => (
                 <div key={period.id || i} className="table-header text-center py-3">
                   {period.start_time && period.end_time 
-                    ? `${period.start_time} - ${period.end_time}` 
-                    : `পিরিয়ড ${i + 1}`}
+                    ? `${formatTimeToBangla(period.start_time)} - ${formatTimeToBangla(period.end_time)}` 
+                    : `পিরিয়ড ${toBanglaNumerals(i + 1)}`}
                 </div>
               ))}
 
@@ -732,7 +731,7 @@ export default function ClassRoutineTable({ selectedClassId, periods }) {
                         {isAssigned && hasDeletePermission && (
                           <button
                             onClick={() => handleDeleteRoutine(routine.id)}
-                            className="absolute top-1 right-1 p-1 text-red-400 hover:text-red-600 transition-colors duration-200"
+                            className="absolute top-1 right-1 p-1 text-red-400 hover:text-red-600 transition-colors duration-200 no-print"
                             title="রুটিন মুছুন"
                             disabled={isDeleting}
                           >
