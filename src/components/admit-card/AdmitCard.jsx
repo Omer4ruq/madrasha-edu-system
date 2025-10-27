@@ -471,7 +471,7 @@ const AdmitCard = () => {
                 </div>
                 <div class="signature-right">
                   <div class="signature-line"></div>
-                  <div class="signature-text">নায়িমে ইহতিমাম স্বাক্ষর</div>
+                  <div class="signature-text">নাযিমে ইহতিমামের স্বাক্ষর</div>
                 </div>
               </div>
             </div>
@@ -584,7 +584,7 @@ const AdmitCard = () => {
             </div>
             <div class="signature-right">
               <div class="signature-line"></div>
-              <div class="signature-text">নাযিমে ইহতিমাম সাক্ষর</div>
+              <div class="signature-text">নাযিমে ইহতিমামের স্বাক্ষর</div>
             </div>
           </div>
         </div>
@@ -1129,7 +1129,7 @@ const AdmitCard = () => {
               className="text-[14px] text-black font-semibold"
               style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.9)' }}
             >
-              নাযিমে ইহতিমাম সাক্ষর
+              নাযিমে ইহতিমামের স্বাক্ষর
             </span>
           </div>
         </div>
