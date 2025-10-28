@@ -4,6 +4,7 @@ import toast, { Toaster } from "react-hot-toast";
 import debounce from "lodash.debounce";
 import Select from "react-select";
 import {
+  studentListApi,
   useDeleteStudentListMutation,
   useGetStudentListQuery,
   useUpdateStudentListMutation,
@@ -16,10 +17,13 @@ import { useGetInstituteLatestQuery } from "../../../redux/features/api/institut
 import { useSelector } from "react-redux";
 import { useGetGroupPermissionsQuery } from "../../../redux/features/api/permissionRole/groupsApi";
 import selectStyles from "../../../utilitis/selectStyles";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 const StudentList = () => {
   const navigate = useNavigate();
+    const dispatch = useDispatch();
+
   const { user, group_id } = useSelector((state) => state.auth);
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
@@ -215,6 +219,286 @@ const StudentList = () => {
       setModalData(null);
     }
   };
+
+    const PAGE_SIZE_FOR_PDF = 30;
+
+    // Fetch all students across pages
+  const fetchAllStudents = async () => {
+    let allStudents = [];
+    let currentPage = 1;
+    while (true) {
+      const response = await dispatch(
+        studentListApi.endpoints.getStudentList.initiate({
+          page: currentPage,
+          page_size: PAGE_SIZE_FOR_PDF,
+          ...filters,
+        })
+      );
+      const data = response.data;
+      if (!data?.students?.length) break;
+      allStudents = [...allStudents, ...data.students];
+      if (!data.next) break;
+      currentPage++;
+    }
+    return allStudents;
+  };
+
+
+ // Handle Download Report for all students
+  const handleDownloadReport = async () => {
+    if (!hasViewPermission) {
+      toast.error("তালিকা দেখার অনুমতি নেই।");
+      return;
+    }
+    if (instituteLoading) {
+      toast.error('ইনস্টিটিউট তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন!');
+      return;
+    }
+    if (!institute) {
+      toast.error('ইনস্টিটিউট তথ্য পাওয়া যায়নি!');
+      return;
+    }
+
+    const allStudents = await fetchAllStudents();
+    if (allStudents.length === 0) {
+      toast.error('কোনো ছাত্র পাওয়া যায়নি!');
+      return;
+    }
+
+        const loadingToast = toast.loading("রিপোর্ট তৈরি হচ্ছে...");
+
+
+    const currentDate = new Date().toLocaleDateString('bn-BD', { dateStyle: 'short' });
+
+    // Chunk students into groups of 20
+    const chunks = [];
+    for (let i = 0; i < allStudents.length; i += PAGE_SIZE_FOR_PDF) {
+      chunks.push(allStudents.slice(i, i + PAGE_SIZE_FOR_PDF));
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>ছাত্র তালিকা</title>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap" rel="stylesheet">
+        <style>
+          @page { size: A4 landscape; margin: 10mm; }
+          body {
+            font-family: 'Noto Sans Bengali', Arial, sans-serif;
+            font-size: 8px;
+            margin: 0px 20px;
+            padding: 0;
+            color: #000;
+            position: relative;
+          }
+          .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            opacity: 0.1;
+            width: 500px;
+            height: 500px;
+            pointer-events: none;
+            text-align: center;
+          }
+          .watermark img {
+            width: 500px;
+            height: 500px;
+            display: block;
+          }
+          .watermark.fallback::before {
+            content: 'লোগো লোড হয়নি';
+            color: #666;
+            font-size: 16px;
+            font-style: italic;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 5px;
+            margin-top: 20px;
+          }
+          .header h1 {
+            font-size: 18px;
+            margin: 0;
+            color: #000;
+          }
+          .header p {
+            font-size: 10px;
+            margin: 2px 0;
+            color: #000;
+          }
+          .title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+          }
+          .details {
+            margin-bottom: 5px;
+            font-size: 9px;
+          }
+          .table-container {
+            width: 100%;
+            overflow-x: auto;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8px;
+          }
+          th, td {
+            border: 1px solid #000;
+            padding: 3px;
+            text-align: center;
+          }
+          th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+            color: #000;
+          }
+          td {
+            text-wrap: nowrap;
+          }
+          .footer {
+            margin-top: 8px;
+            text-align: center;
+            font-size: 9px;
+            padding-top: 40px;
+          }
+          .footer p {
+            margin: 2px 0;
+          }
+          .page {
+            page-break-after: always;
+          }
+          .page:last-child {
+            page-break-after: avoid;
+          }
+        </style>
+      </head>
+      <body>
+        ${
+          institute.institute_logo
+            ? `
+              <div class="watermark">
+                <img id="watermark-logo" src="${institute.institute_logo}" alt="Institute Logo" />
+              </div>
+            `
+            : `
+              <div class="watermark fallback"></div>
+            `
+        }
+        ${chunks.map((chunk, chunkIndex) => `
+          <div class="page">
+            <div class="header">
+              <h1>${institute.institute_name || 'আদর্শ বিদ্যালয়, ঢাকা'}</h1>
+              <p>${institute.institute_address || '১২৩ মেইন রোড, ঢাকা, বাংলাদেশ'}</p>
+            </div>
+            <h1 class="title">শিক্ষার্থীদের তালিকা</h1>
+            <div class="details">
+              <p><strong>তারিখ:</strong> ${currentDate}</p>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ক্রমিক</th>
+                    <th>নাম</th>
+                    <th>ইউজার আইডি</th>
+                    <th>রোল</th>
+                    <th>ক্লাস</th>
+                    <th>সেকশন</th>
+                    <th>শিফট</th>
+                    <th>আবাসিক/অনাবাসিক</th>
+                    <th>অভিভাবক</th>
+                    <th>ফোন</th>
+                    <th>জন্ম তারিখ</th>
+                    <th>লিঙ্গ</th>
+                    <th>রক্তের গ্রুপ</th>
+                    <th>জাতীয়তা</th>
+                    <th>পিতার নাম</th>
+                    <th>মাতার নাম</th>
+                    <th>ভর্তির বছর</th>
+                    <th>ভর্তির তারিখ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${chunk.map((student, index) => {
+                    const serial = chunkIndex * PAGE_SIZE_FOR_PDF + index + 1;
+                    const dob = student.dob ? new Date(student.dob).toLocaleDateString('bn-BD') : 'N/A';
+                    const gender = student.gender === 'Male' ? 'পুরুষ' : student.gender === 'Female' ? 'নারী' : student.gender || 'N/A';
+                    const residential = student.residential_status === "NonResidential" ? "অনাবাসিক" : "আবাসিক";
+                    const admissionDate = student.admission_date ? new Date(student.admission_date).toLocaleDateString('bn-BD') : 'N/A';
+                    return `
+                      <tr>
+                        <td>${serial}</td>
+                        <td>${student.name || 'N/A'}</td>
+                        <td>${student.user_id || 'N/A'}</td>
+                        <td>${student.roll_no || 'N/A'}</td>
+                        <td>${student.class_name || 'N/A'}</td>
+                        <td>${student.section_name || 'N/A'}</td>
+                        <td>${student.shift_name || 'N/A'}</td>
+                        <td>${residential}</td>
+                        <td>${student.guardian || 'N/A'}</td>
+                        <td>${student.phoneno || 'N/A'}</td>
+                        <td>${dob}</td>
+                        <td>${gender}</td>
+                        <td>${student.blood_group || 'N/A'}</td>
+                        <td>${student.nationality || 'N/A'}</td>
+                        <td>${student.father_name || 'N/A'}</td>
+                        <td>${student.mother_name || 'N/A'}</td>
+                        <td>${student.admission_year || 'N/A'}</td>
+                        <td>${admissionDate}</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+            <div class="footer">
+              <p>মুহতামিম বা পরিচালকের স্বাক্ষর: ____________________</p>
+              <p>তারিখ: ${currentDate}</p>
+            </div>
+          </div>
+        `).join('')}
+        <script>
+          let printAttempted = false;
+          window.onbeforeprint = () => { printAttempted = true; };
+          window.onafterprint = () => { window.close(); };
+          window.addEventListener('beforeunload', (event) => {
+            if (!printAttempted) { window.close(); }
+          });
+
+          // Wait for the logo to load before printing
+          const logo = document.getElementById('watermark-logo');
+          if (logo) {
+            logo.onload = () => {
+              console.log('Logo loaded successfully');
+              window.print();
+            };
+            logo.onerror = () => {
+              console.warn('Logo failed to load, proceeding with print.');
+              document.querySelector('.watermark').classList.add('fallback');
+              window.print();
+            };
+          } else {
+            window.print();
+          }
+        </script>
+      </body>
+      </html>
+    `;
+
+   const printWindow = window.open('', '_blank');
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      toast.success('তালিকা রিপোর্ট তৈরি হয়েছে!', { id: loadingToast });
+  };
+
+
 
   // Handle Profile PDF Download
   const handleDownloadProfile = async (student) => {
@@ -1007,6 +1291,20 @@ const StudentList = () => {
               className="w-full"
             />
           </div>
+        </div>
+
+        <div className="flex justify-end mb-6">
+          <button
+            onClick={handleDownloadReport}
+            disabled={isLoading || instituteLoading}
+            className={`flex items-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 ${isLoading || instituteLoading
+                ? 'cursor-not-allowed opacity-50'
+                : 'hover:text-white btn-glow'
+              }`}
+            title="তালিকা ডাউনলোড করুন"
+          >
+            <FaDownload className="mr-2" /> তালিকা ডাউনলোড
+          </button>
         </div>
 
         {/* Student Table */}
