@@ -8,7 +8,7 @@ import { useGetclassConfigApiQuery } from '../../redux/features/api/class/classC
 import { useGetStudentActiveByClassQuery } from '../../redux/features/api/student/studentActiveApi';
 import { 
   useCreateSubjectMarkMutation,
-  useGetSubjectMarksQuery,
+  useGetFilteredSubjectMarksQuery,
   useUpdateSubjectMarkMutation,
 } from '../../redux/features/api/marks/subjectMarksApi';
 import { useSelector } from "react-redux";
@@ -26,7 +26,7 @@ const SubjectMarks = () => {
   const [marks, setMarks] = useState({});
   const [absentStudents, setAbsentStudents] = useState({});
   const [savingInputs, setSavingInputs] = useState({});
-  const [successInputs, setSuccessInputs] = useState({}); // Track successful saves
+  const [successInputs, setSuccessInputs] = useState({});
   const [isEnterPressed, setIsEnterPressed] = useState(false);
   const [sortedStudents, setSortedStudents] = useState([]);
 
@@ -52,12 +52,17 @@ const SubjectMarks = () => {
   } = useGetStudentActiveByClassQuery(selectedClassConfigId, { skip: !selectedClassConfigId });
 
   const currentSubjectId = subjectConfigs?.find(config => config.id.toString() === subjectConfId)?.subject_id;
+
+  // Use filtered query
   const { 
     data: existingMarks, 
-    refetch: refetchMarks 
-  } = useGetSubjectMarksQuery(
+    refetch: refetchMarks,
+    isFetching: marksFetching
+  } = useGetFilteredSubjectMarksQuery(
     { exam_id: examId, class_id: classId, subject_id: currentSubjectId },
-    { skip: !examId || !classId || !currentSubjectId }
+    { 
+      skip: !examId || !classId || !currentSubjectId 
+    }
   );
 
   const [createSubjectMark] = useCreateSubjectMarkMutation();
@@ -74,7 +79,6 @@ const SubjectMarks = () => {
   useEffect(() => {
     if (students && students.length > 0) {
       const sorted = [...students].sort((a, b) => {
-        // Convert roll numbers to numbers for proper numerical sorting
         const rollA = parseInt(a.roll_no, 10);
         const rollB = parseInt(b.roll_no, 10);
         return rollA - rollB;
@@ -97,13 +101,17 @@ const SubjectMarks = () => {
     }
   }, [classId]);
 
-  // Load existing marks
+  // Reset when exam, class, or subject changes
   useEffect(() => {
     setMarks({});
     setAbsentStudents({});
     setSavingInputs({});
     setSuccessInputs({});
     setIsEnterPressed(false);
+  }, [examId, classId, currentSubjectId]);
+
+  // Load existing marks
+  useEffect(() => {
     if (existingMarks && existingMarks.length > 0) {
       const marksMap = {};
       const absentMap = {};
@@ -113,8 +121,11 @@ const SubjectMarks = () => {
       });
       setMarks(marksMap);
       setAbsentStudents(absentMap);
+    } else {
+      setMarks({});
+      setAbsentStudents({});
     }
-  }, [existingMarks, examId, currentSubjectId, classId]);
+  }, [existingMarks]);
 
   const handleMarkChange = (studentId, markConfigId, value) => {
     if (!hasChangePermission) {
@@ -136,7 +147,7 @@ const SubjectMarks = () => {
     }
   };
 
-  const saveIndividualMark = async (studentId, markConfigId, value) => {
+   const saveIndividualMark = async (studentId, markConfigId, value, moveToNext = false, currentIndex = -1) => {
     if (!hasChangePermission) {
       toast.error('মার্ক সংরক্ষণ করার অনুমতি নেই।');
       return;
@@ -174,12 +185,30 @@ const SubjectMarks = () => {
       } else {
         await createSubjectMark(markData).unwrap();
       }
-      refetchMarks();
+      
+      // Don't refetch immediately to prevent re-render
+      // refetchMarks will be called periodically or on component unmount
+      
       setSuccessInputs((prev) => ({ ...prev, [key]: true }));
-      // Hide success icon after 2 seconds
       setTimeout(() => {
         setSuccessInputs((prev) => ({ ...prev, [key]: false }));
       }, 1000);
+
+      // Move to next input if requested
+      if (moveToNext && currentIndex >= 0 && currentIndex < sortedStudents.length - 1) {
+        const nextStudent = sortedStudents[currentIndex + 1];
+        const config = markConfigs?.find(c => c.id === markConfigId);
+        if (nextStudent && config) {
+          setTimeout(() => {
+            const nextInput = document.querySelector(
+              `input[aria-label="মার্ক প্রবেশ করান ${nextStudent.name} ${config.mark_type_name}"]`
+            );
+            if (nextInput && !absentStudents[`${nextStudent.id}_${markConfigId}`]) {
+              nextInput.focus();
+            }
+          }, 50);
+        }
+      }
     } catch (error) {
       console.error(error);
       toast.error(`ত্রুটি: ${error?.data?.message || 'মার্ক সংরক্ষণ ব্যর্থ।'}`);
@@ -189,7 +218,6 @@ const SubjectMarks = () => {
     }
   };
 
-  // Subject-wise absent toggle
   const toggleAbsent = async (studentId, subjectConfId) => {
     if (!hasChangePermission) {
       toast.error('উপস্থিতি স্ট্যাটাস পরিবর্তন করার অনুমতি নেই।');
@@ -252,8 +280,13 @@ const SubjectMarks = () => {
     }
   };
 
-  // Loading state for initial data fetch
-  if (subjectConfigsLoading || subjectConfigsFetching || studentsLoading || studentsFetching || examsLoading || yearsLoading || classesLoading || permissionsLoading) {
+  // Loading state
+  if (
+    subjectConfigsLoading || subjectConfigsFetching || 
+    studentsLoading || studentsFetching || 
+    examsLoading || yearsLoading || classesLoading || 
+    permissionsLoading || marksFetching
+  ) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <FaSpinner className="animate-spin text-2xl text-[#441a05]" />
@@ -310,6 +343,8 @@ const SubjectMarks = () => {
         `}
       </style>
 
+      <Toaster position="top-right" />
+
       {/* Header */}
       <div className="flex items-center space-x-4 mb-6 animate-fadeIn ml-5">
         <IoAddCircle className="text-4xl text-[#441a05]" />
@@ -331,8 +366,6 @@ const SubjectMarks = () => {
               value={examId}
               onChange={(e) => setExamId(e.target.value)}
               className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
-              aria-label="পরীক্ষা নির্বাচন করুন"
-              title="পরীক্ষা নির্বাচন করুন / Select exam"
             >
               <option value="" hidden disabled>পরীক্ষা নির্বাচন করুন</option>
               {exams?.map((exam) => (
@@ -348,8 +381,6 @@ const SubjectMarks = () => {
               value={academicYearId}
               onChange={(e) => setAcademicYearId(e.target.value)}
               className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
-              aria-label="শিক্ষাবর্ষ নির্বাচন করুন"
-              title="শিক্ষাবর্ষ নির্বাচন করুন / Select academic year"
             >
               <option value="" hidden disabled>শিক্ষাবর্ষ নির্বাচন করুন</option>
               {academicYears?.map((year) => (
@@ -371,8 +402,6 @@ const SubjectMarks = () => {
                 setSubjectConfId('');
               }}
               className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow"
-              aria-label="ক্লাস নির্বাচন করুন"
-              title="ক্লাস নির্বাচন করুন / Select class"
             >
               <option value="" hidden disabled>ক্লাস নির্বাচন করুন</option>
               {classes?.map((cls) => (
@@ -389,8 +418,6 @@ const SubjectMarks = () => {
               onChange={(e) => setSubjectConfId(e.target.value)}
               className="w-full p-3 border border-[#9d9087] rounded-lg focus:ring-2 focus:ring-[#DB9E30] focus:border-[#DB9E30] transition-colors bg-white/10 text-[#441a05] animate-scaleIn tick-glow disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={!classId}
-              aria-label="বিষয় নির্বাচন করুন"
-              title="বিষয় নির্বাচন করুন / Select subject"
             >
               <option value="" hidden disabled>বিষয় নির্বাচন করুন</option>
               {subjectConfigs?.map((config) => (
@@ -402,7 +429,6 @@ const SubjectMarks = () => {
           </div>
         </div>
       </div>
-
 
       {/* No Data Messages */}
       {selectedClassConfigId && !subjectConfigs?.length && (
@@ -478,7 +504,7 @@ const SubjectMarks = () => {
                         </div>
                       </div>
                     </td>
-                    {markConfigs.map((config, configIndex) => {
+                    {markConfigs.map((config) => {
                       const key = `${student.id}_${config.id}`;
                       return (
                         <td key={config.id} className="px-6 py-4 text-center relative">
@@ -488,7 +514,6 @@ const SubjectMarks = () => {
                               value={marks[key] || ''}
                               onChange={(e) => handleMarkChange(student.id, config.id, e.target.value)}
                               onBlur={(e) => {
-                                // Only save on blur if Enter was not pressed
                                 setTimeout(() => {
                                   if (!isEnterPressed) {
                                     saveIndividualMark(student.id, config.id, e.target.value);
@@ -501,8 +526,6 @@ const SubjectMarks = () => {
                                   e.preventDefault();
                                   setIsEnterPressed(true);
                                   saveIndividualMark(student.id, config.id, e.target.value);
-                                  
-                                  // Focus logic for next input
                                   if (index < sortedStudents.length - 1) {
                                     const nextStudent = sortedStudents[index + 1];
                                     const nextInput = document.querySelector(
@@ -524,7 +547,6 @@ const SubjectMarks = () => {
                               max={config.max_mark}
                               placeholder="0"
                               aria-label={`মার্ক প্রবেশ করান ${student.name} ${config.mark_type_name}`}
-                              title={`মার্ক প্রবেশ করান / Enter marks for ${student.name} in ${config.mark_type_name}`}
                             />
                             {savingInputs[key] && (
                               <FaSpinner className="absolute top-0 right-0 animate-spin text-sm text-[#DB9E30]" />
@@ -545,8 +567,6 @@ const SubjectMarks = () => {
                               ? 'bg-red-500 text-white hover:bg-red-600'
                               : 'bg-[#DB9E30] text-[#441a05] hover:bg-[#DB9E30]/80'
                           }`}
-                          aria-label={`উপস্থিতি টগল করুন ${student.name}`}
-                          title={`উপস্থিতি টগল করুন / Toggle attendance for ${student.name}`}
                         >
                           {markConfigs.some((c) => absentStudents[`${student.id}_${c.id}`]) ? 'অনুপস্থিত' : 'উপস্থিত'}
                         </button>
@@ -558,7 +578,6 @@ const SubjectMarks = () => {
             </table>
           </div>
 
-          {/* Table Footer with Stats */}
           <div className="bg-white/10 px-6 py-4 border-t border-white/20">
             <div className="flex items-center justify-between text-sm text-[#441a05]">
               <div className="flex items-center space-x-6">
@@ -568,11 +587,11 @@ const SubjectMarks = () => {
                 </span>
                 <span className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span>অনুপস্থিত: {markConfigs ? sortedStudents.filter(student => markConfigs.some(c => absentStudents[`${student.id}_${c.id}`])).length : 0}</span>
+                  <span>অনুপস্থিত: {sortedStudents.filter(student => markConfigs.some(c => absentStudents[`${student.id}_${c.id}`])).length}</span>
                 </span>
                 <span className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-[#DB9E30] rounded-full"></div>
-                  <span>উপস্থিত: {markConfigs ? sortedStudents.length - sortedStudents.filter(student => markConfigs.some(c => absentStudents[`${student.id}_${c.id}`])).length : 0}</span>
+                  <span>উপস্থিত: {sortedStudents.length - sortedStudents.filter(student => markConfigs.some(c => absentStudents[`${student.id}_${c.id}`])).length}</span>
                 </span>
               </div>
               <div className="text-xs text-[#441a05]/70">
@@ -583,7 +602,6 @@ const SubjectMarks = () => {
         </div>
       )}
 
-      {/* No marks config message */}
       {subjectConfId && markConfigs?.length === 0 && !markConfigsLoading && (
         <div className="bg-black/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 mb-8 animate-fadeIn">
           <div className="flex items-center space-x-4">
@@ -600,10 +618,8 @@ const SubjectMarks = () => {
         </div>
       )}
 
-      {/* Empty state when no filters selected */}
       {!examId && !academicYearId && !selectedClassConfigId && !subjectConfId && (
         <div className="text-center py-12 animate-fadeIn">
-          <div className="text-6xl mb-4">📝</div>
           <h3 className="text-xl font-semibold text-[#441a05] mb-2">মার্ক এন্ট্রি শুরু করতে প্রস্তুত?</h3>
           <p className="text-[#441a05]/70">উপরের ফিল্টারগুলি ব্যবহার করে পরীক্ষা, শিক্ষাবর্ষ, ক্লাস এবং বিষয় নির্বাচন করুন</p>
         </div>

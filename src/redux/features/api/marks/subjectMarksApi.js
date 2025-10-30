@@ -1,9 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import BASE_URL from '../../../../utilitis/apiConfig';
 
-const getToken = () => {
-  return localStorage.getItem('token');
-};
+const getToken = () => localStorage.getItem('token');
 
 export const subjectMarksApi = createApi({
   reducerPath: 'subjectMarksApi',
@@ -11,80 +9,74 @@ export const subjectMarksApi = createApi({
     baseUrl: BASE_URL,
     prepareHeaders: (headers) => {
       const token = getToken();
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
+      if (token) headers.set('Authorization', `Bearer ${token}`);
       headers.set('Content-Type', 'application/json');
       return headers;
     },
   }),
   tagTypes: ['SubjectMarks'],
   endpoints: (builder) => ({
-    // GET: Fetch all subject marks
-    getSubjectMarks: builder.query({
-      query: () => '/subject-marks/',
-      providesTags: ['SubjectMarks'],
+    // GET: Filter by exam, class, subject
+    getFilteredSubjectMarks: builder.query({
+      query: ({ exam_id, class_id, subject_id }) => {
+        const params = new URLSearchParams();
+        if (exam_id) params.append('exam_id', exam_id);
+        if (class_id) params.append('class_id', class_id);
+        if (subject_id) params.append('subject_id', subject_id);
+        return `/subject-marks/?${params.toString()}`;
+      },
+      providesTags: (result, error, arg) => 
+        arg ? [{ type: 'SubjectMarks', id: `${arg.exam_id}-${arg.class_id}-${arg.subject_id}` }] : ['SubjectMarks'],
     }),
 
-    // GET: Fetch a single subject mark by ID
     getSubjectMarkById: builder.query({
       query: (id) => `/subject-marks/${id}/`,
-      providesTags: ['SubjectMarks'],
+      providesTags: (result, error, id) => [{ type: 'SubjectMarks', id }],
     }),
 
-    // GET: Filter by multiple query params
-    getFilteredSubjectMarks: builder.query({
-      query: ({ exam_id, student_id, profile_class_id, class_id, academic_year }) => 
-        `/subject-marks/?exam_id=${exam_id ? exam_id : ''}&student_id=${student_id ? student_id : ""}&profile_class_id=${profile_class_id ? profile_class_id : ""}&class_id=${class_id ? class_id : ""}&academic_year=${academic_year ? academic_year : ''}`,
-      providesTags: ['SubjectMarks'],
-    }),
-
-    // POST: Create a new subject mark
     createSubjectMark: builder.mutation({
       query: (markData) => ({
         url: '/subject-marks/',
         method: 'POST',
         body: markData,
       }),
-      invalidatesTags: ['SubjectMarks'],
+      invalidatesTags: (result, error, { exam, class_id }) => 
+        [{ type: 'SubjectMarks', id: `${exam}-${class_id}` }],
     }),
 
-    // PUT: Update an existing subject mark
     updateSubjectMark: builder.mutation({
       query: ({ id, ...markData }) => ({
         url: `/subject-marks/${id}/`,
         method: 'PUT',
         body: markData,
       }),
-      invalidatesTags: ['SubjectMarks'],
+      invalidatesTags: (result, error, { exam, class_id }) => 
+        [{ type: 'SubjectMarks', id: `${exam}-${class_id}` }],
     }),
 
-    // PATCH: Partially update a subject mark
     patchSubjectMark: builder.mutation({
       query: ({ id, ...markData }) => ({
         url: `/subject-marks/${id}/`,
         method: 'PATCH',
         body: markData,
       }),
-      invalidatesTags: ['SubjectMarks'],
+      invalidatesTags: (result, error, { exam, class_id }) => 
+        [{ type: 'SubjectMarks', id: `${exam}-${class_id}` }],
     }),
 
-    // DELETE: Delete a subject mark
     deleteSubjectMark: builder.mutation({
       query: (id) => ({
         url: `/subject-marks/${id}/`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['SubjectMarks'],
+      invalidatesTags: () => ['SubjectMarks'],
     }),
   }),
 });
 
-// Export hooks for usage in components
 export const {
-  useGetSubjectMarksQuery,
-  useGetSubjectMarkByIdQuery,
   useGetFilteredSubjectMarksQuery,
+  useGetSubjectMarkByIdQuery,
   useCreateSubjectMarkMutation,
   useUpdateSubjectMarkMutation,
   usePatchSubjectMarkMutation,
