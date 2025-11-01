@@ -285,7 +285,7 @@ const SubjectMarks = () => {
     subjectConfigsLoading || subjectConfigsFetching || 
     studentsLoading || studentsFetching || 
     examsLoading || yearsLoading || classesLoading || 
-    permissionsLoading || marksFetching
+    permissionsLoading
   ) {
     return (
       <div className="min-h-screen flex items-center justify-center">
