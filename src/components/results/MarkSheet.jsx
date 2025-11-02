@@ -10,6 +10,8 @@ import { useGetExamApiQuery } from "../../redux/features/api/exam/examApi";
 import { useGetclassConfigApiQuery } from "../../redux/features/api/class/classConfigApi";
 import { useGetAcademicYearApiQuery } from "../../redux/features/api/academic-year/academicYearApi";
 import { useGetInstituteLatestQuery } from "../../redux/features/api/institute/instituteLatestApi";
+import { useGetBehaviorTypeApiQuery } from "../../redux/features/api/behavior/behaviorTypeApi";
+import { useGetBehaviorReportApiQuery } from "../../redux/features/api/behavior/behaviorReportApi";
 import selectStyles from "../../utilitis/selectStyles";
 
 // Custom CSS aligned with original MarkSheet.jsx
@@ -86,7 +88,7 @@ const customStyles = `
   }
   th, td {
     border: 1px solid #000;
-    padding: 8px;
+    padding: 6px;
     text-align: center;
   }
   th {
@@ -132,7 +134,8 @@ const customStyles = `
   }
   .a4-portrait {
     max-width: 595.28px;
-    height: 841.89px;
+    height: auto;
+    min-height: 841.89px;
     margin: 0 auto 20px;
     background: white;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -141,6 +144,8 @@ const customStyles = `
     font-family: 'Noto Sans Bengali', sans-serif;
     position: relative;
     overflow: hidden;
+    border: 14px solid rgba(219, 158, 48, 0.7);
+    border-style: double;
   }
   .student-info {
     font-size: 14px;
@@ -158,7 +163,7 @@ const customStyles = `
     font-weight: 600;
   }
   .signature {
-    margin-top: 80px;
+    margin-top: 120px;
     font-size: 12px;
     color: #000;
   }
@@ -169,19 +174,44 @@ const customStyles = `
     color: #000;
   }
   .page-break { page-break-before: always; }
+  .behavior-table {
+    margin-top: 10px;
+    font-size: 9px;
+  }
+  .behavior-table th,
+  .behavior-table td {
+    padding: 4px;
+    font-size: 9px;
+  }
+  .behavior-table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+  }
+  .optional-section {
+    margin-top: 8px;
+  }
+  .behavior-section-title {
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    margin: 10px 0 5px 0;
+    color: #000;
+  }
 `;
 
 const MarkSheet = () => {
   const [selectedExam, setSelectedExam] = useState(null);
   const [selectedClassConfig, setSelectedClassConfig] = useState(null);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState(null);
-  const [gradeFormat, setGradeFormat] = useState("grade_name"); // 'grade_name' or 'grade_name_op'
-  const [sortBy, setSortBy] = useState("roll"); // 'roll' or 'ranking'
-  const [selectedStudent, setSelectedStudent] = useState(null); // Selected student for filtering
+  const [gradeFormat, setGradeFormat] = useState("grade_name");
+  const [sortBy, setSortBy] = useState("roll");
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [showBehaviorMarks, setShowBehaviorMarks] = useState(false);
   const [resultData, setResultData] = useState([]);
   const [filteredResultData, setFilteredResultData] = useState([]);
   const [subjectGroups, setSubjectGroups] = useState([]);
   const [grades, setGrades] = useState([]);
+  const [behaviorMarks, setBehaviorMarks] = useState({});
   const [statistics, setStatistics] = useState({
     totalStudents: 0,
     gradeDistribution: {},
@@ -229,6 +259,12 @@ const MarkSheet = () => {
     isLoading: gradesLoading,
     error: gradesError,
   } = useGetGradeRulesQuery();
+  
+  // Fetch behavior data
+  const { data: behaviorTypes, isLoading: behaviorTypesLoading } =
+    useGetBehaviorTypeApiQuery();
+  const { data: behaviorReports, isLoading: behaviorReportsLoading } =
+    useGetBehaviorReportApiQuery();
 
   // Load grades from gradeRuleApi
   useEffect(() => {
@@ -254,6 +290,31 @@ const MarkSheet = () => {
     if (instituteError) toast.error("ইনস্টিটিউট তথ্য লোড করতে ব্যর্থ হয়েছে!");
     if (gradesError) toast.error("গ্রেড তালিকা লোড করতে ব্যর্থ হয়েছে!");
   }, [instituteError, gradesError]);
+
+  // Load behavior marks
+  useEffect(() => {
+    if (behaviorReports && selectedExam && selectedAcademicYear && students) {
+      const behaviorMarksData = {};
+      
+      behaviorReports.forEach((report) => {
+        const examMatches = report.exam_name_id === parseInt(selectedExam.value);
+        const academicYearMatches = selectedAcademicYear
+          ? report.academic_year === parseInt(selectedAcademicYear.value)
+          : report.academic_year === null;
+
+        if (examMatches && academicYearMatches) {
+          report.behavior_marks.forEach((mark) => {
+            if (!behaviorMarksData[mark.student_id]) {
+              behaviorMarksData[mark.student_id] = {};
+            }
+            behaviorMarksData[mark.student_id][mark.behavior_type] = mark.mark;
+          });
+        }
+      });
+      
+      setBehaviorMarks(behaviorMarksData);
+    }
+  }, [behaviorReports, selectedExam, selectedAcademicYear, students]);
 
   // Helper function to get fail grade based on format
   const getFailGrade = () => {
@@ -425,7 +486,7 @@ const MarkSheet = () => {
 
         const averageMark =
           totalMaxMark > 0 ? (totalObtained / totalMaxMark) * 100 : 0;
-        const roundedAverage = Math.ceil(averageMark); // Using ceil like in ResultSheet
+        const roundedAverage = Math.ceil(averageMark);
         const grade = getGradeForMarks(roundedAverage, hasFailed);
 
         return {
@@ -452,7 +513,6 @@ const MarkSheet = () => {
 
     sortedByTotal.forEach((student, index) => {
       if (index > 0 && student.totalObtained !== previousTotal) {
-        // Different total from previous student, increment rank by 1 only
         currentRank++;
       }
 
@@ -493,287 +553,345 @@ const MarkSheet = () => {
     setIsLoading(false);
   };
 
-  // Generate bulk PDF report
- const generateBulkPDF = () => {
-  if (!selectedExam || !selectedClassConfig || !selectedAcademicYear) {
-    toast.error("অনুগ্রহ করে সমস্ত প্রয়োজনীয় ফিল্ড পূরণ করুন!");
-    return;
-  }
+  // Generate bulk PDF report with behavior marks
+  const generateBulkPDF = () => {
+    if (!selectedExam || !selectedClassConfig || !selectedAcademicYear) {
+      toast.error("অনুগ্রহ করে সমস্ত প্রয়োজনীয় ফিল্ড পূরণ করুন!");
+      return;
+    }
 
-  if (filteredResultData.length === 0) {
-    toast.error("কোনো ফলাফল তথ্য পাওয়া যায়নি!");
-    return;
-  }
+    if (filteredResultData.length === 0) {
+      toast.error("কোনো ফলাফল তথ্য পাওয়া যায়নি!");
+      return;
+    }
 
-  if (!instituteData) {
-    toast.error("ইনস্টিটিউট তথ্য পাওয়া যায়নি!");
-    return;
-  }
+    if (!instituteData) {
+      toast.error("ইনস্টিটিউট তথ্য পাওয়া যায়নি!");
+      return;
+    }
 
-  const institute = instituteData;
-  const printWindow = window.open("", "_blank");
-  
-  // সরাসরি রিপোর্ট তৈরি করুন (ইমেজ প্রিলোডিং ছাড়া)
-  const logoUrl = instituteData.institute_logo 
-    ? instituteData.institute_logo 
-    : "https://demoschool.eduworlderp.com/img/site/1730259402.png";
+    const institute = instituteData;
+    const printWindow = window.open("", "_blank");
+    
+    const logoUrl = instituteData.institute_logo 
+      ? instituteData.institute_logo 
+      : "https://demoschool.eduworlderp.com/img/site/1730259402.png";
 
-  let htmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>শ্রেণির ফলাফল শীট</title>
-      <meta charset="UTF-8">
-      <style>
-        @page { 
-          size: A4 portrait; 
-           border-width: 18px;
-  border-color: rgba(219, 158, 48, 0.9); /* #DB9E30 with 70% opacity */
-  border-style: double;  
-  padding: 20px}
+    // Get active behavior types
+    const activeBehaviorTypes = behaviorTypes?.filter(bt => bt.is_active) || [];
 
-        }
-        body {
-          font-family: 'Noto Sans Bengali', Arial, sans-serif;
-          font-size: 12px;
-          margin: 0;
-          padding: 0;
-          background-color: #ffffff;
-        }
-        .head {
-          text-align: center;
-          margin-top: 0px;
-          margin-bottom: 15px;
-          padding-bottom: 10px;
-        }
-        .institute-info {
-          margin-bottom: 10px;
-        }
-        .institute-info h1 {
-          font-size: 22px;
-          margin: 0;
-          color: #000;
-        }
-        .institute-info p {
-          font-size: 14px;
-          margin: 5px 0;
-          color: #000;
-        }
-        .title {
-          font-size: 18px;
-          color: #DB9E30;
-          margin: 10px 0;
-          font-weight: 600;
-        }
-        .student-info {
-          font-size: 14px;
-          margin: 5px 0;
-          font-weight: 600;
-          color: #000;
-        }
-        .table-container {
-          overflow-x: auto;
-        }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          font-size: 10px;
-        }
-        th, td {
-          border: 1px solid #000;
-          padding: 8px;
-          text-align: center;
-        }
-        th {
-          background-color: #f5f5f5;
-          font-weight: bold;
-          font-size:14px;
-          color: #000;
-          text-transform: uppercase;
-        }
-        td {
-          color: #000;
-          font-size:14px;
-        }
-        .fail-cell {
-          background-color: #FFE6E6;
-          color: #9B1C1C;
-        }
-        .absent-cell {
-          background-color: #FFF7E6;
-          color: #000;
-        }
-        .footer-label {
-          text-align: right;
-          font-size:14px;
-          font-weight: 600;
-        }
-        .footer-value {
-          font-size:14px;
-          font-weight: 600;
-        }
-        .signature {
-          margin-top: 80px;
-          font-size: 12px;
-          color: #000;
-        }
-        .date {
-          margin-top: 20px;
-          text-align: right;
-          font-size: 10px;
-          color: #000;
-        }
-        .page-break { 
-          page-break-before: always; 
-        }
-        .institute-logo {
-          width: 80px;
-          height: 80px;
-          margin: 0 auto 10px;
-          display: block;
-          object-fit: contain;
-        }
-      </style>
-    </head>
-    <body>
-      ${filteredResultData
-        .map(
-          (student, index) => `
-        <div class="${index > 0 ? "page-break" : ""}">
-          <div class="head">
-            <div class="institute-info">
-              <img class="institute-logo" src="${logoUrl}" alt="Institute Logo" onerror="this.src='https://demoschool.eduworlderp.com/img/site/1730259402.png'" />
-              <h1>${institute.institute_name || "অজানা ইনস্টিটিউট"}</h1>
-              <p>${institute.institute_address || "ঠিকানা উপলব্ধ নয়"}</p>
+    let htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>শ্রেণির ফলাফল শীট</title>
+        <meta charset="UTF-8">
+        <style>
+          @page { 
+            size: A4 portrait; 
+            border-width: 18px;
+            border-color: rgba(219, 158, 48, 0.9);
+            border-style: double;  
+            padding: 20px;
+          }
+          body {
+            font-family: 'Noto Sans Bengali', Arial, sans-serif;
+            font-size: 12px;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+          }
+          .head {
+            text-align: center;
+            margin-top: 0px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+          }
+          .institute-info {
+            margin-bottom: 10px;
+          }
+          .institute-info h1 {
+            font-size: 22px;
+            margin: 0;
+            color: #000;
+          }
+          .institute-info p {
+            font-size: 14px;
+            margin: 5px 0;
+            color: #000;
+          }
+          .title {
+            font-size: 18px;
+            color: #DB9E30;
+            margin: 10px 0;
+            font-weight: 600;
+          }
+          .student-info {
+            font-size: 14px;
+            margin: 5px 0;
+            font-weight: 600;
+            color: #000;
+          }
+          .table-container {
+            overflow-x: auto;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+          }
+          th, td {
+            border: 1px solid #000;
+            padding: 6px;
+            text-align: center;
+          }
+          th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+            font-size: 12px;
+            color: #000;
+            text-transform: uppercase;
+          }
+          td {
+            color: #000;
+            font-size: 12px;
+          }
+          .fail-cell {
+            background-color: #FFE6E6;
+            color: #9B1C1C;
+          }
+          .absent-cell {
+            background-color: #FFF7E6;
+            color: #000;
+          }
+          .footer-label {
+            text-align: right;
+            font-size: 12px;
+            font-weight: 600;
+          }
+          .footer-value {
+            font-size: 12px;
+            font-weight: 600;
+          }
+          .signature {
+            margin-top: 120px;
+            font-size: 12px;
+            color: #000;
+          }
+          .date {
+            margin-top: 20px;
+            text-align: right;
+            font-size: 10px;
+            color: #000;
+          }
+          .page-break { 
+            page-break-before: always; 
+          }
+          .institute-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 10px;
+            display: block;
+            object-fit: contain;
+          }
+          .behavior-table {
+            margin-top: 10px;
+            font-size: 9px;
+          }
+          .behavior-table th,
+          .behavior-table td {
+            padding: 4px;
+            font-size: 9px;
+          }
+          .behavior-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+          }
+          .optional-section {
+            margin-top: 8px;
+          }
+          .behavior-section-title {
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0 5px 0;
+            color: #000;
+          }
+        </style>
+      </head>
+      <body>
+        ${filteredResultData
+          .map(
+            (student, index) => `
+          <div class="${index > 0 ? "page-break" : ""}">
+            <div class="head">
+              <div class="institute-info">
+                <img class="institute-logo" src="${logoUrl}" alt="Institute Logo" onerror="this.src='https://demoschool.eduworlderp.com/img/site/1730259402.png'" />
+                <h1>${institute.institute_name || "অজানা ইনস্টিটিউট"}</h1>
+                <p>${institute.institute_address || "ঠিকানা উপলব্ধ নয়"}</p>
+              </div>
+              <h2 class="title">
+                ব্যক্তিগত ফলাফল শীট - ${
+                  exams?.find((e) => e.id === Number(selectedExam.value))
+                    ?.name || "পরীক্ষা নির্বাচিত হয়নি"
+                }
+              </h2>
+              <h3 class="student-info">
+                নাম: ${student.name} | রোল: ${student.roll}
+              </h3>
+              <h3 class="student-info">
+                ক্লাস: ${
+                  classConfigs?.find(
+                    (c) => c.id === Number(selectedClassConfig.value)
+                  )?.class_name || "ক্লাস নির্বাচিত হয়নি"
+                } | 
+                শাখা: ${
+                  classConfigs?.find(
+                    (c) => c.id === Number(selectedClassConfig.value)
+                  )?.section_name || "শাখা নির্বাচিত হয়নি"
+                } | 
+                শিফট: ${
+                  classConfigs?.find(
+                    (c) => c.id === Number(selectedClassConfig.value)
+                  )?.shift_name || "শিফট নির্বাচিত হয়নি"
+                }
+              </h3>
+              <h3 class="student-info">
+                শিক্ষাবর্ষ: ${
+                  academicYears?.find(
+                    (y) => y.id === Number(selectedAcademicYear.value)
+                  )?.name || "শিক্ষাবর্ষ নির্বাচিত হয়নি"
+                }
+              </h3>
             </div>
-            <h2 class="title">
-              ব্যক্তিগত ফলাফল শীট - ${
-                exams?.find((e) => e.id === Number(selectedExam.value))
-                  ?.name || "পরীক্ষা নির্বাচিত হয়নি"
-              }
-            </h2>
-            <h3 class="student-info">
-              নাম: ${student.name} | রোল: ${student.roll}
-            </h3>
-            <h3 class="student-info">
-              ক্লাস: ${
-                classConfigs?.find(
-                  (c) => c.id === Number(selectedClassConfig.value)
-                )?.class_name || "ক্লাস নির্বাচিত হয়নি"
-              } | 
-              শাখা: ${
-                classConfigs?.find(
-                  (c) => c.id === Number(selectedClassConfig.value)
-                )?.section_name || "শাখা নির্বাচিত হয়নি"
-              } | 
-              শিফট: ${
-                classConfigs?.find(
-                  (c) => c.id === Number(selectedClassConfig.value)
-                )?.shift_name || "শিফট নির্বাচিত হয়নি"
-              }
-            </h3>
-            <h3 class="student-info">
-              শিক্ষাবর্ষ: ${
-                academicYears?.find(
-                  (y) => y.id === Number(selectedAcademicYear.value)
-                )?.name || "শিক্ষাবর্ষ নির্বাচিত হয়নি"
-              }
-            </h3>
-          </div>
 
-          <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width: 50px;">ক্রমিক নং</th>
-                  <th style="width: 200px;">বিষয়</th>
-                  <th style="width: 100px;">প্রাপ্ত নম্বর</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${student.subjects
-                  .map(
-                    (sub, idx) => `
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width: 40px;">ক্রমিক নং</th>
+                    <th style="width: 180px;">বিষয়</th>
+                    <th style="width: 80px;">প্রাপ্ত নম্বর</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${student.subjects
+                    .map(
+                      (sub, idx) => `
+                      <tr>
+                        <td>${idx + 1}</td>
+                        <td>${sub.subjectName}</td>
+                        <td class="${
+                          sub.isAbsent
+                            ? "absent-cell"
+                            : sub.isFailed
+                            ? "fail-cell"
+                            : ""
+                        }">
+                          ${sub.isAbsent ? "অনুপস্থিত" : sub.obtained}
+                        </td>
+                      </tr>
+                    `
+                    )
+                    .join("")}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td></td>
+                    <td class="footer-label">মোট নম্বর :</td>
+                    <td class="footer-value">${student.totalObtained} / ${
+              student.totalMaxMark
+            }</td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td class="footer-label">গড় নম্বর :</td>
+                    <td class="footer-value">${student.averageMark.toFixed(0)}</td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td class="footer-label">প্রাপ্ত বিভাগ :</td>
+                    <td class="footer-value">${student.grade}</td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td class="footer-label">মেধা স্থান :</td>
+                    <td class="footer-value ${
+                      student.hasFailed ? "fail-cell" : ""
+                    }">${student.rankDisplay}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            ${
+              showBehaviorMarks && activeBehaviorTypes.length > 0
+                ? `
+            <div class="optional-section">
+              <div class="behavior-section-title">আচরণ নম্বর</div>
+              <div class="table-container">
+                <table class="behavior-table">
+                  <thead>
                     <tr>
-                      <td>${idx + 1}</td>
-                      <td>${sub.subjectName}</td>
-                      <td class="${
-                        sub.isAbsent
-                          ? "absent-cell"
-                          : sub.isFailed
-                          ? "fail-cell"
-                          : ""
-                      }">
-                        ${sub.isAbsent ? "অনুপস্থিত" : sub.obtained}
-                      </td>
+                      <th style="width: 60px;">ক্রমিক</th>
+                      ${activeBehaviorTypes
+                        .map(
+                          (bt) => `
+                        <th>${bt.name}</th>
+                      `
+                        )
+                        .join("")}
                     </tr>
-                  `
-                  )
-                  .join("")}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td></td>
-                  <td class="footer-label">মোট নম্বর :</td>
-                  <td class="footer-value">${student.totalObtained} / ${
-            student.totalMaxMark
-          }</td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td class="footer-label">গড় নম্বর :</td>
-                  <td class="footer-value">${student.averageMark.toFixed(
-                    0
-                  )}</td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td class="footer-label">প্রাপ্ত বিভাগ :</td>
-                  <td class="footer-value">${student.grade}</td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td class="footer-label">মেধা স্থান :</td>
-                  <td class="footer-value ${
-                    student.hasFailed ? "fail-cell" : ""
-                  }">${student.rankDisplay}</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>১</td>
+                      ${activeBehaviorTypes
+                        .map((bt) => {
+                          const mark = behaviorMarks[student.id]?.[bt.id] || "-";
+                          return `<td>${mark}</td>`;
+                        })
+                        .join("")}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            `
+                : ""
+            }
 
-          <div class="signature">
-            পরীক্ষা নিয়ন্ত্রকের স্বাক্ষর: ____________________
-          </div>
+            <div class="signature">
+              পরীক্ষা নিয়ন্ত্রকের স্বাক্ষর: ____________________
+            </div>
 
-          <div class="date">
-            রিপোর্ট তৈরির তারিখ: ${new Date().toLocaleDateString("bn-BD")}
+            <div class="date">
+              রিপোর্ট তৈরির তারিখ: ${new Date().toLocaleDateString("bn-BD")}
+            </div>
           </div>
-        </div>
-      `
-        )
-        .join("")}
-      <script>
-        let printAttempted = false;
-        window.onbeforeprint = () => { printAttempted = true; };
-        window.onafterprint = () => { window.close(); };
-        window.addEventListener('beforeunload', (event) => {
-          if (!printAttempted) { window.close(); }
-        });
-        
-        // ছবি লোড হতে সময় দিন তারপর প্রিন্ট করুন
-        setTimeout(() => {
-          window.print();
-        }, 100);
-      </script>
-    </body>
-    </html>
-  `;
+        `
+          )
+          .join("")}
+        <script>
+          let printAttempted = false;
+          window.onbeforeprint = () => { printAttempted = true; };
+          window.onafterprint = () => { window.close(); };
+          window.addEventListener('beforeunload', (event) => {
+            if (!printAttempted) { window.close(); }
+          });
+          
+          setTimeout(() => {
+            window.print();
+          }, 100);
+        </script>
+      </body>
+      </html>
+    `;
 
-  printWindow.document.write(htmlContent);
-  printWindow.document.close();
-  toast.success("বাল্ক PDF রিপোর্ট তৈরি হয়েছে!");
-};
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    toast.success("বাল্ক PDF রিপোর্ট তৈরি হয়েছে!");
+  };
 
   // Prepare options for react-select
   const examOptions =
@@ -811,6 +929,9 @@ const MarkSheet = () => {
     { value: "ranking", label: "মেধা স্থান অনুসারে" },
   ];
 
+  // Get active behavior types
+  const activeBehaviorTypes = behaviorTypes?.filter(bt => bt.is_active) || [];
+
   // Combined loading state
   const isDataLoading =
     isLoading ||
@@ -821,7 +942,9 @@ const MarkSheet = () => {
     subjectMarksLoading ||
     markConfigsLoading ||
     gradesLoading ||
-    isInstituteLoading;
+    isInstituteLoading ||
+    behaviorTypesLoading ||
+    behaviorReportsLoading;
 
   return (
     <div className="py-8 w-full relative">
@@ -909,7 +1032,7 @@ const MarkSheet = () => {
           </div>
 
           {/* Additional Options Row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
             <div className="relative">
               <label
                 htmlFor="gradeFormatSelect"
@@ -972,6 +1095,27 @@ const MarkSheet = () => {
                 isSearchable={true}
               />
             </div>
+            <div className="relative">
+              <label className="block font-medium text-[#441a05] mb-2">
+                আচরণ নম্বর দেখান
+              </label>
+              <div className="flex items-center mt-2">
+                <input
+                  type="checkbox"
+                  id="showBehaviorMarks"
+                  checked={showBehaviorMarks}
+                  onChange={(e) => setShowBehaviorMarks(e.target.checked)}
+                  className="w-4 h-4 text-[#DB9E30] bg-gray-100 border-gray-300 rounded focus:ring-[#DB9E30] focus:ring-2"
+                  disabled={isDataLoading || activeBehaviorTypes.length === 0}
+                />
+                <label
+                  htmlFor="showBehaviorMarks"
+                  className="ml-2 text-sm text-[#441a05]"
+                >
+                  আচরণ নম্বর টেবিল দেখান
+                </label>
+              </div>
+            </div>
           </div>
 
           <div className="flex justify-end mt-6">
@@ -981,7 +1125,7 @@ const MarkSheet = () => {
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 btn-ripple ${
                 isDataLoading || filteredResultData.length === 0
                   ? "bg-gray-400 text-gray-600 cursor-not-allowed"
-                  : "bg-[#DB9E30] text-[#441a05] hover:text-white btn-glow"
+                  : "bg-[#DB9E30] text-[##DB9E30] hover:text-white btn-glow"
               }`}
               aria-label="বাল্ক PDF রিপোর্ট ডাউনলোড"
               title="বাল্ক PDF রিপোর্ট ডাউনলোড করুন"
@@ -1010,7 +1154,7 @@ const MarkSheet = () => {
           filteredResultData.map((student) => (
             <div
               key={student.id}
-              className="a4-portrait animate-fadeIn border-[14px] border-[#DB9E30]/70 border-double"
+              className="a4-portrait animate-fadeIn"
             >
               <div className="head">
                 <div className="institute-info">
@@ -1061,13 +1205,13 @@ const MarkSheet = () => {
                 <table>
                   <thead>
                     <tr>
-                      <th style={{ width: "50px" }} className="text-xs">
+                      <th style={{ width: "40px" }} className="text-xs">
                         ক্রমিক নং
                       </th>
-                      <th style={{ width: "200px" }} className="text-xs">
+                      <th style={{ width: "180px" }} className="text-xs">
                         বিষয়
                       </th>
-                      <th style={{ width: "100px" }} className="text-xs">
+                      <th style={{ width: "80px" }} className="text-xs">
                         প্রাপ্ত নম্বর
                       </th>
                     </tr>
@@ -1135,12 +1279,43 @@ const MarkSheet = () => {
                   </tfoot>
                 </table>
               </div>
-              {/* <div className="signature">
+
+              {/* Behavior Marks Table - Same design as PDF */}
+              {showBehaviorMarks && activeBehaviorTypes.length > 0 && (
+                <div className="optional-section">
+                  <div className="behavior-section-title">আচরণ নম্বর</div>
+                  <div className="table-container">
+                    <table className="behavior-table">
+                      <thead>
+                        <tr>
+                          <th style={{ width: "60px" }}>ক্রমিক</th>
+                          {activeBehaviorTypes.map((bt) => (
+                            <th className="max-h-[10px]" key={bt.id}>{bt.name}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>১</td>
+                          {activeBehaviorTypes.map((bt) => {
+                            const mark = behaviorMarks[student.id]?.[bt.id] || "-";
+                            return (
+                              <td key={bt.id}>{mark}</td>
+                            );
+                          })}
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              <div className="signature">
                 পরীক্ষা নিয়ন্ত্রকের স্বাক্ষর: ____________________
               </div>
               <div className="date">
                 রিপোর্ট তৈরির তারিখ: {new Date().toLocaleDateString("bn-BD")}
-              </div> */}
+              </div>
             </div>
           ))
         )}

@@ -127,7 +127,6 @@ console.log("selectedGroup", selectedGroup)
 
   return (
     <div className="py-8 w-full relative">
-      <Toaster position="top-right" reverseOrder={false} />
       <style>
         {`
           @keyframes fadeIn {

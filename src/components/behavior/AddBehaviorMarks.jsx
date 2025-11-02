@@ -662,7 +662,7 @@ const AddBehaviorMarks = () => {
         const mark = behaviorReports[student.id]?.[bt.id];
         if (mark && mark !== "" && !isNaN(parseFloat(mark))) totalMarksGiven++;
       });
-    });
+    });z
     const averageMarksPercentage =
       students.length > 0 && activeBehaviorTypes.length > 0
         ? (totalMarksGiven / (students.length * activeBehaviorTypes.length)) *
