@@ -399,7 +399,7 @@ const GiveStudentAttendace = () => {
                                 ? statusColors[record.status.toUpperCase()] || "bg-gray-300"
                                 : "bg-gray-200";
                               const date = record
-                                ? format(new Date(record.attendance_date), "MM/dd")
+                                ? format(new Date(record.attendance_date), "MM/dd/yyyy")
                                 : "--";
                               const status = record
                                 ? statusLabels[record.status.toUpperCase()]
