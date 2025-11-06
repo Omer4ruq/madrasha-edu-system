@@ -4,7 +4,6 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import App from "./App";
-import LeaveType from "./components/attendance/leave-type/LeaveType";
 import Home from "./components/homePage/Home";
 import EditInstituteInfo from "./components/instituteProfile/EditInstituteInfo";
 import InstituteProfile from "./components/instituteProfile/InstituteProfile";
@@ -36,19 +35,14 @@ import StudentList from "./components/users/student-list/StudentList";
 import StaffList from "./components/users/staff-list/StaffList";
 import AddFeePackages from "./components/fees/AddFeePackages";
 import AddFeesName from "./components/fees/AddFeesName";
-import CurrentFees from "./components/fees/CurrentFees";
 import DeleteStudentFees from "./components/fees/DeleteStudentFees";
 import StudentAttendance from "./components/student-attendance/StudentAttendance";
-import PreviousFees from "./components/fees/PreviousFees";
 import MealItems from "./components/meals/MealItems";
 import MealSetup from "./components/meals/MealSetup";
 import MealStatus from "./components/meals/MealStatus";
 import ClassSubject from "./components/SubjectManagement/ClassSubject";
 import SentSms from "./components/Communication2/General-SMS/SendSms";
 import SmsTemplate from "./components/Communication2/General-SMS/SmsTemplate";
-import SentNotificationSMS from "./components/Communication2/Notification-SMS/SentNotificationSMS";
-import SmsNotificationTemplate from "./components/Communication2/Notification-SMS/SmsNotificationTemplate";
-import SubjectMarkConfigs from "./components/marks/SubjectMarkConfigs";
 import SubjectMarks from "./components/marks/SubjectMarks";
 import AttendanceSheet from "./components/layout/AttendanceSheet";
 import ClassPeriodSetup from "./components/periods/ClassPeriodSetup";
@@ -89,6 +83,7 @@ import WithdrawTable from "./components/withdraw/WithdrawTable";
 import LiabilityTable from "./components/accounts/Liability/LiabilityTable";
 import PaidTable from "./components/fees/PaidTable";
 import DueFeeList from "./components/fees/DueFeeList";
+import GiveStudentAttendace from "./components/student-attendance/GiveStudentAttendace";
 
 function Root() {
   const router = createBrowserRouter([
@@ -547,6 +542,16 @@ function Root() {
                   path: "mutalaya-report",
                   element: <MutalayaReport></MutalayaReport>,
                 },
+              ],
+            },
+            {
+              path: "attendance",
+              children: [
+                {
+                  path: "GiveStudent-attendance",
+                  element: <GiveStudentAttendace/>,
+                },
+
               ],
             },
           ],

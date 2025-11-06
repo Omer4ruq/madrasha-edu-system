@@ -86,7 +86,6 @@ import Footer from "./components/topNavbar/Footer";
 import TopNavbar from "./components/topNavbar/TopNavbar";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import "./i18n/i18n.js";
 import { SelectedMenuProvider } from "./context/SelectedMenuContext";
 import { Toaster } from "react-hot-toast";
 import bgImg from '../public/images/bg.png'

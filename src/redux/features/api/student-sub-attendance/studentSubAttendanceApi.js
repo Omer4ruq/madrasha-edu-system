@@ -1,9 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import BASE_URL from '../../../../utilitis/apiConfig';
 
-const getToken = () => {
-  return localStorage.getItem('token');
-};
+const getToken = () => localStorage.getItem('token');
 
 export const studentSubAttendanceApi = createApi({
   reducerPath: 'studentSubAttendanceApi',
@@ -11,76 +9,58 @@ export const studentSubAttendanceApi = createApi({
     baseUrl: BASE_URL,
     prepareHeaders: (headers) => {
       const token = getToken();
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
+      if (token) headers.set('Authorization', `Bearer ${token}`);
       headers.set('Content-Type', 'application/json');
       return headers;
     },
   }),
   tagTypes: ['StudentSubAttendance'],
-  endpoints: (builder) => ({
-    // GET: Fetch student subject attendance with all filter options
-    getStudentSubAttendance: builder.query({
-      query: ({ class_subject_id, class_id, academic_year_id, student_id, date, start_date, end_date, month }) => {
-        const queryParams = new URLSearchParams();
-        // Add filters only if they are provided and valid
-        if (class_subject_id) queryParams.set('class_subject_id', class_subject_id);
-        if (class_id) queryParams.set('class_id', class_id);
-        if (academic_year_id) queryParams.set('academic_year_id', academic_year_id);
-        if (student_id) queryParams.set('student_id', student_id);
-        if (date) queryParams.set('date', date);
-        if (start_date) queryParams.set('start_date', start_date);
-        if (end_date) queryParams.set('end_date', end_date);
-        if (month) queryParams.set('month', month);
 
-        return `/student-sub-attendance/?${queryParams.toString()}`;
+  endpoints: (builder) => ({
+    getStudentSubAttendance: builder.query({
+      query: ({ class_subject_id, class_id, date }) => {
+        const params = new URLSearchParams();
+        if (class_subject_id) params.set('class_subject_id', class_subject_id);
+        if (class_id) params.set('class_id', class_id);
+        if (date) params.set('date', date);
+        return `/student-sub-attendance/?${params.toString()}`;
       },
-      transformResponse: (response) => {
-        // Handle both paginated and non-paginated responses
-        if (Array.isArray(response)) {
-          // Non-paginated response (like your sample)
-          return {
-            attendance: response,
-            total: response.length,
-            next: null,
-            previous: null,
-          };
-        }
-        // Paginated response (if applicable)
-        return {
-          attendance: response.results || response || [],
-          total: response.count || 0,
-          next: response.next || null,
-          previous: response.previous || null,
-        };
+      transformResponse: (res) => {
+        if (Array.isArray(res)) return { attendance: res };
+        return { attendance: res.results || res.attendance || [] };
       },
-      providesTags: ['StudentSubAttendance'],
+      providesTags: (result, error, arg) => [
+        'StudentSubAttendance',
+        { type: 'StudentSubAttendance', id: `${arg.class_subject_id}-${arg.class_id}-${arg.date}` },
+      ],
     }),
 
-    // POST: Create a new student subject attendance record
     createStudentSubAttendance: builder.mutation({
-      query: (attendanceData) => ({
+      query: (payload) => ({
         url: '/student-sub-attendance/',
         method: 'POST',
-        body: attendanceData,
+        body: payload,
       }),
-      invalidatesTags: ['StudentSubAttendance'],
+      invalidatesTags: (result, error, arg) => [
+        'StudentSubAttendance',
+        { type: 'StudentSubAttendance', id: `${arg.class_subject_id}-${arg.class_id}-${arg.date || new Date().toISOString().split('T')[0]}` },
+      ],
     }),
 
-    // PUT: Update an existing student subject attendance record
     updateStudentSubAttendance: builder.mutation({
-      query: ({ id, ...attendanceData }) => ({
-        url: `/student-sub-attendance/${id}/`,
+      query: (payload) => ({
+        url: '/student-sub-attendance/',
         method: 'PUT',
-        body: attendanceData,
+        body: payload,
       }),
-      invalidatesTags: ['StudentSubAttendance'],
+      invalidatesTags: (result, error, arg) => [
+        'StudentSubAttendance',
+        { type: 'StudentSubAttendance', id: `${arg.class_subject_id}-${arg.class_id}-${arg.date || new Date().toISOString().split('T')[0]}` },
+      ],
     }),
   }),
 });
 
-// Export hooks for usage in components
 export const {
   useGetStudentSubAttendanceQuery,
   useCreateStudentSubAttendanceMutation,

@@ -552,6 +552,19 @@ const mainMenu = [
       },
     ],
   },
+  {
+    id: "12",
+    title: "Attendace",
+    icon: "TbReportAnalytics",
+    link: "/attendance",
+    children: [
+      {
+        id: "12/01",
+        title: "Students Attendance",
+        link: "/attendance/GiveStudent-attendance",
+      },
+    ],
+  },
 ];
 
 export default mainMenu;

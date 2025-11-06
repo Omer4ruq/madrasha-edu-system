@@ -1,12 +1,7 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
-import Error from "../common/Error.jsx";
-import Loading from "../common/Loading.jsx";
 import InstituteProfileForm from "./InstituteProfileForm.jsx";
 import InstituteDetails from "./InstituteDetails.jsx";
-import '../../styles/institute-profile.css' // Ensure this path is correct
 import { useGetInstitutesQuery } from "../../redux/features/api/institute/instituteApi.js";
 import { useSelector } from 'react-redux'; // Import useSelector
 import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi'; // Import permission hook

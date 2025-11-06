@@ -76,6 +76,7 @@ import { liabilityHeadsApi } from "./features/api/liability/liabilityHeadsApi";
 import { partiesApi } from "./features/api/parties/partiesApi";
 import { withdrawsApi } from "./features/api/withdraw/withdrawsApi";
 import { liabilityEntriesApi } from "./features/api/liability/liabilityEntriesApi";
+import { lastThreeAttendanceApi } from "./features/api/student-sub-attendance/lastThreeAttendanceApi";
 
 
 export const store = configureStore({
@@ -161,6 +162,7 @@ export const store = configureStore({
     [liabilityEntriesApi.reducerPath]: liabilityEntriesApi.reducer,
     [partiesApi.reducerPath]: partiesApi.reducer,
     [withdrawsApi.reducerPath]: withdrawsApi.reducer,
+    [lastThreeAttendanceApi.reducerPath]: lastThreeAttendanceApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -239,6 +241,7 @@ export const store = configureStore({
       .concat(liabilityEntriesApi.middleware)
       .concat(partiesApi.middleware)
       .concat(withdrawsApi.middleware)
+      .concat(lastThreeAttendanceApi.middleware)
 });
 
 // Enable refetchOnFocus/refetchOnReconnect behaviors
