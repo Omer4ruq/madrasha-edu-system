@@ -1,5 +1,3 @@
-// StudentAttendance.jsx (Final Updated Version)
-
 import React, { useState, useMemo, useEffect } from "react";
 import Select from "react-select";
 import {
@@ -35,7 +33,7 @@ const customStyles = `
     0% { transform: scale(0); opacity: 0.5; }
     100% { transform: scale(4); opacity: 0; }
   }
-  @keyframes iconHover {
+  @keyframeskeyframes iconHover {
     to { transform: scale(1.1); }
   }
   .animate-fadeIn {
@@ -191,35 +189,39 @@ const StudentAttendance = () => {
   } = useGetStudentActiveByClassQuery(selectedClass?.value, {
     skip: !selectedClass,
   });
-  const subjects = Array.isArray(subjectsData) ? subjectsData : [];
+
+  // শুধুমাত্র is_active: true বিষয়গুলো নেওয়া হবে
+  const activeSubjects = useMemo(() => {
+    if (!Array.isArray(subjectsData)) return [];
+    return subjectsData.filter(subject => subject.is_active === true);
+  }, [subjectsData]);
+
   const students = Array.isArray(studentsData) ? studentsData : [];
 
-  const studentOptions = useMemo(() => {
-    return students.map((student) => ({
-      value: student.id,
-      label: `${student.name || "N/A"} (ID: ${student.user_id || "N/A"})`,
-      student,
-    }));
-  }, [students]);
-
-  const filteredStudents = useMemo(() => {
-    if (!students.length) return [];
-    return students.filter(
+  // ছাত্রদের রোল নম্বর অনুযায়ী সর্ট করা
+  const sortedStudents = useMemo(() => {
+    const filtered = students.filter(
       (student) =>
         (student.name &&
           student.name.toLowerCase().includes(studentSearch.toLowerCase())) ||
         (student.user_id && student.user_id.toString().includes(studentSearch))
     );
+
+    return filtered.sort((a, b) => {
+      const rollA = a.roll_no ? parseInt(a.roll_no, 10) : Infinity;
+      const rollB = b.roll_no ? parseInt(b.roll_no, 10) : Infinity;
+      return rollA - rollB;
+    });
   }, [students, studentSearch]);
 
+  // শুধু অ্যাক্টিভ বিষয় + সার্চ ফিল্টার
   const filteredSubjects = useMemo(() => {
-    if (!subjects.length) return [];
-    return subjects.filter(
+    return activeSubjects.filter(
       (subject) =>
         subject.name &&
         subject.name.toLowerCase().includes(subjectSearch.toLowerCase())
     );
-  }, [subjects, subjectSearch]);
+  }, [activeSubjects, subjectSearch]);
 
   const attendanceQueryParams = {
     class_id: selectedClass?.value,
@@ -290,7 +292,7 @@ const StudentAttendance = () => {
   const presentSummary = useMemo(() => {
     if (tabValue !== 1 || !attendanceData?.attendance?.length) return {};
     const summary = {};
-    filteredStudents.forEach((student) => {
+    sortedStudents.forEach((student) => {
       const records = attendanceData.attendance.filter(
         (rec) => rec.student === student.id
       );
@@ -299,7 +301,7 @@ const StudentAttendance = () => {
       summary[student.id] = { present, total };
     });
     return summary;
-  }, [attendanceData, filteredStudents, tabValue]);
+  }, [attendanceData, sortedStudents, tabValue]);
 
   // Render colored summary
   const renderPresentSummary = (present, total) => {
@@ -363,7 +365,7 @@ const StudentAttendance = () => {
     setSelectedStudent(null);
   };
 
-  // Generate PDF Report
+  // Generate PDF Report (Only Active Subjects)
   const generatePDFReport = () => {
     if (
       !selectedClass ||
@@ -504,7 +506,7 @@ const StudentAttendance = () => {
                     : `তারিখের পরিসীমা: ${new Date(startDate).toLocaleDateString("bn-BD")} - ${new Date(endDate).toLocaleDateString("bn-BD")}`
                 }</h3>`
           }
-          ${selectedStudent ? `<h3>ছাত্র: ${selectedStudent.name || "N/A"} (ID: ${selectedStudent.user_id || "N/A"})</h3>` : ""}
+          ${selectedStudent ? `<h3>ছাত্র: ${selectedStudent.name || "N/A"} (রোল: ${selectedStudent.roll_no || "N/A"})</h3>` : ""}
         </div>
 
         <!-- Legend -->
@@ -560,10 +562,10 @@ const StudentAttendance = () => {
     `;
 
     if (tabValue === 0) {
-      filteredStudents.forEach((student) => {
+      sortedStudents.forEach((student) => {
         htmlContent += `
           <tr>
-            <td>${student.name || "N/A"} (Roll: ${student.roll_no || "N/A"})</td>
+            <td>${student.name || "N/A"} (রোল: ${student.roll_no || "N/A"})</td>
             ${filteredSubjects
               .map((subject) => {
                 const attendance = attendanceData?.attendance?.find(
@@ -604,11 +606,11 @@ const StudentAttendance = () => {
         `;
       });
     } else {
-      filteredStudents.forEach((student) => {
+      sortedStudents.forEach((student) => {
         const { present, total } = presentSummary[student.id] || { present: 0, total: 0 };
         htmlContent += `
           <tr>
-            <td>${student.name || "N/A"} (ID: ${student.user_id || "N/A"})</td>
+            <td>${student.name || "N/A"} (রোল: ${student.roll_no || "N/A"})</td>
             <td class="summary">
               <span style="color: green; font-weight: bold;">${present}</span> / 
               <span style="color: #555;">${total}</span>
@@ -907,8 +909,8 @@ const StudentAttendance = () => {
           <p className="p-4 text-[#441a05]/70 animate-scaleIn">
             অনুগ্রহ করে তারিখের পরিসীমা নির্বাচন করুন।
           </p>
-        ) : (tabValue === 0 && filteredStudents.length === 0) ||
-          (tabValue === 1 && !selectedStudent && filteredStudents.length === 0) ? (
+        ) : (tabValue === 0 && sortedStudents.length === 0) ||
+          (tabValue === 1 && !selectedStudent && sortedStudents.length === 0) ? (
           <p className="p-4 text-[#441a05]/70 animate-scaleIn">
             কোনো ছাত্র পাওয়া যায়নি।
           </p>
@@ -960,10 +962,10 @@ const StudentAttendance = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/20">
-                {filteredStudents.map((student, index) => (
+                {sortedStudents.map((student, index) => (
                   <tr key={student.id} className="bg-white/5 hover:bg-white/10 transition-colors duration-200 animate-fadeIn" style={{ animationDelay: `${index * 0.05}s` }}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                      {student.name || "N/A"} (Roll: {student.roll_no || "N/A"})
+                      {student.name || "N/A"} (রোল: {student.roll_no || "N/A"})
                     </td>
                     {filteredSubjects.map((subject) => {
                       const attendance = attendanceData?.attendance?.find(
@@ -1078,7 +1080,7 @@ const StudentAttendance = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/20">
-                {filteredStudents.map((student, index) => {
+                {sortedStudents.map((student, index) => {
                   const { present, total } = presentSummary[student.id] || { present: 0, total: 0 };
                   return (
                     <tr key={student.id} className="bg-white/5 hover:bg-white/10 transition-colors duration-200 animate-fadeIn" style={{ animationDelay: `${index * 0.05}s` }}>
@@ -1086,23 +1088,8 @@ const StudentAttendance = () => {
                         className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05] cursor-pointer hover:underline"
                         onClick={() => handleStudentClick(student)}
                       >
-                        {student.name || "N/A"} (ID: {student.user_id || "N/A"})
+                        {student.name || "N/A"} (রোল: {student.roll_no || "N/A"})
                       </td>
-                      {/* {uniqueDates.map((date) => {
-                        const attendance = attendanceData?.attendance?.find(
-                          (record) =>
-                            record.student === student.id &&
-                            record.attendance_date === date
-                        );
-                        const status = attendance?.status || null;
-                        return (
-                          <td key={`${student.id}-${date}`} className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                            <Tooltip title={status ? statusLabels[status] : ""}>
-                              <span className={`status-circle ${status ? statusColors[status] : "bg-gray-400"}`}></span>
-                            </Tooltip>
-                          </td>
-                        );
-                      })} */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-[#441a05]">
                         {renderPresentSummary(present, total)}
                       </td>
