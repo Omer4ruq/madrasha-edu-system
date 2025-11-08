@@ -1,3 +1,4 @@
+// Updated StudentAttendance.jsx
 import React, { useState, useMemo, useEffect } from "react";
 import Select from "react-select";
 import {
@@ -16,6 +17,8 @@ import { useGetClassSubjectsByClassIdQuery } from "../../redux/features/api/clas
 import { useGetStudentActiveByClassQuery } from "../../redux/features/api/student/studentActiveApi";
 import { useGetStudentSubAttendanceQuery } from "../../redux/features/api/student-sub-attendance/studentSubAttendanceApi";
 import { useGetInstituteLatestQuery } from "../../redux/features/api/institute/instituteLatestApi";
+import { useSelector } from 'react-redux';
+import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi';
 
 // Custom CSS
 const customStyles = `
@@ -97,6 +100,34 @@ const customStyles = `
   }
 `;
 
+const AttendanceStatus = {
+  PRESENT: "PRESENT",
+  ABSENT: "ABSENT",
+  LATE: "LATE",
+  LEAVE: "LEAVE",
+};
+
+const statusLabels = {
+  [AttendanceStatus.PRESENT]: "উপস্থিত",
+  [AttendanceStatus.ABSENT]: "অনুপস্থিত",
+  [AttendanceStatus.LATE]: "বিলম্ব",
+  [AttendanceStatus.LEAVE]: "ছুটি",
+};
+
+const statusColors = {
+  [AttendanceStatus.PRESENT]: "text-green-500",
+  [AttendanceStatus.ABSENT]: "text-red-500",
+  [AttendanceStatus.LATE]: "text-yellow-500",
+  [AttendanceStatus.LEAVE]: "text-blue-500",
+};
+
+const statusEmojis = {
+  [AttendanceStatus.PRESENT]: "",
+  [AttendanceStatus.ABSENT]: "",
+  [AttendanceStatus.LATE]: "",
+  [AttendanceStatus.LEAVE]: "",
+};
+
 const StudentAttendance = () => {
   const [tabValue, setTabValue] = useState(0);
   const [selectedClass, setSelectedClass] = useState(null);
@@ -108,6 +139,12 @@ const StudentAttendance = () => {
   const [subjectSearch, setSubjectSearch] = useState("");
   const [filterType, setFilterType] = useState("dateRange");
   const [selectedStudent, setSelectedStudent] = useState(null);
+
+  const { group_id } = useSelector((state) => state.auth);
+
+  // Permissions
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, { skip: !group_id });
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_student_sub_attendance') || true;
 
   // Fetch institute data
   const {
@@ -394,6 +431,10 @@ const StudentAttendance = () => {
             text-align: right; 
             font-size: 10px; 
           }
+          .present { color: green; }
+          .absent { color: red; }
+          .late { color: orange; }
+          .leave { color: blue; }
         </style>
       </head>
       <body>
@@ -492,13 +533,12 @@ const StudentAttendance = () => {
                     record.class_subject === subject.id &&
                     record.attendance_date === classDate
                 );
-                return `<td>${
-                  attendance?.status === "PRESENT"
-                    ? "উপস্থিত"
-                    : attendance?.status === "ABSENT"
-                    ? "অনুপস্থিত"
-                    : "N/A"
-                }${attendance?.remarks ? ` (${attendance.remarks})` : ""}</td>`;
+                const status = attendance?.status || "N/A";
+                const label = statusLabels[status] || "N/A";
+                const colorClass = status.toLowerCase();
+                return `<td class="${colorClass}">${label}${
+                  attendance?.remarks ? ` (${attendance.remarks})` : ""
+                }</td>`;
               })
               .join("")}
           </tr>
@@ -517,13 +557,12 @@ const StudentAttendance = () => {
                     record.class_subject === subject.id &&
                     record.attendance_date === date
                 );
-                return `<td>${
-                  attendance?.status === "PRESENT"
-                    ? "উপস্থিত"
-                    : attendance?.status === "ABSENT"
-                    ? "অনুপস্থিত"
-                    : "N/A"
-                }${attendance?.remarks ? ` (${attendance.remarks})` : ""}</td>`;
+                const status = attendance?.status || "N/A";
+                const label = statusLabels[status] || "N/A";
+                const colorClass = status.toLowerCase();
+                return `<td class="${colorClass}">${label}${
+                  attendance?.remarks ? ` (${attendance.remarks})` : ""
+                }</td>`;
               })
               .join("")}
           </tr>
@@ -541,13 +580,12 @@ const StudentAttendance = () => {
                     record.student === student.id &&
                     record.attendance_date === date
                 );
-                return `<td>${
-                  attendance?.status === "PRESENT"
-                    ? "উপস্থিত"
-                    : attendance?.status === "ABSENT"
-                    ? "অনুপস্থিত"
-                    : "N/A"
-                }${attendance?.remarks ? ` (${attendance.remarks})` : ""}</td>`;
+                const status = attendance?.status || "N/A";
+                const label = statusLabels[status] || "N/A";
+                const colorClass = status.toLowerCase();
+                return `<td class="${colorClass}">${label}${
+                  attendance?.remarks ? ` (${attendance.remarks})` : ""
+                }</td>`;
               })
               .join("")}
           </tr>
@@ -565,25 +603,13 @@ const StudentAttendance = () => {
         let printAttempted = false;
         window.onbeforeprint = () => { printAttempted = true; };
         window.onafterprint = () => { window.close(); };
-        window.addEventListener('beforeunload', (event) => {
-          if (!printAttempted) { window.close(); }
+        window.addEventListener('beforeunload', (e) => {
+          if (!printAttempted) {
+            e.preventDefault();
+            return 'প্রিন্ট না করে বন্ধ করলে রিপোর্ট হারিয়ে যাবে। প্রিন্ট করুন বা সেভ করুন।';
+          }
         });
-
-        // Wait for the logo to load before printing
-        const logo = document.getElementById('watermark-logo');
-        if (logo) {
-          logo.onload = () => {
-            console.log('Logo loaded successfully');
-            window.print();
-          };
-          logo.onerror = () => {
-            console.warn('Logo failed to load, proceeding with print.');
-            document.querySelector('.watermark').classList.add('fallback');
-            window.print();
-          };
-        } else {
-          window.print();
-        }
+        setTimeout(() => { window.print(); }, 300);
       </script>
       </body>
       </html>
@@ -591,9 +617,6 @@ const StudentAttendance = () => {
 
     printWindow.document.write(htmlContent);
     printWindow.document.close();
-    printWindow.print();
-
-    toast.success("PDF রিপোর্ট তৈরি হয়েছে!");
   };
 
   const isLoading =
@@ -601,16 +624,35 @@ const StudentAttendance = () => {
     isSubjectsLoading ||
     isStudentsLoading ||
     isAttendanceLoading ||
-    isInstituteLoading;
+    isInstituteLoading ||
+    permissionsLoading;
+
+  if (permissionsLoading) {
+    return <div className="p-4 text-center">অনুমতি লোড হচ্ছে...</div>;
+  }
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-center text-red-500">এই পৃষ্ঠাটি দেখার অনুমতি আপনার নেই।</div>;
+  }
 
   return (
-    <div className="py-8 w-full relative">
+    <div className="py-8 w-full relative mx-auto">
       <style>{customStyles}</style>
-      <div className="mx-auto">
+      <Toaster position="top-center" />
+
+      {/* Header Card */}
+      <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+        <div className="flex items-center space-x-2 mb-6">
+          <IoAdd className="text-3xl text-[#441a05]" />
+          <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
+            ছাত্র উপস্থিতি
+          </h3>
+        </div>
+
         {/* Tabs */}
-        <div className="flex border-b border-white/20 mb-6 animate-fadeIn">
+        <div className="flex mb-6 border-b border-white/20">
           <button
-            className={`flex-1 py-3 px-6 sm:text-lg font-medium rounded-t-lg text-sm transition-all duration-300 ${
+            className={`px-6 py-2 font-medium rounded-t-lg transition-all ${
               tabValue === 0 ? "tab-active" : "tab-inactive"
             }`}
             onClick={() => {
@@ -618,148 +660,98 @@ const StudentAttendance = () => {
               setMonth("");
               setStartDate("");
               setEndDate("");
-              setStudentSearch("");
-              setSubjectSearch("");
-              setClassDate("");
               setFilterType("dateRange");
-              setSelectedStudent(null);
             }}
-            aria-label="ক্লাস অনুযায়ী উপস্থিতি"
-            title="ক্লাস অনুযায়ী উপস্থিতি দেখুন / View attendance by class"
           >
-            ক্লাস অনুযায়ী উপস্থিতি
+            দৈনিক
           </button>
           <button
-            className={`flex-1 py-3 px-6 lg:text-lg text-sm font-medium rounded-t-lg transition-all duration-300 ${
+            className={`px-6 py-2 font-medium rounded-t-lg transition-all ${
               tabValue === 1 ? "tab-active" : "tab-inactive"
             }`}
             onClick={() => {
               setTabValue(1);
-              setStudentSearch("");
-              setSubjectSearch("");
               setClassDate("");
-              setSelectedStudent(null);
             }}
-            aria-label="তারিখ/মাস অনুযায়ী উপস্থিতি"
-            title="তারিখ/মাস অনুযায়ী উপস্থিতি দেখুন / View attendance by date/month"
           >
-            তারিখ/মাস অনুযায়ী উপস্থিতি
+            মাসিক / তারিখের পরিসীমা
           </button>
         </div>
 
         {/* Form */}
-        <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
-          <div className="flex items-center space-x-4 mb-6">
-            <FaCalendarAlt className="text-3xl text-[#441a05]" />
-            <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">
-              {tabValue === 0
-                ? "ক্লাস অনুযায়ী উপস্থিতি দেখুন"
-                : "তারিখ/মাস অনুযায়ী উপস্থিতি দেখুন"}
-            </h3>
-          </div>
-
-          <form
-            onSubmit={handleSubmit}
-            className="grid grid-cols-1 md:grid-cols-2 gap-6"
-          >
-            {/* ক্লাস নির্বাচন */}
-            <div className="relative">
-              <label
-                htmlFor="classSelect"
-                className="block font-medium text-[#441a05]"
-              >
-                ক্লাস নির্বাচন <span className="text-red-600">*</span>
-              </label>
-              <Select
-                id="classSelect"
-                options={classOptions}
-                value={selectedClass}
-                onChange={(option) => {
-                  setSelectedClass(option);
-                  setSelectedStudent(null);
-                }}
-                placeholder="ক্লাস নির্বাচন"
-                classNamePrefix="react-select"
-                className="mt-1"
-                isClearable
-                isDisabled={isLoading}
-                styles={selectStyles}
-                menuPortalTarget={document.body}
-                menuPosition="fixed"
-                aria-label="ক্লাস নির্বাচন"
-              />
-            </div>
-
-            {/* তারিখ নির্বাচন */}
-            {tabValue === 0 && (
-              <div className="relative input-icon">
-                <label
-                  htmlFor="classDate"
-                  className="block font-medium text-[#441a05]"
-                >
-                  তারিখ নির্বাচন <span className="text-red-600">*</span>
-                </label>
-                <input
-                  id="classDate"
-                  type="date"
-                  value={classDate}
-                  onChange={(e) => setClassDate(e.target.value)}
-                  onClick={handleDateClick}
-                  className="mt-1 block w-full bg-transparent text-[#441a05] pl-10 py-2 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#441a05] focus:ring-[#441a05] transition-all duration-300"
-                  required
-                  disabled={isLoading}
-                  aria-label="তারিখ নির্বাচন"
-                />
-                <FaCalendarAlt className="absolute left-3 top-[42px] text-[#DB9E30]" />
-              </div>
-            )}
-
-            {/* ছাত্র নির্বাচন ও ফিল্টার */}
-            {tabValue === 1 && (
-              <>
-                <div className="relative">
-                  <label
-                    htmlFor="studentSelect"
-                    className="block font-medium text-[#441a05]"
-                  >
-                    ছাত্র নির্বাচন
+        <form onSubmit={handleSubmit}>
+          {tabValue === 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fadeIn">
+                {/* Class Select */}
+                <div>
+                  <label className="block text-[#441a05] sm:text-base text-xs font-medium mb-2">
+                    ক্লাস নির্বাচন করুন:
                   </label>
                   <Select
-                    id="studentSelect"
-                    options={studentOptions}
-                    value={studentOptions.find(
-                      (option) => option.value === selectedStudent?.id
-                    )}
-                    onChange={(option) =>
-                      setSelectedStudent(option?.student || null)
-                    }
-                    placeholder="ছাত্র নির্বাচন"
-                    classNamePrefix="react-select"
-                    className="mt-1"
+                    options={classOptions}
+                    value={selectedClass}
+                    onChange={setSelectedClass}
+                    placeholder="ক্লাস নির্বাচন করুন"
+                    isLoading={isClassesLoading}
                     isClearable
-                    isDisabled={isLoading || !selectedClass}
+                    isSearchable
                     styles={selectStyles}
                     menuPortalTarget={document.body}
                     menuPosition="fixed"
-                    isSearchable
-                    filterOption={(option, inputValue) =>
-                      option.label
-                        .toLowerCase()
-                        .includes(inputValue.toLowerCase())
-                    }
-                    aria-label="ছাত্র নির্বাচন"
+                    className="animate-scaleIn"
                   />
                 </div>
 
-                <div className="relative input-icon col-span-2">
-                  <label
-                    htmlFor="filterType"
-                    className="block font-medium text-[#441a05]"
-                  >
-                    ফিল্টার প্রকার
+                {/* Date Picker */}
+                <div className="relative input-icon">
+                  <label className="block text-[#441a05] sm:text-base text-xs font-medium mb-2">
+                    তারিখ নির্বাচন করুন:
+                  </label>
+                  <FaCalendarAlt
+                    className="absolute left-3 top-11 text-[#DB9E30] cursor-pointer"
+                    onClick={handleDateClick}
+                  />
+                  <input
+                    type="date"
+                    value={classDate}
+                    onChange={(e) => setClassDate(e.target.value)}
+                    onClick={handleDateClick}
+                    className="mt-1 block w-full bg-transparent text-[#441a05] pl-10 pr-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05] animate-scaleIn"
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fadeIn">
+                {/* Class Select */}
+                <div>
+                  <label className="block text-[#441a05] sm:text-base text-xs font-medium mb-2">
+                    ক্লাস নির্বাচন করুন:
+                  </label>
+                  <Select
+                    options={classOptions}
+                    value={selectedClass}
+                    onChange={setSelectedClass}
+                    placeholder="ক্লাস নির্বাচন করুন"
+                    isLoading={isClassesLoading}
+                    isClearable
+                    isSearchable
+                    styles={selectStyles}
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
+                    className="animate-scaleIn"
+                  />
+                </div>
+
+                {/* Filter Type */}
+                <div>
+                  <label className="block text-[#441a05] sm:text-base text-xs font-medium mb-2">
+                    ফিল্টার টাইপ:
                   </label>
                   <select
-                    id="filterType"
                     value={filterType}
                     onChange={(e) => {
                       setFilterType(e.target.value);
@@ -767,447 +759,428 @@ const StudentAttendance = () => {
                       setStartDate("");
                       setEndDate("");
                     }}
-                    className="mt-1 block w-full bg-transparent text-[#441a05] pl-10 py-2.5 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#441a05] focus:ring-[#441a05] transition-all duration-300"
+                    className="mt-1 block w-full bg-transparent text-[#441a05] pl-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05] animate-scaleIn"
                     disabled={isLoading}
-                    aria-label="ফিল্টার প্রকার"
                   >
+                    <option value="month">মাসিক</option>
                     <option value="dateRange">তারিখের পরিসীমা</option>
-                    <option value="month">মাস</option>
                   </select>
-                  <FaCalendarAlt className="absolute left-3 top-[42px] text-[#DB9E30]" />
                 </div>
 
-                <div className="relative input-icon col-span-2">
-                  <label className="block font-medium text-[#441a05]">
-                    {filterType === "month"
-                      ? "মাস নির্বাচন করুন"
-                      : "তারিখের পরিসীমা"}
-                  </label>
-                  {filterType === "month" ? (
+                {/* Month or Date Range */}
+                {filterType === "month" ? (
+                  <div className="relative input-icon">
+                    <label className="block text-[#441a05] sm:text-base text-xs font-medium mb-2">
+                      মাস নির্বাচন করুন:
+                    </label>
+                    <FaCalendarAlt
+                      className="absolute left-3 top-11 text-[#DB9E30] cursor-pointer"
+                      onClick={handleDateClick}
+                    />
                     <input
-                      id="monthPicker"
                       type="month"
                       value={month}
-                      onChange={(e) => {
-                        setMonth(e.target.value);
-                        setStartDate("");
-                        setEndDate("");
-                      }}
+                      onChange={(e) => setMonth(e.target.value)}
                       onClick={handleDateClick}
-                      className="mt-1 block w-full bg-transparent text-[#441a05] pl-10 py-2 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#441a05] focus:ring-[#441a05] transition-all duration-300"
+                      className="mt-1 block w-full bg-transparent text-[#441a05] pl-10 pr-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05] animate-scaleIn"
                       disabled={isLoading}
-                      aria-label="মাস নির্বাচন"
                     />
-                  ) : (
-                    <div className="flex flex-col sm:flex-row gap-4">
+                  </div>
+                ) : (
+                  <>
+                    <div className="relative input-icon">
+                      <label className="block text-[#441a05] sm:text-base text-xs font-medium">
+                        শুরুর তারিখ:
+                      </label>
+                      <FaCalendarAlt
+                        className="absolute left-3 top-10 text-[#DB9E30] cursor-pointer"
+                        onClick={handleDateClick}
+                      />
                       <input
-                        id="startDatePicker"
                         type="date"
                         value={startDate}
-                        onChange={(e) => {
-                          setStartDate(e.target.value);
-                          setMonth("");
-                        }}
+                        onChange={(e) => setStartDate(e.target.value)}
                         onClick={handleDateClick}
-                        className="block w-full bg-transparent text-[#441a05] pl-10 py-2 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#441a05] focus:ring-[#441a05] transition-all duration-300"
-                        aria-label="শুরুর তারিখ"
-                      />
-                      <input
-                        id="endDatePicker"
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => {
-                          setEndDate(e.target.value);
-                          setMonth("");
-                        }}
-                        onClick={handleDateClick}
-                        className="block w-full bg-transparent text-[#441a05] pl-10 py-2 border border-[#9d9087] rounded-lg focus:outline-none focus:border-[#441a05] focus:ring-[#441a05] transition-all duration-300"
-                        aria-label="শেষের তারিখ"
+                        className="mt-1 block w-full bg-transparent text-[#441a05] pl-10 pr-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05] animate-scaleIn"
+                        disabled={isLoading}
                       />
                     </div>
-                  )}
-                  <FaCalendarAlt className="absolute left-3 top-[42px] text-[#DB9E30]" />
-                </div>
-
-                <div className="sm:flex items-end">
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className={`flex items-center text-nowrap justify-center px-6 py-3 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 animate-scaleIn btn-ripple ${
-                      isLoading
-                        ? "cursor-not-allowed opacity-70"
-                        : "hover:text-white btn-glow"
-                    }`}
-                    aria-label="উপস্থিতি দেখুন"
-                  >
-                    {isLoading ? (
-                      <>
-                        <FaSpinner className="animate-spin text-lg mr-2" />
-                        লোড হচ্ছে...
-                      </>
-                    ) : (
-                      <>
-                        <IoAdd className="w-5 h-5 mr-2" />
-                        উপস্থিতি দেখুন
-                      </>
-                    )}
-                  </button>
-                </div>
-              </>
-            )}
-          </form>
-        </div>
-
-        {/* Print Button */}
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={generatePDFReport}
-            disabled={isLoading || !attendanceData?.attendance?.length}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-              isLoading || !attendanceData?.attendance?.length
-                ? "bg-gray-400 text-gray-600 cursor-not-allowed"
-                : "bg-[#DB9E30] text-[#441a05] hover:text-white btn-glow"
-            }`}
-            aria-label="PDF রিপোর্ট ডাউনলোড"
-            title="PDF রিপোর্ট ডাউনলোড করুন / Download PDF report"
-          >
-            <FaFilePdf className="text-lg" />
-            <span>PDF রিপোর্ট</span>
-          </button>
-        </div>
-
-        {/* Attendance Table */}
-        <div className="bg-black/10 px-6 py-2 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn table-container border border-white/20">
-          <div className="flex items-center justify-between p-4 border-b border-white/20">
-            <h3 className="text-lg font-semibold text-[#441a05]">
-              {selectedStudent
-                ? `${selectedStudent.name || "N/A"} এর উপস্থিতি বিস্তারিত`
-                : "উপস্থিতি তালিকা"}
-            </h3>
-            {/* {selectedStudent && (
-              <button
-                onClick={handleBackClick}
-                className="flex items-center px-4 py-2 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 btn-ripple hover:text-white btn-glow"
-                aria-label="পিছনে ফিরুন"
-                title="পিছনে ফিরুন / Back to main table"
-              >
-                <FaArrowLeft className="mr-2" />
-                পিছনে ফিরুন
-              </button>
-            )} */}
-          </div>
-          {isLoading ? (
-            <p className="p-4 text-[#441a05]/70 animate-scaleIn">
-              <FaSpinner className="animate-spin text-lg mr-2" />
-              উপস্থিতি লোড হচ্ছে...
-            </p>
-          ) : !selectedClass ? (
-            <p className="p-4 text-[#441a05]/70 animate-scaleIn">
-              অনুগ্রহ করে একটি ক্লাস নির্বাচন করুন।
-            </p>
-          ) : tabValue === 0 && !classDate ? (
-            <p className="p-4 text-[#441a05]/70 animate-scaleIn">
-              অনুগ্রহ করে একটি তারিখ নির্বাচন করুন।
-            </p>
-          ) : tabValue === 1 && filterType === "month" && !month ? (
-            <p className="p-4 text-[#441a05]/70 animate-scaleIn">
-              অনুগ্রহ করে একটি মাস নির্বাচন করুন।
-            </p>
-          ) : tabValue === 1 &&
-            filterType === "dateRange" &&
-            (!startDate || !endDate) ? (
-            <p className="p-4 text-[#441a05]/70 animate-scaleIn">
-              অনুগ্রহ করে তারিখের পরিসীমা নির্বাচন করুন।
-            </p>
-          ) : (tabValue === 0 && filteredStudents.length === 0) ||
-            (tabValue === 1 &&
-              !selectedStudent &&
-              filteredStudents.length === 0) ? (
-            <p className="p-4 text-[#441a05]/70 animate-scaleIn">
-              কোনো ছাত্র পাওয়া যায়নি।
-            </p>
-          ) : tabValue === 0 ? (
-            <div className="overflow-x-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 animate-fadeIn">
-                <div className="relative input-icon">
-                  <label
-                    className="block font-medium text-[#441a05]"
-                    htmlFor="searchStudent"
-                  >
-                    ছাত্র অনুসন্ধান
-                  </label>
-                  <FaSearch className="absolute left-3 top-[42px] text-[#DB9E30]" />
-                  <input
-                    id="searchStudent"
-                    type="text"
-                    value={studentSearch}
-                    onChange={(e) => setStudentSearch(e.target.value)}
-                    placeholder="ছাত্রের নাম বা আইডি লিখুন"
-                    className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 pr-3 py-2.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
-                    disabled={isLoading}
-                    aria-label="ছাত্র অনুসন্ধান"
-                    title="ছাত্র অনুসন্ধান / Search student"
-                  />
-                </div>
-                <div className="relative input-icon">
-                  <label
-                    className="block font-medium text-[#441a05]"
-                    htmlFor="searchSubject"
-                  >
-                    বিষয় অনুসন্ধান
-                  </label>
-                  <FaSearch className="absolute left-3 top-[42px] text-[#DB9E30]" />
-                  <input
-                    id="searchSubject"
-                    type="text"
-                    value={subjectSearch}
-                    onChange={(e) => setSubjectSearch(e.target.value)}
-                    placeholder="বিষয়ের নাম লিখুন"
-                    className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 pr-3 py-2.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
-                    disabled={isLoading}
-                    aria-label="বিষয় অনুসন্ধান"
-                    title="বিষয় অনুসন্ধান / Search subject"
-                  />
-                </div>
+                    <div className="relative input-icon">
+                      <label className="block text-[#441a05] sm:text-base text-xs font-medium">
+                        শেষ তারিখ:
+                      </label>
+                      <FaCalendarAlt
+                        className="absolute left-3 top-10 text-[#DB9E30] cursor-pointer"
+                        onClick={handleDateClick}
+                      />
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        onClick={handleDateClick}
+                        className="mt-1 block w-full bg-transparent text-[#441a05] pl-10 pr-3 py-2 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05] animate-scaleIn"
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
-              <table className="min-w-full divide-y divide-white/20">
-                <thead className="bg-white/5">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ছাত্র
-                    </th>
-                    {filteredSubjects.map((subject) => (
-                      <th
-                        key={subject.id}
-                        className="px-6 py-3 text-center text-sm font-medium text-[#441a05]/70 uppercase tracking-wider"
-                      >
-                        {subject.name || "N/A"}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/20">
-                  {filteredStudents.map((student, index) => (
-                    <tr
-                      key={student.id}
-                      className="bg-white/5 hover:bg-white/10 transition-colors duration-200 animate-fadeIn"
-                      style={{ animationDelay: `${index * 0.05}s` }}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                        {student.name || "N/A"} (Roll: {student.roll_no || " N/A"})
-                      </td>
-                      {filteredSubjects.map((subject) => {
-                        const attendance = attendanceData?.attendance?.find(
-                          (record) =>
-                            record.student === student.id &&
-                            record.class_subject === subject.id &&
-                            record.attendance_date === classDate
-                        );
-                        return (
-                          <td
-                            key={`${student.id}-${subject.id}`}
-                            className="px-6 py-4 whitespace-nowrap text-sm text-center text-[#441a05]"
-                          >
-                            <Tooltip title={attendance?.remarks || ""}>
-                              <span>
-                                {attendance?.status === "PRESENT"
-                                  ? "✅ উপস্থিত"
-                                  : attendance?.status === "ABSENT"
-                                  ? "❌ অনুপস্থিত"
-                                  : "N/A"}
-                              </span>
-                            </Tooltip>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : selectedStudent ? (
-            <div className="overflow-x-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 animate-fadeIn">
-                <div className="relative input-icon col-span-2">
-                  <label
-                    className="block font-medium text-[#441a05]"
-                    htmlFor="searchSubject"
-                  >
-                    বিষয় অনুসন্ধান
-                  </label>
-                  <FaSearch className="absolute left-3 top-[42px] text-[#DB9E30]" />
-                  <input
-                    id="searchSubject"
-                    type="text"
-                    value={subjectSearch}
-                    onChange={(e) => setSubjectSearch(e.target.value)}
-                    placeholder="বিষয়ের নাম লিখুন"
-                    className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 pr-3 py-2.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
-                    disabled={isLoading}
-                    aria-label="বিষয় অনুসন্ধান"
-                    title="বিষয় অনুসন্ধান / Search subject"
-                  />
-                </div>
-              </div>
-              <table className="min-w-full divide-y divide-white/20">
-                <thead className="bg-white/5">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      বিষয়
-                    </th>
-                    {uniqueDates.map((date) => (
-                      <th
-                        key={date}
-                        className="px-6 py-3 text-center text-sm font-medium text-[#441a05]/70 uppercase tracking-wider"
-                      >
-                        {new Date(date).toLocaleDateString("bn-BD")}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/20">
-                  {filteredSubjects.map((subject, index) => (
-                    <tr
-                      key={subject.id}
-                      className="bg-white/5 hover:bg-white/10 transition-colors duration-200 animate-fadeIn"
-                      style={{ animationDelay: `${index * 0.05}s` }}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
-                        {subject.name || "N/A"}
-                      </td>
-                      {uniqueDates.map((date) => {
-                        const attendance = attendanceData?.attendance?.find(
-                          (record) =>
-                            record.student === selectedStudent.id &&
-                            record.class_subject === subject.id &&
-                            record.attendance_date === date
-                        );
-                        return (
-                          <td
-                            key={`${subject.id}-${date}`}
-                            className="px-6 py-4 whitespace-nowrap text-sm text-center text-[#441a05]"
-                          >
-                            <Tooltip title={attendance?.remarks || ""}>
-                              <span>
-                                {attendance?.status === "PRESENT"
-                                  ? "✅ উপস্থিত"
-                                  : attendance?.status === "ABSENT"
-                                  ? "❌ অনুপস্থিত"
-                                  : "N/A"}
-                              </span>
-                            </Tooltip>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 animate-fadeIn">
-                <div className="relative input-icon">
-                  <label
-                    className="block font-medium text-[#441a05]"
-                    htmlFor="searchStudent"
-                  >
-                    ছাত্র অনুসন্ধান
-                  </label>
-                  <FaSearch className="absolute left-3 top-[42px] text-[#DB9E30]" />
-                  <input
-                    id="searchStudent"
-                    type="text"
-                    value={studentSearch}
-                    onChange={(e) => setStudentSearch(e.target.value)}
-                    placeholder="ছাত্রের নাম বা আইডি লিখুন"
-                    className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 pr-3 py-2.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
-                    disabled={isLoading}
-                    aria-label="ছাত্র অনুসন্ধান"
-                    title="ছাত্র অনুসন্ধান / Search student"
-                  />
-                </div>
-                <div className="relative input-icon">
-                  <label
-                    className="block font-medium text-[#441a05]"
-                    htmlFor="searchSubject"
-                  >
-                    বিষয় অনুসন্ধান
-                  </label>
-                  <FaSearch className="absolute left-3 top-[42px] text-[#DB9E30]" />
-                  <input
-                    id="searchSubject"
-                    type="text"
-                    value={subjectSearch}
-                    onChange={(e) => setSubjectSearch(e.target.value)}
-                    placeholder="বিষয়ের নাম লিখুন"
-                    className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 pr-3 py-2.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
-                    disabled={isLoading}
-                    aria-label="বিষয় অনুসন্ধান"
-                    title="বিষয় অনুসন্ধান / Search subject"
-                  />
-                </div>
-              </div>
-              <table className="min-w-full divide-y divide-white/20">
-                <thead className="bg-white/5">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-[#441a05]/70 uppercase tracking-wider">
-                      ছাত্র
-                    </th>
-                    {uniqueDates.map((date) => (
-                      <th
-                        key={date}
-                        className="px-6 py-3 text-center text-sm font-medium text-[#441a05]/70 uppercase tracking-wider"
-                      >
-                        {new Date(date).toLocaleDateString("bn-BD")}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/20">
-                  {filteredStudents.map((student, index) => (
-                    <tr
-                      key={student.id}
-                      className="bg-white/5 hover:bg-white/10 transition-colors duration-200 animate-fadeIn"
-                      style={{ animationDelay: `${index * 0.05}s` }}
-                    >
-                      <td
-                        className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05] cursor-pointer hover:underline"
-                        onClick={() => handleStudentClick(student)}
-                      >
-                        {student.name || "N/A"} (ID: ${student.user_id || "N/A"}
-                        )
-                      </td>
-                      {uniqueDates.map((date) => {
-                        const attendance = attendanceData?.attendance?.find(
-                          (record) =>
-                            record.student === student.id &&
-                            record.attendance_date === date
-                        );
-                        return (
-                          <td
-                            key={`${student.id}-${date}`}
-                            className="px-6 py-4 whitespace-nowrap text-sm text-center text-[#441a05]"
-                          >
-                            <Tooltip title={attendance?.remarks || ""}>
-                              <span>
-                                {attendance?.status === "PRESENT"
-                                  ? "✅ উপস্থিত"
-                                  : attendance?.status === "ABSENT"
-                                  ? "❌ অনুপস্থিত"
-                                  : "N/A"}
-                              </span>
-                            </Tooltip>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            </>
+          )}
+        </form>
+      </div>
+
+      {/* Print Button */}
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={generatePDFReport}
+          disabled={isLoading || !attendanceData?.attendance?.length}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+            isLoading || !attendanceData?.attendance?.length
+              ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+              : "bg-[#DB9E30] text-[#441a05] hover:text-white btn-glow"
+          }`}
+          aria-label="PDF রিপোর্ট ডাউনলোড"
+          title="PDF রিপোর্ট ডাউনলোড করুন / Download PDF report"
+        >
+          <FaFilePdf className="text-lg" />
+          <span>PDF রিপোর্ট</span>
+        </button>
+      </div>
+
+      {/* Attendance Table */}
+      <div className="bg-black/10 px-6 py-2 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn table-container border border-white/20">
+        <div className="flex items-center justify-between p-4 border-b border-white/20">
+          <h3 className="text-lg font-semibold text-[#441a05]">
+            {selectedStudent
+              ? `${selectedStudent.name || "N/A"} এর উপস্থিতি বিস্তারিত`
+              : "উপস্থিতি তালিকা"}
+          </h3>
+          {selectedStudent && (
+            <button
+              onClick={handleBackClick}
+              className="flex items-center px-4 py-2 rounded-lg font-medium bg-[#DB9E30] text-[#441a05] transition-all duration-300 btn-ripple hover:text-white btn-glow"
+              aria-label="পিছনে ফিরুন"
+              title="পিছনে ফিরুন / Back to main table"
+            >
+              <FaArrowLeft className="mr-2" />
+              পিছনে ফিরুন
+            </button>
           )}
         </div>
+        {isLoading ? (
+          <p className="p-4 text-[#441a05]/70 animate-scaleIn">
+            <FaSpinner className="animate-spin text-lg mr-2" />
+            উপস্থিতি লোড হচ্ছে...
+          </p>
+        ) : !selectedClass ? (
+          <p className="p-4 text-[#441a05]/70 animate-scaleIn">
+            অনুগ্রহ করে একটি ক্লাস নির্বাচন করুন।
+          </p>
+        ) : tabValue === 0 && !classDate ? (
+          <p className="p-4 text-[#441a05]/70 animate-scaleIn">
+            অনুগ্রহ করে একটি তারিখ নির্বাচন করুন।
+          </p>
+        ) : tabValue === 1 && filterType === "month" && !month ? (
+          <p className="p-4 text-[#441a05]/70 animate-scaleIn">
+            অনুগ্রহ করে একটি মাস নির্বাচন করুন।
+          </p>
+        ) : tabValue === 1 &&
+          filterType === "dateRange" &&
+          (!startDate || !endDate) ? (
+          <p className="p-4 text-[#441a05]/70 animate-scaleIn">
+            অনুগ্রহ করে তারিখের পরিসীমা নির্বাচন করুন।
+          </p>
+        ) : (tabValue === 0 && filteredStudents.length === 0) ||
+          (tabValue === 1 &&
+            !selectedStudent &&
+            filteredStudents.length === 0) ? (
+          <p className="p-4 text-[#441a05]/70 animate-scaleIn">
+            কোনো ছাত্র পাওয়া যায়নি।
+          </p>
+        ) : tabValue === 0 ? (
+          <div className="overflow-x-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 animate-fadeIn">
+              <div className="relative input-icon">
+                <label
+                  className="block font-medium text-[#441a05]"
+                  htmlFor="searchStudent"
+                >
+                  ছাত্র অনুসন্ধান
+                </label>
+                <FaSearch className="absolute left-3 top-[42px] text-[#DB9E30]" />
+                <input
+                  id="searchStudent"
+                  type="text"
+                  value={studentSearch}
+                  onChange={(e) => setStudentSearch(e.target.value)}
+                  placeholder="ছাত্রের নাম বা আইডি লিখুন"
+                  className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 pr-3 py-2.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
+                  disabled={isLoading}
+                  aria-label="ছাত্র অনুসন্ধান"
+                  title="ছাত্র অনুসন্ধান / Search student"
+                />
+              </div>
+              <div className="relative input-icon">
+                <label
+                  className="block font-medium text-[#441a05]"
+                  htmlFor="searchSubject"
+                >
+                  বিষয় অনুসন্ধান
+                </label>
+                <FaSearch className="absolute left-3 top-[42px] text-[#DB9E30]" />
+                <input
+                  id="searchSubject"
+                  type="text"
+                  value={subjectSearch}
+                  onChange={(e) => setSubjectSearch(e.target.value)}
+                  placeholder="বিষয়ের নাম লিখুন"
+                  className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 pr-3 py-2.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
+                  disabled={isLoading}
+                  aria-label="বিষয় অনুসন্ধান"
+                  title="বিষয় অনুসন্ধান / Search subject"
+                />
+              </div>
+            </div>
+            <table className="min-w-full divide-y divide-white/20">
+              <thead className="bg-white/5">
+                <tr>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-[#441a05]/70 uppercase tracking-wider">
+                    ছাত্র
+                  </th>
+                  {filteredSubjects.map((subject) => (
+                    <th
+                      key={subject.id}
+                      className="px-6 py-3 text-center text-sm font-medium text-[#441a05]/70 uppercase tracking-wider"
+                    >
+                      {subject.name || "N/A"}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/20">
+                {filteredStudents.map((student, index) => (
+                  <tr
+                    key={student.id}
+                    className="bg-white/5 hover:bg-white/10 transition-colors duration-200 animate-fadeIn"
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                      {student.name || "N/A"} (Roll: {student.roll_no || "N/A"})
+                    </td>
+                    {filteredSubjects.map((subject) => {
+                      const attendance = attendanceData?.attendance?.find(
+                        (record) =>
+                          record.student === student.id &&
+                          record.class_subject === subject.id &&
+                          record.attendance_date === classDate
+                      );
+                      const status = attendance?.status || null;
+                      return (
+                        <td
+                          key={`${student.id}-${subject.id}`}
+                          className="px-6 py-4 whitespace-nowrap text-sm text-center text-[#441a05]"
+                        >
+                          <Tooltip title={attendance?.remarks || ""}>
+                            <span
+                              className={`inline-block px-3 py-1 rounded-full ${
+                                status ? statusColors[status] : "bg-gray-500"
+                              }`}
+                            >
+                              {statusEmojis[status] || ""} {statusLabels[status] || "N/A"}
+                            </span>
+                          </Tooltip>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : selectedStudent ? (
+          <div className="overflow-x-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 animate-fadeIn">
+              <div className="relative input-icon col-span-2">
+                <label
+                  className="block font-medium text-[#441a05]"
+                  htmlFor="searchSubject"
+                >
+                  বিষয় অনুসন্ধান
+                </label>
+                <FaSearch className="absolute left-3 top-[42px] text-[#DB9E30]" />
+                <input
+                  id="searchSubject"
+                  type="text"
+                  value={subjectSearch}
+                  onChange={(e) => setSubjectSearch(e.target.value)}
+                  placeholder="বিষয়ের নাম লিখুন"
+                  className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 pr-3 py-2.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
+                  disabled={isLoading}
+                  aria-label="বিষয় অনুসন্ধান"
+                  title="বিষয় অনুসন্ধান / Search subject"
+                />
+              </div>
+            </div>
+            <table className="min-w-full divide-y divide-white/20">
+              <thead className="bg-white/5">
+                <tr>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-[#441a05]/70 uppercase tracking-wider">
+                    বিষয়
+                  </th>
+                  {uniqueDates.map((date) => (
+                    <th
+                      key={date}
+                      className="px-6 py-3 text-center text-sm font-medium text-[#441a05]/70 uppercase tracking-wider"
+                    >
+                      {new Date(date).toLocaleDateString("bn-BD")}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/20">
+                {filteredSubjects.map((subject, index) => (
+                  <tr
+                    key={subject.id}
+                    className="bg-white/5 hover:bg-white/10 transition-colors duration-200 animate-fadeIn"
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05]">
+                      {subject.name || "N/A"}
+                    </td>
+                    {uniqueDates.map((date) => {
+                      const attendance = attendanceData?.attendance?.find(
+                        (record) =>
+                          record.student === selectedStudent.id &&
+                          record.class_subject === subject.id &&
+                          record.attendance_date === date
+                      );
+                      const status = attendance?.status || null;
+                      return (
+                        <td
+                          key={`${subject.id}-${date}`}
+                          className="px-6 py-4 whitespace-nowrap text-sm text-center text-[#441a05]"
+                        >
+                          <Tooltip title={attendance?.remarks || ""}>
+                            <span
+                              className={`inline-block px-3 py-1 rounded-full ${
+                                status ? statusColors[status] : "bg-gray-500"
+                              }`}
+                            >
+                              {statusEmojis[status] || ""} {statusLabels[status] || "N/A"}
+                            </span>
+                          </Tooltip>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 animate-fadeIn">
+              <div className="relative input-icon">
+                <label
+                  className="block font-medium text-[#441a05]"
+                  htmlFor="searchStudent"
+                >
+                  ছাত্র অনুসন্ধান
+                </label>
+                <FaSearch className="absolute left-3 top-[42px] text-[#DB9E30]" />
+                <input
+                  id="searchStudent"
+                  type="text"
+                  value={studentSearch}
+                  onChange={(e) => setStudentSearch(e.target.value)}
+                  placeholder="ছাত্রের নাম বা আইডি লিখুন"
+                  className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 pr-3 py-2.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
+                  disabled={isLoading}
+                  aria-label="ছাত্র অনুসন্ধান"
+                  title="ছাত্র অনুসন্ধান / Search student"
+                />
+              </div>
+              <div className="relative input-icon">
+                <label
+                  className="block font-medium text-[#441a05]"
+                  htmlFor="searchSubject"
+                >
+                  বিষয় অনুসন্ধান
+                </label>
+                <FaSearch className="absolute left-3 top-[42px] text-[#DB9E30]" />
+                <input
+                  id="searchSubject"
+                  type="text"
+                  value={subjectSearch}
+                  onChange={(e) => setSubjectSearch(e.target.value)}
+                  placeholder="বিষয়ের নাম লিখুন"
+                  className="mt-1 block w-full bg-transparent text-[#441a05] placeholder-[#441a05]/70 pl-10 pr-3 py-2.5 focus:outline-none border border-[#9d9087] rounded-lg transition-all duration-300 focus:border-[#441a05] focus:ring-[#441a05]"
+                  disabled={isLoading}
+                  aria-label="বিষয় অনুসন্ধান"
+                  title="বিষয় অনুসন্ধান / Search subject"
+                />
+              </div>
+            </div>
+            <table className="min-w-full divide-y divide-white/20">
+              <thead className="bg-white/5">
+                <tr>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-[#441a05]/70 uppercase tracking-wider">
+                    ছাত্র
+                  </th>
+                  {uniqueDates.map((date) => (
+                    <th
+                      key={date}
+                      className="px-6 py-3 text-center text-sm font-medium text-[#441a05]/70 uppercase tracking-wider"
+                    >
+                      {new Date(date).toLocaleDateString("bn-BD")}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/20">
+                {filteredStudents.map((student, index) => (
+                  <tr
+                    key={student.id}
+                    className="bg-white/5 hover:bg-white/10 transition-colors duration-200 animate-fadeIn"
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
+                    <td
+                      className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05] cursor-pointer hover:underline"
+                      onClick={() => handleStudentClick(student)}
+                    >
+                      {student.name || "N/A"} (ID: {student.user_id || "N/A"})
+                    </td>
+                    {uniqueDates.map((date) => {
+                      const attendance = attendanceData?.attendance?.find(
+                        (record) =>
+                          record.student === student.id &&
+                          record.attendance_date === date
+                      );
+                      const status = attendance?.status || null;
+                      return (
+                        <td
+                          key={`${student.id}-${date}`}
+                          className="px-6 py-4 whitespace-nowrap text-sm text-center text-[#441a05]"
+                        >
+                          <Tooltip title={attendance?.remarks || ""}>
+                            <span
+                              className={`inline-block px-3 py-1 rounded-full ${
+                                status ? statusColors[status] : "bg-gray-500"
+                              }`}
+                            >
+                              {statusEmojis[status] || ""} {statusLabels[status] || "N/A"}
+                            </span>
+                          </Tooltip>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

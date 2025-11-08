@@ -1,3 +1,4 @@
+// Updated studentSubAttendanceApi.js
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import BASE_URL from '../../../../utilitis/apiConfig';
 
@@ -18,10 +19,16 @@ export const studentSubAttendanceApi = createApi({
 
   endpoints: (builder) => ({
     getStudentSubAttendance: builder.query({
-      query: ({ class_subject_id, class_id, date }) => {
+      query: ({ class_subject_id, class_id, academic_year_id, start_date, end_date, month, status, student_id, date }) => {
         const params = new URLSearchParams();
         if (class_subject_id) params.set('class_subject_id', class_subject_id);
         if (class_id) params.set('class_id', class_id);
+        if (academic_year_id) params.set('academic_year_id', academic_year_id);
+        if (start_date) params.set('start_date', start_date);
+        if (end_date) params.set('end_date', end_date);
+        if (month) params.set('month', month);
+        if (status) params.set('status', status);
+        if (student_id) params.set('student_id', student_id);
         if (date) params.set('date', date);
         return `/student-sub-attendance/?${params.toString()}`;
       },
@@ -31,7 +38,7 @@ export const studentSubAttendanceApi = createApi({
       },
       providesTags: (result, error, arg) => [
         'StudentSubAttendance',
-        { type: 'StudentSubAttendance', id: `${arg.class_subject_id}-${arg.class_id}-${arg.date}` },
+        { type: 'StudentSubAttendance', id: `${arg.class_subject_id || ''}-${arg.class_id || ''}-${arg.date || ''}` },
       ],
     }),
 

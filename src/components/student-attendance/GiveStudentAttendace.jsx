@@ -116,7 +116,7 @@ const GiveStudentAttendace = () => {
     refetch: refetchAttendance,
   } = useGetStudentSubAttendanceQuery(
     {
-      class_subject_id: selectedSubjectObj?.class_subject || "",
+      class_subject_id: selectedSubjectObj?.value || "",
       class_id: selectedClassId,
       date: selectedDate,
     },
@@ -129,7 +129,7 @@ const GiveStudentAttendace = () => {
     refetch: refetchLastThree,
   } = useGetLastThreeAttendanceQuery(
     {
-      class_subject_id: selectedSubjectObj?.class_subject || "",
+      class_subject_id: selectedSubjectObj?.value || "",
       class_id: selectedClassId,
     },
     { skip: !selectedSubjectObj || !selectedClassId || !hasViewPermission }
@@ -144,6 +144,8 @@ const GiveStudentAttendace = () => {
     });
     return map;
   }, [lastThreeData]);
+
+  console.log(selectedSubject)
 
   const [createAttendance] = useCreateStudentSubAttendanceMutation();
   const [updateAttendance] = useUpdateStudentSubAttendanceMutation();
@@ -244,7 +246,7 @@ const GiveStudentAttendace = () => {
       }
 
       const payload = {
-        class_subject_id: selectedSubject.class_subject,
+        class_subject_id: selectedSubject.value,
         class_id: selectedClassId,
         date: selectedDate,
         attendances,
