@@ -138,7 +138,7 @@ const mainMenu = [
         title: "মার্কস কনফিগার",
         link: "/talimat/marks",
         children: [
-                {
+          {
             id: "05/03/01",
             title: "বিষয়-কনফিগারেশন",
             link: "/talimat/marks",
@@ -148,8 +148,6 @@ const mainMenu = [
             title: "মার্কস-কনফিগার",
             link: "/talimat/marks/mark-config",
           },
-       
-          
         ],
       },
       {
@@ -224,11 +222,6 @@ const mainMenu = [
         link: "/talimat/exam-routine",
       },
       {
-        id: "05/14",
-        title: "ছাত্রের উপস্থিতি",
-        link: "/talimat/student-attendance",
-      },
-      {
         id: "05/15",
         title: "প্রত্যয়ন পত্র",
         link: "/talimat/testimonial",
@@ -298,7 +291,7 @@ const mainMenu = [
             title: "ফিসের ধরন",
             link: "/accounts/settings/fee-heads",
           },
-            {
+          {
             id: "07/01/05",
             title: "দায়ের ধরন",
             link: "/accounts/settings/liability-heads",
@@ -345,22 +338,22 @@ const mainMenu = [
         title: "ডিলিট - ফি",
         link: "/accounts/delete-fee",
       },
-       {
+      {
         id: "07/11",
         title: "পার্টিস",
         link: "/accounts/parties",
       },
-       {
+      {
         id: "07/12",
         title: "উত্তলন",
         link: "/accounts/withdraws",
       },
-             {
+      {
         id: "07/13",
         title: "দায় এন্ট্রিস",
         link: "/accounts/liability-entries",
       },
-        {
+      {
         id: "07/14",
         title: "রিপোর্ট",
         link: "/accounts/expense-items-list",
@@ -375,22 +368,22 @@ const mainMenu = [
             title: "আয়ের লিস্ট",
             link: "/accounts/income-items-list",
           },
-             {
+          {
             id: "07/10/03",
             title: "উত্তলন লিস্ট",
             link: "/accounts/withdraws-list",
           },
-             {
+          {
             id: "07/10/04",
             title: "দায় লিস্ট",
             link: "/accounts/liability-list",
           },
-           {
+          {
             id: "07/10/05",
             title: "পেইড লিস্ট",
             link: "/accounts/paid-list",
           },
-             {
+          {
             id: "07/10/06",
             title: "বকেয়া লিস্ট",
             link: "/accounts/due-fees-list",
@@ -554,14 +547,26 @@ const mainMenu = [
   },
   {
     id: "12",
-    title: "Attendace",
-    icon: "TbReportAnalytics",
+    title: "উপস্থিতি",
+    icon: "FaCalendarAlt",
     link: "/attendance",
     children: [
       {
         id: "12/01",
-        title: "Students Attendance",
+        title: "শিক্ষার্থীদের",
         link: "/attendance/GiveStudent-attendance",
+        children: [
+          {
+            id: "12/01/01",
+            title: "শিক্ষার্থীদের উপস্থিতি",
+            link: "/attendance/GiveStudent-attendance",
+          },
+                {
+        id: "05/14",
+        title: "উপস্থিতি রিপোর্ট",
+        link: "/talimat/student-attendance",
+      },
+        ],
       },
     ],
   },

@@ -1,6 +1,6 @@
 import { CgCommunity } from "react-icons/cg";
 import { CiDollar } from "react-icons/ci";
-import { FaCloudDownloadAlt, FaFileInvoiceDollar, FaMoneyCheckAlt, FaPlaceOfWorship, FaRegCheckSquare, FaUsers } from "react-icons/fa";
+import { FaCalendarAlt, FaCloudDownloadAlt, FaFileInvoiceDollar, FaMoneyCheckAlt, FaPlaceOfWorship, FaRegCheckSquare, FaUsers } from "react-icons/fa";
 import { FaHotel, FaPeopleGroup } from "react-icons/fa6";
 import { GiNetworkBars, GiPayMoney, GiReceiveMoney, GiTakeMyMoney } from "react-icons/gi";
 import { GrTableAdd } from "react-icons/gr";
@@ -8,7 +8,7 @@ import { HiAcademicCap, HiOutlineBuildingStorefront, HiOutlineTableCells } from 
 import { IoMdSettings } from "react-icons/io";
 import { LiaSmsSolid } from "react-icons/lia";
 import { LuFileText } from "react-icons/lu";
-import { MdAccountBalance, MdAccountBalanceWallet, MdOutlineEventAvailable, MdOutlineTextsms, MdVideoSettings } from "react-icons/md";
+import { MdAccountBalance, MdAccountBalanceWallet, MdAttachment, MdOutlineEventAvailable, MdOutlineTextsms, MdVideoSettings } from "react-icons/md";
 import { PiChalkboardTeacherFill, PiExamBold, PiPresentationChartBold, PiShapesFill, PiStudentBold } from "react-icons/pi";
 import { RiDashboardHorizontalFill, RiParentFill, RiServiceLine } from "react-icons/ri";
 import { TbReportAnalytics, TbReportMoney } from "react-icons/tb";
@@ -18,6 +18,9 @@ import { BsBank2 } from "react-icons/bs";
 
 export default function Icons({ name }) {
   switch (name) {
+    case "FaCalendarAlt":
+      return <FaCalendarAlt />;
+
     case "RiDashboardHorizontalFill":
       return <RiDashboardHorizontalFill />;
 

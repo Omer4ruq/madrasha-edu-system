@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { format } from "date-fns";
+import Select from "react-select";
 import { useGetclassConfigApiQuery } from "../../redux/features/api/class/classConfigApi";
 import { useGetClassSubjectsByClassIdQuery } from "../../redux/features/api/class-subjects/classSubjectsApi";
 import { useGetStudentActiveByClassQuery } from "../../redux/features/api/student/studentActiveApi";
@@ -10,6 +11,11 @@ import {
   useGetStudentSubAttendanceQuery,
 } from "../../redux/features/api/student-sub-attendance/studentSubAttendanceApi";
 import { Tooltip } from "react-tooltip";
+import { IoAddCircle } from "react-icons/io5";
+import toast from "react-hot-toast";
+import selectStyles from '../../utilitis/selectStyles';
+import { useSelector } from 'react-redux';
+import { useGetGroupPermissionsQuery } from '../../redux/features/api/permissionRole/groupsApi';
 
 const AttendanceStatus = {
   PRESENT: "PRESENT",
@@ -33,24 +39,40 @@ const statusColors = {
 };
 
 const GiveStudentAttendace = () => {
-  const [selectedClassConfig, setSelectedClassConfig] = useState("");
-  const [selectedSubject, setSelectedSubject] = useState("");
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [selectedClassConfig, setSelectedClassConfig] = useState(null);
+  const [selectedSubject, setSelectedSubject] = useState(null);
+  const [bulkAction, setBulkAction] = useState(null);
   const [attendanceData, setAttendanceData] = useState({});
   const [originalAttendanceData, setOriginalAttendanceData] = useState({});
-  const [bulkAction, setBulkAction] = useState("");
-  
-  // নতুন স্টেট: ডেটা রিলোডের জন্য
-  const [refreshKey, setRefreshKey] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { group_id } = useSelector((state) => state.auth);
+
+  const today = format(new Date(), "yyyy-MM-dd");
+  const selectedDate = today;
+
+  // Permissions
+  const { data: groupPermissions, isLoading: permissionsLoading } = useGetGroupPermissionsQuery(group_id, { skip: !group_id });
+  const hasAddPermission = groupPermissions?.some(perm => perm.codename === 'add_student_sub_attendance') || true;
+  const hasChangePermission = groupPermissions?.some(perm => perm.codename === 'change_student_sub_attendance') || true;
+  const hasViewPermission = groupPermissions?.some(perm => perm.codename === 'view_student_sub_attendance') || true;
 
   // Fetch Class Configs
   const { data: classConfigs = [], isLoading: loadingConfigs } = useGetclassConfigApiQuery();
   const activeClassConfigs = useMemo(() => classConfigs.filter((c) => c.is_active), [classConfigs]);
 
-  // Get selected config and g_class_id
-  const selectedConfig = activeClassConfigs.find((c) => c.id == selectedClassConfig);
-  const gClassId = selectedConfig?.g_class_id;
+  const classOptions = useMemo(
+    () =>
+      activeClassConfigs.map((cfg) => ({
+        value: cfg.id,
+        label: `${cfg.g_class_name} - ${cfg.section_name || ''} (${cfg.shift_name || ''})`.trim(),
+        g_class_id: cfg.g_class_id,
+      })),
+    [activeClassConfigs]
+  );
+
+  const selectedClassId = selectedClassConfig?.value;
+  const gClassId = selectedClassConfig?.g_class_id;
 
   // Fetch Subjects
   const {
@@ -61,43 +83,56 @@ const GiveStudentAttendace = () => {
 
   const activeSubjects = useMemo(() => subjects.filter((s) => s.is_active), [subjects]);
 
-  // Fetch Active Students
-  const { data: students = [], isLoading: loadingStudents } = useGetStudentActiveByClassQuery(
-    selectedClassConfig,
-    { skip: !selectedClassConfig }
+  const subjectOptions = useMemo(
+    () =>
+      activeSubjects.map((sub) => ({
+        value: sub.id,
+        label: sub.name,
+        class_subject: sub.class_subject,
+      })),
+    [activeSubjects]
   );
 
-  const activeStudents = useMemo(() => students.filter((s) => s.status == "Active"), [students]);
+  // Fetch Active Students
+  const { data: students = [], isLoading: loadingStudents } = useGetStudentActiveByClassQuery(
+    selectedClassId,
+    { skip: !selectedClassId }
+  );
 
-  // Selected Subject
-  const selectedSubjectObj = activeSubjects.find((s) => s.id == selectedSubject);
+  const activeStudents = useMemo(() => {
+    const filtered = students.filter((s) => s.status === "Active");
+    return filtered.sort((a, b) => {
+      const rollA = parseInt(a.roll_no) || 0;
+      const rollB = parseInt(b.roll_no) || 0;
+      return rollA - rollB;
+    });
+  }, [students]);
 
-  // Fetch existing attendance - refreshKey দিয়ে কন্ট্রোল করা
+  const selectedSubjectObj = selectedSubject;
+
+  // Fetch Existing Attendance
   const {
     data: existingAttendance = { attendance: [] },
     refetch: refetchAttendance,
   } = useGetStudentSubAttendanceQuery(
     {
       class_subject_id: selectedSubjectObj?.class_subject || "",
-      class_id: selectedClassConfig,
+      class_id: selectedClassId,
       date: selectedDate,
     },
-    { 
-      skip: !selectedSubjectObj || !selectedClassConfig || !selectedDate,
-      refetchOnMountOrArgChange: refreshKey, // এটা নতুন
-    }
+    { skip: !selectedSubjectObj || !selectedClassId || !hasViewPermission }
   );
 
-  // Last 3 Attendance - এটাও রিফ্রেশ হবে
+  // Last 3 Attendance
   const {
     data: lastThreeData = { attendance: [] },
     refetch: refetchLastThree,
   } = useGetLastThreeAttendanceQuery(
     {
       class_subject_id: selectedSubjectObj?.class_subject || "",
-      class_id: selectedClassConfig,
+      class_id: selectedClassId,
     },
-    { skip: !selectedSubjectObj || !selectedClassConfig }
+    { skip: !selectedSubjectObj || !selectedClassId || !hasViewPermission }
   );
 
   const lastThreeMap = useMemo(() => {
@@ -110,150 +145,145 @@ const GiveStudentAttendace = () => {
     return map;
   }, [lastThreeData]);
 
-  // Mutations
   const [createAttendance] = useCreateStudentSubAttendanceMutation();
   const [updateAttendance] = useUpdateStudentSubAttendanceMutation();
 
-  // Load existing attendance data
+  // Load existing attendance – সব ছাত্রের জন্য attendanceData তৈরি করো
   useEffect(() => {
-    if (existingAttendance?.attendance && existingAttendance.attendance.length > 0) {
-      const newAttendanceData = {};
-      existingAttendance.attendance.forEach((record) => {
-        newAttendanceData[record.student_id] = {
-          status: record.status,
-          remarks: record.remarks || "",
-        };
-      });
-      setAttendanceData(newAttendanceData);
-      setOriginalAttendanceData(JSON.parse(JSON.stringify(newAttendanceData)));
-    } else {
-      // No existing data for this date
+    if (!existingAttendance?.attendance || activeStudents.length === 0) {
       setAttendanceData({});
       setOriginalAttendanceData({});
-    }
-  }, [existingAttendance, selectedDate, selectedSubject]);
-
-  // Reset on class change
-  useEffect(() => {
-    setSelectedSubject("");
-    setAttendanceData({});
-    setBulkAction("");
-    setOriginalAttendanceData({});
-    setRefreshKey((prev) => prev + 1); // নতুন কী
-  }, [selectedClassConfig]);
-
-  // Handlers
-  const handleStatusChange = (studentId, status) => {
-    setAttendanceData((prev) => ({
-      ...prev,
-      [studentId]: { ...(prev[studentId] || {}), status },
-    }));
-  };
-
-  const handleRemarksChange = (studentId, remarks) => {
-    setAttendanceData((prev) => ({
-      ...prev,
-      [studentId]: { ...(prev[studentId] || {}), remarks },
-    }));
-  };
-
-  // Bulk action এখন automatically apply হবে
-  const handleBulkAction = (action) => {
-    if (!action || !activeStudents.length) return;
-
-    const newAttendanceData = { ...attendanceData };
-    activeStudents.forEach((student) => {
-      newAttendanceData[student.id] = {
-        ...(newAttendanceData[student.id] || {}),
-        status: action,
-      };
-    });
-
-    setAttendanceData(newAttendanceData);
-  };
-
-  // ফাইনাল handleSubmit - স্টেট ম্যানেজমেন্ট সহ
-  const handleSubmit = async () => {
-    if (!selectedClassConfig || !selectedSubject || !selectedDate) {
-      alert("শ্রেণি, বিষয় এবং তারিখ নির্বাচন করুন");
       return;
     }
 
-    const hasExistingData = Object.keys(originalAttendanceData).length > 0;
-    let attendances;
+    const newAttendance = {};
+    const newOriginal = {};
 
-    if (hasExistingData) {
-      // PUT: Only changed data
-      attendances = Object.entries(attendanceData)
-        .filter(([student_id, data]) => {
-          const original = originalAttendanceData[student_id];
-          return data.status && (
-            !original || 
-            original.status !== data.status || 
-            (original.remarks || "") !== (data.remarks || "")
-          );
-        })
-        .map(([student_id, { status, remarks }]) => ({
-          student_id: Number(student_id),
-          attendance_date: selectedDate,
-          status,
-          ...(remarks?.trim() && { remarks: remarks.trim() }),
-        }));
+    activeStudents.forEach((student) => {
+      const record = existingAttendance.attendance.find((r) => r.student_id === student.id);
+      const status = record?.status ?? null;
 
-      if (attendances.length === 0) {
-        alert("কোনো পরিবর্তন করা হয়নি");
-        return;
-      }
-    } else {
-      // POST: All marked attendance
-      attendances = Object.entries(attendanceData)
-        .filter(([_, data]) => data.status)
-        .map(([student_id, { status, remarks }]) => ({
-          student_id: Number(student_id),
-          attendance_date: selectedDate,
-          status,
-          ...(remarks?.trim() && { remarks: remarks.trim() }),
-        }));
+      newAttendance[student.id] = { status };
+      newOriginal[student.id] = { status };
+    });
 
-      if (attendances.length === 0) {
-        alert("কোনো উপস্থিতি চিহ্নিত করা হয়নি");
-        return;
-      }
+    setAttendanceData(newAttendance);
+    setOriginalAttendanceData(newOriginal);
+  }, [existingAttendance, activeStudents]);
+
+  // Reset on class change
+  useEffect(() => {
+    setSelectedSubject(null);
+    setBulkAction(null);
+    setAttendanceData({});
+    setOriginalAttendanceData({});
+  }, [selectedClassConfig]);
+
+  const handleStatusChange = (studentId, status) => {
+    if (!hasAddPermission && !hasChangePermission) {
+      toast.error('আপনার এই কাজটি করার অনুমতি নেই।');
+      return;
     }
+
+    setAttendanceData((prev) => ({
+      ...prev,
+      [studentId]: { status },
+    }));
+  };
+
+  const handleBulkAction = (action) => {
+    if (!hasAddPermission && !hasChangePermission) {
+      toast.error('আপনার এই কাজটি করার অনুমতি নেই।');
+      return;
+    }
+
+    if (!action || !activeStudents.length) return;
+    const newAttendanceData = {};
+    activeStudents.forEach((student) => {
+      newAttendanceData[student.id] = { status: action.value };
+    });
+    setAttendanceData(newAttendanceData);
+  };
+
+  const handleSubmit = async () => {
+    if (!hasAddPermission && !hasChangePermission) {
+      toast.error('আপনার এই কাজটি করার অনুমতি নেই।');
+      return;
+    }
+
+    if (!selectedClassId || !selectedSubject) {
+      toast.error("শ্রেণি এবং বিষয় নির্বাচন করুন");
+      return;
+    }
+
+    const toastId = toast.loading("উপস্থিতি জমা হচ্ছে...");
 
     try {
       setIsSubmitting(true);
-      
+
+      // শুধুমাত্র পরিবর্তিত রেকর্ড পাঠানো হবে
+      const attendances = activeStudents
+        .map((student) => {
+          const current = attendanceData[student.id]?.status ?? null;
+          const original = originalAttendanceData[student.id]?.status ?? null;
+
+          if (current !== original) {
+            return {
+              student_id: student.id,
+              attendance_date: selectedDate,
+              status: current,
+            };
+          }
+          return null;
+        })
+        .filter(Boolean);
+
+      if (attendances.length === 0) {
+        toast("কোনো পরিবর্তন করা হয়নি", { icon: "info", id: toastId });
+        return;
+      }
+
       const payload = {
-        class_subject_id: selectedSubjectObj.class_subject,
-        class_id: selectedClassConfig,
+        class_subject_id: selectedSubject.class_subject,
+        class_id: selectedClassId,
         date: selectedDate,
         attendances,
       };
 
-      console.log("Submitting:", payload);
+      const hasExistingData = Object.keys(originalAttendanceData).length > 0;
 
       if (hasExistingData) {
+        if (!hasChangePermission) {
+          toast.error('আপডেট করার অনুমতি আপনার নেই।', { id: toastId });
+          return;
+        }
         await updateAttendance(payload).unwrap();
-        alert("উপস্থিতি সফলভাবে আপডেট করা হয়েছে!");
+        toast.success("উপস্থিতি সফলভাবে আপডেট করা হয়েছে!", { id: toastId });
       } else {
+        if (!hasAddPermission) {
+          toast.error('তৈরি করার অনুমতি আপনার নেই।', { id: toastId });
+          return;
+        }
         await createAttendance(payload).unwrap();
-        alert("উপস্থিতি সফলভাবে জমা দেওয়া হয়েছে!");
+        toast.success("উপস্থিতি সফলভাবে জমা দেওয়া হয়েছে!", { id: toastId });
       }
 
-      // স্টেট রিফ্রেশ - এটাই মূল কাজ
-      setRefreshKey((prev) => prev + 1);
-      
-      // UI রিফ্রেশ
+      // originalAttendanceData আপডেট করো
+      const updatedOriginal = {};
+      activeStudents.forEach((student) => {
+        updatedOriginal[student.id] = {
+          status: attendanceData[student.id]?.status ?? null,
+        };
+      });
+      setOriginalAttendanceData(updatedOriginal);
+
+      // Refetch
       await refetchAttendance();
       await refetchLastThree();
-      
-      // Original data আপডেট করো
-      setOriginalAttendanceData(JSON.parse(JSON.stringify(attendanceData)));
 
     } catch (err) {
-      console.error("Submit error:", err);
-      alert("উপস্থিতি জমা দিতে ব্যর্থ: " + (err?.data?.message || err.message || "অজানা ত্রুটি"));
+      const message = err?.data?.message || err.message || "অজানা ত্রুটি";
+      toast.error(`উপস্থিতি জমা দিতে ব্যর্থ: ${message}`, { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
@@ -261,196 +291,209 @@ const GiveStudentAttendace = () => {
 
   const hasExistingData = Object.keys(originalAttendanceData).length > 0;
 
+  const bulkOptions = Object.values(AttendanceStatus).map((status) => ({
+    value: status,
+    label: statusLabels[status],
+  }));
+
+  // Permission-based Rendering
+  if (permissionsLoading) {
+    return <div className="p-4 text-center">অনুমতি লোড হচ্ছে...</div>;
+  }
+
+  if (!hasViewPermission) {
+    return <div className="p-4 text-center text-red-500">এই পৃষ্ঠাটি দেখার অনুমতি আপনার নেই।</div>;
+  }
+
   return (
-    <div className="p-6 max-w-7xl mx-auto bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-6 text-center text-[#441a05]">
-        ছাত্র-ছাত্রীর উপস্থিতি প্রদান
-      </h2>
+    <div className="py-8 w-full relative mx-auto">
+      <style>
+        {`
+          @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+          .animate-fadeIn { animation: fadeIn 0.6s ease-out forwards; }
+          .animate-scaleIn { animation: scaleIn 0.4s ease-out forwards; }
+          .btn-glow:hover { box-shadow: 0 0 15px rgba(219, 158, 48, 0.3); }
+          ::-webkit-scrollbar { width: 8px; }
+          ::-webkit-scrollbar-track { background: transparent; }
+          ::-webkit-scrollbar-thumb { background: rgba(22, 31, 48, 0.26); border-radius: 10px; }
+          ::-webkit-scrollbar-thumb:hover { background: rgba(10, 13, 21, 0.44); }
+        `}
+      </style>
 
-      {/* Header with Selectors and Submit Button */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
-          <div>
-            <label className="block text-sm font-semibold mb-1 text-gray-700">শ্রেণি কনফিগ</label>
-            <select
+      {/* Header Card */}
+      <div className="bg-black/10 backdrop-blur-sm border border-white/20 p-8 rounded-2xl mb-8 animate-fadeIn shadow-xl">
+        <div className="flex items-center space-x-2 mb-6">
+          <IoAddCircle className="text-3xl text-[#441a05]" />
+          <h3 className="sm:text-2xl text-xl font-bold text-[#441a05] tracking-tight">ছাত্র-ছাত্রীর উপস্থিতি</h3>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Class Select */}
+          <div className="animate-fadeIn">
+            <label className="block text-[#441a05] sm:text-base text-xs font-medium mb-2">শ্রেণি:</label>
+            <Select
+              options={classOptions}
               value={selectedClassConfig}
-              onChange={(e) => setSelectedClassConfig(e.target.value)}
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-              disabled={loadingConfigs}
-            >
-              <option value="">-- নির্বাচন করুন --</option>
-              {activeClassConfigs.map((cfg) => (
-                <option key={cfg.id} value={cfg.id}>
-                  {cfg.g_class_name} - {cfg.section_name} ({cfg.shift_name})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold mb-1 text-gray-700">বিষয়</label>
-            <select
-              value={selectedSubject}
-              onChange={(e) => setSelectedSubject(e.target.value)}
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-              disabled={!selectedClassConfig || loadingSubjects || fetchingSubjects}
-            >
-              <option value="">-- নির্বাচন করুন --</option>
-              {activeSubjects.map((sub) => (
-                <option key={sub.id} value={sub.id}>
-                  {sub.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold mb-1 text-gray-700">তারিখ</label>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              onChange={setSelectedClassConfig}
+              placeholder="শ্রেণি নির্বাচন"
+              isLoading={loadingConfigs}
+              isClearable
+              isSearchable
+              styles={selectStyles}
+              menuPortalTarget={document.body}
+              menuPosition="fixed"
+              className="animate-scaleIn"
             />
           </div>
-        </div>
-      </div>
 
-      {/* Bulk Actions - বাটন ছাড়া */}
-      {selectedClassConfig && selectedSubject && activeStudents.length > 0 && (
-        <div className="flex flex-col sm:flex-row justify-between gap-3 items-start sm:items-center mb-4 p-4 bg-gray-50 rounded-lg">
-          <div className="flex flex-wrap items-center gap-2">
-            <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">
-              সকলের জন্য নির্বাচন করুন:
-            </label>
-            <select
-              value={bulkAction}
-              onChange={(e) => {
-                setBulkAction(e.target.value);
-                handleBulkAction(e.target.value);
-              }}
-              className="p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">-- নির্বাচন করুন --</option>
-              {Object.values(AttendanceStatus).map((status) => (
-                <option key={status} value={status}>
-                  {statusLabels[status]}
-                </option>
-              ))}
-            </select>
+          {/* Subject Select */}
+          <div className="animate-fadeIn">
+            <label className="block text-[#441a05] sm:text-base text-xs font-medium mb-2">বিষয়:</label>
+            <Select
+              options={subjectOptions}
+              value={selectedSubject}
+              onChange={setSelectedSubject}
+              placeholder="বিষয় নির্বাচন"
+              isLoading={loadingSubjects || fetchingSubjects}
+              isDisabled={!selectedClassConfig}
+              isClearable
+              isSearchable
+              styles={selectStyles}
+              menuPortalTarget={document.body}
+              menuPosition="fixed"
+              className="animate-scaleIn"
+            />
           </div>
 
-          <div className="flex justify-end">
+          {/* Fixed Date */}
+          <div className="animate-fadeIn">
+            <label className="block text-[#441a05] sm:text-base text-xs font-medium mb-2">তারিখ:</label>
+            <div className="w-full bg-transparent text-[#441a05] pl-3 py-2 border border-[#9d9087] rounded-lg cursor-default animate-scaleIn">
+              {format(new Date(), "dd MMMM, yyyy")}
+            </div>
+          </div>
+        </div>
+
+        {/* Bulk Action & Submit */}
+        {selectedClassId && selectedSubject && activeStudents.length > 0 && (
+          <div className="flex flex-col sm:flex-row justify-between gap-4 mt-6 animate-fadeIn">
+            <div className="flex items-center gap-3">
+              <span className="text-[#441a05] font-medium">সকলের জন্য:</span>
+              <div className="w-48">
+                <Select
+                  options={bulkOptions}
+                  value={bulkAction}
+                  onChange={(opt) => {
+                    setBulkAction(opt);
+                    handleBulkAction(opt);
+                  }}
+                  placeholder="নির্বাচন"
+                  isClearable
+                  styles={selectStyles}
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                />
+              </div>
+            </div>
+
             <button
               onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="px-6 py-2 bg-[#DB9E30] text-white font-bold rounded-lg shadow-md hover:bg-[#c78a28] disabled:opacity-50 disabled:cursor-not-allowed transition whitespace-nowrap"
+              disabled={isSubmitting || (!hasAddPermission && !hasChangePermission)}
+              className="px-6 py-2 bg-[#DB9E30] text-[#441a05] font-bold rounded-lg hover:text-white transition-all btn-glow disabled:opacity-60"
             >
-              {isSubmitting ? "জমা হচ্ছে..." : hasExistingData ? "উপস্থিতি আপডেট করুন" : "উপস্থিতি জমা দিন"}
+              {isSubmitting ? "জমা হচ্ছে..." : hasExistingData ? "আপডেট করুন" : "জমা দিন"}
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Table */}
-      {selectedClassConfig && selectedSubject ? (
-        loadingStudents ? (
-          <p className="text-center py-8">ছাত্র তালিকা লোড হচ্ছে...</p>
-        ) : activeStudents.length === 0 ? (
-          <p className="text-center py-8 text-orange-600">কোনো সক্রিয় ছাত্র পাওয়া যায়নি</p>
-        ) : (
-          <>
-            <div className="overflow-x-auto border rounded-lg">
-              <table className="w-full text-sm">
-                <thead className="bg-gradient-to-r from-blue-50 to-indigo-50">
+      {/* Attendance Table */}
+      <div className="bg-black/10 backdrop-blur-sm rounded-2xl shadow-xl animate-fadeIn overflow-y-auto max-h-[60vh] py-2 px-6">
+        <div className="flex items-center justify-between p-4 border-b border-white/20">
+          <h3 className="text-lg font-semibold text-[#441a05]">উপস্থিতি তালিকা</h3>
+        </div>
+
+        {selectedClassId && selectedSubject ? (
+          loadingStudents ? (
+            <p className="p-6 text-center text-[#441a05]/70 animate-pulse">ছাত্র তালিকা লোড হচ্ছে...</p>
+          ) : activeStudents.length === 0 ? (
+            <p className="p-6 text-center text-orange-600">কোনো সক্রিয় ছাত্র পাওয়া যায়নি</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-white/20">
+                <thead className="bg-white/5">
                   <tr>
-                    <th className="border px-3 py-2 text-left font-bold">রোল</th>
-                    <th className="border px-3 py-2 text-center">ছবি</th>
-                    <th className="border px-3 py-2 text-left font-bold">নাম</th>
-                    <th className="border px-3 py-2 text-center">শেষ ৩ দিন</th>
-                    <th className="border px-3 py-2 text-center font-bold">উপস্থিতি</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#441a05] uppercase">রোল</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-[#441a05] uppercase">ছবি</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#441a05] uppercase">নাম</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-[#441a05] uppercase">শেষ ৩ দিন</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-[#441a05] uppercase">উপস্থিতি</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {activeStudents.map((student) => {
+                <tbody className="divide-y divide-white/20">
+                  {activeStudents.map((student, index) => {
                     const lastThree = lastThreeMap[student.id] || [];
-                    const current = attendanceData[student.id] || {};
+                    const current = attendanceData[student.id] || { status: null };
 
                     return (
-                      <tr key={student.id} className="hover:bg-gray-50 transition">
-                        <td className="border px-3 py-2 font-medium">{student?.roll_no}</td>
-                        <td className="border px-3 py-2">
+                      <tr key={student.id} className="bg-white/5 animate-fadeIn" style={{ animationDelay: `${index * 0.05}s` }}>
+                        <td className="px-4 py-3 text-sm text-[#441a05] font-medium">{student.roll_no}</td>
+                        <td className="px-4 py-3">
                           <div className="flex justify-center">
                             <img
                               src={student.avatar || "/default-avatar.png"}
                               alt={student.name}
-                              className="w-10 h-10 rounded-full object-cover border"
+                              className="w-10 h-10 rounded-full object-cover border-2 border-[#DB9E30]/30"
                             />
                           </div>
                         </td>
-                        <td className="border px-3 py-2 font-semibold">{student.name}</td>
+                        <td className="px-4 py-3 text-sm text-[#441a05] font-semibold">{student.name}</td>
 
-                        {/* Last 3 Dots */}
-                        <td className="border px-3 py-2">
+                        <td className="px-4 py-3">
                           <div className="flex justify-center gap-1">
                             {[...Array(3)].map((_, i) => {
                               const record = lastThree[i];
                               const color = record
                                 ? statusColors[record.status.toUpperCase()] || "bg-gray-300"
                                 : "bg-gray-200";
-                              const date = record
-                                ? format(new Date(record.attendance_date), "MM/dd/yyyy")
-                                : "--";
-                              const status = record
-                                ? statusLabels[record.status.toUpperCase()]
-                                : "রেকর্ড নেই";
-
-                              if (!record) {
-                                return (
-                                  <div key={i} className={`w-4 h-4 rounded-full ${color} border`} />
-                                );
-                              }
-
                               const tooltipId = `tooltip-${student.id}-${i}`;
-                              const tooltipContent = record.remarks?.trim()
-                                ? `${date}\n${status}\n${record.remarks}`
-                                : `${date}\n${status}`;
+                              const content = record
+                                ? `${format(new Date(record.attendance_date), "dd MMM")}, ${statusLabels[record.status.toUpperCase()]}`
+                                : "রেকর্ড নেই";
 
                               return (
                                 <div key={i}>
                                   <div
                                     data-tooltip-id={tooltipId}
-                                    data-tooltip-content={tooltipContent}
-                                    className={`w-4 h-4 rounded-full ${color} border cursor-help`}
+                                    data-tooltip-content={content}
+                                    className={`w-5 h-5 rounded-full ${color} border-2 border-white cursor-help transition-transform hover:scale-110`}
                                   />
-                                  <Tooltip id={tooltipId} place="top" className="z-50" />
+                                  <Tooltip id={tooltipId} place="top" className="z-50 text-xs" />
                                 </div>
                               );
                             })}
                           </div>
                         </td>
 
-                        {/* Radio Buttons */}
-                        <td className="border px-3 py-2">
+                        <td className="px-4 py-3">
                           <div className="flex justify-center gap-2 flex-wrap">
                             {Object.values(AttendanceStatus).map((status) => (
-                              <label
-                                key={status}
-                                className="flex flex-col items-center gap-1 justify-center cursor-pointer text-xs"
-                              >
+                              <label key={status} className="cursor-pointer">
                                 <input
                                   type="radio"
                                   name={`status-${student.id}`}
-                                  checked={current.status == status}
+                                  checked={current.status === status}
                                   onChange={() => handleStatusChange(student.id, status)}
                                   className="hidden"
+                                  disabled={!hasAddPermission && !hasChangePermission}
                                 />
                                 <span
-                                  className={`font-medium px-2 py-1 rounded transition ${
-                                    current.status == status
-                                      ? statusColors[status] + " text-white"
-                                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                  }`}
+                                  className={`inline-block px-3 py-1 border text-xs font-medium rounded-full transition-all ${
+                                    current.status === status
+                                      ? `${statusColors[status]} text-white shadow-lg`
+                                      : "bg-white/10 text-[#441a05] hover:bg-white/20"
+                                  } ${(!hasAddPermission && !hasChangePermission) ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 >
                                   {statusLabels[status]}
                                 </span>
@@ -464,20 +507,13 @@ const GiveStudentAttendace = () => {
                 </tbody>
               </table>
             </div>
-
-            {/* সাবমিট স্ট্যাটাস দেখানোর জন্য */}
-            {isSubmitting && (
-              <div className="mt-4 p-3 bg-blue-50 border rounded-lg">
-                <p className="text-sm text-blue-700">উপস্থিতি আপডেট হচ্ছে... দয়া করে অপেক্ষা করুন</p>
-              </div>
-            )}
-          </>
-        )
-      ) : (
-        <div className="text-center py-12 text-gray-500">
-          <p className="text-lg">শ্রেণি কনফিগ এবং বিষয় নির্বাচন করুন</p>
-        </div>
-      )}
+          )
+        ) : (
+          <p className="p-6 text-center text-[#441a05]/70 animate-fadeIn">
+            শ্রেণি এবং বিষয় নির্বাচন করুন
+          </p>
+        )}
+      </div>
     </div>
   );
 };
