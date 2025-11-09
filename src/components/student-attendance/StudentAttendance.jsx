@@ -33,7 +33,7 @@ const customStyles = `
     0% { transform: scale(0); opacity: 0.5; }
     100% { transform: scale(4); opacity: 0; }
   }
-  @keyframeskeyframes iconHover {
+  @keyframes iconHover {
     to { transform: scale(1.1); }
   }
   .animate-fadeIn {
@@ -286,31 +286,6 @@ const StudentAttendance = () => {
   const formatDateOnly = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("bn-BD", { day: "numeric" });
-  };
-
-  // Present Summary with color
-  const presentSummary = useMemo(() => {
-    if (tabValue !== 1 || !attendanceData?.attendance?.length) return {};
-    const summary = {};
-    sortedStudents.forEach((student) => {
-      const records = attendanceData.attendance.filter(
-        (rec) => rec.student === student.id
-      );
-      const total = records.length;
-      const present = records.filter((rec) => rec.status === "PRESENT").length;
-      summary[student.id] = { present, total };
-    });
-    return summary;
-  }, [attendanceData, sortedStudents, tabValue]);
-
-  // Render colored summary
-  const renderPresentSummary = (present, total) => {
-    return (
-      <span>
-        <span className="text-green-600 font-bold">{present}</span> /{" "}
-        <span className="text-black">{total}</span>
-      </span>
-    );
   };
 
   useEffect(() => {
@@ -606,17 +581,20 @@ const StudentAttendance = () => {
         `;
       });
     } else {
+      // NEW: Correct per-date summary
       sortedStudents.forEach((student) => {
-        const { present, total } = presentSummary[student.id] || { present: 0, total: 0 };
-        htmlContent += `
-          <tr>
-            <td>${student.name || "N/A"} (রোল: ${student.roll_no || "N/A"})</td>
-            <td class="summary">
-              <span style="color: green; font-weight: bold;">${present}</span> / 
-              <span style="color: #555;">${total}</span>
-            </td>
-          </tr>
-        `;
+        htmlContent += `<tr><td>${student.name || "N/A"} (রোল: ${student.roll_no || "N/A"})</td>`;
+        uniqueDates.forEach((date) => {
+          const dayRecords = attendanceData?.attendance?.filter(
+            (rec) => rec.student === student.id && rec.attendance_date === date
+          ) || [];
+          const present = dayRecords.filter(rec => rec.status === 'PRESENT').length;
+          const total = dayRecords.length;
+          htmlContent += `<td class="summary">
+            ${total > 0 ? `<span style="color: green; font-weight: bold;">${present}</span> / <span style="color: #555;">${total}</span>` : "-"}
+          </td>`;
+        });
+        htmlContent += `</tr>`;
       });
     }
 
@@ -1081,18 +1059,48 @@ const StudentAttendance = () => {
               </thead>
               <tbody className="divide-y divide-white/20">
                 {sortedStudents.map((student, index) => {
-                  const { present, total } = presentSummary[student.id] || { present: 0, total: 0 };
                   return (
-                    <tr key={student.id} className="bg-white/5 hover:bg-white/10 transition-colors duration-200 animate-fadeIn" style={{ animationDelay: `${index * 0.05}s` }}>
+                    <tr
+                      key={student.id}
+                      className="bg-white/5 hover:bg-white/10 transition-colors duration-200 animate-fadeIn"
+                      style={{ animationDelay: `${index * 0.05}s` }}
+                    >
                       <td
                         className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#441a05] cursor-pointer hover:underline"
                         onClick={() => handleStudentClick(student)}
                       >
                         {student.name || "N/A"} (রোল: {student.roll_no || "N/A"})
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-[#441a05]">
-                        {renderPresentSummary(present, total)}
-                      </td>
+
+                      {uniqueDates.map((date) => {
+                        const dayRecords = attendanceData.attendance.filter(
+                          (rec) =>
+                            rec.student === student.id &&
+                            rec.attendance_date === date
+                        );
+
+                        const presentInSubjects = dayRecords.filter(
+                          (rec) => rec.status === "PRESENT"
+                        ).length;
+
+                        const totalInSubjects = dayRecords.length;
+
+                        return (
+                          <td
+                            key={date}
+                            className="px-6 py-4 whitespace-nowrap text-sm text-center font-bold"
+                          >
+                            {totalInSubjects > 0 ? (
+                              <span>
+                                <span className="text-green-600">{presentInSubjects}</span> /{" "}
+                                <span className="text-gray-700">{totalInSubjects}</span>
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                        );
+                      })}
                     </tr>
                   );
                 })}

@@ -145,7 +145,7 @@ const GiveStudentAttendace = () => {
     return map;
   }, [lastThreeData]);
 
-  console.log(selectedSubject)
+
 
   const [createAttendance] = useCreateStudentSubAttendanceMutation();
   const [updateAttendance] = useUpdateStudentSubAttendanceMutation();
